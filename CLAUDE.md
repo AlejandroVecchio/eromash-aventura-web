@@ -17,3 +17,6 @@ Tercer juego de Eromash: la aventura en 2.5D sobre el motor web y la estética d
 - Pendiente pedido por Alejandro: una forma de que él ayude a armar los mapas además de Tiled.
 
 - **Interiores** (`motor/interiores.js`, muebles en `mundo/assets-interiores.js`, textos `in.`): las casas se entran con E; adentro el cuarto se ve de frente y de cerca (1600 × 900, pared de tablas, piso en perspectiva), con la estética de la cabaña del mago de las notas del parche, y el bosque queda en pausa (`J.dentro`). Un cuarto nuevo se arma en `armarCuarto`.
+
+- **Prólogo del mago** (`interfaz/prologo.js` + el personaje en `interfaz/mago.js`, textos `pl.`): el título muestra al mago escribiendo en su escritorio (la ilustración de las notas del parche); una partida nueva empieza con sus preguntas (nombre, a qué viene, signo) y lo contestado queda en `E.extra.prologo`. Al terminar la cámara pasa a verse desde arriba, entra al pergamino y queda en negro antes de la partida. `?jugar=N` lo saltea (pruebas).
+- **El este** (`motor/este.js`, `mundo/assets-este.js`, textos `es.`): Aserradero de Orm (Ylva, compuerta y rueda, el buey del barro) y Santuario de las Raíces (estelas, zarzas, sello, mirador). Un sistema puede abrir la vista con `J.alejarA(k)` mientras lo pide cada cuadro (el mirador).

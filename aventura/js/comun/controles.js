@@ -52,6 +52,7 @@ window.CONTROLES = (function () {
     usandoMando = false,
     eje = { x: 0, y: 0 };
   addEventListener("keydown", (e) => {
+    if (e.target && e.target.tagName === "INPUT") return;
     if (e.code === "Tab") e.preventDefault();
     abajo.add(e.code);
     usandoMando = false;

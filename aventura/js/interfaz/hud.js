@@ -150,9 +150,11 @@ window.HUD = (function () {
 
   // ---------- menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando ----------
   let menu = null;
-  function abrir(html, botones) {
+  function abrir(html, botones, op) {
+    const clase = (op && op.clase) || "";
     $("capa").classList.remove("oculto");
-    $("capaCaja").className = "caja panel";
+    $("capa").className = "capa" + (clase ? " " + clase : "");
+    $("capaCaja").className = "caja panel" + (clase ? " " + clase : "");
     $("capaCaja").innerHTML = html;
     const cont = document.createElement("div");
     $("capaCaja").appendChild(cont);

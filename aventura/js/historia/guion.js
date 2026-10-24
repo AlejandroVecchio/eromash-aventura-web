@@ -291,7 +291,7 @@ window.HISTORIA = (function () {
   function resumen(n) {
     const d = leer(n);
     if (!d) return null;
-    return { mision: MISIONES[d.mision] ? MISIONES[d.mision].id : "fin", fecha: d.fecha, tiempo: d.tiempo };
+    return { mision: MISIONES[d.mision] ? MISIONES[d.mision].id : "fin", fecha: d.fecha, tiempo: d.tiempo, nombre: d.extra && d.extra.prologo ? d.extra.prologo.nombre : "" };
   }
   function reciente() {
     let mejor = 0,

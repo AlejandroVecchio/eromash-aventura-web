@@ -1162,7 +1162,9 @@
       CALIDAD.nivel = n[(n.indexOf(CALIDAD.nivel) + 1) % n.length];
       titulo();
     } });
-    HUD.abrir(`<h1>Eromash</h1><div class="sub">${tav("juego_subtitulo")}</div>`, botones);
+    HUD.abrir(`<h1>Eromash</h1><div class="sub">${tav("juego_subtitulo")}</div>`, botones, { clase: "titulo" });
+    // de fondo, el mago escribe en su escritorio
+    if (window.PROLOGO) PROLOGO.mostrar();
     const nota = document.createElement("div");
     nota.className = "nota";
     nota.textContent = (CONTROLES.mando() ? t("ui.controles_mando") : t("ui.controles")) + " · " + tav("titulo_mvp");
@@ -1171,23 +1173,30 @@
   function elegirRanura() {
     const bot = [1, 2, 3].map((n) => {
       const r = H.resumen(n);
-      return { texto: tav("ranura", [n]), sub: r ? r.mision + " · " + tiempoTxt(r.tiempo) : tav("ranura_vacia"), fn: () => {
+      return { texto: tav("ranura", [n]), sub: r ? (r.nombre ? t("pl.saga_de", [r.nombre]) + " · " : "") + r.mision + " · " + tiempoTxt(r.tiempo) : tav("ranura_vacia"), fn: () => {
         if (r && !confirmar[n]) {
           confirmar[n] = true;
           HUD.aviso(tav("ranura_reemplazar"));
           return;
         }
-        empezar(n, true);
+        nuevaConMago(n);
       } };
     });
     bot.push({ texto: t("ui.cerrar"), fn: titulo });
-    HUD.abrir(`<h2>${tav("ranuras_nueva")}</h2>`, bot);
+    HUD.abrir(`<h2>${tav("ranuras_nueva")}</h2>`, bot, { clase: "titulo" });
+  }
+  // una partida nueva empieza con las preguntas del mago; lo que se contesta queda en la partida
+  function nuevaConMago(n) {
+    if (!window.PROLOGO) return empezar(n, true);
+    PROLOGO.preguntas((datos) => empezar(n, true, datos));
   }
   const confirmar = {};
-  function empezar(n, nueva) {
+  function empezar(n, nueva, prologo) {
     if (nueva) H.nueva(n);
     else H.cargar(n);
+    if (window.PROLOGO) PROLOGO.ocultar();
     const E = H.E;
+    if (prologo) E.extra.prologo = prologo;
     const ini = W.mas(W.LUGARES.puesto.p, -16, 8);
     if (E.pos) {
       jug.x = E.pos[0];
@@ -1233,6 +1242,8 @@
     J.modo = "menu";
     const lista = H.E.diario.length ? H.E.diario.map((k) => `<p>${tav(k)}</p>`).join("") : `<p>${t("ui.diario_vacio")}</p>`;
     let extra = "";
+    const pr = H.E.extra.prologo;
+    if (pr && pr.nombre) extra += `<div class="diario-resumen"><p>${t("pl.diario", [pr.nombre, t("pl.signo_corto_" + pr.signo)])}</p></div>`;
     SIS.forEach((s0) => s0.diario && (extra += s0.diario()));
     HUD.abrir(`<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`, [{ texto: t("ui.cerrar"), fn: cerrarMenu }]);
   }
