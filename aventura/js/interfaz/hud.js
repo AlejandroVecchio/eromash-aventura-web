@@ -124,6 +124,7 @@ window.HUD = (function () {
     const clave = casillas.map((q) => q.id + ":" + (q.runa || q.icono) + ":" + (q.nivel || 0) + ":" + CONTROLES.glifo(q.accion)).join("|") + I18N.lang + (window.INVENTARIO ? INVENTARIO.version() : 0);
     if (clave !== barraClave) {
       barraClave = clave;
+      casillas.forEach((q) => ["ap", "es", "en"].forEach((p) => delete ultimo[p + q.id]));
       el.innerHTML = casillas
         .map((q) => `<div class="casilla${q.grande ? " grande" : ""}" id="c_${q.id}"><canvas width="${q.grande ? 128 : 96}" height="${q.grande ? 128 : 96}"></canvas><i class="espera"></i><span class="tecla">${CONTROLES.glifo(q.accion)}</span><small>${q.nombre}</small>${q.grande ? '<b class="poder"><i></i></b>' : ""}</div>`)
         .join("");
@@ -153,9 +154,11 @@ window.HUD = (function () {
     casillas.forEach((q) => {
       const d = $("c_" + q.id);
       if (!d) return;
-      d.classList.toggle("apagada", !q.listo);
-      d.querySelector(".espera").style.setProperty("--f", Math.max(0, Math.min(1, q.espera || 0)));
-      if (q.grande) d.querySelector(".poder i").style.width = Math.round((q.energia || 0) * 100) + "%";
+      // solo se toca el DOM cuando algo cambió (cada escritura obliga a recalcular estilos)
+      if (cambia("ap" + q.id, !q.listo)) d.classList.toggle("apagada", !q.listo);
+      const f = Math.round(Math.max(0, Math.min(1, q.espera || 0)) * 200) / 200;
+      if (cambia("es" + q.id, f)) d.querySelector(".espera").style.setProperty("--f", f);
+      if (q.grande && cambia("en" + q.id, Math.round((q.energia || 0) * 100))) d.querySelector(".poder i").style.width = Math.round((q.energia || 0) * 100) + "%";
     });
   }
   function jugador(hp, hpMax, sta, staMax, cansado) {
@@ -194,12 +197,26 @@ window.HUD = (function () {
     plegado.todo = !plegado.todo;
     guardarPlegado();
   }
+  // los metros cambian a cada paso: se cambian en su lugar sin rearmar el rastreador (rearmarlo en cada cuadro
+  // recalcula toda la página)
+  let metrosEls = {};
   function misiones(lista) {
     ultimaLista = lista;
-    const clave = JSON.stringify(lista);
-    if (clave === claveMis) return;
+    const clave = JSON.stringify(lista, (k, v) => (k === "metros" ? v != null : v));
+    if (clave === claveMis) {
+      lista.forEach((m, i) =>
+        m.objetivos.forEach((o, j) => {
+          const b = metrosEls[i + "," + j];
+          if (!b || o.metros == null) return;
+          const txt = t("av.objetivo_metros", [Math.round(o.metros)]);
+          if (b.textContent !== txt) b.textContent = txt;
+        }),
+      );
+      return;
+    }
     const antes = claveMis;
     claveMis = clave;
+    metrosEls = {};
     const caja = $("hudMisiones");
     caja.innerHTML = "";
     const cab = document.createElement("button");
@@ -210,7 +227,7 @@ window.HUD = (function () {
     cab.addEventListener("click", plegarTodo);
     caja.appendChild(cab);
     if (plegado.todo) return;
-    lista.forEach((m) => {
+    lista.forEach((m, i) => {
       const id = m.id || (m.secundaria ? "secretos" : "historia");
       const cerrada = !!plegado.una[id];
       const d = document.createElement("div");
@@ -226,16 +243,24 @@ window.HUD = (function () {
       caja.appendChild(d);
       if (cerrada) return;
       const ul = d.querySelector("ul");
-      m.objetivos.forEach((o) => {
+      m.objetivos.forEach((o, j) => {
         const li = document.createElement("li");
         li.className = o.estado;
         li.innerHTML = `<i></i><span></span>${o.metros != null ? "<b></b>" : ""}`;
         li.querySelector("span").textContent = o.texto;
-        if (o.metros != null) li.querySelector("b").textContent = t("av.objetivo_metros", [Math.round(o.metros)]);
+        if (o.metros != null) {
+          const b = li.querySelector("b");
+          b.textContent = t("av.objetivo_metros", [Math.round(o.metros)]);
+          metrosEls[i + "," + j] = b;
+        }
         // destello cuando un objetivo recién se cumple
         const k = m.nombre + "|" + o.texto;
         if (o.estado === "hecho" && antes && !antes.includes(JSON.stringify(o.texto) + ',"estado":"hecho"')) recien[k] = performance.now();
-        if (recien[k] && performance.now() - recien[k] < 1600) li.classList.add("recien");
+        const pasado = recien[k] ? performance.now() - recien[k] : 1e9;
+        if (pasado < 1600) {
+          li.classList.add("recien");
+          setTimeout(() => li.classList.remove("recien"), 1600 - pasado);
+        }
         ul.appendChild(li);
       });
     });

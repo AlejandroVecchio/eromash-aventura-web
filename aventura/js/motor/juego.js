@@ -1366,7 +1366,7 @@
       const tiembla = l[1] === "#FF8D71" ? 0.84 + Math.sin(J.t * 11 + o.x) * 0.08 + Math.sin(J.t * 23 + o.y) * 0.06 : 0.9 + Math.sin(J.t * 7 + o.x) * 0.06;
       if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * tiembla });
     });
-    if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
+    if (n > 0.2) W.decoDe("hongosRocio").forEach((d) => d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
     for (const e of enemigos) if (e.activo && !e.muerto && e.d.luz && e.x > x0 - 300 && e.x < x1 + 300 && e.y > y0 - 300 && e.y < y1 + 300) L0.push({ x: e.x, y: e.y - 60, r: 240, col: ["#8CF0B4", "#73D5DB", "#9A6BD8"][e.pal || 0], f: 0.9 });
     if (nucleoSuelo) L0.push({ x: nucleoSuelo.x, y: nucleoSuelo.y, r: 200, col: "#73D5DB", f: 1 });
     if (ciervo.activo || ciervo.mostrarAtaduras) L0.push({ x: ciervo.x, y: ciervo.y - 80, r: 340, col: "#73D5DB", f: 0.8 });
@@ -1434,10 +1434,10 @@
     const lista = [];
     W.cercanas(wx0 - 300, wy0 - 100, wx1 + 300, wy1 + 420, (o) => {
       if (o.oculto || o.x < wx0 - 320 || o.x > wx1 + 320 || o.y < wy0 - 40 || o.y - o.alto * 1.2 > wy1 + (g ? 400 : 0)) return;
-      lista.push({ x: o.x, y: o.y + (o.o.orden || 0), pie: o.y, f: () => dibujarCosa(o), cosa: o }); // o.orden: adelante / atrás del editor
+      lista.push({ x: o.x, y: o.y + (o.o.orden || 0), pie: o.y, f: null, cosa: o }); // o.orden: adelante / atrás del editor
     });
-    W.DECO.forEach((d) => {
-      if (d.id === "hongosRocio" && d.x > wx0 - 40 && d.x < wx1 + 40 && d.y > wy0 && d.y < wy1 + 40) lista.push({ x: d.x, y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
+    W.decoDe("hongosRocio").forEach((d) => {
+      if (d.x > wx0 - 40 && d.x < wx1 + 40 && d.y > wy0 && d.y < wy1 + 40) lista.push({ x: d.x, y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
     });
     const visible = (x, y) => {
       if (g) [x, y] = vista(x, y);
@@ -1462,10 +1462,11 @@
     }
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((d) => {
-      if (!d.dx && !d.dy) return d.f();
+      // las cosas del mundo no llevan función propia (menos basura por cuadro)
+      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa);
       c.save();
       c.translate(d.dx, d.dy);
-      d.f();
+      d.f ? d.f() : dibujarCosa(d.cosa);
       c.restore();
     });
     siluetaJugador(lista);
@@ -1640,6 +1641,41 @@
     silC = silCv.getContext("2d"),
     tapaCv = document.createElement("canvas"),
     tapaC = tapaCv.getContext("2d");
+  // Hasta dónde llega el dibujo de una cosa: a cada lado de su pie (ancho) y hacia arriba (alto). Lo de forma fija
+  // (árboles, rocas, tocones) se mide una vez por asset dibujándolo aparte (con tres semillas y sus variantes); lo que
+  // cambia según sus opciones o según hacia dónde mira la cámara (casas, cercas, gigantes, lo que tiene caras) usa su
+  // choque y su alto con margen. Se guarda en la cosa.
+  const medidaAsset = {};
+  function medirAsset(id) {
+    const L = 900,
+      pie = L * 0.8,
+      cv = document.createElement("canvas");
+    cv.width = cv.height = L;
+    const g = cv.getContext("2d");
+    for (const sem of [1, 2.7, 6.3]) for (const roble of [false, true]) ASSETS.dibujar(g, id, L / 2, pie, 0, { sem, roble });
+    const px = g.getImageData(0, 0, L, L).data;
+    let an = 0,
+      al = 0;
+    for (let y = 0; y < L; y += 2)
+      for (let x = 0; x < L; x += 2)
+        if (px[(y * L + x) * 4 + 3] > 8) {
+          an = Math.max(an, Math.abs(x - L / 2));
+          al = Math.max(al, pie - y);
+        }
+    return { ancho: an * 1.1 + 12, alto: al * 1.1 + 12 };
+  }
+  function bordes(o) {
+    if (!o.bordes) {
+      const k = (o.o.s || 1) * (o.o.esc || 1) * Math.max(o.o.ex || 1, o.o.ey || 1);
+      const a = ASSETS.LISTA[o.id],
+        fijo = a && !a.caras && !(o.choque && o.choque.w) && o.o.x2 == null && !o.o.ancho && !o.o.copa && (o.arbol || o.resto || (o.choque && o.choque.r));
+      if (fijo) {
+        const m = medidaAsset[o.id] || (medidaAsset[o.id] = medirAsset(o.id));
+        o.bordes = { ancho: m.ancho * k, alto: m.alto * k };
+      } else o.bordes = { ancho: Math.max(90 * k, o.choque && o.choque.w ? o.choque.w * 0.75 + 60 : 0, o.alto * 0.6, o.o.ancho || 0, o.o.copa ? o.o.copa[2] : 0, o.o.x2 != null ? Math.abs(o.o.x2 - o.x) + 60 : 0), alto: o.alto * 1.3 };
+    }
+    return o.bordes;
+  }
   function siluetaJugador(lista) {
     if (jug.muerto) return;
     const zj = jug.z || 0,
@@ -1653,7 +1689,14 @@
       by = jy - zj - 150,
       bw = 200,
       bh = 170;
-    const tapan = lista.filter((d) => d.cosa && d.y > claveV && !d.cosa.o.piso && d.cosa.y + (d.dy || 0) - d.cosa.alto * 1.3 < jy - zj && Math.abs(d.cosa.x + (d.dx || 0) - jx) < 420);
+    // solo lo que de verdad se cruza con el encuadre de Eromash (redibujar todo lo de adelante era lo más caro del
+    // cuadro); los assets se dibujan siempre de frente a la cámara, así que sus bordes valen igual con la vista girada
+    const tapan = lista.filter((d) => {
+      if (!d.cosa || d.y <= claveV || d.cosa.o.piso) return false;
+      const vy = d.cosa.y + (d.dy || 0),
+        b = bordes(d.cosa);
+      return vy - d.cosa.alto * 1.3 < jy - zj && vy - b.alto < by + bh && Math.abs(d.cosa.x + (d.dx || 0) - jx) < bw / 2 + b.ancho;
+    });
     if (!tapan.length) return;
     const w = Math.ceil(bw * esc),
       h = Math.ceil(bh * esc);

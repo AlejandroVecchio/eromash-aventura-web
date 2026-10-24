@@ -38,7 +38,6 @@ window.LUZ = (function () {
     return { h, n, o, osc };
   }
 
-  let gradCache = null;
   // luces: [{ x, y, r (unidades del mundo), col, f (fuerza 0..1) }]
   function dibujar(c, cw, ch, x0, y0, esc, luces, amb, t) {
     const nv = nivel();
@@ -83,16 +82,10 @@ window.LUZ = (function () {
         sy = (l.y - y0) * s,
         r = l.r * s;
       if (sx < -r || sy < -r || sx > w + r || sy > h + r) continue;
-      const g = cc.createRadialGradient(sx, sy, 0, sx, sy, r);
-      const f = Math.min(1, l.f == null ? 1 : l.f);
-      g.addColorStop(0, `rgba(0,0,0,${f})`);
-      g.addColorStop(0.45, `rgba(0,0,0,${f * 0.75})`);
-      g.addColorStop(1, "rgba(0,0,0,0)");
-      cc.fillStyle = g;
-      cc.beginPath();
-      cc.ellipse(sx, sy, r, r * 0.82, 0, 0, Math.PI * 2);
-      cc.fill();
+      cc.globalAlpha = Math.min(1, l.f == null ? 1 : l.f);
+      cc.drawImage(AGUJERO, sx - r, sy - r * 0.82, r * 2, r * 1.64);
     }
+    cc.globalAlpha = 1;
     c.imageSmoothingEnabled = true;
     c.drawImage(capa, 0, 0, cw, ch);
     // el color de cada luz, sumado (solo alta, y más fuerte cuanto más oscuro)
@@ -105,19 +98,52 @@ window.LUZ = (function () {
           sy = (l.y - y0) * esc,
           r = l.r * esc * 0.7;
         if (sx < -r || sy < -r || sx > cw + r || sy > ch + r) continue;
-        const g = c.createRadialGradient(sx, sy, 0, sx, sy, r);
-        g.addColorStop(0, hexA(l.col, 0.16 * fuerza * (l.f == null ? 1 : Math.min(1, l.f))));
-        g.addColorStop(1, hexA(l.col, 0));
-        c.fillStyle = g;
-        c.fillRect(sx - r, sy - r, r * 2, r * 2);
+        c.globalAlpha = 0.16 * fuerza * (l.f == null ? 1 : Math.min(1, l.f));
+        c.drawImage(brillo(l.col), sx - r, sy - r, r * 2, r * 2);
       }
+      c.globalAlpha = 1;
     }
     c.restore();
   }
-  const hexA = (hex, a) => {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
-  };
+  // Las luces se pintan con dos dibujos hechos una sola vez (crear un degradado por luz en cada cuadro era lo más caro
+  // de la luz): el agujero en la oscuridad (círculo que se apaga hacia afuera, cortado en una elipse de 1 × 0,82) y
+  // el brillo de cada color. La fuerza de cada luz va como globalAlpha: da lo mismo que el degradado de antes.
+  const LADO = 256;
+  const AGUJERO = (() => {
+    const cv = document.createElement("canvas");
+    cv.width = LADO;
+    cv.height = Math.round(LADO * 0.82);
+    const g2 = cv.getContext("2d"),
+      m = LADO / 2,
+      my = cv.height / 2;
+    const g = g2.createRadialGradient(m, my, 0, m, my, m);
+    g.addColorStop(0, "rgba(0,0,0,1)");
+    g.addColorStop(0.45, "rgba(0,0,0,0.75)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    g2.fillStyle = g;
+    g2.beginPath();
+    g2.ellipse(m, my, m, my, 0, 0, Math.PI * 2);
+    g2.fill();
+    return cv;
+  })();
+  const BRILLOS = new Map();
+  function brillo(col) {
+    let cv = BRILLOS.get(col);
+    if (cv) return cv;
+    cv = document.createElement("canvas");
+    cv.width = cv.height = LADO;
+    const g2 = cv.getContext("2d"),
+      m = LADO / 2,
+      n = parseInt(col.slice(1), 16),
+      rgb = `${n >> 16},${(n >> 8) & 255},${n & 255}`;
+    const g = g2.createRadialGradient(m, m, 0, m, m, m);
+    g.addColorStop(0, `rgba(${rgb},1)`);
+    g.addColorStop(1, `rgba(${rgb},0)`);
+    g2.fillStyle = g;
+    g2.fillRect(0, 0, LADO, LADO);
+    BRILLOS.set(col, cv);
+    return cv;
+  }
   // franjas diagonales de luz que se mueven despacio con la cámara (parallax suave)
   function colorHora(h) {
     if (h < 9) return "255,190,170"; // alba

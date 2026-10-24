@@ -258,7 +258,7 @@ window.VIDA = (function () {
       if (id === "camaHongos" || id === "hongoDorado") emisores.hongos.push([o.x, o.y - 10]);
       if (id === "totemCampamento" && window.HORDAS) emisores.totems.push(o);
     });
-    W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 60 && d.x < x1 + 60 && d.y > y0 - 60 && d.y < y1 + 60 && emisores.hongos.push([d.x, d.y - 8]));
+    W.decoDe("hongosRocio").forEach((d) => d.x > x0 - 60 && d.x < x1 + 60 && d.y > y0 - 60 && d.y < y1 + 60 && emisores.hongos.push([d.x, d.y - 8]));
   }
 
   // ---------- emisores con estado (brasas, humo, hojas, motas rúnicas…) ----------
