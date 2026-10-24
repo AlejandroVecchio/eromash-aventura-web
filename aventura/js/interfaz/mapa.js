@@ -148,36 +148,61 @@ window.MAPA = (function () {
   // Recorre todo lo que tiene miniatura en el mapa: lugares, estructuras, campamentos, puentes, piedras, altares,
   // cofres y manzanos. fn(tipo, x, y, op, prioridad) · prioridad 0 = lugar grande … 3 = cosa chica.
   const TIPO_LUGAR = { puesto: "puesto", refugio: "casa", casa_lindes: "casa", eikholt: "ciudad", paso: "paso", claro: "claro", aserradero: "aserradero", santuario: "santuario", brunvik: "casa", skarnholt: "salon", tumulo: "tumulo", caravana: "caravana", torre: "torre", carro: "caravana" };
+  // lo que ya se completó (cofre abierto, piedra leída, rito hecho, campamento limpio, lugar resuelto) va gris y
+  // más chico, y se dibuja antes que lo pendiente para que lo que falta quede arriba
+  const HECHO_LUGAR = { carro: "carro_visto", claro: "ciervo_vencido", santuario: "calco_entregado", paso: "puente_reparado" };
+  const HECHO_UNICO = { caravana: "hrungnir" };
+  const ACHICAR = 0.6;
   let totems = null;
+  const grupoDe = (o) => {
+    if (!window.HORDAS) return null;
+    let mejor = null,
+      dm = 1e9;
+    for (const g of HORDAS.grupos) {
+      const d = Math.hypot(g.centro[0] - (o.x - 60), g.centro[1] - (o.y + 40));
+      if (d < dm) (dm = d), (mejor = g);
+    }
+    return dm < 40 ? mejor : null;
+  };
+  const unicoMuerto = (id) => window.HORDAS && HORDAS.grupos.some((g) => g.unico === id && g.miembros.some((e) => e.lider && e.muerto > 0));
+  const limpio = (g) => g && g.miembros.every((e) => e.muerto > 0);
   function cadaMarca(fn) {
+    const hechas = [],
+      pend = [];
+    const poner = (tipo, x, y, op, pri) => (op.apagado ? hechas : pend).push([tipo, x, y, op, pri]);
+    const ban = A.H.E.banderas || {};
     for (const id in TIPO_LUGAR) {
       const L = W.LUGARES[id];
-      if (L && visto(L.p[0], L.p[1])) fn(TIPO_LUGAR[id], L.p[0], L.p[1], { nombre: A.H.E.vistos.includes(id) ? t("av.lugar_" + id) : null }, 0);
+      if (!L || !visto(L.p[0], L.p[1])) continue;
+      const hecho = (HECHO_LUGAR[id] && !!ban[HECHO_LUGAR[id]]) || (HECHO_UNICO[id] && unicoMuerto(HECHO_UNICO[id]));
+      poner(TIPO_LUGAR[id], L.p[0], L.p[1], { nombre: A.H.E.vistos.includes(id) ? t("av.lugar_" + id) : null, apagado: hecho }, 0);
     }
-    if (!totems) totems = W.COSAS.filter((o) => o.id === "totemCampamento");
-    totems.forEach((o) => visto(o.x, o.y) && fn("campamento", o.x, o.y, {}, 1));
+    if (!totems) totems = W.COSAS.filter((o) => o.id === "totemCampamento").map((o) => ({ o, g: grupoDe(o) }));
+    totems.forEach(({ o, g }) => visto(o.x, o.y) && poner("campamento", o.x, o.y, { apagado: limpio(g) }, 1));
     W.PUENTES.forEach((p) => {
       const x = (p.a[0] + p.b[0]) / 2,
         y = (p.a[1] + p.b[1]) / 2;
-      if (visto(x, y)) fn("puente", x, y, {}, 2);
+      if (visto(x, y)) poner("puente", x, y, {}, 2);
     });
     const S = SECRETOS.lista();
-    S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && fn("altar", a.cosa.x, a.cosa.y, { runa: a.runa, col: ASSETS.COL_RUNA[a.runa], apagado: a.cosa.o.tomada }, 1));
-    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && fn("piedra", p.cosa.x, p.cosa.y, { runa: "ansuz", col: S.st.piedras[p.id] ? "#73D5DB" : "#4A5A60" }, 2));
+    S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && poner("altar", a.cosa.x, a.cosa.y, { runa: a.runa, col: ASSETS.COL_RUNA[a.runa], apagado: a.cosa.o.tomada }, 1));
+    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedra", p.cosa.x, p.cosa.y, { runa: "ansuz", col: "#73D5DB", apagado: !!S.st.piedras[p.id] }, 2));
     if (window.RITOS) {
       const R = RITOS.lista();
-      R.camino.forEach((p) => visto(p.cosa.x, p.cosa.y) && fn("piedraCamino", p.cosa.x, p.cosa.y, { col: R.st.camino[p.id] ? "#C8402D" : "#6E4A3A" }, 2));
+      R.camino.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedraCamino", p.cosa.x, p.cosa.y, { apagado: !!R.st.camino[p.id] }, 2));
       R.ritos.forEach((r) => {
         const d = ASSETS.RITO[r.tipo];
-        r.piedras.forEach((q) => visto(q.x, q.y) && fn("piedra", q.x, q.y, { runa: d.runa, col: R.st.ritos[r.id] ? d.col : "#5A5A64", borde: d.col }, 2));
-        if (visto(r.cofre.x, r.cofre.y) && !R.st.cofres[r.id]) fn("cofre", r.cofre.x, r.cofre.y, { col: r.cofre.o.sellado ? "#9A6BD8" : "#FFD98A" }, 3);
+        r.piedras.forEach((q) => visto(q.x, q.y) && poner("piedra", q.x, q.y, { runa: d.runa, col: d.col, apagado: !!R.st.ritos[r.id] }, 2));
+        if (visto(r.cofre.x, r.cofre.y)) poner("cofre", r.cofre.x, r.cofre.y, { col: r.cofre.o.sellado ? "#9A6BD8" : "#FFD98A", apagado: !!R.st.cofres[r.id] }, 3);
       });
     }
     S.cofres.forEach((q) => {
       if (!visto(q.cosa.x, q.cosa.y) || q.cosa.o.oculto) return;
-      fn("cofre", q.cosa.x, q.cosa.y, { apagado: !!S.st.cofres[q.id], col: q.cosa.o.sellado ? "#9A6BD8" : null }, 3);
+      poner("cofre", q.cosa.x, q.cosa.y, { apagado: !!S.st.cofres[q.id], col: q.cosa.o.sellado ? "#9A6BD8" : null }, 3);
     });
-    S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && fn("manzano", m.cosa.x, m.cosa.y, { apagado: m.cosa.o.cosechado }, 3));
+    S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && poner("manzano", m.cosa.x, m.cosa.y, { apagado: m.cosa.o.cosechado }, 3));
+    hechas.forEach((a) => fn(...a));
+    pend.forEach((a) => fn(...a));
   }
 
   function abrir() {
@@ -197,7 +222,7 @@ window.MAPA = (function () {
     c.drawImage(niebla, 0, 0);
     const nombres = [];
     cadaMarca((tipo, x, y, op, pri) => {
-      ICONOS.dibujar(c, tipo, x * k, y * k, [16, 12, 10, 7][pri], op);
+      ICONOS.dibujar(c, tipo, x * k, y * k, [16, 12, 10, 7][pri] * (op.apagado ? ACHICAR : 1), op);
       if (op.nombre) nombres.push([op.nombre, x * k, y * k - 17]);
     });
     // nombres de los lugares descubiertos
@@ -277,9 +302,9 @@ window.MAPA = (function () {
       c.fill();
     };
     cadaMarca((tipo, x, y, op, pri) => {
-      if (!dentro(x, y) || (op.apagado && pri === 3)) return;
+      if (!dentro(x, y)) return;
       const [px, py] = aqui(x, y);
-      ICONOS.dibujar(c, tipo, px, py, [9, 7, 6, 5][pri], op);
+      ICONOS.dibujar(c, tipo, px, py, Math.max(3, [9, 7, 6, 5][pri] * (op.apagado ? ACHICAR : 1)), op);
     });
     // criaturas despiertas o cerca (no se muestran las dormidas lejos: el bosque sigue teniendo sorpresas)
     for (const e of A.enemigos) {

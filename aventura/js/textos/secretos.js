@@ -161,5 +161,5 @@ I18N.textos({
 
   // ---------- mapa ----------
   "mp.titulo": { es: "Mapa de Eldervald", en: "Map of Eldervald" },
-  "mp.leyenda": { es: "Lo oscuro todavía no lo caminaste. Cada lugar, estructura, piedra, altar, campamento y cofre que viste queda con su miniatura; lo gris ya está usado.", en: "The dark parts you haven't walked yet. Every place, structure, stone, altar, camp and chest you have seen keeps its icon; grey ones are used up." },
+  "mp.leyenda": { es: "Lo oscuro todavía no lo caminaste. Cada lugar, estructura, piedra, altar, campamento y cofre que viste queda con su miniatura; lo que ya completaste queda más chico y gris.", en: "The dark parts you haven't walked yet. Every place, structure, stone, altar, camp and chest you have seen keeps its icon; what you have already completed turns smaller and grey." },
 });
