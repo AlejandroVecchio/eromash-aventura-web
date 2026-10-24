@@ -6,7 +6,7 @@
 // adarve, más ancha que el muro, con su cuarto de vigía alumbrado, techo de tejuelas en punta y el estandarte del
 // Ciervo colgado del lado de adentro.
 // En el plano del tramo u va a lo largo del muro y w hacia adentro de la ciudad.
-//   MURALLA25.tramo(largo, sem, conEscalera) → { dibujar(c, x, y, giro, k, t), alto }
+//   MURALLA25.tramo(largo, sem, conEscalera, conCofre) → { dibujar(c, x, y, giro, k, t), alto }
 //   MURALLA25.torre(sem) → { dibujar(c, x, y, giro, k, t), alto, ancho }
 window.MURALLA25 = (function () {
   "use strict";
@@ -53,7 +53,7 @@ window.MURALLA25 = (function () {
   }
 
   // un tramo de muralla de largo l (centrado en u = 0)
-  function tramo(l, sem, conEscalera) {
+  function tramo(l, sem, conEscalera, conCofre) {
     const U = l / 2 + 2;
     function dibujar(c, x, y, giro, k, t) {
       const pr = CASAS25.proyector(x, y, giro, k);
@@ -138,9 +138,26 @@ window.MURALLA25 = (function () {
           L(c, a[0] - 7, a[1], a[0] + 7, a[1], C.madera, 4);
         }
       };
+      // un cofre olvidado en el adarve: el premio de los que suben a recorrer la muralla
+      const cofre = () => {
+        if (!conCofre) return;
+        const caja = (u0, u1, w0, w1, z0, z1, cols) => {
+          const cara = (pts, nu, nw, col) => pr.mira(nu, nw)[1] > 0.01 && P(c, pts.map((p) => pr(...p)).flat(), col);
+          cara([[u0, w1, z0], [u1, w1, z0], [u1, w1, z1], [u0, w1, z1]], 0, 1, lx(0, 1) > 0.2 ? cols[1] : cols[0]);
+          cara([[u1, w0, z0], [u0, w0, z0], [u0, w0, z1], [u1, w0, z1]], 0, -1, lx(0, -1) > 0.2 ? cols[1] : cols[0]);
+          cara([[u1, w1, z0], [u1, w0, z0], [u1, w0, z1], [u1, w1, z1]], 1, 0, lx(1, 0) > 0.2 ? cols[1] : cols[0]);
+          cara([[u0, w0, z0], [u0, w1, z0], [u0, w1, z1], [u0, w0, z1]], -1, 0, lx(-1, 0) > 0.2 ? cols[1] : cols[0]);
+          P(c, [[u0, w0, z1], [u1, w0, z1], [u1, w1, z1], [u0, w1, z1]].map((p) => pr(...p)).flat(), cols[2]);
+        };
+        caja(-40, 40, -25, 25, ZD, ZD + 40, [C.maderaSombra, C.madera, C.maderaLuz]);
+        caja(-42, 42, -27, 27, ZD + 40, ZD + 52, [C.hierro, "#5A5E66", "#6A7078"]);
+        const [hx, hy] = pr(0, 0, ZD + 56);
+        halo(c, hx, hy, 50, C.ambar, 0.35 + Math.sin(t * 2 + sem) * 0.1);
+      };
       if (desdeAdentro) {
         afuera();
         adarve();
+        cofre();
         farol();
         adentro();
         escalera();

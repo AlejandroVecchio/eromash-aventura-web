@@ -22,5 +22,6 @@ I18N.textos({
   "ci.lugar_guardia": { es: "Campo de la Guardia", en: "Guard training ground" },
   "ci.lugar_caravanas": { es: "Forasteros y caravanas", en: "Strangers and caravans" },
   "ci.lugar_sanacion": { es: "Casa de Sanación", en: "House of Healing" },
+  "ci.lugar_muelle": { es: "El muelle", en: "The dock" },
   "ci.lugar_lejos": { es: "Toda la ciudad", en: "Whole city" },
 });

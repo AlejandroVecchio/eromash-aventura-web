@@ -127,6 +127,7 @@ window.PLANO25 = (function () {
   calle([[0, -R_MURO + 2], [0, -300]], 6);
   calle([[48, 0], [R_MURO + 4, 0]], 6, "laja"); // al este, el aserradero y el santuario
   calle([[R_MURO - 2, 0], [200, -6], [300, -14]], 6);
+  calle([[R_MURO + 4, 1], [163, 24], [167, 50]], 2.4, "senda"); // de la Puerta del Este al muelle, por la orilla
   calle([[-48, 0], [-R_MURO - 4, 0]], 5.5, "laja"); // al oeste, Brunvik
   calle([[-R_MURO + 2, 0], [-300, 12]], 5.5);
   [PI / 4, (3 * PI) / 4, (5 * PI) / 4, (7 * PI) / 4].forEach((a, i) => radial(a, 52, rOficios, 3.6, "tierra", i));
@@ -220,7 +221,7 @@ window.PLANO25 = (function () {
         const largo = Math.hypot(x1 - x0, z1 - z0) * M;
         if (largo < 20) continue;
         // un tramo de la muralla doble en volumen (u a lo largo, w hacia adentro); una escalera cada tanto
-        cosas.push({ tipo: "casa", x: xm * M, y: zm * M, ry: Math.atan2(z1 - z0, x1 - x0), casa: MURALLA25.tramo(largo, i, i % 9 === 4), nombre: "muralla" + i });
+        cosas.push({ tipo: "casa", x: xm * M, y: zm * M, ry: Math.atan2(z1 - z0, x1 - x0), casa: MURALLA25.tramo(largo, i, i % 9 === 4, [37, 101, 163].includes(i)), nombre: "muralla" + i });
       }
       // el choque de la empalizada: un anillo de círculos (con los huecos de las puertas)
       for (let i = 0; i < 640; i++) {
@@ -469,6 +470,18 @@ window.PLANO25 = (function () {
       const [sx, sz] = LUGAR.sanacion;
       especial("sanacion", sx, sz, mirando(sx, sz, 0, 0), { W: 22 * M, D: 11 * M, pisos: 2, H: 300, RT: 220, tipo: "dosAguas", techo: 2, piedra: 90, galeria: true, porche: null, anexo: { lado: 1, W: 7 * M, D: 7 * M }, escalera: false, buhardilla: 2, dragones: true, chimenea: { u: -0.25, w: -0.1 }, entra: true, lena: true, pared: 0 }, 7301);
       anclas.sanacion = U(aMundoE(sx, sz, mirando(sx, sz, 0, 0), 0, 8));
+      // el patio de adelante: los catres bajo la lona para los que no entran, los secaderos, el banco de los que
+      // esperan y dos braseros; la senda de lajas que lleva de la calle a la puerta
+      {
+        const ry = mirando(sx, sz, 0, 0),
+          en = (u, w) => aMundoE(sx, sz, ry, u, w);
+        calle([en(0, 6), en(0, 13), en(2, 19)], 2.2, "laja");
+        asset("lonaCuadrilla", ...en(-7, 12), { s: 1.4 });
+        for (const u of [-9.5, -5]) asset("camaPieles", ...en(u, 11.5), { s: 0.4 });
+        for (const u of [6, 9.5]) asset("secaderoHierbas", ...en(u, 11), { s: 1.3 });
+        asset("estanteHierbas", ...en(8, 14.5), { s: 0.55 });
+        for (const u of [-2.6, 2.6]) asset("brasero", ...en(u, 8.5), { s: 1.1 });
+      }
       // la huerta de hierbas: canteros cercados, secaderos y el banco de los que se curan
       const [hx, hz] = LUGAR.hierbas;
       for (let i = 0; i < 6; i++) asset("huerta", hx - 7 + (i % 3) * 7, hz - 4 + Math.floor(i / 3) * 8, { s: 1.5, sem: 40 + i });
@@ -765,11 +778,25 @@ window.PLANO25 = (function () {
         const a = r2() * TAU,
           rr = R_MURO + 12 + r2() * (R_FUERA - R_MURO - 12);
         const [x, z] = polar(a, rr);
-        if (aCalle(x, z).d < 3 || aRio(x, z) < ANCHO_RIO / 2 + 3) continue;
+        if (aCalle(x, z).d < 3 || aRio(x, z) < ANCHO_RIO / 2 + 3 || Math.hypot(x - 168, z - 50) < 10) continue;
         if (r2() < 0.75) asset("pino", x, z, { s: 1.4 + r2() * 0.9, pisos: 4 + (k % 2), sem: k });
         else asset("abedul", x, z, { s: 1.2 + r2() * 0.5, sem: k });
         circulo(x, z, 0.5);
       }
+    }
+    // ---------- el río: los dos puentes, el muelle y los botes ----------
+    {
+      const obra = (nombre, x, z, ry, casa) => cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa, nombre });
+      obra("puente_este", 180.5, -3.6, Math.atan2(-6, 50), OFICIOS25.puente(27 * M, 6.5 * M, 1));
+      obra("puente_sur", 0, 196, PI / 2, OFICIOS25.puente(27 * M, 7.5 * M, 2));
+      obra("muelle", 173, 50, 0, OFICIOS25.muelle(11 * M, 3.4 * M, 1));
+      obra("bote0", 176, 46.6, 0.06, OFICIOS25.bote(6.5 * M, 1));
+      obra("bote1", 175.5, 53.5, -0.05, OFICIOS25.bote(5.5 * M, 2));
+      obra("bote2", 177, 62, 0.4, OFICIOS25.bote(6 * M, 3));
+      asset("sacosAbiertos", 168.5, 46.5, { s: 1, sem: 4 });
+      asset("barriles", 168, 53.5, { s: 0.55 });
+      asset("posteFarol", 167, 49, { s: 1.2 });
+      anclas.muelle = U([167, 50]);
     }
     // faroles del anillo y de las avenidas
     for (let i = 0; i < 36; i++) {

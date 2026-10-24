@@ -40,6 +40,12 @@
 <script src="js/mundo/assets-eikholt.js"></script>
 <script src="js/mundo/assets-capital.js"></script>
 <script src="js/mundo/assets-ciudad.js"></script>
+<script src="js/mundo/assets-interiores.js"></script>
+<script src="js/mundo/assets-secretos.js"></script>
+<script src="js/mundo/assets-este.js"></script>
+<script src="js/mundo/assets-senda.js"></script>
+<script src="js/mundo/assets-puesto.js"></script>
+<script src="js/mundo/assets-norte.js"></script>
 <script src="js/personajes/vikingo.js"></script>
 <script src="js/personajes/gente.js"></script>
 <script src="js/motor/capital.js"></script>
@@ -87,6 +93,7 @@
     guardia: [L.entrenamiento[0] + 300, L.entrenamiento[1] + 700],
     caravanas: [L.forasteros[0] + 600, L.forasteros[1] + 1200],
     sanacion: [L.sanacion[0] + 600, L.sanacion[1] + 700],
+    muelle: [plano.anclas.muelle[0] + 300, plano.anclas.muelle[1] + 500],
     lejos: [0, 600],
   };
   const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
@@ -106,6 +113,7 @@
     const k = q.get("en");
     if (LUGARES[k]) { cam.x = objetivo.x = LUGARES[k][0]; cam.y = objetivo.y = LUGARES[k][1]; }
   }
+  if (q.get("x")) { cam.x = objetivo.x = +q.get("x"); cam.y = objetivo.y = +q.get("y"); }
   if (q.get("g")) giro.value = q.get("g");
   if (q.get("k")) altura.value = q.get("k");
   if (q.get("z")) cerca.value = q.get("z");
@@ -120,7 +128,7 @@
     gente.push({ id: ids[i % ids.length], x, y, vx: rr() < 0.5 ? (rr() - 0.5) * 80 : 0, vy: 0, s: 1 });
   }
   const sur = plano.anclas.puerta_sur;
-  for (let i = 0; i < 40; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 500, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1 });
+  for (let i = 0; i < 18; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 300, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1 });
   // la gente de cada barrio: los de la Guardia en el campo, los forasteros alrededor del fuego, los que esperan en
   // Sanación, los que toman afuera del Hongo, los de los oficios (parados, que hablan; alguno va y viene)
   const RONDAS = [
@@ -146,6 +154,38 @@
       gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5 });
     }
   }
+  // los choques del plano en una grilla, para preguntar rápido si un punto está libre
+  const CELDA = 400, grilla = new Map();
+  for (const h of plano.choques) {
+    let x0, y0, x1, y1;
+    if (h.circulo) { const [x, y, r] = h.circulo; x0 = x - r; x1 = x + r; y0 = y - r; y1 = y + r; }
+    else if (h.poli) { const xs = h.poli.map((q) => q[0]), ys = h.poli.map((q) => q[1]); x0 = Math.min(...xs); x1 = Math.max(...xs); y0 = Math.min(...ys); y1 = Math.max(...ys); }
+    else continue;
+    for (let gy = Math.floor(y0 / CELDA); gy <= Math.floor(y1 / CELDA); gy++)
+      for (let gx = Math.floor(x0 / CELDA); gx <= Math.floor(x1 / CELDA); gx++) {
+        const k = gx + "," + gy;
+        if (!grilla.has(k)) grilla.set(k, []);
+        grilla.get(k).push(h);
+      }
+  }
+  const dentroPoli = (pts, x, y) => {
+    let d = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [xi, yi] = pts[i], [xj, yj] = pts[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d;
+    }
+    return d;
+  };
+  function libre(x, y) {
+    const l = grilla.get(Math.floor(x / CELDA) + "," + Math.floor(y / CELDA));
+    if (!l) return true;
+    for (const h of l) {
+      if (h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 20) return false;
+      if (h.poli && dentroPoli(h.poli, x, y)) return false;
+    }
+    return true;
+  }
+  for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
   const VK = { S: VIKINGO.imagen("R", "S", "calm"), E: VIKINGO.imagen("R", "E", "calm"), N: VIKINGO.imagen("R", "N", "calm") };
   const eromash = { x: LUGARES.plaza[0] - 200, y: LUGARES.plaza[1] - 100 };
   function dibujarEromash(c, x, y) {
@@ -196,9 +236,12 @@
     cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
     cam.x += (objetivo.x - cam.x) * Math.min(1, dt * 6);
     cam.y += (objetivo.y - cam.y) * Math.min(1, dt * 6);
+    // los que caminan no atraviesan nada: si el paso siguiente choca, se dan vuelta
     for (const p of gente) {
-      p.x += p.vx * dt; p.y += p.vy * dt;
-      if (Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; }
+      if (!p.vx && !p.vy) continue;
+      const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
+      if (!libre(nx, ny) || Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; continue; }
+      p.x = nx; p.y = ny;
     }
     const extra = gente.map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0, hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
     extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });

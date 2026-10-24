@@ -2,7 +2,7 @@
 // El portón de cada puerta de Eikholt con sus tres medidas, como las casas (CASAS25), dibujado desde el ángulo de la
 // cámara, así gira con la muralla. Las torres son atalayas de la muralla (MURALLA25.torre) con el estandarte del lado
 // de afuera; entre las dos va el pasillo del adarve con la runa Raido tallada de los dos lados y faroles colgados; las
-// hojas quedan abiertas hacia adentro; adelante de cada torre se para una piedra rúnica casi tan alta como ella, con
+// hojas quedan abiertas hacia adentro; del lado de adentro de cada torre se para una piedra rúnica casi tan alta como ella, con
 // dos runas atadas que brillan en azul rúnico, y a los lados del paso, dos braseros.
 // u va a lo largo de la muralla y w hacia afuera de la ciudad. PORTON25.crear(hueco, norte) → { dibujar(c, x, y, giro, k, t) }
 window.PORTON25 = (function () {
@@ -98,8 +98,9 @@ window.PORTON25 = (function () {
       };
       // una piedra rúnica: losa alta en punta, con grosor, y dos runas atadas que brillan
       const piedra = (lado) => {
+        // del lado de adentro de la puerta (w−): desde afuera se ven los estandartes de las torres
         const u0 = lado * (TC + 10),
-          w0 = T + 110,
+          w0 = -T - 30,
           SW = 105,
           H = ZT - 40;
         const forma = [[-1, 0], [-1.05, 0.5], [-0.9, 0.82], [-0.5, 0.97], [0, 1.02], [0.5, 0.97], [0.9, 0.82], [1.05, 0.5], [1, 0]];
@@ -163,8 +164,8 @@ window.PORTON25 = (function () {
         [pr.fondo(-hueco * 0.7, -T - hueco * 0.45), () => hoja(-1)],
         [pr.fondo(hueco * 0.7, -T - hueco * 0.45), () => hoja(1)],
         [pr.fondo(0, 0), pasillo],
-        [pr.fondo(-TC - 10, T + 75), () => piedra(-1)],
-        [pr.fondo(TC + 10, T + 75), () => piedra(1)],
+        [pr.fondo(-TC - 10, -T - 65), () => piedra(-1)],
+        [pr.fondo(TC + 10, -T - 65), () => piedra(1)],
         [pr.fondo(-hueco + 50, T + 80), () => brasero(-1)],
         [pr.fondo(hueco - 50, T + 80), () => brasero(1)],
       ];
