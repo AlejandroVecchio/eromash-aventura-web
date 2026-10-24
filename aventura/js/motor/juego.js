@@ -98,6 +98,14 @@
   };
   J.sacudir = (f) => (J.cam.sac = Math.max(J.cam.sac, f));
   J.herir = (dano, ox, oy, tipo) => {
+    // esquivar o saltar justo cuando el golpe llega: el mundo va lento un instante, vuelve estamina y el próximo golpe pega doble
+    if (!jug.muerto && (jug.salto > 0 || jug.esq > 0) && J.t - (jug.justaT || -9) > 0.8) {
+      jug.justaT = J.t;
+      J.camLenta = 0.32;
+      jug.sta = Math.min(jug.staMax, jug.sta + 15);
+      jug.contra = 1.6;
+      textoFlotante(jug.x, jug.y - 130, t("mj.justa"), "#73D5DB");
+    }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
@@ -437,9 +445,53 @@
   const VEL_PASO = [0, 100, 175, 295],
     VEL_ESQ = 520;
   const GOLPES = [
-    { wind: 0.08, swing: 0.14, rec: 0.2, arc: 2.3, reach: 78, dano: 16 },
-    { wind: 0.08, swing: 0.16, rec: 0.28, arc: 2.5, reach: 84, dano: 22 },
+    { wind: 0.08, swing: 0.14, rec: 0.2, arc: 2.3, reach: 78, dano: 16, empuje: 0.4 },
+    { wind: 0.08, swing: 0.16, rec: 0.24, arc: 2.5, reach: 84, dano: 20, empuje: 0.45 },
+    { wind: 0.13, swing: 0.18, rec: 0.34, arc: 3.0, reach: 96, dano: 32, empuje: 1.9, remate: true },
   ];
+  const GOLPE_GIRO = { wind: 0.05, swing: 0.34, rec: 0.26, arc: Math.PI * 2, reach: 100, dano: 28, empuje: 1.5, giro: true },
+    GOLPE_CARRERA = { wind: 0.04, swing: 0.16, rec: 0.26, arc: 1.1, reach: 112, dano: 24, avanza: 420, empuje: 1.4 },
+    GOLPE_CAIDA = { wind: 0, swing: 0.1, rec: 0.24, arc: Math.PI * 2, reach: 92, dano: 22, empuje: 1.3, giro: true, caida: true },
+    CARGA_GIRO = 0.6;
+  function atacarCon(d, dir, side = 1) {
+    jug.atk = { t: 0, d, dir, side, pego: false };
+    if (!d.giro) jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
+    if (d.caida) {
+      polvareda(jug.x, jug.y, 14);
+      J.sacudir(0.22);
+    }
+  }
+  // con mando (o sin mouse) el golpe se corre solo hacia la criatura más cercana delante, si la hay
+  function apuntar(dir) {
+    const o = objetivoCerca(dir);
+    return o ? Math.atan2((o.y - jug.y) * 1.25, o.x - jug.x) : dir;
+  }
+  function objetivoCerca(dir) {
+    let mejor = null,
+      dm = 170;
+    for (const e of enemigos) {
+      if (!e.activo || e.muerto) continue;
+      const dx = e.x - jug.x,
+        dy = (e.y - jug.y) * 1.25,
+        l = Math.hypot(dx, dy);
+      if (l > dm) continue;
+      let da = Math.atan2(dy, dx) - dir;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) > 1.05) continue;
+      dm = l;
+      mejor = e;
+    }
+    return mejor;
+  }
+  // ¿hay pelea cerca? (criaturas que persiguen o golpean, el ciervo o un jefe)
+  function enPelea() {
+    if (ciervo.activo || J.jefeHud) return true;
+    return enemigos.some((e) => e.activo && !e.muerto && e.estado !== "quieto" && e.estado !== "vuelve" && Math.abs(e.x - jug.x) < 1100 && Math.abs(e.y - jug.y) < 800);
+  }
+  function polvareda(x, y, n) {
+    if (window.CALIDAD && CALIDAD.nivel === "baja") return;
+    for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
+  }
   let mouse = { x: 0, y: 0, usado: false };
   lienzo.addEventListener("pointermove", (e) => {
     const k = cw / innerWidth;
@@ -473,12 +525,17 @@
     jug.staEspera = Math.max(0, (jug.staEspera || 0) - dt);
     // con mando se toca L3 (o L2) una vez y sigue corriendo hasta que frenás o te cansás
     if (CONTROLES.mando() && libre && CONTROLES.recien("correr")) jug.sprintFijo = !jug.sprintFijo;
-    if (!mov || jug.cansado || !CONTROLES.mando()) jug.sprintFijo = false;
+    // con teclado, dos toques de Shift lo dejan corriendo solo hasta que frenás
+    if (!CONTROLES.mando() && libre && CONTROLES.recien("correr")) {
+      if (J.t - (jug.shiftT || -9) < 0.3) jug.sprintFijo = true;
+      jug.shiftT = J.t;
+    }
+    if (!mov || jug.cansado) jug.sprintFijo = false;
     jug.correr = libre && mov && (CONTROLES.pulsado("correr") || jug.sprintFijo) && !jug.cansado && !jug.atk;
-    if (jug.correr) {
+    if (jug.correr && jug.pelea) {
       jug.sta -= 20 * dt;
       jug.staEspera = 0.6;
-    } else if (jug.esq <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * dt;
+    } else if (jug.esq <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * (jug.pelea ? 1 : 1.6) * dt;
     if (jug.sta <= 0) {
       jug.sta = 0;
       jug.cansado = true;
@@ -487,10 +544,10 @@
     if (jug.cansado && jug.sta > jug.staMax * 0.35) jug.cansado = false;
     jug.sta = Math.min(jug.staMax, jug.sta);
     jug.paso = !mov ? 0 : jug.correr ? 3 : jug.cansado || mag < 0.6 ? 1 : 2;
-    // esquiva
+    // esquiva (atraviesa a la gente y a las criaturas: dura poco y es para salir de un golpe)
     if (jug.esq > 0) {
       jug.esq -= dt;
-      moverJugador(jug.esqDir[0] * VEL_ESQ * dt, jug.esqDir[1] * VEL_ESQ * dt);
+      moverJugador(jug.esqDir[0] * VEL_ESQ * dt, jug.esqDir[1] * VEL_ESQ * dt, true);
       return;
     }
     if (!libre) return;
@@ -498,36 +555,86 @@
       const l = Math.hypot(e.x, e.y);
       jug.dir = [e.x / l, e.y / l];
     }
-    if (CONTROLES.recien("esquivar") && jug.sta >= 20 && jug.salto <= 0) {
+    // lo que se aprieta un instante antes de poder hacerlo queda guardado y sale apenas se puede
+    for (const k of ["atacar", "esquivar", "saltar"]) if (CONTROLES.recien(k)) jug.pedido = { k, t: 0.18 };
+    if (jug.pedido && (jug.pedido.t -= dt) <= 0) jug.pedido = null;
+    const pide = (k) => jug.pedido && jug.pedido.k === k;
+    // la esquiva corta el final de un golpe; quieto, es un paso atrás
+    const enRec = !jug.atk || jug.atk.t >= jug.atk.d.wind + jug.atk.d.swing;
+    if (pide("esquivar") && enRec && jug.sta >= 20 && jug.salto <= 0) {
+      jug.pedido = null;
       jug.sta -= 20;
       jug.staEspera = 0.6;
       jug.esq = 0.3;
       jug.inv = Math.max(jug.inv, 0.26);
-      jug.esqDir = jug.dir.slice();
+      jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
       jug.atk = null;
+      jug.carga = 0;
+      polvareda(jug.x, jug.y, 5);
       return;
     }
-    if (CONTROLES.recien("saltar") && jug.salto <= 0) jug.salto = 0.42;
-    // ataque: combo de dos golpes, hacia el mouse si se usa, si no hacia donde mira
+    if (pide("saltar") && jug.salto <= 0 && !jug.atk) {
+      jug.pedido = null;
+      jug.salto = 0.42;
+      jug.saltoLargo = jug.correr;
+      jug.golpeAire = false;
+    }
+    // al caer del salto: polvo, y si se atacó en el aire, el golpe contra el piso
+    if (jug.saltoAntes > 0 && jug.salto <= 0) {
+      polvareda(jug.x, jug.y, 6);
+      if (jug.golpeAire) atacarCon(GOLPE_CAIDA, Math.atan2(jug.dir[1], jug.dir[0]));
+      jug.golpeAire = false;
+    }
+    jug.saltoAntes = jug.salto;
+    // ataque: tres golpes seguidos (el tercero remata y empuja); corriendo es una estocada; en el aire, golpe al caer;
+    // mantener apretado carga el giro
     jug.comboT = Math.max(0, jug.comboT - dt);
+    jug.contra = Math.max(0, (jug.contra || 0) - dt);
     if (jug.atk) {
       const a = jug.atk,
         d = a.d;
       a.t += dt;
+      if (d.avanza && a.t < d.wind + d.swing) moverJugador(Math.cos(a.dir) * d.avanza * dt, (Math.sin(a.dir) * d.avanza * dt) / 1.25);
       if (a.t >= d.wind && a.t <= d.wind + d.swing && !a.pego) golpear(a);
       if (a.t >= d.wind + d.swing + d.rec) {
         jug.atk = null;
-        jug.comboT = 0.35;
+        jug.comboT = d.giro || d.remate ? 0 : 0.35;
       }
-    } else if (CONTROLES.recien("atacar")) {
-      const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
-      jug.combo = n;
+    }
+    if (CONTROLES.pulsado("atacar") && !jug.salto) jug.carga = (jug.carga || 0) + dt;
+    else if (jug.carga) {
+      const listo = jug.carga >= CARGA_GIRO && jug.sta >= 15;
+      jug.carga = 0;
+      if (listo) {
+        jug.sta -= 15;
+        jug.staEspera = 0.6;
+        atacarCon(GOLPE_GIRO, 0);
+        jug.pedido = null;
+      }
+    }
+    if (pide("atacar") && jug.salto > 0) {
+      jug.pedido = null;
+      jug.golpeAire = true;
+    } else if (pide("atacar") && !jug.atk) {
+      jug.pedido = null;
       let dir = Math.atan2(jug.dir[1], jug.dir[0]);
       if (mouse.usado && !CONTROLES.mando()) dir = Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-      jug.atk = { t: 0, d: GOLPES[n], dir, side: n % 2 ? -1 : 1, pego: false };
-      jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
+      else dir = apuntar(dir);
+      if (jug.correr) atacarCon(GOLPE_CARRERA, dir);
+      else {
+        const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
+        jug.combo = n;
+        atacarCon(GOLPES[n], dir, n % 2 ? -1 : 1);
+      }
     }
-    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1);
+    // los caminos son más rápidos; fuera de pelea correr no cansa
+    jug.caminoT = (jug.caminoT || 0) - dt;
+    if (jug.caminoT <= 0) {
+      jug.caminoT = 0.25;
+      jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
+      jug.pelea = enPelea();
+    }
+    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -556,11 +663,11 @@
     if (CONTROLES.recien("interactuar")) interactuar();
     if (CONTROLES.recien("lente")) usarLente();
   }
-  function moverJugador(dx, dy) {
+  function moverJugador(dx, dy, atraviesa) {
     if (window.ALTURAS && ALTURAS.mover(dx, dy)) return; // escaleras y adarves
     // las cercas frenan, salvo saltando
     const valla = (nx, ny) => jug.salto <= 0 && !(jug.z > 0) && W.vallaEntre(jug.x, jug.y, nx, ny, R);
-    const cuerpos = cuerposCerca();
+    const cuerpos = atraviesa ? [] : cuerposCerca();
     if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y) && !choca(cuerpos, jug.x + dx, jug.y)) jug.x += dx;
     if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy) && !choca(cuerpos, jug.x, jug.y + dy)) jug.y += dy;
   }
@@ -597,18 +704,36 @@
       da = Math.atan2(Math.sin(da), Math.cos(da));
       return Math.abs(da) <= d.arc / 2 || l < r;
     };
+    // el contraataque después de una esquiva justa pega doble; a quien no te vio, golpe por sorpresa; a veces, crítico
+    const contra = jug.contra > 0;
+    let pego = 0;
     for (const e of enemigos) {
       if (!e.activo || e.muerto || Math.abs(e.x - jug.x) > 300 || !enArco(e.x, e.y, e.d.radio)) continue;
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
+      const sorpresa = e.estado === "quieto",
+        critico = Math.random() < 0.1;
+      const dano = Math.round(d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? 1.6 : 1));
       chispa(e.x, e.y - 30);
-      numero(e.x, e.y - 60, Math.round(d.dano * J.mulDano));
-      CB.golpear(J, e, Math.round(d.dano * J.mulDano), jug.x, jug.y);
+      numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
+      if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
+      CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      pego++;
     }
     if (ciervo.activo && enArco(ciervo.x, ciervo.y, 60)) {
       const antes = ciervo.vida;
-      CB.golpearCiervo(J, ciervo, d.dano * J.mulDano);
+      CB.golpearCiervo(J, ciervo, d.dano * J.mulDano * (contra ? 2 : 1));
       chispa(ciervo.x, ciervo.y - 80);
-      numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)));
+      numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)), contra ? "#FFD98A" : null, contra);
+      pego++;
+    }
+    if (pego) {
+      // una pausa mínima al conectar: el golpe se siente
+      J.hitstop = Math.max(J.hitstop || 0, d.remate || d.giro || contra ? 0.07 : 0.045);
+      if (d.remate || contra) J.sacudir(0.25);
+      if (contra) {
+        jug.contra = 0;
+        textoFlotante(jug.x, jug.y - 120, t("mj.contra"), "#FFD98A");
+      }
     }
     cadaSis("alGolpear", jug.x, jug.y, a.dir, d.reach);
   }
@@ -623,8 +748,14 @@
   function chispa(x, y) {
     for (let i = 0; i < 7; i++) J.fx.push({ x, y, vx: (Math.random() - 0.5) * 300, vy: -Math.random() * 260, t: 0.35, c: i % 2 ? "#F2ECEC" : "#FF8D71", s: 3 + Math.random() * 3 });
   }
-  function numero(x, y, n) {
-    if (n > 0) J.textos.push({ x, y, n, t: 0 });
+  function numero(x, y, n, col, grande) {
+    if (!(n > 0)) return;
+    // los números que caen juntos se abren un poco para no taparse
+    const cerca = J.textos.filter((o) => o.t < 0.3 && Math.abs(o.x - x) < 40 && Math.abs(o.y - y) < 30).length;
+    J.textos.push({ x: x + (cerca % 2 ? 1 : -1) * Math.ceil(cerca / 2) * 26, y: y - cerca * 8, n, t: 0, col, grande });
+  }
+  function textoFlotante(x, y, n, col) {
+    J.textos.push({ x, y, n, t: 0, col, grande: false, palabra: true });
   }
 
   // ---------- con qué se puede interactuar ahora ----------
@@ -793,7 +924,7 @@
     }
     // de espaldas la espada en guardia queda detrás del cuerpo
     const detras = sp.y < p.y - 95 || (!p.atk && p.mira.vista === "N");
-    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, false);
+    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
         d = a.d,
@@ -821,7 +952,7 @@
     c.rotate(p.salto > 0 ? -0.25 * jp : paso === 3 && p.mira.vista === "E" ? 0.1 : 0);
     if (img.complete) c.drawImage(img, -w / 2, -h / 2, w, h);
     c.restore();
-    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, false);
+    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     c.restore();
   }
   function dibujarNpc(n) {
@@ -1019,6 +1150,17 @@
     J.marcas.forEach(dibujarMarca);
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
     J.avisos.forEach((a) => CB.dibujarAviso(c, a));
+    // con mando, el anillo bajo la criatura a la que va el próximo golpe
+    if (J.modo === "juego" && (CONTROLES.mando() || !mouse.usado)) {
+      const o = objetivoCerca(Math.atan2(jug.dir[1], jug.dir[0]));
+      if (o) DIB.alfa(c, 0.55 + Math.sin(J.t * 6) * 0.15, () => {
+        c.beginPath();
+        c.ellipse(o.x, o.y, o.d.radio * o.s + 14, (o.d.radio * o.s + 14) * 0.4, 0, 0, DIB.TAU);
+        c.strokeStyle = "#F2ECEC";
+        c.lineWidth = 3;
+        c.stroke();
+      });
+    }
     cadaSis("piso", c, x0, y0, x1, y1);
     J.ondas.forEach(dibujarOnda);
     if (nucleoSuelo) ASSETS.dibujar(c, "nucleo", nucleoSuelo.x, nucleoSuelo.y, J.t, {});
@@ -1051,10 +1193,11 @@
     c.textAlign = "center";
     J.textos.forEach((n) => {
       c.globalAlpha = Math.max(0, 1 - n.t / 0.9);
+      c.font = n.grande ? '800 26px "Eromash Text", system-ui, sans-serif' : n.palabra ? '800 15px "Eromash Text", system-ui, sans-serif' : '800 18px "Eromash Text", system-ui, sans-serif';
       c.lineWidth = 4;
       c.strokeStyle = "#0A0707";
       c.strokeText(n.n, n.x, n.y - n.t * 40);
-      c.fillStyle = "#F2ECEC";
+      c.fillStyle = n.col || "#F2ECEC";
       c.fillText(n.n, n.x, n.y - n.t * 40);
     });
     c.globalAlpha = 1;
@@ -1336,7 +1479,7 @@
   let antes = performance.now(),
     autoguardado = 0;
   function cuadro(ahora) {
-    const dt = Math.min(0.05, (ahora - antes) / 1000);
+    let dt = Math.min(0.05, (ahora - antes) / 1000);
     antes = ahora;
     CONTROLES.actualizar();
     if (J.modo === "menu") {
@@ -1361,6 +1504,14 @@
       J.timers = J.timers.filter((tm) => tm.t > 0);
       J.dentro.paso(dt);
     } else if (J.modo === "juego" || J.modo === "dialogo" || J.modo === "cine") {
+      // la pausa del golpe y la cámara lenta de la esquiva justa
+      if (J.hitstop > 0) {
+        J.hitstop -= dt;
+        dt *= 0.05;
+      } else if (J.camLenta > 0) {
+        J.camLenta -= dt;
+        dt *= 0.35;
+      }
       J.t += dt;
       H.E.tiempo += dt;
       actualizarJugador(dt);
