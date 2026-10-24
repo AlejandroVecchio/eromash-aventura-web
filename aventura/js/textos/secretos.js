@@ -67,6 +67,7 @@ I18N.textos({
   "pj.forja_espada": { es: "Afilar la espada · {0}/{1}", en: "Hone the sword · {0}/{1}" },
   "pj.forja_cota": { es: "Reforzar la cota · {0}/{1}", en: "Reinforce the mail · {0}/{1}" },
   "pj.forja_lampara": { es: "Lámpara de aceite de ballena · {0}/{1}", en: "Whale-oil lantern · {0}/{1}" },
+  "pj.forja_pechera": { es: "Pechera de escamas de la sierpe · {0}/{1}", en: "Serpent-scale breastplate · {0}/{1}" },
   "pj.forja_costo": { es: "{0} de plata", en: "{0} silver" },
   "pj.forja_falta": { es: "no alcanza", en: "not enough" },
   "pj.forja_lleno": { es: "Ya no se puede mejorar más", en: "Can't be improved further" },

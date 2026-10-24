@@ -900,7 +900,7 @@
     for (const c0 of W.CAMINOS) if (W.distLinea(jug.x, jug.y, c0.p) < c0.w) s0 *= 0.4;
     if (Math.hypot(jug.x - W.CIUDAD.c[0], (jug.y - W.CIUDAD.c[1]) * 1.3) < W.CIUDAD.rx) s0 = 0;
     for (const k of ["tumulo", "claro"]) if (dist(jug, W.LUGARES[k].p) < W.LUGARES[k].r * 1.6) s0 = Math.max(s0, k === "tumulo" ? 1.4 : 0.6);
-    return s0;
+    return Math.max(s0, J.oscuro || 0);
   }
   // cada asset que alumbra: radio y color (se suma su posición en el mundo)
   const LUZ_ASSET = {
@@ -964,6 +964,7 @@
       y1 = y0 + vh;
     c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
     W.dibujarPiso(c, x0, y0, x1, y1, escBase);
+    cadaSis("fondo", c, x0, y0, x1, y1);
     // lo que va en el piso
     J.marcas.forEach(dibujarMarca);
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
@@ -1138,7 +1139,7 @@
     const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
     cadaSis("hud");
-    HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : null);
+    HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : J.jefeHud || null);
   }
 
   // ---------- menús ----------
@@ -1304,10 +1305,12 @@
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
       alejarMeta = 1;
+      J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
       esc = escBase / alejar;
       amb = LUZ.ambiente(H.E.tiempo, sombraAqui(), dt);
+      if (J.oscuro) amb = Object.assign({}, amb, { n: Math.max(amb.n, 0.8), o: 0 });
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));

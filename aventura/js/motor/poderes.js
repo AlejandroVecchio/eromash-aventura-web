@@ -28,7 +28,7 @@ window.PODERES = (function () {
   const base = () => ({ plata: 0, runas: [], sel: 0, frag: 0, nivel: 0, espada: 0, cota: 0, lampara: 0, manzanas: 0 });
   const poder = () => 1 + (pj ? pj.nivel : 0) * 0.15;
   function aplicar() {
-    jug.hpMax = 100 + pj.cota * 12 + pj.manzanas * 15;
+    jug.hpMax = 100 + pj.cota * 12 + pj.manzanas * 15 + (pj.pechera ? 40 : 0);
     jug.hp = Math.min(jug.hp, jug.hpMax);
     J.mulDano = 1 + pj.espada * 0.12;
     J.lampara = 1 + pj.lampara * 0.35 + (sol > 0 ? 1.6 : 0);
@@ -106,6 +106,8 @@ window.PODERES = (function () {
         jug.hp += 12;
       }),
       linea("pj.forja_lampara", pj.lampara, COSTO_LAMPARA, () => pj.lampara++),
+      // la pechera de escamas, con las escamas de Góinn
+      ...(window.GOINN && GOINN.vencido() ? [linea("pj.forja_pechera", pj.pechera ? 1 : 0, [200], () => ((pj.pechera = 1), (jug.hp += 40)))] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }

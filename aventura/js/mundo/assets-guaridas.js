@@ -55,9 +55,55 @@
     }
     for (let k = 0; k < 4; k++) E(c, x - 100 + r() * 200, y - 30 + r() * 60, 14, 6, "#6E6A64");
   }
+  // la puerta de piedra del sótano de la hospedería (se ve de frente, contra la pared del fondo): doce huecos en el
+  // arco, uno por proeza; los que ya tienen su trofeo brillan en azul. Abierta deja ver la escalera que baja.
+  function puertaPiedra(c, x, y, t, o) {
+    const s = o.s || 1;
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    // el marco: bloques de piedra vieja, más viejos que la madera de la hospedería
+    P(c, [-150, 0, -150, -250, -120, -320, -60, -362, 0, -372, 60, -362, 120, -320, 150, -250, 150, 0], PIEDRA[1]);
+    P(c, [60, -362, 120, -320, 150, -250, 150, 0, 96, 0, 96, -240, 70, -296, 40, -318], PIEDRA[2]);
+    for (let k = 0; k < 5; k++) L(c, -150, -50 * k - 20, -100, -50 * k - 20, PIEDRA[0], 3);
+    for (let k = 0; k < 5; k++) L(c, 100, -50 * k - 20, 150, -50 * k - 20, PIEDRA[0], 3);
+    // el vano
+    const vano = [-96, 0, -96, -240, -70, -296, -36, -318, 0, -324, 36, -318, 70, -296, 96, -240, 96, 0];
+    if (o.abierta) {
+      P(c, vano, "#0E1416");
+      for (let k = 0; k < 5; k++) P(c, [-80 + k * 6, -30 - k * 34, 80 - k * 6, -30 - k * 34, 74 - k * 6, -46 - k * 34, -74 + k * 6, -46 - k * 34], k % 2 ? "#2A3236" : "#323A3E");
+      DIB.alfa(c, 0.35 + Math.sin(t * 2) * 0.1, () => P(c, vano, "#73D5DB"));
+    } else {
+      P(c, vano, PIEDRA[0]);
+      P(c, [0, -324, 36, -318, 70, -296, 96, -240, 96, 0, 0, 0], "#34383C");
+      L(c, 0, -324, 0, 0, "#2A2E32", 3);
+      // la talla de las raíces en la hoja
+      c.strokeStyle = "#4E5458";
+      c.lineWidth = 4;
+      c.beginPath();
+      c.moveTo(0, -60);
+      c.quadraticCurveTo(-40, -120, -20, -200);
+      c.moveTo(0, -60);
+      c.quadraticCurveTo(40, -130, 24, -210);
+      c.moveTo(0, -60);
+      c.lineTo(0, -250);
+      c.stroke();
+    }
+    // los doce huecos del arco
+    for (let k = 0; k < 12; k++) {
+      const a = Math.PI * (0.92 - (k / 11) * 0.84),
+        hx = Math.cos(a) * 128,
+        hy = -250 - Math.sin(a) * 92,
+        lit = k < (o.luces || 0);
+      E(c, hx, hy, 9, 7, lit ? "#73D5DB" : "#1E2226");
+      if (lit) DIB.alfa(c, 0.4, () => E(c, hx, hy, 16, 13, "#73D5DB"));
+    }
+    c.restore();
+  }
   Object.assign(ASSETS.LISTA, {
+    puertaPiedra: { f: puertaPiedra, alto: 380, grupo: "interiores" },
     bocaCueva: { f: bocaCueva, alto: 300, choque: { w: 520, h: 50 }, grupo: "guaridas" },
     nidoZarzal: { f: nidoZarzal, alto: 20, grupo: "guaridas", piso: true },
   });
-  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { bocaCueva: { s: 0.6 }, nidoZarzal: { s: 0.6 } });
+  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { puertaPiedra: { luces: 5, s: 0.6 }, bocaCueva: { s: 0.6 }, nidoZarzal: { s: 0.6 } });
 })();

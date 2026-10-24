@@ -61,11 +61,13 @@ window.INTERIORES = (function () {
       pared = "taberna";
       mueble("mostrador", 800, 680, { s: 1 }, 320, "in.accion_mostrador", hidromiel);
       mueble("barriles", 1370, 700, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.taberna_barriles"));
+      // detrás de los barriles, la puerta de piedra del sótano viejo con sus doce huecos (goinn.js)
+      if (window.GOINN) mueble("puertaPiedra", 1310, FONDO + 20, { s: 0.8, luces: GOINN.trofeos(), abierta: GOINN.abierta() }, 90, "in.accion_puerta_piedra", () => GOINN.puerta());
       mueble("mesaBanco", 470, 830, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa"));
       mueble("mesaBanco", 1120, 850, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa2"));
       hogar(260);
       g.push({ id: "ulf", x: 640, y: 650 });
-      estandarte = 1150;
+      estandarte = 990;
       ventana = 560;
     } else {
       // las casas de la gente: tres maneras de vivir, y no todas tienen arcón
@@ -403,6 +405,7 @@ window.INTERIORES = (function () {
     d.muebles.forEach((q) => {
       const s = q.o.s || 1;
       if (q.id === "hogarPiedra") L0.push({ x: q.x, y: q.y - 60 * s, r: 620, col: "255,141,113", f: 0.95 + Math.sin(J.t * 7 + q.x) * 0.05 });
+      if (q.id === "puertaPiedra" && (q.o.luces || q.o.abierta)) L0.push({ x: q.x, y: q.y - 200 * s, r: 320, col: "115,213,219", f: q.o.abierta ? 0.8 : 0.2 + q.o.luces * 0.04 });
       if (q.id === "forjaAsa") L0.push({ x: q.x, y: q.y - 180 * s, r: 700, col: "255,141,113", f: 0.9 + Math.sin(J.t * 3) * 0.08 });
       if (q.id === "escritorioRunico") L0.push({ x: q.x - 300 * s * 0.72, y: q.y - 260 * s, r: 420, col: "255,217,138", f: 0.9 }, { x: q.x, y: q.y - 40, r: 380, col: "74,120,208", f: 0.5 });
       if (q.id === "mostrador") L0.push({ x: q.x + 40 * s, y: q.y - 220 * s, r: 460, col: "255,217,138", f: 0.9 });
@@ -493,5 +496,16 @@ window.INTERIORES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { puertas, adentro: () => !!dentro };
+  // salir del cuarto directo a otro lugar (la escalera del sótano de la hospedería)
+  function salirA(x, y) {
+    if (!dentro) return;
+    dentro = null;
+    J.dentro = null;
+    jug.x = x;
+    jug.y = y;
+    jug.mira = { vista: "N", espejo: false };
+    J.cam.x = x;
+    J.cam.y = y - 30;
+  }
+  return { puertas, salirA, adentro: () => !!dentro };
 })();

@@ -533,6 +533,8 @@ window.SECUNDARIAS = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     descuento: () => (st && A ? nivelRenombre() * 0.05 : 0),
+    proezas: () => (st && A ? proezas() : 0),
+    marcarGoinn: () => st && (st.goinn = 1),
     renombre: () => (st && A ? nivelRenombre() : 0),
     // Ása: los herrajes de la quilla cuando ya le llegó el hierro de Grim
     hablarCon(n) {

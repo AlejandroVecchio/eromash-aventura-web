@@ -998,7 +998,10 @@ window.ELDERVALD = (function () {
 
   // ---------- choques ----------
   // ¿puede pararse un cuerpo de radio r en (x, y)?
+  // lugares fuera del mapa que arma un sistema (la cámara del sótano y las raíces de Góinn): { x0, y0, x1, y1, libre }
+  const EXTRAS = [];
   function libre(x, y, r = 14) {
+    for (const z of EXTRAS) if (x >= z.x0 && x <= z.x1 && y >= z.y0 && y <= z.y1) return z.libre(x, y, r);
     if (x < 0 || y < 0 || x >= ANCHO || y >= ALTO) return false;
     for (const [ox, oy] of [[0, 0], [r, 0], [-r, 0], [0, r * 0.5], [0, -r * 0.5]]) {
       const g = suelo[Math.floor((y + oy) / CELDA) * GW + Math.floor((x + ox) / CELDA)];
@@ -1209,6 +1212,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE,
+    m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();
