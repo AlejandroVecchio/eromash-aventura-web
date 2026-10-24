@@ -14,16 +14,8 @@ window.EDITOR_MUNDO = (function () {
   let trazo = null, // los puntos de la región que se está dibujando
     pieza = null; // la pieza que se pone con el próximo clic
   const r1 = (v) => Math.round(v);
-  const nombreDe = (r) => (r.nombre && (r.nombre[I18N.lang] || r.nombre.es || r.nombre.en)) || "";
-  const adentro = (x, y, p) => {
-    let si = false;
-    for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
-      const [xi, yi] = p[i],
-        [xj, yj] = p[j];
-      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) si = !si;
-    }
-    return si;
-  };
+  // el nombre y «¿está adentro?» son los mismos que usa el juego (motor/regiones.js)
+  const { nombreDe, adentro } = window.REGIONES;
   function pedirNombre(previo) {
     const es = prompt(t("ed.reg_nombre_es"), (previo && previo.es) || "");
     if (es === null) return null;
@@ -123,30 +115,26 @@ window.EDITOR_MUNDO = (function () {
       });
     }
     // la pieza que se va a poner, transparente bajo el puntero
-    if (pieza && cursor) {
-      c.globalAlpha = 0.55;
-      pieza.items
-        .slice()
-        .sort((a, b) => a.dy - b.dy)
-        .forEach((it) => {
-          const o = JSON.parse(JSON.stringify(it.o)),
-            k = W.ESCALA_CASA[it.id];
-          if (k) o.s = (o.s || 1) * k;
+    if (pieza && cursor)
+      E.fantasmas(
+        c,
+        pieza.items.map((it) => {
+          const o = Object.assign({}, it.o);
           if (o.x2 !== undefined) (o.x2 += cursor.x), (o.y2 += cursor.y);
-          const d = E.enVista({ id: it.id, x: cursor.x + it.dx, y: cursor.y + it.dy, o });
-          try {
-            ASSETS.dibujar(c, it.id, d.x, d.y, tt, d.o);
-          } catch (er) {}
-        });
-      c.globalAlpha = 1;
-    }
+          return { id: it.id, x: cursor.x + it.dx, y: cursor.y + it.dy, o };
+        }),
+        tt,
+        0.55
+      );
     c.restore();
   }
 
   // ---------- piezas ----------
   function pintarPiezas() {
-    const pz = E.est().piezas || {};
+    const pz = E.est().piezas || {},
+      antes = $("piezas").value;
     $("piezas").innerHTML = `<option value="">${t("ed.piezas")}</option>` + Object.keys(pz).sort().map((k) => `<option value="${encodeURIComponent(k)}">${k.replace(/</g, "&lt;")} · ${pz[k].length}</option>`).join("");
+    $("piezas").value = pieza ? antes : "";
   }
   function soltarPieza() {
     pieza = null;
@@ -160,6 +148,7 @@ window.EDITOR_MUNDO = (function () {
     if (!nom) return;
     E.cambiar((est) => ((est.piezas = est.piezas || {})[nom] = JSON.parse(JSON.stringify(items))));
     pintarPiezas();
+    E.usar("pieza");
     E.avisar(t("ed.pieza_ok", [nom]));
   };
   $("piezas").addEventListener("change", () => {
@@ -247,7 +236,8 @@ window.EDITOR_MUNDO = (function () {
   }
   $("bExportar").onclick = () => exportar();
   $("bExportar").title = t("ed.exportar");
-  $("hRegion").onclick = () => E.ponerHerr("region");
+  // cambiar de herramienta deja la región a medio dibujar
+  E.alCambiarHerr((h) => h !== "region" && trazo && ((trazo = null), E.pedir()));
   pintarPiezas();
-  return { clic, tecla, dibujar, exportar, pintarPiezas, enTrazo: () => !!trazo || !!pieza };
+  return { clic, tecla, dibujar, exportar, pintarPiezas, enTrazo: () => !!trazo || !!pieza, trazando: () => !!trazo, pieza: () => !!pieza };
 })();

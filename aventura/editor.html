@@ -39,24 +39,37 @@
   footer .botones .ancho2b { grid-column: 1 / -1; }
   footer .botones .ancho { grid-column: 1 / -1; background: #9C2315; border-color: #C8402D; }
   #cuenta, #donde { font-size: 12px; color: #B5A5A0; }
-  #ayuda { position: absolute; left: 12px; bottom: 10px; right: 352px; font-size: 12px; color: #E0B2B2; background: rgba(17,17,17,0.75); padding: 6px 10px; pointer-events: none; }
+  /* abajo del mapa: los pasos que tienen sentido ahora (con su tecla) y una línea corta de cómo moverse */
+  #ayuda { position: absolute; left: 12px; bottom: 10px; right: 352px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; pointer-events: none; }
+  #ayuda > small { font-size: 12px; color: #E0B2B2; background: rgba(17,17,17,0.75); padding: 5px 9px; text-align: right; max-width: 42%; }
+  #siguiente { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #siguiente:empty { display: none; }
+  #siguiente b { font-size: 12px; color: #FFD98A; background: rgba(17,17,17,0.85); padding: 6px 9px; }
+  #siguiente .paso { pointer-events: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; padding: 6px 10px; background: rgba(28,23,20,0.92); border: 1px solid #4A3630; color: #F2ECEC; }
+  #siguiente span.paso { color: #E0B2B2; }
+  #siguiente .paso.primero { border-color: #FFD98A; }
+  #siguiente kbd { font: inherit; font-size: 11px; color: #FFD98A; background: #111111; border: 1px solid #4A3630; padding: 1px 5px; }
+  .herr button[data-tecla] { position: relative; }
+  .herr button[data-tecla]::after { content: attr(data-tecla); position: absolute; top: 2px; right: 4px; font-size: 9px; color: #B5A5A0; }
+  .herr button.activo[data-tecla]::after { color: #FFD98A; }
+  #hPoner, #hMover, #hBorrar { font-weight: 600; }
+  #ponerOpc.apagado { opacity: 0.45; }
+  #vistaOpc { margin: 2px 0 4px; }
+  #vistaOpc summary { cursor: pointer; padding: 6px 16px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #FFD98A; }
+  #bDescargar.pendiente::after { content: " •"; color: #FFD98A; }
   #aviso { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); background: #1C1714; border: 1px solid #9C2315; padding: 8px 14px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 60%; }
   #aviso.ver { opacity: 1; }
   .oculto { display: none !important; }
-  #camPanel { margin: 4px 12px 6px; padding: 10px 4px; border: 1px solid #C9A45A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
-  #camPanel > b { padding: 0 12px; color: #FFD98A; font-size: 14px; }
-  #camPanel .fila > span { width: 56px; }
-  #camPanel select { flex: 1; }
-  #camPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
-  #camPanel button { font-size: 12px; padding: 7px 6px; }
-  #camPanel .ayudita { display: block; padding: 4px 12px 0; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
-  #aguaPanel { margin: 4px 12px 6px; padding: 10px 4px; border: 1px solid #73D5DB; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
-  #aguaPanel > b { padding: 0 12px; color: #73D5DB; font-size: 14px; }
-  #aguaPanel .fila > span { width: 56px; }
-  #aguaPanel select { flex: 1; }
-  #aguaPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
-  #aguaPanel button { font-size: 12px; padding: 7px 6px; }
-  #aguaPanel .ayudita { display: block; padding: 4px 12px 0; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
+  /* el panel del camino y el del agua son iguales, cada uno con su color */
+  #camPanel, #aguaPanel { margin: 4px 12px 6px; padding: 10px 4px; border: 1px solid #C9A45A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
+  #aguaPanel { border-color: #73D5DB; }
+  #camPanel > b, #aguaPanel > b { padding: 0 12px; color: #FFD98A; font-size: 14px; }
+  #aguaPanel > b { color: #73D5DB; }
+  #camPanel .fila > span, #aguaPanel .fila > span { width: 56px; }
+  #camPanel select, #aguaPanel select { flex: 1; }
+  #camPanel .botones3, #aguaPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
+  #camPanel button, #aguaPanel button { font-size: 12px; padding: 7px 6px; }
+  #camPanel .ayudita, #aguaPanel .ayudita { display: block; padding: 4px 12px 0; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
   #selPanel { margin: 4px 12px 6px; padding: 10px 4px 10px; border: 1px solid #FFD98A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
   #selPanel > b { padding: 0 12px; color: #FFD98A; font-size: 15px; }
   #selPanel > small { padding: 0 12px; color: #B5A5A0; font-size: 12px; }
@@ -142,40 +155,18 @@
       <p class="sub" data-i18n="ed.sub"></p>
     </header>
     <div class="herr">
-      <button id="hPoner" class="activo" data-i18n="ed.poner"></button>
-      <button id="hMover" data-i18n="ed.mover"></button>
-      <button id="hBorrar" data-i18n="ed.borrar"></button>
-      <button id="hCamino" data-i18n="ed.camino"></button>
-      <button id="hNota" data-i18n="ed.nota"></button>
-      <button id="hAgua" data-i18n="ed.agua"></button>
-      <button id="hMedir" data-i18n="ed.medir"></button>
-      <button id="hIA" data-i18n="ed.ia"></button>
-      <button id="hComandos" data-i18n="ed.comandos"></button>
-      <button id="hRegion" data-i18n="ed.region"></button>
-      <button id="hPincel" data-i18n="ed.pincel"></button>
-      <button id="hInteriores" data-i18n="ed.interiores"></button>
-    </div>
-    <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
-    <div class="fila">
-      <label><span data-i18n="ed.variante"></span><input id="variante" type="number" min="0" max="20" value="0" /></label>
-      <label><input id="espejo" type="checkbox" /><span data-i18n="ed.espejo"></span></label>
-      <label><input id="variar" type="checkbox" /><span data-i18n="ed.variar"></span></label>
-    </div>
-    <div class="fila">
-      <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
-      <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
-      <label><input id="grilla" type="checkbox" /><span data-i18n="ed.grilla"></span></label>
-    </div>
-    <div class="fila">
-      <label><input id="verBosque" type="checkbox" checked /><span data-i18n="ed.ver_bosque"></span></label>
-      <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
-      <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
-    </div>
-    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label><select id="verHistoria" style="flex: 1"></select></div>
-    <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
-    <div class="fila">
-      <label><input id="original" type="checkbox" /><span data-i18n="ed.original"></span></label>
-      <input id="originalA" type="range" min="0.05" max="1" step="0.05" value="0.5" /><b id="originalV">50%</b>
+      <button id="hPoner" data-tecla="1" class="activo" data-i18n="ed.poner"></button>
+      <button id="hMover" data-tecla="2" data-i18n="ed.mover"></button>
+      <button id="hBorrar" data-tecla="3" data-i18n="ed.borrar"></button>
+      <button id="hCamino" data-tecla="4" data-i18n="ed.camino"></button>
+      <button id="hNota" data-tecla="5" data-i18n="ed.nota"></button>
+      <button id="hAgua" data-tecla="6" data-i18n="ed.agua"></button>
+      <button id="hMedir" data-tecla="7" data-i18n="ed.medir"></button>
+      <button id="hIA" data-tecla="8" data-i18n="ed.ia"></button>
+      <button id="hComandos" data-tecla="Ctrl+K" data-i18n="ed.comandos"></button>
+      <button id="hRegion" data-tecla="0" data-i18n="ed.region"></button>
+      <button id="hPincel" data-tecla="B" data-i18n="ed.pincel"></button>
+      <button id="hInteriores" data-tecla="9" data-i18n="ed.interiores"></button>
     </div>
     <div id="camPanel" class="oculto">
       <b id="camTitulo"></b>
@@ -235,6 +226,32 @@
       <button id="selInterior" class="oculto" data-i18n="ed.sel_interior"></button>
       <div class="botones3"><button id="selIguales" data-i18n="ed.sel_iguales"></button><button id="selDuplicar" data-i18n="ed.sel_duplicar"></button><button id="selSacar" data-i18n="ed.sel_sacar"></button></div>
     </div>
+    <div id="ponerOpc">
+    <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
+    <div class="fila">
+      <label><span data-i18n="ed.variante"></span><input id="variante" type="number" min="0" max="20" value="0" /></label>
+      <label><input id="espejo" type="checkbox" /><span data-i18n="ed.espejo"></span></label>
+      <label><input id="variar" type="checkbox" /><span data-i18n="ed.variar"></span></label>
+    </div>
+    </div>
+    <details id="vistaOpc"><summary data-i18n="ed.vista"></summary>
+    <div class="fila">
+      <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
+      <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
+      <label><input id="grilla" type="checkbox" /><span data-i18n="ed.grilla"></span></label>
+    </div>
+    <div class="fila">
+      <label><input id="verBosque" type="checkbox" checked /><span data-i18n="ed.ver_bosque"></span></label>
+      <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
+      <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
+    </div>
+    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label><select id="verHistoria" style="flex: 1"></select></div>
+    <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
+    <div class="fila">
+      <label><input id="original" type="checkbox" /><span data-i18n="ed.original"></span></label>
+      <input id="originalA" type="range" min="0.05" max="1" step="0.05" value="0.5" /><b id="originalV">50%</b>
+    </div>
+    </details>
     <div class="fila"><select id="ir"></select></div>
     <div class="fila"><input id="buscar" type="search" /></div>
     <div id="lista"></div>
@@ -265,7 +282,7 @@
     </footer>
   </aside>
 </div>
-<div id="ayuda" data-i18n="ed.ayuda"></div>
+<div id="ayuda"><div id="siguiente"></div><small data-i18n="ed.ayuda_corta"></small></div>
 <div id="cuartos" class="oculto">
   <canvas id="cuartoLienzo"></canvas>
   <aside>
@@ -352,6 +369,7 @@
 <script src="js/editor/comandos.js"></script>
 <script src="js/editor/ia.js"></script>
 <script src="js/motor/interiores.js"></script>
+<script src="js/motor/regiones.js"></script>
 <script src="js/editor/cuartos.js"></script>
 <script src="js/editor/mundo.js"></script>
 <script src="js/editor/pincel.js"></script>

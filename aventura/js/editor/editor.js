@@ -63,9 +63,136 @@
     const h = new Date();
     $("guardadoV").textContent = t("ed.guardado_a", [String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0"), historial.length]);
     armarIr();
+    pintarPendiente();
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
   };
+  // «Descargar» se resalta mientras haya cambios que todavía no se bajaron
+  let bajado = null;
+  try {
+    bajado = localStorage.getItem(CLAVE + "-bajado");
+  } catch (e) {}
+  const huella = () => {
+    const s = JSON.stringify(est);
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return String(h);
+  };
+  function pintarPendiente() {
+    const b = document.getElementById("bDescargar");
+    if (b) b.classList.toggle("pendiente", huella() !== bajado);
+  }
   const r1 = (v) => Math.round(v);
+
+  // ---------- lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después ----------
+  // Abajo del mapa aparecen los pasos que tienen sentido ahora (con su tecla; también se tocan). El orden aprende en
+  // este navegador: cuenta qué acción vino después de cuál (o de qué situación) y pone primero lo que más sigue.
+  let uso = {},
+    ultAccion = "",
+    usoT = 0;
+  try {
+    uso = JSON.parse(localStorage.getItem(CLAVE + "-uso") || "{}") || {};
+  } catch (e) {}
+  function usar(id) {
+    if (ultAccion && ultAccion !== id) {
+      const m = (uso[ultAccion] = uso[ultAccion] || {});
+      m[id] = Math.min(999, (m[id] || 0) + 1);
+      clearTimeout(usoT);
+      usoT = setTimeout(() => {
+        try {
+          localStorage.setItem(CLAVE + "-uso", JSON.stringify(uso));
+        } catch (e) {}
+      }, 800);
+    }
+    ultAccion = id;
+  }
+  // id: [texto, tecla, qué hace (null: solo se muestra la tecla)]
+  const PASOS = {
+    poner: ["ed.poner", "1", () => ponerHerr("poner")],
+    mover: ["ed.sig_mover", "2", () => ponerHerr("mover")],
+    deshacer: ["ed.deshacer", "Ctrl+Z", () => deshacer()],
+    duplicar: ["ed.sel_duplicar", "Ctrl+D", () => duplicar()],
+    copiar: ["ed.com_copiar", "Ctrl+C", () => copiar()],
+    pegar: ["ed.com_pegar", "Ctrl+V", () => pegarAca()],
+    sacar: ["ed.sel_sacar", "Supr", () => sacarElegidos()],
+    iguales: ["ed.sel_iguales", "", () => elegirIguales()],
+    pieza: ["ed.pieza_guardar", "", () => $("bPieza").click()],
+    ia: ["ed.sig_ia", "8", () => window.EDITOR_IA && EDITOR_IA.abrir()],
+    interior: ["ed.sel_interior", "9", () => $("selInterior").click()],
+    girar: ["ed.sig_girar", "Q · E", null],
+    vuelta: ["ed.sig_vuelta", "F", () => darVuelta()],
+    soltar: ["ed.sel_soltar", "Esc", () => soltarTodo()],
+    terminar: ["ed.sig_terminar", "Enter", () => (rio ? terminarRio() : camino && terminarCamino())],
+    cerrarReg: ["ed.sig_cerrar_reg", "Enter", null],
+    atras: ["ed.sig_atras", "⌫", null],
+    otra: ["ed.sig_otra", "Shift+clic", null],
+    tam: ["ed.sig_tam", "[ · ]", null],
+    densidad: ["ed.sig_densidad", "{ · }", null],
+    variar: ["ed.sig_variar", "V", () => alternarVariar()],
+    probar: ["ed.probar", "P", () => $("bProbar").click()],
+    descargar: ["ed.sig_descargar", "Ctrl+S", () => $("bDescargar").click()],
+  };
+  // la situación de ahora y los pasos que le van, en su orden de base
+  function situacion() {
+    const M = window.EDITOR_MUNDO,
+      pend = document.getElementById("bDescargar").classList.contains("pendiente") ? "descargar" : null,
+      pg = copia && copia.length ? "pegar" : null;
+    if (M && M.pieza()) return ["pieza", ["otra", "soltar"]];
+    if (M && M.trazando()) return ["region", ["cerrarReg", "atras", "soltar"]];
+    if (camino || rio) return ["trazo", ["terminar", "atras", "soltar"]];
+    if (herr === "pincel") return ["pincel", ["tam", $("pincelModo").value === "abrir" ? null : "densidad", "deshacer", "mover"]];
+    if (grupo.length > 1) return ["grupo", ["copiar", "duplicar", "pieza", "ia", "sacar", "soltar"]];
+    if (elegida) return ["uno", ["duplicar", $("selInterior").classList.contains("oculto") ? null : "interior", "girar", "vuelta", "iguales", "copiar", "sacar"]];
+    if (herr === "poner" && elegido) return ["poner", ["variar", "mover", "deshacer", pg]];
+    return ["libre_" + herr, [pg, herr === "poner" ? "mover" : "poner", "deshacer", "probar", pend]];
+  }
+  let sitPrevia = "",
+    sigFirma = "";
+  function pintarSiguiente() {
+    const [sit, l] = situacion();
+    if (sit !== sitPrevia) (sitPrevia = sit), usar("s_" + sit);
+    const cuenta = uso[ultAccion] || {},
+      ids = l
+        .filter(Boolean)
+        .map((id, i) => [id, i])
+        .sort((a, b) => (cuenta[b[0]] || 0) - (cuenta[a[0]] || 0) || a[1] - b[1])
+        .slice(0, 5)
+        .map((q) => q[0]),
+      firma = sit + ids.join() + I18N.lang + grupo.length;
+    if (firma === sigFirma) return;
+    sigFirma = firma;
+    const caja = $("siguiente");
+    caja.innerHTML = "";
+    const tit = t("ed.sig_s_" + sit, [grupo.length]);
+    if (tit !== "ed.sig_s_" + sit) {
+      const b = document.createElement("b");
+      b.textContent = tit;
+      caja.appendChild(b);
+    }
+    ids.forEach((id, i) => {
+      const [k, tecla, hacer] = PASOS[id],
+        el = document.createElement(hacer ? "button" : "span");
+      el.className = "paso" + (i === 0 ? " primero" : "");
+      el.textContent = t(k);
+      if (tecla) {
+        const kb = document.createElement("kbd");
+        kb.textContent = tecla;
+        el.appendChild(kb);
+      }
+      if (hacer) el.onclick = () => (usar(id), hacer(), cv.focus());
+      caja.appendChild(el);
+    });
+  }
+  // lo de ahora para la paleta de comandos (lo que se toca, en el mismo orden)
+  function sugeridos() {
+    pintarSiguiente();
+    const [, l] = situacion(),
+      cuenta = uso[ultAccion] || {};
+    return l
+      .filter((id) => id && PASOS[id][2])
+      .map((id, i) => [id, i])
+      .sort((a, b) => (cuenta[b[0]] || 0) - (cuenta[a[0]] || 0) || a[1] - b[1])
+      .map(([id]) => ({ nom: t(PASOS[id][0]), tecla: PASOS[id][1], hacer: () => (usar(id), PASOS[id][2]()) }));
+  }
 
   // ---------- el lienzo y la cámara ----------
   const cv = $("mapa"),
@@ -757,6 +884,7 @@
     elegida = d.agregado != null ? { a: est.poner[d.agregado] } : { cosa: d.cosa };
     pintarElegida();
   }
+  const elegidos = () => (grupo.length > 1 ? grupo : elegida ? [elegida] : []);
   function soltarElegida() {
     elegida = null;
     pegarA = null;
@@ -1740,6 +1868,7 @@
 
   // ---------- herramientas ----------
   let herr = "poner";
+  const BOTON_HERR = { poner: "hPoner", mover: "hMover", borrar: "hBorrar", camino: "hCamino", nota: "hNota", agua: "hAgua", medir: "hMedir", region: "hRegion", pincel: "hPincel" };
   function ponerHerr(h) {
     if (h !== "camino" && camino) terminarCamino();
     if (h !== "agua" && rio) terminarRio();
@@ -1750,24 +1879,17 @@
     $("hCamino").classList.toggle("activo", h === "camino");
     if (h !== "camino" && h !== "mover") camElegido = null;
     pintarPanelCamino();
-    $("hPoner").classList.toggle("activo", h === "poner");
-    $("hMover").classList.toggle("activo", h === "mover");
-    $("hBorrar").classList.toggle("activo", h === "borrar");
-    $("hNota").classList.toggle("activo", h === "nota");
-    $("hMedir").classList.toggle("activo", h === "medir");
-    $("hRegion").classList.toggle("activo", h === "region");
-    $("hPincel").classList.toggle("activo", h === "pincel");
+    Object.keys(BOTON_HERR).forEach((k) => $(BOTON_HERR[k]).classList.toggle("activo", h === k));
     $("pincelPanel").classList.toggle("oculto", h !== "pincel");
+    // las opciones de cómo sale lo puesto solo importan al poner
+    $("ponerOpc").classList.toggle("apagado", h !== "poner" && h !== "pincel");
     $("hIA").classList.toggle("activo", !!window.EDITOR_IA && EDITOR_IA.abierta());
     cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" || h === "region" ? "cell" : h === "pincel" ? "none" : "not-allowed";
+    alCambiarHerr.forEach((f) => f(h));
+    usar("h_" + h);
   }
-  $("hPoner").onclick = () => ponerHerr("poner");
-  $("hMover").onclick = () => ponerHerr("mover");
-  $("hBorrar").onclick = () => ponerHerr("borrar");
-  $("hNota").onclick = () => ponerHerr("nota");
-  $("hCamino").onclick = () => ponerHerr("camino");
-  $("hAgua").onclick = () => ponerHerr("agua");
-  $("hMedir").onclick = () => ponerHerr("medir");
+  const alCambiarHerr = [];
+  Object.keys(BOTON_HERR).forEach((k) => ($(BOTON_HERR[k]).onclick = () => ponerHerr(k)));
   $("hIA").onclick = () => window.EDITOR_IA && EDITOR_IA.alternar();
   // el mapa original: prendido o no y su transparencia quedan recordados en este navegador
   try {
@@ -1786,6 +1908,15 @@
     pintarOriginal();
   });
   pintarOriginal();
+  // «Vista y capas» queda abierto o cerrado como se dejó
+  try {
+    $("vistaOpc").open = localStorage.getItem(CLAVE + "-vista") === "1";
+  } catch (e) {}
+  $("vistaOpc").addEventListener("toggle", () => {
+    try {
+      localStorage.setItem(CLAVE + "-vista", $("vistaOpc").open ? "1" : "0");
+    } catch (e) {}
+  });
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
   let variando = null; // la variación que toca al próximo que se pone (la vista previa ya la muestra)
@@ -2037,6 +2168,7 @@
         variando = null;
         guardar();
         recientes(elegido);
+        usar("colocar");
         arrastre = null;
       }
     } else if (herr === "mover") {
@@ -2213,6 +2345,7 @@
     if (grupo.length === 1) grupo = [];
     pintarElegida();
     avisar(t("ed.caja_elegidos", [Math.max(1, grupo.length)]));
+    usar("caja");
   }
   // todos los que son el mismo objeto que lo elegido, en lo que se ve
   function elegirIguales() {
@@ -2231,6 +2364,7 @@
     if (grupo.length === 1) grupo = [];
     pintarElegida();
     avisar(t("ed.caja_elegidos", [Math.max(1, grupo.length)]));
+    usar("iguales");
   }
   $("selIguales").onclick = elegirIguales;
   $("selDuplicar").onclick = () => duplicar();
@@ -2245,7 +2379,7 @@
     copia = JSON.parse(localStorage.getItem(CLAVE + "-copia") || "null");
   } catch (e) {}
   function copiar() {
-    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    const l = elegidos();
     if (!l.length) return avisar(t("ed.nada_elegido")), false;
     const items = l.map((g) => {
       if (g.a) return { id: g.a.id, x: g.a.x, y: g.a.y, o: JSON.parse(JSON.stringify(g.a.o || {})) };
@@ -2271,6 +2405,7 @@
       localStorage.setItem(CLAVE + "-copia", JSON.stringify(copia));
     } catch (e) {}
     avisar(t("ed.copiados", [copia.length]));
+    usar("copiar");
     return true;
   }
   function pegar(x, y) {
@@ -2288,12 +2423,44 @@
     grupo = nuevos.length > 1 ? nuevos.map((a) => ({ a })) : [];
     elegida = { a: nuevos[nuevos.length - 1] };
     pintarElegida();
+    usar("pegar");
   }
   function duplicar() {
-    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    const l = elegidos();
     if (!l.length || !copiar()) return;
     const ps = l.map((g) => datosDe(g).p);
+    usar("duplicar");
     pegar(ps.reduce((s2, q) => s2 + q[0], 0) / ps.length + 60, ps.reduce((s2, q) => s2 + q[1], 0) / ps.length + 40);
+  }
+
+  const pegarAca = () => (cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y));
+  function darVuelta() {
+    if (!elegida) return;
+    recordar();
+    cambiarElegida("esp", true, !!opcionesElegida().esp);
+    guardar();
+    pintarElegida();
+    usar("vuelta");
+  }
+  function alternarVariar() {
+    $("variar").checked = !$("variar").checked;
+    variando = null;
+    avisar(t($("variar").checked ? "ed.variar_si" : "ed.variar_no"));
+  }
+  // Esc: deja de hacer lo que se esté haciendo (trazos, modos y ventanas) y suelta lo elegido
+  function soltarTodo(trazando) {
+    if (probando) (probando = false), $("bProbar").classList.remove("activo");
+    if (cortando) (cortando = null), $("camCortar").classList.remove("activo");
+    $("atajos").classList.add("oculto");
+    $("revision").classList.add("oculto");
+    medida = null;
+    if (trazando) return camino && terminarCamino();
+    elegirAgua(null);
+    elegido = null;
+    pegarA = null;
+    soltarElegida();
+    lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
+    pedir();
   }
 
   // ---------- marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve ----------
@@ -2516,6 +2683,11 @@
       if (ctrl && e.key.toLowerCase() === "y") return e.preventDefault(), rehacer();
       return EDITOR_CUARTOS.tecla(e);
     }
+    // las teclas que no llaman a una acción con nombre también enseñan qué se usa después de qué
+    const k = e.key.toLowerCase(),
+      regionAbierta = window.EDITOR_MUNDO && EDITOR_MUNDO.trazando(),
+      tk = k.length === 1 && "qert".includes(k) && elegida ? "girar" : e.key === "Enter" ? (regionAbierta ? "cerrarReg" : "terminar") : e.key === "Backspace" && (camino || rio || regionAbierta) ? "atras" : e.key === "[" || e.key === "]" ? "tam" : e.key === "{" || e.key === "}" ? "densidad" : e.key === "Escape" ? "soltar" : null;
+    if (tk && !ctrl) usar(tk);
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida()) : null);
@@ -2531,7 +2703,7 @@
     if (ctrl && e.key.toLowerCase() === "c") return copiar();
     if (ctrl && e.key.toLowerCase() === "v") {
       e.preventDefault();
-      return cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y);
+      return pegarAca();
     }
     if (ctrl && e.key.toLowerCase() === "d") {
       e.preventDefault();
@@ -2561,12 +2733,10 @@
     if (e.key === "1") ponerHerr("poner");
     if (e.key === "2") ponerHerr("mover");
     if (e.key === "3") ponerHerr("borrar");
-    if (elegida && (e.key === "f" || e.key === "F")) {
-      recordar();
-      cambiarElegida("esp", true, !!opcionesElegida().esp);
-      guardar();
-      pintarElegida();
-    }
+    if (elegida && (e.key === "f" || e.key === "F")) darVuelta();
+    if (!ctrl && (e.key === "v" || e.key === "V")) alternarVariar();
+    if (!ctrl && (e.key === "p" || e.key === "P")) $("bProbar").click();
+    if (ctrl && e.key.toLowerCase() === "s") return e.preventDefault(), $("bDescargar").click();
     // R y T: girarlo sobre el piso
     if (elegida && !esDos() && (e.key === "r" || e.key === "t" || e.key === "R" || e.key === "T")) {
       recordar();
@@ -2595,17 +2765,7 @@
     const trazando = camino || rio;
     if ((e.key === "Enter" || e.key === "Escape") && rio) terminarRio();
     else if (e.key === "Enter" && camino) terminarCamino();
-    if (e.key === "Escape" && probando) (probando = false), $("bProbar").classList.remove("activo");
-    if (e.key === "Escape" && cortando) (cortando = null), $("camCortar").classList.remove("activo");
-    if (e.key === "Escape") ($("atajos").classList.add("oculto"), $("revision").classList.add("oculto"), (medida = null));
-    if (e.key === "Escape" && trazando) camino && terminarCamino();
-    else if (e.key === "Escape") {
-      elegirAgua(null);
-      elegido = null;
-      pegarA = null;
-      soltarElegida();
-      lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
-    }
+    if (e.key === "Escape") soltarTodo(trazando);
     if (ctrl && !e.shiftKey && e.key.toLowerCase() === "z") deshacer();
     if ((e.key === "Delete" || e.key === "Backspace") && rio) {
       rio.p.pop();
@@ -2658,7 +2818,7 @@
   $("norte").addEventListener("click", () => girarCamara(0, true));
   // Supr con algo elegido: saca todo lo elegido (lo de la historia no se saca)
   function sacarElegidos() {
-    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    const l = elegidos();
     if (!l.length) return;
     recordar();
     let quedan = 0;
@@ -2675,6 +2835,7 @@
     });
     soltarElegida();
     guardar();
+    usar("sacar");
     if (quedan) avisar(t("ed.no_se_saca"));
   }
   function rehacer() {
@@ -2693,6 +2854,7 @@
     if (!s) return;
     rehechos.push(JSON.stringify(est));
     est = JSON.parse(s);
+    usar("deshacer");
     soltarElegida();
     camElegido = null;
     aguaSel = null;
@@ -2749,6 +2911,12 @@
     a.download = "agregados.js";
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    bajado = huella();
+    try {
+      localStorage.setItem(CLAVE + "-bajado", bajado);
+    } catch (e) {}
+    pintarPendiente();
+    usar("descargar");
   };
   $("bCopiar").onclick = () => {
     const s = texto();
@@ -2816,7 +2984,8 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [] };
+    // las piezas son la biblioteca de este navegador: limpiar el mapa no las borra
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {} };
     guardar();
   };
 
@@ -2865,7 +3034,7 @@
       deshacer: () => deshacer(),
       rehacer: () => rehacer(),
       copiar: () => copiar(),
-      pegar: () => (cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y)),
+      pegar: () => pegarAca(),
       duplicar: () => duplicar(),
       iguales: () => elegirIguales(),
       sacar: () => sacarElegidos(),
@@ -2880,6 +3049,8 @@
       descargar: () => $("bDescargar").click(),
       atajos: () => $("atajos").classList.toggle("oculto"),
       borrador: () => $("bBorrador").click(),
+      pieza: () => $("bPieza").click(),
+      exportar: () => $("bExportar").click(),
     },
     // los lugares de «Ir a…»: [{ nom, x, y }]
     lugares: () => [{ nom: t("av.lugar_eikholt"), x: W.CIUDAD.c[0], y: W.CIUDAD.c[1] }].concat(Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => ({ nom: t("av.lugar_" + k), x: W.LUGARES[k].p[0], y: W.LUGARES[k].p[1] }))).concat([...nombradas.keys()].map((o) => ({ nom: t("as." + o.id) + " · " + nombradas.get(o), x: o.x, y: o.y }))),
@@ -2922,5 +3093,27 @@
       }
     },
     pedir: () => pedir(),
+    // vista previa de objetos que todavía no están (pieza, IA, pincel): transparentes y de atrás para adelante
+    fantasmas: (c, items, tt, alfa) => {
+      c.save();
+      c.globalAlpha = alfa;
+      items
+        .slice()
+        .sort((p, q) => p.y - q.y)
+        .forEach((a) => {
+          const o = JSON.parse(JSON.stringify(a.o || {})),
+            k = W.ESCALA_CASA[a.id];
+          if (k) o.s = (o.s || 1) * k;
+          const d = enVista({ id: a.id, x: a.x, y: a.y, o });
+          try {
+            ASSETS.dibujar(c, a.id, d.x, d.y, tt, d.o);
+          } catch (er) {}
+        });
+      c.restore();
+    },
+    usar,
+    sugeridos,
+    alCambiarHerr: (f) => alCambiarHerr.push(f),
   };
+  setInterval(pintarSiguiente, 200);
 })();

@@ -23,6 +23,8 @@ window.EDITOR_COMANDOS = (function () {
       ["nota", "ed.nota", "5"],
       ["agua", "ed.agua", "6"],
       ["medir", "ed.medir", "7"],
+      ["region", "ed.region", "0"],
+      ["pincel", "ed.pincel", "B"],
     ].map(([h, k, tecla]) => ({ nom: t(k), tipo: t("ed.com_herramienta"), tecla, hacer: () => E.ponerHerr(h) }));
     const acc = [
       ["deshacer", "ed.deshacer", "Ctrl+Z"],
@@ -39,9 +41,11 @@ window.EDITOR_COMANDOS = (function () {
       ["bloquear", "ed.bloquear", ""],
       ["notas", "ed.ver_notas", ""],
       ["norte", "ed.norte", ""],
-      ["probar", "ed.probar", ""],
+      ["probar", "ed.probar", "P"],
       ["borrador", "ed.borrador_guardar", ""],
-      ["descargar", "ed.descargar", ""],
+      ["descargar", "ed.descargar", "Ctrl+S"],
+      ["pieza", "ed.pieza_guardar", ""],
+      ["exportar", "ed.exportar", ""],
       ["atajos", "ed.atajos_titulo", "?"],
     ].map(([a, k, tecla]) => ({ nom: t(k), tipo: t("ed.com_accion"), tecla, hacer: E.acciones[a] }));
     acc.push({ nom: t("ed.ia_titulo"), tipo: t("ed.com_accion"), tecla: "8", hacer: () => window.EDITOR_IA && EDITOR_IA.abrir() });
@@ -50,6 +54,20 @@ window.EDITOR_COMANDOS = (function () {
     const obj = ASSETS.catalogo().map((a) => ({ nom: t("as." + a.id) === "as." + a.id ? a.id : t("as." + a.id), extra: a.id, tipo: t("ed.com_objeto"), tecla: "", hacer: () => E.elegir(a.id) }));
     const lug = E.lugares().map((l) => ({ nom: l.nom, tipo: t("ed.com_lugar"), tecla: "", hacer: () => E.ir(l.x, l.y) }));
     items = herr.concat(acc, lug, obj);
+  }
+  // sin nada escrito: primero lo que tiene sentido ahora (en el orden que se suele usar) y lo último que se eligió acá
+  let recientes = [];
+  try {
+    recientes = JSON.parse(localStorage.getItem("eromash-editor-comandos") || "[]") || [];
+  } catch (e) {}
+  function alPrincipio() {
+    const ahora = E.sugeridos().map((it) => Object.assign(it, { tipo: t("ed.com_ahora") })),
+      vistosN = new Set(ahora.map((it) => it.nom)),
+      ult = recientes
+        .map((n) => items.find((it) => it.nom === n))
+        .filter((it) => it && !vistosN.has(it.nom))
+        .map((it) => Object.assign({}, it, { tipo: t("ed.com_reciente") }));
+    return ahora.concat(ult);
   }
   // sin tildes ni mayúsculas, y cada palabra buscada tiene que estar
   const llano = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -61,6 +79,11 @@ window.EDITOR_COMANDOS = (function () {
     });
     // primero lo que empieza con lo escrito
     if (q.length) vistos.sort((a, b) => (llano(b.nom).startsWith(q[0]) ? 1 : 0) - (llano(a.nom).startsWith(q[0]) ? 1 : 0));
+    else {
+      const arriba = alPrincipio(),
+        ya = new Set(arriba.map((it) => it.nom));
+      vistos = arriba.concat(vistos.filter((it) => !ya.has(it.nom)));
+    }
     vistos = vistos.slice(0, 60);
     activo = 0;
     pintar();
@@ -87,6 +110,12 @@ window.EDITOR_COMANDOS = (function () {
   function hacer(i) {
     const it = vistos[i];
     cerrar();
+    if (it && it.tipo !== t("ed.com_ahora")) {
+      recientes = [it.nom].concat(recientes.filter((n) => n !== it.nom)).slice(0, 5);
+      try {
+        localStorage.setItem("eromash-editor-comandos", JSON.stringify(recientes));
+      } catch (e) {}
+    }
     if (it && it.hacer) it.hacer();
   }
   function abrir() {

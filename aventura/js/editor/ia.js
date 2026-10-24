@@ -7,7 +7,6 @@
 window.EDITOR_IA = (function () {
   "use strict";
   const E = window.EDITOR,
-    W = E.W,
     t = E.t,
     $ = (id) => document.getElementById(id);
   const CLAVE = "eromash-aventura-editor-ia";
@@ -61,6 +60,7 @@ window.EDITOR_IA = (function () {
     $("iaZona").textContent = t(z.deRect ? "ed.ia_zona_rect" : "ed.ia_zona_vista_txt", [Math.round((x1 - x0) / 30), Math.round((y1 - y0) / 30)]);
   }
   function abrir() {
+    E.usar("ia");
     panel.classList.remove("oculto");
     pintarConf();
     pintarZona();
@@ -293,20 +293,7 @@ window.EDITOR_IA = (function () {
       c.stroke();
     });
     c.restore();
-    c.globalAlpha = 0.65;
-    propuesta.poner
-      .slice()
-      .sort((a, b) => a.y - b.y)
-      .forEach((a) => {
-        const o = Object.assign({}, a.o),
-          k = W.ESCALA_CASA[a.id];
-        if (k) o.s = (o.s || 1) * k;
-        const d = enVista({ id: a.id, x: a.x, y: a.y, o });
-        try {
-          ASSETS.dibujar(c, a.id, d.x, d.y, tt, d.o);
-        } catch (e) {}
-      });
-    c.globalAlpha = 1;
+    E.fantasmas(c, propuesta.poner, tt, 0.65);
     c.strokeStyle = "#C8402D";
     c.lineWidth = 3 / cam.z;
     propuesta.quitar.forEach((q) => {

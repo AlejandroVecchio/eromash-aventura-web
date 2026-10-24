@@ -326,6 +326,7 @@ window.EDITOR_CUARTOS = (function () {
   const abierta = () => !caja.classList.contains("oculto");
   let conLista = false;
   function abrir(p) {
+    E.usar("interior");
     if (p) elegirPlantilla(p);
     if (!conLista) (armarLista(), (conLista = true));
     caja.classList.remove("oculto");

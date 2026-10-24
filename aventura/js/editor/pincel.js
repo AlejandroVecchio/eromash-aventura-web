@@ -136,20 +136,16 @@ window.EDITOR_PINCEL = (function () {
     if (e.ctrlKey || e.metaKey) return false;
     if (e.key === "b" || e.key === "B") return E.ponerHerr(E.herr() === "pincel" ? "mover" : "pincel"), true;
     if (E.herr() !== "pincel") return false;
-    if (e.key === "[" || e.key === "]") {
-      const mas = e.key === "]";
-      if (e.shiftKey || e.key === "{" || e.key === "}") $("pincelDensidad").value = +$("pincelDensidad").value + (mas ? 1 : -1);
-      else radio = Math.max(60, Math.min(2400, Math.round(radio * (mas ? 1.2 : 1 / 1.2))));
-      pintarPanel();
-      E.pedir();
-      return true;
-    }
-    if (e.key === "{" || e.key === "}") {
-      $("pincelDensidad").value = +$("pincelDensidad").value + (e.key === "}" ? 1 : -1);
-      pintarPanel();
-      return true;
-    }
-    return false;
+    // Esc a mitad de un trazo lo deja sin aplicar
+    if (e.key === "Escape" && trazo) return (trazo = null), E.pedir(), true;
+    // Shift+[ y ] es { y } en la mayoría de los teclados, pero no en todos
+    const mas = e.key === "]" || e.key === "}";
+    if (e.key === "{" || e.key === "}" || ((e.key === "[" || e.key === "]") && e.shiftKey)) $("pincelDensidad").value = +$("pincelDensidad").value + (mas ? 1 : -1);
+    else if (e.key === "[" || e.key === "]") radio = Math.max(60, Math.min(2400, Math.round(radio * (mas ? 1.2 : 1 / 1.2))));
+    else return false;
+    pintarPanel();
+    E.pedir();
+    return true;
   }
   function pintarPanel() {
     $("pincelRadio").value = radio;
@@ -176,17 +172,7 @@ window.EDITOR_PINCEL = (function () {
         c.arc(px, py, 7 / cam.z, 0, Math.PI * 2);
         c.fill();
       });
-      c.globalAlpha = 0.8;
-      trazo.poner
-        .slice()
-        .sort((a, b) => a.y - b.y)
-        .forEach((a) => {
-          const d = E.enVista({ id: a.id, x: a.x, y: a.y, o: Object.assign({}, a.o) });
-          try {
-            ASSETS.dibujar(c, a.id, d.x, d.y, tt, d.o);
-          } catch (er) {}
-        });
-      c.globalAlpha = 1;
+      E.fantasmas(c, trazo.poner, tt, 0.8);
     }
     if (cursor) {
       const [px, py] = V(cursor.x, cursor.y);
