@@ -15,7 +15,7 @@ window.HUD = (function () {
         <div class="barra" id="bVida"><i></i><span><b>${t("ui.vida")}</b><em></em></span></div>
         <div class="barra est" id="bEst"><i></i><span><b>${t("ui.estamina")}</b><em></em></span></div>
       </div>
-      <div id="hudObjetivo" class="ui panel"><div class="rotulo"><span id="oMision"></span><b id="oDist"></b></div><div class="texto" id="oTexto"></div></div>
+      <div id="hudMisiones" class="ui"></div>
       <div id="hudAccion" class="ui panel oculto"><span class="tecla" id="aTecla"></span><span id="aTexto"></span></div>
       <div id="hudAvisos" class="ui"></div>
       <div id="hudJefe" class="ui oculto"><div class="nombre"><span id="jNombre"></span><small id="jAtaduras"></small></div><div class="barra"><i id="jVida"></i></div><div class="ataque" id="jAtaque"></div></div>
@@ -38,12 +38,39 @@ window.HUD = (function () {
       $("bEst").querySelector("em").textContent = Math.floor(sta) + " / " + staMax;
     }
   }
-  function objetivo(mision, texto, metros) {
-    $("hudObjetivo").classList.toggle("oculto", !texto);
-    if (cambia("om", mision)) $("oMision").textContent = mision;
-    if (cambia("ot", texto)) $("oTexto").textContent = texto || "";
-    const d = metros == null ? "" : t("av.objetivo_metros", [Math.round(metros)]);
-    if (cambia("od", d)) $("oDist").textContent = d;
+  // el rastreador de misiones, al centro a la derecha como en el WoW: rótulo, nombre en dorado y los objetivos
+  // (los cumplidos tachados en verde, el actual con el rombo rúnico y la distancia; los que vienen no se adelantan).
+  // lista = [{ rotulo, nombre, objetivos: [{ texto, estado: "hecho" | "actual", metros }] }]
+  let claveMis = "";
+  const recien = {};
+  function misiones(lista) {
+    const clave = JSON.stringify(lista);
+    if (clave === claveMis) return;
+    const antes = claveMis;
+    claveMis = clave;
+    const caja = $("hudMisiones");
+    caja.innerHTML = "";
+    lista.forEach((m) => {
+      const d = document.createElement("div");
+      d.className = "mision" + (m.secundaria ? " secundaria" : "");
+      d.innerHTML = `<div class="rotulo"></div><div class="nombre"></div><ul></ul>`;
+      d.querySelector(".rotulo").textContent = m.rotulo || "";
+      d.querySelector(".nombre").textContent = m.nombre;
+      const ul = d.querySelector("ul");
+      m.objetivos.forEach((o) => {
+        const li = document.createElement("li");
+        li.className = o.estado;
+        li.innerHTML = `<i></i><span></span>${o.metros != null ? "<b></b>" : ""}`;
+        li.querySelector("span").textContent = o.texto;
+        if (o.metros != null) li.querySelector("b").textContent = t("av.objetivo_metros", [Math.round(o.metros)]);
+        // destello cuando un objetivo recién se cumple
+        const k = m.nombre + "|" + o.texto;
+        if (o.estado === "hecho" && antes && !antes.includes(JSON.stringify(o.texto) + ',"estado":"hecho"')) recien[k] = performance.now();
+        if (recien[k] && performance.now() - recien[k] < 1600) li.classList.add("recien");
+        ul.appendChild(li);
+      });
+      caja.appendChild(d);
+    });
   }
   function accion(texto, glifo) {
     $("hudAccion").classList.toggle("oculto", !texto);
@@ -83,7 +110,7 @@ window.HUD = (function () {
     if (cambia("jq", atq)) $("jAtaque").innerHTML = atq;
   }
   function ocultarJuego(si) {
-    ["hudJugador", "hudObjetivo"].forEach((id) => $(id).style.visibility = si ? "hidden" : "");
+    ["hudJugador", "hudMisiones"].forEach((id) => $(id).style.visibility = si ? "hidden" : "");
   }
 
   // ---------- menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando ----------
@@ -135,5 +162,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, objetivo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, fundido, ocultarJuego, hayMenu: () => !!menu };
+  return { armar, jugador, misiones, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, fundido, ocultarJuego, hayMenu: () => !!menu };
 })();

@@ -24,11 +24,24 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .barra span { position: absolute; left: 10px; right: 10px; top: 0; line-height: 16px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; display: flex; justify-content: space-between; text-shadow: 0 1px 0 #0008; }
 .barra.est span { color: #2A1C08; text-shadow: none; }
 
-/* objetivo */
-#hudObjetivo { right: 16px; top: 16px; max-width: 340px; padding: 10px 14px 12px; }
-#hudObjetivo .rotulo { color: var(--oro); display: flex; justify-content: space-between; gap: 12px; }
-#hudObjetivo .texto { margin-top: 6px; font-size: 14px; line-height: 1.35; }
-#hudObjetivo .rotulo b { color: var(--runico); font-weight: 800; }
+/* rastreador de misiones: centro a la derecha, sin caja (como en el WoW), con una sombra suave detrás para leerse */
+#hudMisiones { right: 18px; top: 50%; transform: translateY(-50%); width: 320px; display: flex; flex-direction: column; gap: 18px; text-align: right; }
+#hudMisiones::before { content: ""; position: absolute; inset: -30px -18px -30px -60px; background: radial-gradient(ellipse at 80% 50%, rgba(10,10,8,0.55), rgba(10,10,8,0) 70%); z-index: -1; }
+#hudMisiones .rotulo { color: var(--rosa); font-size: 9px; }
+#hudMisiones .nombre { font-family: "Eromash Display", system-ui, sans-serif; color: var(--oro); font-size: 18px; margin: 2px 0 6px; text-shadow: 0 2px 0 #000c, 0 0 8px #000a; }
+#hudMisiones ul { list-style: none; margin: 0; padding: 0; }
+#hudMisiones li { display: flex; justify-content: flex-end; align-items: baseline; gap: 8px; font-size: 14px; line-height: 1.35; margin-top: 3px; text-shadow: 0 1px 0 #000, 0 0 6px #000c; }
+#hudMisiones li i { order: 2; flex: none; width: 8px; height: 8px; margin-left: 2px; transform: rotate(45deg) translateY(-1px); background: var(--runico); }
+#hudMisiones li span { order: 1; }
+#hudMisiones li b { order: 0; color: var(--runico); font-weight: 800; font-size: 11px; white-space: nowrap; }
+#hudMisiones li.hecho { color: #8A8A80; }
+#hudMisiones li.hecho span { text-decoration: line-through; text-decoration-color: #7BC86C88; }
+#hudMisiones li.hecho i { background: #7BC86C; }
+#hudMisiones li.recien { animation: recien 1.6s; color: #7BC86C; }
+@keyframes recien { 0% { transform: translateX(-8px); opacity: 0; } 20% { transform: none; opacity: 1; } }
+#hudMisiones .secundaria .nombre { font-size: 15px; color: var(--hueso); }
+#hudMisiones .secundaria li { font-size: 12px; }
+#hudMisiones .secundaria li.actual i { background: var(--oro); }
 
 /* cartel de interactuar: el rombo de la arena con la tecla */
 #hudAccion { left: 50%; bottom: 120px; transform: translateX(-50%); padding: 8px 14px 8px 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; }

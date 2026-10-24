@@ -100,6 +100,11 @@ I18N.textos({
   "sx.viaje_titulo": { es: "La red de las piedras", en: "The web of stones" },
   "sx.viaje_sub": { es: "La runa te lleva a donde ya despertaste otra.", en: "The rune carries you to where you've woken another." },
   "sx.algo_brilla": { es: "Algo brilla bajo el musgo.", en: "Something glints under the moss." },
+  "sx.seg_rotulo": { es: "Exploración", en: "Exploration" },
+  "sx.seg_nombre": { es: "Los secretos de Eldervald", en: "The secrets of Eldervald" },
+  "sx.seg_runas": { es: "Runas de los altares: {0}/{1}", en: "Altar runes: {0}/{1}" },
+  "sx.seg_piedras": { es: "Piedras del susurro despiertas: {0}/{1}", en: "Whispering stones awake: {0}/{1}" },
+  "sx.seg_cofres": { es: "Cofres abiertos: {0}/{1}", en: "Chests opened: {0}/{1}" },
   "sx.diario_titulo": { es: "Secretos:", en: "Secrets:" },
   "sx.diario_txt": { es: "{0}/{1} cofres · {2}/{3} piedras del susurro · {4}/{5} manzanos", en: "{0}/{1} chests · {2}/{3} whispering stones · {4}/{5} apple trees" },
   // lo que cuenta cada piedra del susurro

@@ -1000,7 +1000,22 @@
     const o = H.objetivo(),
       m = H.idMision();
     const p = dondeObjetivo();
-    HUD.objetivo(m === "fin" ? tav("mision_fin") : t("ui.mision", [m]), o ? tav(o.texto) : tav("obj_fin"), p ? dist(jug, p) / 43 : null);
+    // la misión de la historia: los objetivos cumplidos y el actual
+    const mis = H.mision(),
+      lista = [];
+    if (mis) {
+      const objs = [];
+      for (const ob of mis.objetivos) {
+        if (tiene(ob.hecho)) objs.push({ texto: tav(ob.texto), estado: "hecho" });
+        else {
+          objs.push({ texto: tav(ob.texto), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
+          break;
+        }
+      }
+      lista.push({ rotulo: t("ui.mision", [m]), nombre: tav("mision_" + m), objetivos: objs });
+    } else lista.push({ rotulo: tav("mision_fin"), nombre: tav("obj_fin"), objetivos: [] });
+    SIS.forEach((s0) => s0.seguimiento && lista.push(s0.seguimiento()));
+    HUD.misiones(lista);
     const cer = J.modo === "juego" && !jug.muerto ? cercano() : null;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
     cadaSis("hud");

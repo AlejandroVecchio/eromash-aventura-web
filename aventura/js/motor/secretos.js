@@ -376,6 +376,18 @@ window.SECRETOS = (function () {
         }) });
       });
     },
+    // la segunda entrada del rastreador: lo que falta encontrar en el bosque
+    seguimiento() {
+      const n = (o) => Object.keys(o).filter((k) => o[k]).length;
+      const runas = altares.filter((a) => PODERES.tiene(a.runa)).length;
+      const o = (clave, a, b) => ({ texto: t(clave, [a, b]), estado: a >= b ? "hecho" : "actual" });
+      return {
+        secundaria: true,
+        rotulo: t("sx.seg_rotulo"),
+        nombre: t("sx.seg_nombre"),
+        objetivos: [o("sx.seg_runas", runas, altares.length), o("sx.seg_piedras", n(st.piedras), piedras.length), o("sx.seg_cofres", n(st.cofres), cofres.length)],
+      };
+    },
     diario() {
       if (!st) return "";
       const n = (o) => Object.keys(o).filter((k) => o[k]).length;
