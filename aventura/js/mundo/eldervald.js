@@ -1191,6 +1191,28 @@ window.ELDERVALD = (function () {
     });
     return ok;
   }
+  // las cercas de troncos frenan a Eromash pero se saltan (juego.js no la mira mientras salta). ¿Pasar de a hacia b
+  // la cruza, o se mete en su franja acercándose? (si ya está adentro, puede salir)
+  let VALLAS = null;
+  function vallaEntre(ax, ay, bx, by, r) {
+    if (!VALLAS) VALLAS = COSAS.filter((c) => c.id === "cerca" && c.o.x2 !== undefined && !c.o.sinChoque).map((c) => [c.x, c.y, c.o.x2, c.o.y2]);
+    const franja = r * 0.5 + 8;
+    for (const [x1, y1, x2, y2] of VALLAS) {
+      if (Math.max(ax, bx) < Math.min(x1, x2) - 60 || Math.min(ax, bx) > Math.max(x1, x2) + 60 || Math.max(ay, by) < Math.min(y1, y2) - 60 || Math.min(ay, by) > Math.max(y1, y2) + 60) continue;
+      const db = distSeg(bx, by, x1, y1, x2, y2);
+      if (db < franja && db < distSeg(ax, ay, x1, y1, x2, y2)) return true;
+      // cruzar la línea de un paso (de un lado al otro)
+      const lado = (px, py) => (x2 - x1) * (py - y1) - (y2 - y1) * (px - x1),
+        la = lado(ax, ay),
+        lb = lado(bx, by);
+      if (la * lb < 0) {
+        const l1 = (bx - ax) * (y1 - ay) - (by - ay) * (x1 - ax),
+          l2 = (bx - ax) * (y2 - ay) - (by - ay) * (x2 - ax);
+        if (l1 * l2 <= 0) return true;
+      }
+    }
+    return false;
+  }
   // ¿hay algo que tape entre dos puntos? (casas, rocas, troncos: un golpe no pasa a través)
   function hayMuro(ax, ay, bx, by) {
     const n = Math.ceil(Math.hypot(bx - ax, by - ay) / 24);
@@ -1382,6 +1404,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, vallaEntre, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();

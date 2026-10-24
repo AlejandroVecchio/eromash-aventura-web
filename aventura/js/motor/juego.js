@@ -558,8 +558,10 @@
   }
   function moverJugador(dx, dy) {
     if (window.ALTURAS && ALTURAS.mover(dx, dy)) return; // escaleras y adarves
-    if (W.libre(jug.x + dx, jug.y, R)) jug.x += dx;
-    if (W.libre(jug.x, jug.y + dy, R)) jug.y += dy;
+    // las cercas frenan, salvo saltando
+    const valla = (nx, ny) => jug.salto <= 0 && !(jug.z > 0) && W.vallaEntre(jug.x, jug.y, nx, ny, R);
+    if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y)) jug.x += dx;
+    if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy)) jug.y += dy;
   }
   function golpear(a) {
     a.pego = true;
