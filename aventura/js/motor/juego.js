@@ -230,6 +230,9 @@
       HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
       // descubrir un lugar paga un poco de plata (los vecinos le pagan al que trae noticias del camino)
       if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_LUGAR);
+      // el lugar entero queda a la vista en el mapa
+      const L = W.LUGARES[dato];
+      if (L && window.MAPA) MAPA.descubrir(L.p[0], L.p[1], L.r + 1200);
     }
     else if (tipo === "fin") setTimeout(mostrarFin, 1000);
   });
@@ -1865,6 +1868,7 @@
     noche: () => amb.n,
     amb: () => amb,
     enPelea,
+    dondeObjetivo,
     // el viaje: columna de luz rúnica al irse y al llegar, el nombre del lugar y un instante sin que nada lo toque
     teletransportar: (x, y, lugar) => {
       J.modo = "cine";

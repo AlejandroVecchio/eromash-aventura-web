@@ -57,4 +57,16 @@ I18N.textos({
   "op.interfaz_normal": { es: "Normal", en: "Normal" },
   "op.interfaz_grande": { es: "Grande", en: "Large" },
   "op.idioma": { es: "Idioma (guarda y vuelve al título)", en: "Language (saves and returns to title)" },
+  "op.brujula": { es: "Brújula arriba", en: "Compass at the top" },
+  // explorar (motor/exploracion.js)
+  "ex.cardinales": { es: "N,NE,E,SE,S,SO,O,NO", en: "N,NE,E,SE,S,SW,W,NW" },
+  "ex.secretos": { es: "{0}/{1} secretos", en: "{0}/{1} secrets" },
+  "ex.explorado": { es: "Explorado: {0} %", en: "Explored: {0}%" },
+  "ex.hito": { es: "{0} % de Eldervald recorrido", en: "{0}% of Eldervald explored" },
+  "ex.hito_sub": { es: "El bosque te va conociendo", en: "The forest is getting to know you" },
+  "ex.mapa_tesoro": { es: "Un mapa del tesoro", en: "A treasure map" },
+  "ex.mapa_tesoro_sub": { es: "Algo enterrado a unos {0} m: quedó marcado en el mapa", en: "Something buried about {0} m away: it's marked on the map" },
+  "ex.zona_tesoro": { es: "Mapa del tesoro: algo enterrado por acá", en: "Treasure map: something buried around here" },
+  "ex.zona_aqui": { es: "Acá marca el mapa: lo enterrado se ve con la Lente o con Sowilo", en: "This is where the map points: buried things show with the Lens or Sowilo" },
+  "ex.diario_titulo": { es: "Exploración.", en: "Exploration." },
 });

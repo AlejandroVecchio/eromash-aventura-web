@@ -221,13 +221,38 @@ window.SECRETOS = (function () {
       A.chispa(x, y - 30);
       const total = cofres.filter((q) => st.cofres[q.id]).length;
       if (!b.frag && !b.manzana) HUD.aviso(t("sx.cofre_abierto", [total, cofres.length]), "#FFD98A");
+      // uno de cada tres arcones guarda un mapa del tesoro: marca la zona de un arca enterrada que falta encontrar
+      if (c.tipo === "arconLenador" && c.id % 3 === 0) J.retrasar(0.9, () => mapaTesoro(x, y));
     });
+  }
+  function mapaTesoro(x, y) {
+    let mejor = null,
+      dm = Infinity;
+    cofres.forEach((q) => {
+      if (q.tipo !== "arcaEnterrada" || st.cofres[q.id] || st.vistos[q.id] || st.pistas[q.id]) return;
+      const d = Math.hypot(q.cosa.x - x, q.cosa.y - y);
+      if (d < dm) (dm = d), (mejor = q);
+    });
+    if (!mejor) return;
+    st.pistas[mejor.id] = true;
+    if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.8 });
+    HUD.aviso(t("ex.mapa_tesoro_sub", [Math.round(dm / W.M)]), "lugar", t("ex.mapa_tesoro"));
+  }
+  // las zonas de los mapas del tesoro que siguen sin cavar: el centro corrido un poco para no regalar el lugar exacto
+  const RADIO_PISTA = 520;
+  function pistas() {
+    if (!st) return [];
+    return cofres
+      .filter((q) => st.pistas[q.id] && !st.cofres[q.id] && q.cosa.o.oculto)
+      .map((q) => ({ x: q.cosa.x + (((q.id * 137) % 400) - 200), y: q.cosa.y + (((q.id * 71) % 300) - 150), r: RADIO_PISTA, id: q.id }));
   }
   function despertar(p) {
     jug.interactuando = 0.7;
     st.piedras[p.id] = true;
     p.cosa.o.viva = true;
     A.ondaPor([[jug.x, jug.y], [p.cosa.x, p.cosa.y]], 1.4);
+    // la piedra despierta levanta la niebla de alrededor en el mapa
+    if (window.MAPA) MAPA.descubrir(p.cosa.x, p.cosa.y, 2400);
     const n = Object.keys(st.piedras).length;
     // el pedazo de historia que guarda cada piedra
     A.dialogoLibre([["piedra", "sx.susurro_" + (p.id % 20)]], () => {
@@ -320,11 +345,11 @@ window.SECRETOS = (function () {
       jug = A.jug;
       W = A.W;
       armar();
-      st = { cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {} };
+      st = { cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {}, pistas: {} };
       aplicar();
     },
     alEmpezar(extra) {
-      extra.sec = Object.assign({ cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {} }, extra.sec || {});
+      extra.sec = Object.assign({ cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {}, pistas: {} }, extra.sec || {});
       st = extra.sec;
       aplicar();
     },
@@ -438,5 +463,6 @@ window.SECRETOS = (function () {
   return {
     lista: () => ({ cofres, piedras, altares, manzanos, st }),
     viajar: () => viajar(null, true),
+    pistas,
   };
 })();

@@ -6,7 +6,7 @@ window.OPCIONES = (function () {
   "use strict";
   const t = (k, v) => I18N.t(k, v);
   const CLAVE = "eromash.aventura.opciones";
-  const v = { temblor: true, numeros: true, flechas: true, apuntar: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
+  const v = { brujula: true, temblor: true, numeros: true, flechas: true, apuntar: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
   try {
     Object.assign(v, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
@@ -38,6 +38,7 @@ window.OPCIONES = (function () {
       lista.push({ texto: t("op.calidad"), valor: t("op.calidad_" + CALIDAD.nivel), fn: () => (CALIDAD.nivel = N[(N.indexOf(CALIDAD.nivel) + 1) % 3]) });
     }
     const alternar = (k) => () => (v[k] = !v[k]);
+    lista.push({ texto: t("op.brujula"), valor: siNo(v.brujula), fn: alternar("brujula") });
     lista.push({ texto: t("op.temblor"), valor: siNo(v.temblor), fn: alternar("temblor") });
     lista.push({ texto: t("op.numeros"), valor: siNo(v.numeros), fn: alternar("numeros") });
     lista.push({ texto: t("op.flechas"), valor: siNo(v.flechas), fn: alternar("flechas") });

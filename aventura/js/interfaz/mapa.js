@@ -143,6 +143,42 @@ window.MAPA = (function () {
     if (cambio) st.v = Array.from(vista).join("");
   }
   const visto = (x, y) => vista[Math.floor(y / CEL) * GW + Math.floor(x / CEL)] === 1;
+  // cuánto del bosque ya se caminó (de 0 a 1), contando solo las celdas de adentro del borde
+  function explorado() {
+    let n = 0,
+      v = 0;
+    const b = Math.floor(W.BORDE / CEL);
+    for (let y = b; y < GH - b; y++)
+      for (let x = b; x < GW - b; x++) {
+        n++;
+        v += vista[y * GW + x];
+      }
+    return n ? v / n : 0;
+  }
+  // la zona de un mapa del tesoro: un círculo dorado punteado con una X en el medio
+  function zonaTesoro(c, px, py, r) {
+    c.save();
+    c.setLineDash([4, 4]);
+    c.strokeStyle = "#FFD98A";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.arc(px, py, r, 0, Math.PI * 2);
+    c.stroke();
+    c.setLineDash([]);
+    const x = Math.max(4, r * 0.35);
+    c.lineWidth = 4;
+    c.strokeStyle = "#111111";
+    c.beginPath();
+    c.moveTo(px - x, py - x);
+    c.lineTo(px + x, py + x);
+    c.moveTo(px + x, py - x);
+    c.lineTo(px - x, py + x);
+    c.stroke();
+    c.lineWidth = 2.2;
+    c.strokeStyle = "#FFD98A";
+    c.stroke();
+    c.restore();
+  }
 
 
   // ---------- las miniaturas ----------
@@ -185,7 +221,9 @@ window.MAPA = (function () {
       const L = W.LUGARES[id];
       if (!L || !visto(L.p[0], L.p[1])) continue;
       const hecho = (HECHO_LUGAR[id] && !!ban[HECHO_LUGAR[id]]) || (HECHO_UNICO[id] && unicoMuerto(HECHO_UNICO[id]));
-      poner(TIPO_LUGAR[id], L.p[0], L.p[1], { nombre: A.H.E.vistos.includes(id) ? t("av.lugar_" + id) : null, apagado: hecho }, 0);
+      const conocido = A.H.E.vistos.includes(id),
+        sec = conocido && window.EXPLORA ? EXPLORA.secretosDe(id) : null;
+      poner(TIPO_LUGAR[id], L.p[0], L.p[1], { nombre: conocido ? t("av.lugar_" + id) : null, tip: sec && sec.n ? t("ex.secretos", [sec.h, sec.n]) : "", apagado: hecho }, 0);
     }
     if (!totems) totems = W.COSAS.filter((o) => o.id === "totemCampamento").map((o) => ({ o, g: grupoDe(o) }));
     totems.forEach(({ o, g }) => visto(o.x, o.y) && poner("campamento", o.x, o.y, { apagado: limpio(g) }, 1));
@@ -384,7 +422,7 @@ window.MAPA = (function () {
       if (px < -20 || py < -20 || px > cv.width + 20 || py > cv.height + 20) return;
       ICONOS.dibujar(c, tipo, px, py, [18, 14, 12, 10][pri] * zi * (op.apagado ? ACHICAR : 1), op);
       if (op.nombre) nombres.push([op.nombre, px, py - 19 * zi]);
-      tocables.push({ px, py, r: [18, 14, 12, 10][pri] * zi, texto: op.nombre || t("mp.ley_" + op.cat) + (op.apagado ? " · " + t("mp.hecho") : "") });
+      tocables.push({ px, py, r: [18, 14, 12, 10][pri] * zi, texto: (op.nombre || t("mp.ley_" + op.cat)) + (op.tip ? " · " + op.tip : "") + (op.apagado ? " · " + t("mp.hecho") : "") });
     });
     // nombres de los lugares descubiertos
     c.font = '700 13px "Eromash Text", system-ui, sans-serif';
@@ -407,6 +445,14 @@ window.MAPA = (function () {
       c.arc(px, py, 9, 0, Math.PI * 2);
       c.stroke();
     }
+    // los mapas del tesoro encontrados en los arcones: dónde cavar
+    if (window.SECRETOS)
+      SECRETOS.pistas().forEach((z) => {
+        const [px, py] = aLienzo(cv, z.x, z.y),
+          [qx] = aLienzo(cv, z.x + z.r, z.y);
+        zonaTesoro(c, px, py, Math.max(8, qx - px));
+        tocables.push({ px, py, r: Math.max(12, qx - px), texto: t("ex.zona_tesoro") });
+      });
     // la marca propia: un banderín dorado
     const mk = marca();
     if (mk) {
@@ -482,7 +528,7 @@ window.MAPA = (function () {
     html += `<button class="ley${st && st.verHecho ? "" : " apagada"}" data-cat="_hecho"><canvas width="56" height="56"></canvas><span>${t("mp.ley_hecho")}</span><em></em></button>`;
     const el = document.getElementById("mapaLeyenda");
     if (!el) return;
-    el.innerHTML = `<div class="ley-titulo">${t("mp.ley_titulo")}</div>` + html;
+    el.innerHTML = `<div class="ley-titulo">${t("mp.ley_titulo")}</div><div class="ley-explorado">${t("ex.explorado", [Math.floor(explorado() * 100)])}</div>` + html;
     el.querySelectorAll("button").forEach((b) => {
       const cat = b.dataset.cat,
         cx = b.querySelector("canvas").getContext("2d");
@@ -573,6 +619,12 @@ window.MAPA = (function () {
       if (dentro(n.x, n.y)) rombo(n.x, n.y, "#7BC86C", 3);
     }
     if (A.ciervo && A.ciervo.activo) rombo(A.ciervo.x, A.ciervo.y, "#9A6BD8", 5);
+    if (window.SECRETOS)
+      SECRETOS.pistas().forEach((z) => {
+        if (!dentro(z.x, z.y) && Math.hypot(z.x - jug.x, z.y - jug.y) > LADO) return;
+        const [px, py] = aqui(z.x, z.y);
+        zonaTesoro(c, px, py, z.r * k);
+      });
     // el objetivo (rúnico) y la marca propia (dorada): anillo si se ve, flecha en el borde si no
     const o = A.H.objetivo();
     const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
@@ -683,7 +735,8 @@ window.MAPA = (function () {
       paso += dt;
       if (paso > 0.5) {
         paso = 0;
-        marcar();
+        // desde lo alto (el adarve, un mirador) se ve el doble de lejos
+        marcar(jug.x, jug.y, jug.alto ? 4 : 2);
       }
       if (J.modo === "juego" && CONTROLES.recien("mapa")) abrir();
       else if (J.modo === "menu" && document.getElementById("mapaLienzo") && CONTROLES.recien("mapa")) A.cerrarMenu();
@@ -691,5 +744,5 @@ window.MAPA = (function () {
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   // descubre de golpe un pedazo del mapa (las piedras del camino): radio en unidades del mundo
-  return { abrir, marca, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
+  return { abrir, marca, explorado, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
 })();
