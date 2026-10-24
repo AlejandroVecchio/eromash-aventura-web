@@ -1278,7 +1278,8 @@ window.ELDERVALD = (function () {
     c.stroke();
   }
   // dibuja el piso visible; esc = píxeles por unidad. Los trozos se guardan (como mucho 30).
-  function dibujarPiso(c, x0, y0, x1, y1, esc) {
+  // todo: pinta todos los trozos que falten de una vez (el editor, al armar su vista de lejos)
+  function dibujarPiso(c, x0, y0, x1, y1, esc, todo) {
     if (Math.abs(esc - escalaCache) > 0.01) {
       cache.clear();
       escalaCache = esc;
@@ -1293,7 +1294,7 @@ window.ELDERVALD = (function () {
         const k = tx + "," + ty;
         let cv = cache.get(k);
         if (!cv) {
-          if (pintados > 2 && cache.size) continue; // no más de 3 por cuadro: evita tirones al llegar a otra zona
+          if (pintados > 2 && cache.size && !todo) continue; // no más de 3 por cuadro: evita tirones al llegar a otra zona
           cv = pintarTrozo(tx, ty, esc);
           pintados++;
           cache.set(k, cv);

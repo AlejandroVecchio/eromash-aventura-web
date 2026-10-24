@@ -1086,16 +1086,17 @@ window.ASSETS = (function () {
     santuario: { f: santuario, alto: 180, choque: { w: 300, h: 40 }, grupo: "este", luz: true },
     zarzas: { f: zarzas, alto: 80, choque: null, grupo: "este" },
   };
-  // o.esc (tamaño), o.ex / o.ey (ancho y alto) y o.esp (espejado) valen para cualquier asset: los pone el editor
+  // o.esc (tamaño), o.ex / o.ey (ancho y alto), o.esp (espejado) y o.rot (giro en grados, sobre el pie) valen para cualquier asset: los pone el editor
   function dibujar(c, id, x, y, t, o = {}) {
     const a = LISTA[id];
     if (!a) return;
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
-    if (ex === 1 && ey === 1) return a.f(c, x, y, t, o);
+    if (ex === 1 && ey === 1 && !o.rot) return a.f(c, x, y, t, o);
     c.save();
     c.translate(x, y);
+    if (o.rot) c.rotate((o.rot * Math.PI) / 180);
     c.scale(ex, ey);
     c.translate(-x, -y);
     a.f(c, x, y, t, o);

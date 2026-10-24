@@ -110,9 +110,93 @@
     });
     return l;
   }
+  // ---------- de lejos, liviano ----------
+  // Orden de importancia: 0 lo de la historia, lo agregado o movido y las estructuras; 1 lo demás que choca; 2 los
+  // árboles; 3 lo chico de adorno. Según el zoom:
+  //   cerca (≥ 0.7): todo como es
+  //   medio (0.5–0.7): sin lo chico (3)
+  //   de 0.5 para abajo: el mundo de base queda horneado en baldosas (piso + objetos, tres niveles de detalle) y
+  //   encima solo se dibuja en vivo lo cambiado en el editor
+  const LIVIANO = 0.7,
+    HORNO = 0.5;
+  const chico = (d) => !d.choque && d.alto < 90 && d.agregado == null && d.movido == null && !(d.cosa && nombradas.has(d.cosa));
+  // baldosas horneadas: dos niveles (lejos y muy lejos). La firma de cada una son los cambios del editor que caen
+  // adentro; si cambia, se vuelve a hornear.
+  const NIVELES = [
+    { T: 1024, res: 0.55, m: new Map() },
+    { T: 2048, res: 0.26, m: new Map() },
+    { T: 4096, res: 0.12, m: new Map() },
+    { T: 8192, res: 0.05, m: new Map() },
+  ];
+  function firma(x0, y0, x1, y1) {
+    const den = (x, y) => x > x0 - 500 && x < x1 + 500 && y > y0 - 300 && y < y1 + 1200;
+    return est.quitar.filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
+  }
+  function hornear(nv, tx, ty) {
+    const x0 = tx * nv.T,
+      y0 = ty * nv.T,
+      x1 = x0 + nv.T,
+      y1 = y0 + nv.T;
+    const cvb = document.createElement("canvas");
+    cvb.width = cvb.height = Math.ceil(nv.T * nv.res);
+    const g = cvb.getContext("2d");
+    g.scale(nv.res, nv.res);
+    g.translate(-x0, -y0);
+    W.dibujarPiso(g, x0, y0, x1, y1, 0.2, true);
+    const l = [];
+    W.cercanas(x0 - 400, y0 - 200, x1 + 400, y1 + 1200, (o) => {
+      if (movidos.has(o) || sacado(o) || o.y < y0 - 60 || o.y - o.alto * 1.2 > y1 || o.x < x0 - 500 || o.x > x1 + 500) return;
+      if (nv.res < 0.08 && !o.choque && o.alto < 90) return; // muy lejos lo chico ni se ve
+      l.push(o);
+    });
+    l.filter((o) => o.o.piso).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
+    l.filter((o) => !o.o.piso).sort((a, b) => a.y - b.y).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
+    return { cv: cvb, firma: firma(x0, y0, x1, y1) };
+  }
+  // dibuja las baldosas del nivel que tocan la vista; hornea a lo sumo una que falte o haya cambiado por cuadro.
+  // Devuelve si quedó alguna sin hornear.
+  function baldosas(nv, x0, y0, x1, y1) {
+    let horneada = false,
+      falta = false;
+    const tx0 = Math.max(0, Math.floor(x0 / nv.T)),
+      tx1 = Math.min(Math.ceil(W.ANCHO / nv.T) - 1, Math.floor(x1 / nv.T)),
+      ty0 = Math.max(0, Math.floor(y0 / nv.T)),
+      ty1 = Math.min(Math.ceil(W.ALTO / nv.T) - 1, Math.floor(y1 / nv.T));
+    for (let ty = ty0; ty <= ty1; ty++)
+      for (let tx = tx0; tx <= tx1; tx++) {
+        const k = tx + "," + ty;
+        let b = nv.m.get(k);
+        const vieja = b && b.firma !== firma(tx * nv.T, ty * nv.T, (tx + 1) * nv.T, (ty + 1) * nv.T);
+        if ((!b || vieja) && !horneada) {
+          b = hornear(nv, tx, ty);
+          nv.m.delete(k);
+          nv.m.set(k, b);
+          if (nv.m.size > 64) nv.m.delete(nv.m.keys().next().value); // las que hace más que no se ven
+          horneada = true;
+        } else if (!b || vieja) falta = true;
+        if (b) c.drawImage(b.cv, tx * nv.T, ty * nv.T, nv.T + 1, nv.T + 1);
+        else if (croquis.complete && croquis.naturalWidth) {
+          const sx = croquis.naturalWidth / W.ANCHO;
+          c.drawImage(croquis, tx * nv.T * sx, ty * nv.T * sx, nv.T * sx, nv.T * sx, tx * nv.T, ty * nv.T, nv.T, nv.T);
+        }
+      }
+    return falta;
+  }
+  // solo se redibuja cuando algo cambia (o cada tanto, por lo que se anima)
+  let sucio = true,
+    ultimo = 0,
+    faltan = false;
+  const pedir = () => (sucio = true);
+  ["pointermove", "pointerdown", "pointerup", "wheel", "keydown", "keyup", "input", "change", "click", "resize"].forEach((ev) => addEventListener(ev, pedir, { capture: true, passive: true }));
+
   let tPrev = performance.now(),
     tt = 0;
   function dibujar() {
+    const ahoraT = performance.now(),
+      moviendo = Object.keys(teclas).some((k) => teclas[k]);
+    if (!sucio && !faltan && !moviendo && ahoraT - ultimo < (cam.z >= LIVIANO ? 120 : 1000)) return requestAnimationFrame(dibujar);
+    sucio = false;
+    ultimo = ahoraT;
     const ahora = performance.now();
     tt += Math.min(0.1, (ahora - tPrev) / 1000);
     tPrev = ahora;
@@ -126,12 +210,13 @@
       x1 = x0 + vw,
       y1 = y0 + vh;
     c.setTransform(cam.z, 0, 0, cam.z, -x0 * cam.z, -y0 * cam.z);
-    const lejos = cam.z < 0.07;
-    if (lejos || !croquis.complete) {
-      if (croquis.complete && croquis.naturalWidth) c.drawImage(croquis, 0, 0, W.ANCHO, W.ALTO);
-    } else {
+    const lejos = cam.z < 0.07,
+      horno = cam.z < HORNO;
+    if (horno) faltan = baldosas(NIVELES[lejos ? 3 : cam.z < 0.16 ? 2 : cam.z < 0.3 ? 1 : 0], x0, y0, x1, y1);
+    else {
+      faltan = false;
       // el piso cacheado a dos resoluciones fijas, para no repintarlo en cada zoom
-      W.dibujarPiso(c, x0, y0, x1, y1, cam.z < 0.25 ? 0.2 : 0.5);
+      W.dibujarPiso(c, x0, y0, x1, y1, cam.z < 0.5 ? 0.2 : 0.5);
     }
     // los caminos nuevos, pintados como los del juego (tierra pisada, borde oscuro, centro gastado)
     const trazoC = (pts, w, col) => {
@@ -158,7 +243,8 @@
       });
     }
     if (!lejos) {
-      const lista = visibles(x0, y0, x1, y1);
+      // horneado: lo de base ya está en las baldosas, en vivo solo lo cambiado (agregado o movido)
+      const lista = visibles(x0, y0, x1, y1).filter((d) => (horno ? d.agregado != null || d.movido != null : cam.z >= LIVIANO || !chico(d)));
       lista.filter((d) => d.piso).forEach((d) => ASSETS.dibujar(c, d.id, d.x, d.y, tt, d.o));
       lista.filter((d) => !d.piso).sort((a, b) => a.y - b.y).forEach((d) => {
         if (sel && sel.d && sel.d.agregado === d.agregado && sel.d.cosa === d.cosa) c.globalAlpha = 0.55;
@@ -202,7 +288,7 @@
     if (!lejos) {
       const lista2 = visibles(x0, y0, x1, y1);
       lista2.forEach((d) => {
-        if (!nombradas.has(d.cosa)) return;
+        if (!nombradas.has(d.cosa) || (horno && cam.z < 0.1)) return;
         const r = 8 / cam.z;
         c.strokeStyle = "#73D5DB";
         c.lineWidth = 2.5 / cam.z;
@@ -389,9 +475,10 @@
     else o[k] = v;
   }
   const deslizadores = [
-    ["selEsc", "esc"],
-    ["selEx", "ex"],
-    ["selEy", "ey"],
+    ["selEsc", "esc", 1],
+    ["selEx", "ex", 1],
+    ["selEy", "ey", 1],
+    ["selRot", "rot", 0],
   ];
   function pintarElegida() {
     const panel = $("selPanel");
@@ -404,21 +491,21 @@
     $("selNombre").textContent = nom === "as." + id ? id : nom;
     $("selTipo").textContent = hist ? t("ed.de_historia", [hist]) : elegida.a ? t("ed.sel_agregado", [hijosDe(elegida.a.u || "-").length]) : t("ed.sel_mundo", [hijosDe(claveDe(elegida.cosa)).length]);
     const dos = o.x2 !== undefined;
-    deslizadores.forEach(([el, k]) => {
-      $(el).value = o[k] || 1;
-      $(el + "V").textContent = (+$(el).value).toFixed(2);
+    deslizadores.forEach(([el, k, base]) => {
+      $(el).value = o[k] || base;
+      $(el + "V").textContent = k === "rot" ? Math.round(+$(el).value) + "°" : (+$(el).value).toFixed(2);
       $(el).disabled = dos;
     });
     $("selEsp").checked = !!o.esp;
     $("selDos").classList.toggle("oculto", !dos);
   }
-  deslizadores.forEach(([el, k]) => {
+  deslizadores.forEach(([el, k, base]) => {
     $(el).addEventListener("pointerdown", () => recordar());
     $(el).addEventListener("keydown", () => recordar());
     $(el).addEventListener("input", () => {
       const v = +$(el).value;
-      $(el + "V").textContent = v.toFixed(2);
-      cambiarElegida(k, v, Math.abs(v - 1) < 0.001);
+      $(el + "V").textContent = k === "rot" ? Math.round(v) + "°" : v.toFixed(2);
+      cambiarElegida(k, v, Math.abs(v - base) < 0.001);
     });
     $(el).addEventListener("change", guardar);
   });
@@ -430,7 +517,7 @@
   $("selComo").onclick = () => {
     if (!elegida) return;
     recordar();
-    ["esc", "ex", "ey", "esp"].forEach((k) => cambiarElegida(k, 0, true));
+    ["esc", "ex", "ey", "esp", "rot"].forEach((k) => cambiarElegida(k, 0, true));
     guardar();
     pintarElegida();
   };
@@ -851,6 +938,20 @@
     if (e.key === "1") ponerHerr("poner");
     if (e.key === "2") ponerHerr("mover");
     if (e.key === "3") ponerHerr("borrar");
+    if (elegida && (e.key === "f" || e.key === "F")) {
+      recordar();
+      cambiarElegida("esp", true, !!opcionesElegida().esp);
+      guardar();
+      pintarElegida();
+    }
+    if (elegida && (e.key === "q" || e.key === "e" || e.key === "Q" || e.key === "E")) {
+      recordar();
+      let r = (opcionesElegida().rot || 0) + (e.key.toLowerCase() === "e" ? 15 : -15);
+      r = ((((r + 180) % 360) + 360) % 360) - 180;
+      cambiarElegida("rot", r, r === 0);
+      guardar();
+      pintarElegida();
+    }
     if (e.key === "4") ponerHerr("camino");
     if (e.key === "5") ponerHerr("nota");
     if (e.key === "Enter" && camino) terminarCamino();
