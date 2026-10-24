@@ -1022,6 +1022,12 @@ window.ELDERVALD = (function () {
   // agregado aparta los árboles que le quedan encima.
   {
     const AG = window.AGREGADOS || {};
+    // lo pintado en el piso que se sacó (charcos de barro, musgo, helechos, hongos)
+    (AG.quitarDeco || []).forEach((q) => {
+      const es = (d) => d.id === q.id && Math.abs(d.x - q.x) < 6 && Math.abs(d.y - q.y) < 6;
+      for (let i = DECO.length - 1; i >= 0; i--) if (es(DECO[i])) DECO.splice(i, 1);
+      for (let i = BARROS.length - 1; i >= 0; i--) if (es(BARROS[i])) BARROS.splice(i, 1);
+    });
     (AG.quitar || []).forEach((q) => {
       for (let i = COSAS.length - 1; i >= 0; i--) {
         const c = COSAS[i];
@@ -1066,6 +1072,7 @@ window.ELDERVALD = (function () {
       if (def.piso) o.piso = true;
       const c = poner(a.id, [a.x, a.y], o);
       c.agregado = true;
+      if (a.id === "barro") BARROS.push({ x: a.x, y: a.y, s: (o.s || 1) * (o.esc || 1) }); // el barro agregado también frena
       const ancho = c.choque ? (c.choque.w ? c.choque.w / 2 : c.choque.r * 1.3) + 40 : 0;
       if (!ancho) return;
       for (let i = COSAS.length - 1; i >= 0; i--) {

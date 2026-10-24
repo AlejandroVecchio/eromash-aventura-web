@@ -16,7 +16,7 @@
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [], mover: [], caminos: [], notas: [] };
+  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -27,6 +27,7 @@
   if (!est.notas) est.notas = [];
   if (!est.caminos) est.caminos = [];
   if (!est.mover) est.mover = [];
+  if (!est.quitarDeco) est.quitarDeco = [];
   const historial = [];
   const recordar = () => {
     historial.push(JSON.stringify(est));
@@ -39,7 +40,9 @@
     if (!est.notas) est.notas = [];
     if (!est.caminos) est.caminos = [];
     if (!est.mover) est.mover = [];
+    if (!est.quitarDeco) est.quitarDeco = [];
     armarMovidos();
+    aplicarDeco();
     $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]);
     armarIr();
   };
@@ -72,6 +75,47 @@
     const v = W.NOMBRADAS[k];
     (Array.isArray(v) ? v : [v]).forEach((x) => x && x.id && !nombradas.has(x) && nombradas.set(x, k.replace(/\d+$/, "")));
   });
+  // lo pintado en el piso (charcos de barro, musgo, helechos, hongos): se saca con Sacar (est.quitarDeco)
+  const DECO0 = W.DECO.slice(),
+    DECO_SACABLE = { barro: 1, alfombraMusgo: 1, helechos: 1, hongosRocio: 1 };
+  let decoSacada = new Set();
+  const claveDeco = (d) => d.id + "@" + Math.round(d.x) + "," + Math.round(d.y);
+  function aplicarDeco() {
+    const nueva = new Set(est.quitarDeco.map(claveDeco));
+    const cambian = DECO0.filter((d) => nueva.has(claveDeco(d)) !== decoSacada.has(claveDeco(d)));
+    decoSacada = nueva;
+    if (!cambian.length) return;
+    W.DECO.length = 0;
+    DECO0.forEach((d) => !decoSacada.has(claveDeco(d)) && W.DECO.push(d));
+    cambian.forEach((d) => W.invalidar(d.x, d.y));
+  }
+  // con Sacar: lo del piso gana si el puntero está sobre el charco y no al pie de un objeto (un tronco que lo tapa)
+  function tocadoSacar(x, y) {
+    const d = tocado(x, y),
+      dd = cam.z >= 0.15 ? decoEn(x, y) : null;
+    if (!dd) return d;
+    if (d) {
+      const ancho = d.choque ? (d.choque.w ? d.choque.w / 2 : d.choque.r) + 20 : 30;
+      if (Math.abs(x - d.x) < ancho && Math.abs(y - d.y) < 40) return d;
+    }
+    return { deco: dd };
+  }
+  function decoEn(x, y) {
+    let mejor = null,
+      dm = 1;
+    W.DECO.forEach((d) => {
+      if (!DECO_SACABLE[d.id]) return;
+      const rx = d.id === "barro" || d.id === "alfombraMusgo" ? 66 * (d.s || 1) : 36,
+        ry = rx * 0.5;
+      if (Math.abs(x - d.x) > rx || Math.abs(y - d.y) > ry) return;
+      const q = Math.hypot((x - d.x) / rx, (y - d.y) / ry);
+      if (q < dm) {
+        dm = q;
+        mejor = d;
+      }
+    });
+    return mejor;
+  }
   // lo del mundo que se movió (est.mover: { id, x, y } donde estaba → { nx, ny }), para dibujarlo en su lugar nuevo
   let movidos = new Map(); // cosa → índice en est.mover
   function armarMovidos() {
@@ -130,7 +174,7 @@
   ];
   function firma(x0, y0, x1, y1) {
     const den = (x, y) => x > x0 - 500 && x < x1 + 500 && y > y0 - 300 && y < y1 + 1200;
-    return est.quitar.filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
+    return est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
   }
   function hornear(nv, tx, ty) {
     const x0 = tx * nv.T,
@@ -301,8 +345,9 @@
         c.stroke();
       });
       marcarElegida(lista2);
-      const h = cursor && !arrastre && !sel ? tocado(cursor.x, cursor.y) : null;
-      if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(h);
+      const h = cursor && !arrastre && !sel ? (herr === "borrar" ? tocadoSacar(cursor.x, cursor.y) : tocado(cursor.x, cursor.y)) : null;
+      if (h && h.deco) etiqueta({ id: h.deco.id, x: h.deco.x, y: h.deco.y });
+      else if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(h);
     }
     est.quitar.forEach((q) => {
       if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) return;
@@ -865,8 +910,15 @@
       sel = { d, dx: x - d.x, dy: y - d.y, mueve: true, x0: x, y0: y, creado, hijos: hijosDe(claveDe(d)) };
       cv.style.cursor = "grabbing";
     } else if (herr === "borrar") {
-      const d = tocado(x, y);
-      if (!d) return;
+      const d = tocadoSacar(x, y);
+      if (!d || d.deco) {
+        const dd = d && d.deco;
+        if (!dd) return;
+        recordar();
+        est.quitarDeco.push({ id: dd.id, x: r1(dd.x), y: r1(dd.y) });
+        guardar();
+        return;
+      }
       if (d.agregado != null) {
         recordar();
         est.poner.splice(d.agregado, 1);
@@ -1026,7 +1078,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -1066,12 +1118,13 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
         if (!nuevo.caminos) nuevo.caminos = [];
         if (!nuevo.mover) nuevo.mover = [];
+        if (!nuevo.quitarDeco) nuevo.quitarDeco = [];
         recordar();
         est = nuevo;
         guardar();
@@ -1089,7 +1142,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], mover: [], caminos: [], notas: [] };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], notas: [] };
     guardar();
   };
 
