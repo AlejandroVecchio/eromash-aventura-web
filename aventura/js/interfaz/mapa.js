@@ -167,10 +167,19 @@ window.MAPA = (function () {
   };
   const unicoMuerto = (id) => window.HORDAS && HORDAS.grupos.some((g) => g.unico === id && g.miembros.some((e) => e.lider && e.muerto > 0));
   const limpio = (g) => g && g.miembros.every((e) => e.muerto > 0);
+  // las clases de marca: así se filtran en el mapa grande y se nombran en la leyenda (mp.ley_<clase>)
+  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano" };
+  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "puente"];
+  // ícono de muestra de cada clase para la leyenda
+  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], puente: ["puente", {}] };
+  const filtro = (cat) => !st || !st.ocultas || !st.ocultas[cat];
   function cadaMarca(fn) {
     const hechas = [],
       pend = [];
-    const poner = (tipo, x, y, op, pri) => (op.apagado ? hechas : pend).push([tipo, x, y, op, pri]);
+    const poner = (tipo, x, y, op, pri) => {
+      op.cat = op.cat || CAT_DE[tipo] || "lugar";
+      (op.apagado ? hechas : pend).push([tipo, x, y, op, pri]);
+    };
     const ban = A.H.E.banderas || {};
     for (const id in TIPO_LUGAR) {
       const L = W.LUGARES[id];
@@ -188,13 +197,13 @@ window.MAPA = (function () {
     const S = SECRETOS.lista();
     S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && poner("altar", a.cosa.x, a.cosa.y, { runa: a.runa, col: ASSETS.COL_RUNA[a.runa], apagado: a.cosa.o.tomada }, 1));
     // las despiertas son puntos de viaje: llevan Raidho (el camino) y brillan; las dormidas, Ansuz más tenue
-    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedra", p.cosa.x, p.cosa.y, S.st.piedras[p.id] ? { runa: "raidho", col: "#C8F2F4" } : { runa: "ansuz", col: "#4E8E92" }, 2));
+    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedra", p.cosa.x, p.cosa.y, S.st.piedras[p.id] ? { runa: "raidho", col: "#C8F2F4", cat: "viaje" } : { runa: "ansuz", col: "#4E8E92", cat: "piedra" }, 2));
     if (window.RITOS) {
       const R = RITOS.lista();
       R.camino.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedraCamino", p.cosa.x, p.cosa.y, { apagado: !!R.st.camino[p.id] }, 2));
       R.ritos.forEach((r) => {
         const d = ASSETS.RITO[r.tipo];
-        r.piedras.forEach((q) => visto(q.x, q.y) && poner("piedra", q.x, q.y, { runa: d.runa, col: d.col, apagado: !!R.st.ritos[r.id] }, 2));
+        r.piedras.forEach((q) => visto(q.x, q.y) && poner("piedra", q.x, q.y, { runa: d.runa, col: d.col, apagado: !!R.st.ritos[r.id], cat: "rito" }, 2));
         if (visto(r.cofre.x, r.cofre.y)) poner("cofre", r.cofre.x, r.cofre.y, { col: r.cofre.o.sellado ? "#9A6BD8" : "#FFD98A", apagado: !!R.st.cofres[r.id] }, 3);
       });
     }
@@ -253,9 +262,10 @@ window.MAPA = (function () {
     vistaMapa.cy = jug.y;
     acotar();
     A.menu(
-      `<h2>${t("mp.titulo")}</h2><div class="mapa-marco"><canvas id="mapaLienzo" class="mapa"></canvas>` +
+      `<h2>${t("mp.titulo")}</h2><div class="mapa-cuerpo"><div class="mapa-marco"><canvas id="mapaLienzo" class="mapa"></canvas>` +
         `<div class="mapa-zoom"><button id="mapaMas" aria-label="${t("mp.acercar")}">+</button><button id="mapaMenos" aria-label="${t("mp.alejar")}">−</button></div></div>` +
-        `<div class="sub mapa-ley">${t("mp.leyenda")} ${t("mp.ayuda_marca")}</div>`,
+        `<div id="mapaLeyenda" class="mapa-leyenda"></div></div>` +
+        `<div class="sub mapa-ley">${t("mp.ayuda_corta")}</div>`,
       [
         { texto: t("mp.viajar"), fn: () => {
           A.cerrarMenu();
@@ -269,6 +279,7 @@ window.MAPA = (function () {
     // el botón de quitar: los botones del menú no traen id, se busca por su texto
     document.querySelectorAll("#capaCaja button").forEach((b) => b.textContent === t("mp.quitar_marca") && (b.id = "mapaQuitar"));
     botonQuitar();
+    leyenda();
     const cv = document.getElementById("mapaLienzo");
     const enLienzo = (e) => {
       const r = cv.getBoundingClientRect();
@@ -300,7 +311,15 @@ window.MAPA = (function () {
       }
     });
     cv.addEventListener("pointermove", (e) => {
-      if (!dedos.has(e.pointerId)) return;
+      if (!dedos.has(e.pointerId)) {
+        const [px, py] = enLienzo(e),
+          q = buscarTocable(px, py);
+        if (q !== senalado) {
+          senalado = q;
+          dibujar();
+        }
+        return;
+      }
       const antes = dedos.get(e.pointerId),
         ahora = enLienzo(e);
       dedos.set(e.pointerId, ahora);
@@ -325,7 +344,11 @@ window.MAPA = (function () {
       const p = dedos.get(e.pointerId);
       dedos.delete(e.pointerId);
       if (dedos.size < 2) pellizco = 0;
-      if (e.type === "pointerup" && movido <= 6 && dedos.size === 0) ponerMarca(...aMundo(cv, p[0], p[1]));
+      if (e.type === "pointerup" && movido <= 6 && dedos.size === 0) {
+        // tocar un ícono dice qué es (y lo marca); tocar en otro lado solo marca
+        senalado = buscarTocable(p[0], p[1]);
+        ponerMarca(...aMundo(cv, p[0], p[1]));
+      }
     };
     cv.addEventListener("pointerup", soltar);
     cv.addEventListener("pointercancel", soltar);
@@ -354,11 +377,14 @@ window.MAPA = (function () {
     c.drawImage(niebla, wx0 * kn, wy0 * kn, vw * kn, vh * kn, 0, 0, cv.width, cv.height);
     const nombres = [],
       zi = Math.min(1.6, 1 + (vistaMapa.z - 1) * 0.15);
+    tocables = [];
     cadaMarca((tipo, x, y, op, pri) => {
+      if (!filtro(op.cat) || (op.apagado && !(st && st.verHecho) && op.cat !== "lugar")) return;
       const [px, py] = aLienzo(cv, x, y);
       if (px < -20 || py < -20 || px > cv.width + 20 || py > cv.height + 20) return;
-      ICONOS.dibujar(c, tipo, px, py, [16, 12, 10, 7][pri] * zi * (op.apagado ? ACHICAR : 1), op);
-      if (op.nombre) nombres.push([op.nombre, px, py - 17 * zi]);
+      ICONOS.dibujar(c, tipo, px, py, [18, 14, 12, 10][pri] * zi * (op.apagado ? ACHICAR : 1), op);
+      if (op.nombre) nombres.push([op.nombre, px, py - 19 * zi]);
+      tocables.push({ px, py, r: [18, 14, 12, 10][pri] * zi, texto: op.nombre || t("mp.ley_" + op.cat) + (op.apagado ? " · " + t("mp.hecho") : "") });
     });
     // nombres de los lugares descubiertos
     c.font = '700 13px "Eromash Text", system-ui, sans-serif';
@@ -416,6 +442,60 @@ window.MAPA = (function () {
     c.fill();
     c.stroke();
     c.restore();
+    // el nombre de lo que está bajo el puntero (o lo último tocado)
+    if (senalado) {
+      const tx = senalado.px,
+        ty = senalado.py - senalado.r - 12;
+      c.font = '700 14px "Eromash Text", system-ui, sans-serif';
+      const w = c.measureText(senalado.texto).width + 16;
+      c.fillStyle = "rgba(17,17,17,0.92)";
+      c.fillRect(tx - w / 2, ty - 18, w, 24);
+      c.fillStyle = "#FFD98A";
+      c.textAlign = "center";
+      c.fillText(senalado.texto, tx, ty);
+    }
+  }
+  let tocables = [],
+    senalado = null;
+  function buscarTocable(px, py) {
+    let mejor = null,
+      dm = 1e9;
+    for (const q of tocables) {
+      const d = Math.hypot(q.px - px, q.py - py);
+      if (d < q.r + 8 && d < dm) (dm = d), (mejor = q);
+    }
+    return mejor;
+  }
+  // la leyenda: cada clase con su ícono, su nombre y cuántas faltan; tocarla la muestra u oculta en el mapa
+  function leyenda() {
+    const cuenta = {};
+    cadaMarca((tipo, x, y, op) => {
+      const k = (cuenta[op.cat] = cuenta[op.cat] || { p: 0, h: 0 });
+      op.apagado ? k.h++ : k.p++;
+    });
+    let html = "";
+    CATS.forEach((cat) => {
+      if (!cuenta[cat]) return;
+      const n = cuenta[cat];
+      html += `<button class="ley${filtro(cat) ? "" : " apagada"}" data-cat="${cat}"><canvas width="56" height="56"></canvas><span>${t("mp.ley_" + cat)}</span><em>${n.p ? n.p : "✓"}</em></button>`;
+    });
+    html += `<button class="ley${st && st.verHecho ? "" : " apagada"}" data-cat="_hecho"><canvas width="56" height="56"></canvas><span>${t("mp.ley_hecho")}</span><em></em></button>`;
+    const el = document.getElementById("mapaLeyenda");
+    if (!el) return;
+    el.innerHTML = `<div class="ley-titulo">${t("mp.ley_titulo")}</div>` + html;
+    el.querySelectorAll("button").forEach((b) => {
+      const cat = b.dataset.cat,
+        cx = b.querySelector("canvas").getContext("2d");
+      cx.scale(2, 2);
+      if (cat === "_hecho") ICONOS.dibujar(cx, "cofre", 14, 15, 10 * ACHICAR, { apagado: true });
+      else ICONOS.dibujar(cx, MUESTRA[cat][0], 14, 15, 10, MUESTRA[cat][1]);
+      b.onclick = () => {
+        if (cat === "_hecho") st.verHecho = !st.verHecho;
+        else (st.ocultas = st.ocultas || {})[cat] = !st.ocultas[cat];
+        leyenda();
+        dibujar();
+      };
+    });
   }
 
   // ---------- el minimapa ----------
@@ -457,10 +537,24 @@ window.MAPA = (function () {
       c.lineTo(px - r, py);
       c.fill();
     };
+    // en el minimapa solo lo que sirve ahora: los lugares, las piedras de viaje, los campamentos que siguen en pie y
+    // las cosas pendientes que están a un paso (las cinco más cercanas); lo hecho no aparece
+    const chicas = [];
     cadaMarca((tipo, x, y, op, pri) => {
-      if (!dentro(x, y)) return;
+      if (!dentro(x, y) || op.apagado) return;
+      if (op.cat === "lugar" || op.cat === "viaje" || op.cat === "campamento") {
+        const [px, py] = aqui(x, y);
+        ICONOS.dibujar(c, tipo, px, py, op.cat === "lugar" ? 9 : 7, op);
+        return;
+      }
+      if (op.cat === "puente" || op.cat === "camino" || op.cat === "rito") return;
+      const d = Math.hypot(x - jug.x, y - jug.y);
+      if (d < 1300) chicas.push([d, tipo, x, y, op]);
+    });
+    chicas.sort((a, b) => a[0] - b[0]);
+    chicas.slice(0, 5).forEach(([d, tipo, x, y, op]) => {
       const [px, py] = aqui(x, y);
-      ICONOS.dibujar(c, tipo, px, py, Math.max(3, [9, 7, 6, 5][pri] * (op.apagado ? ACHICAR : 1)), op);
+      ICONOS.dibujar(c, tipo, px, py, 6.5, op);
     });
     // criaturas despiertas o cerca (no se muestran las dormidas lejos: el bosque sigue teniendo sorpresas)
     for (const e of A.enemigos) {
@@ -528,6 +622,18 @@ window.MAPA = (function () {
     c.restore();
   }
 
+  // dónde está Eromash: el lugar descubierto más cerca si está adentro, si no el bosque
+  function lugarAqui() {
+    let mejor = null,
+      dm = 1e9;
+    for (const k of A.H.E.vistos) {
+      const L = W.LUGARES[k];
+      if (!L) continue;
+      const d = Math.hypot(L.p[0] - jug.x, L.p[1] - jug.y);
+      if (d < L.r * 1.4 + 300 && d < dm) (dm = d), (mejor = k);
+    }
+    return mejor ? t("av.lugar_" + mejor) : t("mp.bosque");
+  }
   const sistema = {
     iniciar(api) {
       A = api;
@@ -548,8 +654,9 @@ window.MAPA = (function () {
       dibujarMini();
       const h = A.hora(),
         txt = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.floor((h % 1) * 6) * 10).padStart(2, "0");
-      const lug = document.getElementById("miniLugar");
-      if (lug.textContent !== txt) lug.textContent = txt;
+      const lug = document.getElementById("miniLugar"),
+        todo = lugarAqui() + " · " + txt;
+      if (lug.textContent !== todo) lug.textContent = todo;
     },
     alEmpezar(extra) {
       extra.mapa = extra.mapa || { v: "" };
