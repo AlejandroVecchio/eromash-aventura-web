@@ -405,6 +405,7 @@ window.SECUNDARIAS = (function () {
       if (visible(huldra.x, huldra.y)) {
         if (Math.hypot(jug.x - huldra.x, jug.y - huldra.y) < 300) huldra.mira = VIKINGO.vista(jug.x - huldra.x, jug.y - huldra.y, huldra.mira);
         lista.push({
+          x: huldra.x,
           y: huldra.y,
           f: () => {
             GENTE.dibujar(c, "huldra", huldra.x, huldra.y, J.t, huldra.mira);
@@ -415,6 +416,7 @@ window.SECUNDARIAS = (function () {
       if (campanaSuelo && visible(campanaSuelo[0], campanaSuelo[1])) {
         const [bx, by] = campanaSuelo;
         lista.push({
+          x: bx,
           y: by,
           f: () => {
             DIB.halo(c, bx, by - 10, 50, "#FFD98A", 0.4 + Math.sin(J.t * 4) * 0.15);
@@ -426,6 +428,7 @@ window.SECUNDARIAS = (function () {
       // el nøkk, metido en el agua hasta la cintura, tocando
       if (visible(nokk.x, nokk.y)) {
         lista.push({
+          x: nokk.x,
           y: nokk.y,
           f: () => {
             const yy = nokk.y + 34;
@@ -456,6 +459,7 @@ window.SECUNDARIAS = (function () {
         }
         if (!visible(x, y)) return;
         lista.push({
+          x: x,
           y: y,
           f: () => {
             const a = [0.25, -0.35, 0.6][i],
@@ -480,6 +484,8 @@ window.SECUNDARIAS = (function () {
       const lv = jefes.lobo_viejo && jefes.lobo_viejo.e;
       if (lv && lv.activo && !lv.muerto && visible(lv.x, lv.y))
         lista.push({
+          x: lv.x,
+          pie: lv.y,
           y: lv.y + 0.5,
           f: () => {
             const s = lv.s;

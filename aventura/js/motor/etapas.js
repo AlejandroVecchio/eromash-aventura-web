@@ -132,6 +132,7 @@ window.ETAPAS = (function () {
       for (const m of musgos) {
         if (m.tomado || !visible(m.x, m.y)) continue;
         lista.push({
+          x: m.x,
           y: m.y,
           f: () => {
             D.sombra(c, m.x, m.y, 26, 8);

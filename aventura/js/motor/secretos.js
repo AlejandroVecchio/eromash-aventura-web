@@ -460,7 +460,7 @@ window.SECRETOS = (function () {
         if (st.cofres[q.id] || q.cosa.o.oculto || !visible(q.cosa.x, q.cosa.y)) return;
         const g = Math.max(0, Math.sin(J.t * 2.2 + q.id * 1.7)) ** 6;
         if (g < 0.05) return;
-        lista.push({ y: q.cosa.y + 1, f: () => DIB.alfa(c, g, () => {
+        lista.push({ x: q.cosa.x, pie: q.cosa.y, y: q.cosa.y + 1, f: () => DIB.alfa(c, g, () => {
           const x = q.cosa.x + 14,
             y = q.cosa.y - 52;
           DIB.P(c, [x, y - 10, x + 3, y - 3, x + 10, y, x + 3, y + 3, x, y + 10, x - 3, y + 3, x - 10, y, x - 3, y - 3], "#FFF4D0");

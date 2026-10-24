@@ -290,6 +290,8 @@ window.CRIATURAS = (function () {
   flashCv.height = FLASH_H * FLASH_PIX;
   const flashC = flashCv.getContext("2d");
   function dibujar(c, id, x, y, t, o = {}) {
+    // la vista es la del mundo: con la cámara girada se elige la de la pantalla
+    if (window.VOL && VOL.cam.g) o = Object.assign({}, o, VOL.relativa(o.vista || "S", o.espejo));
     c.save();
     c.translate(x, y);
     const s = o.s || 1;

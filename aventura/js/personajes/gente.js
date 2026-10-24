@@ -475,6 +475,8 @@ window.GENTE = (function () {
   const VISTAS = { S: frente, E: costado, N: espaldas };
   const PROPIOS = { huldra, nokk };
   function dibujar(c, id, x, y, t, o = {}) {
+    // o.vista y o.espejo son hacia dónde mira en el mundo: con la cámara girada se elige la vista de la pantalla
+    if (window.VOL && VOL.cam.g) o = Object.assign({}, o, VOL.relativa(o.vista || "S", o.espejo));
     const f = FICHAS[id] || FICHAS.trabajador,
       s = o.s || 1;
     c.save();

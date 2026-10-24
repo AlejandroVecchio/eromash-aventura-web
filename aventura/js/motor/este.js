@@ -265,12 +265,14 @@ window.ESTE = (function () {
     objetos(lista, visible, c) {
       const N = W.NOMBRADAS;
       if (!N.rueda) return;
-      if (visible(ylva.x, ylva.y)) lista.push({ y: ylva.y, f: () => GENTE.dibujar(c, "ylva", ylva.x, ylva.y, J.t, ylva.mira) });
+      if (visible(ylva.x, ylva.y)) lista.push({ x: ylva.x, y: ylva.y, f: () => GENTE.dibujar(c, "ylva", ylva.x, ylva.y, J.t, ylva.mira) });
       // las vetas de luz azul que corren por el suelo entre la puerta y el bosque (Lente)
       const pt = N.santuario;
       if (vetasHasta > J.t && pt) {
         const a = Math.min(1, (vetasHasta - J.t) / 2) * 0.38;
         lista.push({
+          x: pt.x,
+          pie: pt.y,
           y: pt.y + 1,
           f: () =>
             DIB.alfa(c, a, () => {

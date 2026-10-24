@@ -1287,9 +1287,12 @@ window.ASSETS = (function () {
     zarzas: { f: zarzas, alto: 80, choque: null, grupo: "este" },
   };
   // o.esc (tamaño), o.ex / o.ey (ancho y alto), o.esp (espejado), o.rot (inclinado, en grados, sobre el pie) y o.giro (girado sobre el piso, en grados) valen para cualquier asset: los pone el editor
+  // Lo que tiene `vol: true` está armado con caras (comun/volumen.js) y se gira de verdad: recibe o.fi (su giro más
+  // el de la cámara, VOL.cam.g) y el tamaño y el espejado le llegan como medidas del mundo, no de la pantalla.
   function dibujar(c, id, x, y, t, o = {}) {
     const a = LISTA[id];
     if (!a) return;
+    if (a.vol && window.VOL) return dibujarVol(c, a, x, y, t, o);
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
@@ -1313,6 +1316,19 @@ window.ASSETS = (function () {
     a.f(c, x, y, t, o);
     c.restore();
   }
+  function dibujarVol(c, a, x, y, t, o) {
+    const k = o.esc || 1,
+      fi = VOL.fiDe(o),
+      // o.s es el tamaño propio del asset; el del editor se suma acá. eu: a lo ancho, ez: el alto
+      v = Object.assign({}, o, { fi, s: (o.s || 1) * k, eu: (o.ex || 1) * (o.eu || 1), ez: (o.ey || 1) * (o.ez || 1), esc: 1, ex: 1, ey: 1 });
+    if (!o.rot) return a.f(c, x, y, t, v);
+    c.save();
+    c.translate(x, y);
+    c.rotate((o.rot * Math.PI) / 180);
+    c.translate(-x, -y);
+    a.f(c, x, y, t, v);
+    c.restore();
+  }
   // el choque y el alto de un asset con sus opciones (o.s de cada asset y el tamaño y las proporciones del editor)
   function medidas(id, o = {}) {
     const a = LISTA[id];
@@ -1321,7 +1337,14 @@ window.ASSETS = (function () {
       ex = o.ex || 1,
       ey = o.ey || 1;
     let ch = a.choque ? (a.choque.r ? { r: a.choque.r * k * Math.max(ex, ey) } : { w: a.choque.w * k * ex, h: a.choque.h * k * ey }) : null;
-    if (ch && ch.w && o.giro) {
+    if (ch && ch.w && o.giro && a.vol && window.VOL) {
+      // girado de verdad: la caja que lo encierra en el piso (el fondo del choque está aplanado por K)
+      const g = (o.giro * Math.PI) / 180,
+        co = Math.abs(Math.cos(g)),
+        si = Math.abs(Math.sin(g)),
+        hk = ch.h / VOL.K;
+      ch = { w: ch.w * co + hk * si, h: (ch.w * si + hk * co) * VOL.K };
+    } else if (ch && ch.w && o.giro) {
       // girado sobre el piso: de costado ocupa menos de ancho y más de fondo
       const g = (o.giro * Math.PI) / 180,
         co = Math.abs(Math.cos(g)),

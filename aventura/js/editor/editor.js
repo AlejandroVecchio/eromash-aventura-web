@@ -242,24 +242,11 @@
   medir();
   // la cámara gira (cam.g, en radianes) alrededor del centro de la vista: el piso gira con ella y los objetos quedan
 // parados. V lleva un punto del mundo a la vista girada; aMundo, del puntero al mundo.
-  const V = (x, y) => {
-    if (!cam.g) return [x, y];
-    const co = Math.cos(cam.g),
-      si = Math.sin(cam.g),
-      dx = x - cam.x,
-      dy = y - cam.y;
-    return [cam.x + dx * co - dy * si, cam.y + dx * si + dy * co];
-  };
-  const desdeVista = (vx, vy) => {
-    if (!cam.g) return [vx, vy];
-    const co = Math.cos(cam.g),
-      si = Math.sin(cam.g),
-      dx = vx - cam.x,
-      dy = vy - cam.y;
-    return [cam.x + dx * co + dy * si, cam.y - dx * si + dy * co];
-  };
+  // (el giro es el del piso en perspectiva, VOL.girar: lo mismo que haría la cámara del juego)
+  const V = (x, y) => VOL.vista(x, y, cam.x, cam.y, cam.g);
+  const desdeVista = (vx, vy) => VOL.mundo(vx, vy, cam.x, cam.y, cam.g);
   // un desplazamiento de la pantalla, pasado al mundo (para mover la vista)
-  const giroInverso = (dx, dy) => (cam.g ? [dx * Math.cos(cam.g) + dy * Math.sin(cam.g), -dx * Math.sin(cam.g) + dy * Math.cos(cam.g)] : [dx, dy]);
+  const giroInverso = (dx, dy) => VOL.desgirar(dx, dy, cam.g);
   const aMundo = (sx, sy) => desdeVista((sx * dpr - cw / 2) / cam.z + cam.x, (sy * dpr - ch / 2) / cam.z + cam.y);
   // lo que se dibuja parado, pasado a la vista: su pie (y las dos puntas de lo que va de punta a punta) giran con el
   // piso; lo que tiene todas sus caras (ASSETS.LISTA[id].caras) además se ve desde el lado que mira la cámara
@@ -273,7 +260,10 @@
     // gira de mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
     // postes, torres: choque redondo) y la naturaleza se ven igual de cualquier lado y quedan como están
     const md = d.choque || (def && def.choque);
-    if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
+    // lo armado con caras (vol) mira solo la cámara (VOL.cam.g)
+    if (def && def.vol) {
+      // nada
+    } else if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
     else if (def && o.x2 === undefined && !(md && md.r) && def.grupo !== "naturaleza" && !def.piso) o.giroCam = cam.g;
     return Object.assign({}, d, { x, y, o, mundo: d });
   }
@@ -478,7 +468,16 @@
 
   let tPrev = performance.now(),
     tt = 0;
+  // la cámara del editor es la de los volúmenes mientras se dibuja el mapa (las miniaturas de la lista van de frente)
   function dibujar() {
+    VOL.cam.g = cam.g;
+    try {
+      dibujarMapa();
+    } finally {
+      VOL.cam.g = 0;
+    }
+  }
+  function dibujarMapa() {
     const ahoraT = performance.now(),
       moviendo = Object.keys(teclas).some((k) => teclas[k]);
     if (!sucio && !faltan && !moviendo && ahoraT - ultimo < (cam.z >= LIVIANO ? 120 : 1000)) return requestAnimationFrame(dibujar);
@@ -494,7 +493,7 @@
       vh = ch / cam.z,
       xv0 = cam.x - vw / 2,
       yv0 = cam.y - vh / 2,
-      rr = Math.hypot(vw, vh) / 2,
+      rr = Math.hypot(vw, vh / VOL.K) / 2,
       // con la cámara girada, lo que se ve del mundo es el círculo que toca las cuatro esquinas
       x0 = cam.g ? cam.x - rr : xv0,
       y0 = cam.g ? cam.y - rr : yv0,
@@ -505,9 +504,7 @@
     const pisoT = () => {
       vistaT();
       if (!cam.g) return;
-      c.translate(cam.x, cam.y);
-      c.rotate(cam.g);
-      c.translate(-cam.x, -cam.y);
+      VOL.piso(c, cam.x, cam.y, cam.g);
     };
     pisoT();
     const lejos = cam.z < 0.07,
@@ -1977,7 +1974,7 @@
   function tocado(x, y) {
     const vw = cw / cam.z,
       vh = ch / cam.z,
-      rr = cam.g ? Math.hypot(vw, vh) / 2 : 0;
+      rr = cam.g ? Math.hypot(vw, vh / VOL.K) / 2 : 0;
     const l = cam.g ? visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr) : visibles(cam.x - vw / 2, cam.y - vh / 2, cam.x + vw / 2, cam.y + vh / 2);
     let mejor = null,
       dm = Infinity;
@@ -2389,7 +2386,7 @@
     const id = elegida.a ? elegida.a.id : elegida.cosa.id,
       vw = cw / cam.z,
       vh = ch / cam.z,
-      rr = Math.hypot(vw, vh) / 2;
+      rr = Math.hypot(vw, vh / VOL.K) / 2;
     const l = visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr).filter((d) => d.id === id && !($("bloquear").checked && d.agregado == null));
     grupo = [];
     l.forEach((d) => {

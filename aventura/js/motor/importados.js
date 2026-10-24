@@ -34,8 +34,10 @@ window.IMPORTADOS = (function () {
     I18N.textos(tabla);
     return { d: n, id: n.id, img, lineas, x: n.x, y: n.y, casa: [n.x, n.y], meta: null, espera: 1 + Math.random() * 3, mira: { vista: "S", espejo: false }, camina: 0 };
   }
+  // la vista según la cámara (VOL.relativa): p.mira es hacia dónde mira en el mundo
+  const enVista = (p) => VOL.relativa(p.mira.vista, p.mira.espejo);
   function imagenDe(p) {
-    const v = p.mira.vista;
+    const v = enVista(p).vista;
     const im = p.img[v] && p.img[v].complete && p.img[v].naturalWidth ? p.img[v] : p.img.S;
     return im && im.complete && im.naturalWidth ? im : null;
   }
@@ -51,7 +53,7 @@ window.IMPORTADOS = (function () {
     c.save();
     c.translate(p.x, p.y - salto);
     // el costado mira al este; al oeste se espeja (y el frente o la espalda solos también, si no hay costado)
-    if (p.mira.espejo) c.scale(-1, 1);
+    if (enVista(p).espejo) c.scale(-1, 1);
     c.drawImage(im, -w / 2, -h * respira, w, h * respira);
     c.restore();
   }
@@ -117,7 +119,7 @@ window.IMPORTADOS = (function () {
       }
     },
     objetos(lista, visible, c) {
-      for (const p of gente) if (visible(p.x, p.y)) lista.push({ y: p.y, f: () => dibujar(c, p) });
+      for (const p of gente) if (visible(p.x, p.y)) lista.push({ x: p.x, y: p.y, f: () => dibujar(c, p) });
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);

@@ -892,9 +892,9 @@ window.VIDA = (function () {
     const T = J.t;
     for (const b of bichos) {
       if (!visible(b.x, b.y)) continue;
-      if (b.tipo === "liebre") lista.push({ y: b.y, f: () => ASSETS.dibujar(c, "liebre", b.x, b.y, T, { s: 1, mira: b.mira, salto: b.salto }) });
-      else if (b.tipo === "pinzon") lista.push({ y: b.y, f: () => ASSETS.dibujar(c, "pinzon", b.x, b.y, T, { s: 1, mira: b.mira, alto: b.alto, vuela: b.vuela, picotea: !b.vuela }) });
-      else if (b.tipo === "mariposa") lista.push({ y: b.y + 40, f: () => ASSETS.dibujar(c, "mariposa", b.x, b.y, T, { s: 1, col: b.col, sem: b.sem }) });
+      if (b.tipo === "liebre") lista.push({ x: b.x, y: b.y, f: () => ASSETS.dibujar(c, "liebre", b.x, b.y, T, { s: 1, mira: b.mira, salto: b.salto }) });
+      else if (b.tipo === "pinzon") lista.push({ x: b.x, y: b.y, f: () => ASSETS.dibujar(c, "pinzon", b.x, b.y, T, { s: 1, mira: b.mira, alto: b.alto, vuela: b.vuela, picotea: !b.vuela }) });
+      else if (b.tipo === "mariposa") lista.push({ x: b.x, pie: b.y, y: b.y + 40, f: () => ASSETS.dibujar(c, "mariposa", b.x, b.y, T, { s: 1, col: b.col, sem: b.sem }) });
     }
   }
   function aire(c, x0, y0, x1, y1) {

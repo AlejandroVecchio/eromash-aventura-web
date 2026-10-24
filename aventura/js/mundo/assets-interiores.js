@@ -296,20 +296,37 @@
   }
 
   // ---------- Mesa con banco ----------
+  // armada con caras (VOL): se ve bien desde cualquier lado
   function mesaBanco(c, x, y, t, o) {
-    const s = o.s || 1;
-    sombra(c, x + 14 * s, y + 4 * s, 170 * s, 18 * s, 0.45);
-    // banco de atrás
-    R(c, x - 150 * s, y - 120 * s, 300 * s, 14 * s, MADERA[2]);
-    // patas y tapa
-    [-130, 120].forEach((dx) => R(c, x + dx * s, y - 100 * s, 14 * s, 100 * s, MADERA_OSCURA));
-    P(c, [x - 170 * s, y - 100 * s, x - 150 * s, y - 150 * s, x + 150 * s, y - 150 * s, x + 170 * s, y - 100 * s], MADERA[0]);
-    P(c, [x - 170 * s, y - 100 * s, x + 170 * s, y - 100 * s, x + 170 * s, y - 88 * s, x - 170 * s, y - 88 * s], MADERA_CLARA);
-    // pan, cuenco y jarra
-    P(c, poli(x - 60 * s, y - 128 * s, 34 * s, 14 * s, 7, 0.2), "#C89A5A");
-    P(c, poli(x + 20 * s, y - 124 * s, 30 * s, 10 * s, 8, 0), "#553A22");
-    P(c, [x + 80 * s, y - 120 * s, x + 76 * s, y - 166 * s, x + 110 * s, y - 166 * s, x + 106 * s, y - 120 * s], "#E0B2B2");
-    vela(c, x - 120 * s, y - 132 * s, 0.7 * s, t, 7);
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr);
+    VOL.sombra(c, pr, 10, -20, 190, 70, 0.45);
+    // el banco de atrás
+    S.poner(0, -95, () => {
+      [-125, 125].forEach((u) => VOL.cubo(c, pr, u, -95, 14, 26, 50, MADERA_OSCURA));
+      VOL.cubo(c, pr, 0, -95, 300, 34, 12, [MADERA[1], MADERA[2], MADERA_CLARA], null, 50);
+    });
+    S.poner(0, 0, () => {
+      [[-140, -30], [140, -30], [-140, 30], [140, 30]].forEach(([u, w]) => VOL.cubo(c, pr, u, w, 14, 14, 100, MADERA_OSCURA));
+      VOL.cubo(c, pr, 0, 0, 340, 90, 12, [MADERA[1], MADERA_CLARA, "#8A2A1E", MADERA[0]], null, 100);
+      // pan, cuenco, jarra y vela sobre la tapa, de atrás para adelante
+      const T = VOL.escena(pr);
+      T.poner(-60, 4, () => {
+        VOL.elipse(c, pr, -60, 4, 112, 34, 16, "#9A7448");
+        VOL.elipse(c, pr, -60, 4, 118, 30, 12, "#C89A5A");
+      });
+      T.poner(20, -10, () => {
+        VOL.cilindro(c, pr, 20, -10, 28, 112, 122, "#3A2616", { n: 10 });
+        VOL.elipse(c, pr, 20, -10, 122, 22, 22, "#1E140C");
+      });
+      T.poner(92, 10, () => VOL.cilindro(c, pr, 92, 10, 16, 112, 158, ["#B08A8A", "#E0B2B2", "#F2ECEC"], { n: 8 }));
+      T.poner(-120, -14, () => {
+        const p = pr(-120, -14, 112);
+        vela(c, p[0], p[1], 0.7 * pr.s, t, 7);
+      });
+      T.dibujar();
+    });
+    S.dibujar();
   }
 
   Object.assign(ASSETS.LISTA, {
@@ -323,7 +340,7 @@
     mostrador: { f: mostrador, alto: 230, choque: null, grupo: "interiores" },
     barriles: { f: barriles, alto: 260, choque: null, grupo: "interiores" },
     telar: { f: telar, alto: 310, choque: null, grupo: "interiores" },
-    mesaBanco: { f: mesaBanco, alto: 220, choque: null, grupo: "interiores" },
+    mesaBanco: { f: mesaBanco, alto: 220, choque: null, grupo: "interiores", vol: true },
   });
   ASSETS.vela = vela;
   ASSETS.runaViva = runaViva;
