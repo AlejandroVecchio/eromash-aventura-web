@@ -41,21 +41,57 @@ window.HUD = (function () {
   // el rastreador de misiones, al centro a la derecha como en el WoW: rótulo, nombre en dorado y los objetivos
   // (los cumplidos tachados en verde, el actual con el rombo rúnico y la distancia; los que vienen no se adelantan).
   // lista = [{ rotulo, nombre, objetivos: [{ texto, estado: "hecho" | "actual", metros }] }]
-  let claveMis = "";
+  // Se pliega entero (con la cabecera o su tecla) o misión por misión (tocando su nombre); se recuerda en este
+  // navegador.
+  let claveMis = "",
+    ultimaLista = [];
   const recien = {};
+  let plegado = { todo: false, una: {} };
+  try {
+    plegado = Object.assign(plegado, JSON.parse(localStorage.getItem("eromash.aventura.plegado") || "{}"));
+  } catch (e) {}
+  function guardarPlegado() {
+    try {
+      localStorage.setItem("eromash.aventura.plegado", JSON.stringify(plegado));
+    } catch (e) {}
+    claveMis = "";
+    misiones(ultimaLista);
+  }
+  function plegarTodo() {
+    plegado.todo = !plegado.todo;
+    guardarPlegado();
+  }
   function misiones(lista) {
+    ultimaLista = lista;
     const clave = JSON.stringify(lista);
     if (clave === claveMis) return;
     const antes = claveMis;
     claveMis = clave;
     const caja = $("hudMisiones");
     caja.innerHTML = "";
+    const cab = document.createElement("button");
+    cab.className = "cabeza" + (plegado.todo ? " plegada" : "");
+    cab.innerHTML = `<span></span><b></b>`;
+    cab.querySelector("span").textContent = t("ui.misiones", [lista.length]);
+    cab.querySelector("b").textContent = CONTROLES.glifo("misiones");
+    cab.addEventListener("click", plegarTodo);
+    caja.appendChild(cab);
+    if (plegado.todo) return;
     lista.forEach((m) => {
+      const id = m.secundaria ? "secretos" : "historia";
+      const cerrada = !!plegado.una[id];
       const d = document.createElement("div");
-      d.className = "mision" + (m.secundaria ? " secundaria" : "");
-      d.innerHTML = `<div class="rotulo"></div><div class="nombre"></div><ul></ul>`;
+      d.className = "mision" + (m.secundaria ? " secundaria" : "") + (cerrada ? " plegada" : "");
+      d.innerHTML = `<div class="rotulo"></div><button class="nombre"></button><ul></ul>`;
       d.querySelector(".rotulo").textContent = m.rotulo || "";
-      d.querySelector(".nombre").textContent = m.nombre;
+      const nom = d.querySelector(".nombre");
+      nom.textContent = m.nombre;
+      nom.addEventListener("click", () => {
+        plegado.una[id] = !plegado.una[id];
+        guardarPlegado();
+      });
+      caja.appendChild(d);
+      if (cerrada) return;
       const ul = d.querySelector("ul");
       m.objetivos.forEach((o) => {
         const li = document.createElement("li");
@@ -69,7 +105,6 @@ window.HUD = (function () {
         if (recien[k] && performance.now() - recien[k] < 1600) li.classList.add("recien");
         ul.appendChild(li);
       });
-      caja.appendChild(d);
     });
   }
   function accion(texto, glifo) {
@@ -162,5 +197,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, misiones, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, fundido, ocultarJuego, hayMenu: () => !!menu };
+  return { armar, jugador, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, fundido, ocultarJuego, hayMenu: () => !!menu };
 })();

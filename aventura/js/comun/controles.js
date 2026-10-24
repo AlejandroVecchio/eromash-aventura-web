@@ -17,6 +17,7 @@ window.CONTROLES = (function () {
     runa: ["KeyQ"],
     cambiarRuna: ["KeyT"],
     mapa: ["KeyM"],
+    misiones: ["KeyL"],
     diario: ["KeyJ", "Tab"],
     pausa: ["Escape", "KeyP"],
     seguir: ["Enter", "Space", "KeyE", "KeyF"],
@@ -42,7 +43,7 @@ window.CONTROLES = (function () {
     derecha: [15],
   };
   const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L" };
 
   const abajo = new Set();
   let antes = {},
@@ -114,7 +115,7 @@ window.CONTROLES = (function () {
       for (const a in ahora) antes[a] = true;
     },
     glifo: (a) => {
-      const g = (usandoMando ? GLIFOS_MANDO[a] : GLIFOS_TECLADO[a]) || a;
+      const g = (usandoMando ? GLIFOS_MANDO[a] : GLIFOS_TECLADO[a]) || (usandoMando ? "" : a);
       return g[0] === "@" ? I18N.t(g.slice(1)) : g;
     },
     mando: () => usandoMando,

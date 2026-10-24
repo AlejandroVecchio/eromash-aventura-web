@@ -1143,6 +1143,7 @@
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
     } else if (J.modo === "juego") {
+      if (CONTROLES.recien("misiones")) HUD.plegarTodo();
       if (CONTROLES.recien("pausa")) pausa();
       else if (CONTROLES.recien("diario")) diario();
     }

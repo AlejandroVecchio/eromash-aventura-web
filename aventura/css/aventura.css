@@ -28,7 +28,7 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudMisiones { right: 18px; top: 50%; transform: translateY(-50%); width: 320px; display: flex; flex-direction: column; gap: 18px; text-align: right; }
 #hudMisiones::before { content: ""; position: absolute; inset: -30px -18px -30px -60px; background: radial-gradient(ellipse at 80% 50%, rgba(10,10,8,0.55), rgba(10,10,8,0) 70%); z-index: -1; }
 #hudMisiones .rotulo { color: var(--rosa); font-size: 9px; }
-#hudMisiones .nombre { font-family: "Eromash Display", system-ui, sans-serif; color: var(--oro); font-size: 18px; margin: 2px 0 6px; text-shadow: 0 2px 0 #000c, 0 0 8px #000a; }
+#hudMisiones .mision .nombre { font-family: "Eromash Display", system-ui, sans-serif; color: var(--oro); font-size: 18px; margin: 2px 0 6px; text-shadow: 0 2px 0 #000c, 0 0 8px #000a; }
 #hudMisiones ul { list-style: none; margin: 0; padding: 0; }
 #hudMisiones li { display: flex; justify-content: flex-end; align-items: baseline; gap: 8px; font-size: 14px; line-height: 1.35; margin-top: 3px; text-shadow: 0 1px 0 #000, 0 0 6px #000c; }
 #hudMisiones li i { order: 2; flex: none; width: 8px; height: 8px; margin-left: 2px; transform: rotate(45deg) translateY(-1px); background: var(--runico); }
@@ -39,9 +39,18 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudMisiones li.hecho i { background: #7BC86C; }
 #hudMisiones li.recien { animation: recien 1.6s; color: #7BC86C; }
 @keyframes recien { 0% { transform: translateX(-8px); opacity: 0; } 20% { transform: none; opacity: 1; } }
-#hudMisiones .secundaria .nombre { font-size: 15px; color: var(--hueso); }
+#hudMisiones .secundaria .nombre {  font-size: 15px; color: var(--hueso); }
 #hudMisiones .secundaria li { font-size: 12px; }
 #hudMisiones .secundaria li.actual i { background: var(--oro); }
+/* plegar: la cabecera pliega todo; el nombre de cada misión pliega la suya (se tocan con mouse o dedo) */
+#hudMisiones button { pointer-events: auto; border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: right; }
+#hudMisiones .cabeza { align-self: flex-end; display: flex; gap: 8px; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; color: var(--hueso); text-shadow: 0 1px 0 #000; margin-bottom: -8px; }
+#hudMisiones .cabeza b:empty { display: none; }
+#hudMisiones .cabeza b { font-size: 10px; background: var(--hueso); color: var(--negro); padding: 1px 5px; letter-spacing: 0; }
+#hudMisiones .cabeza::after, #hudMisiones .nombre::before { content: ""; display: inline-block; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid currentColor; transition: transform 0.15s; }
+#hudMisiones .nombre::before { margin-right: 8px; vertical-align: middle; opacity: 0.7; }
+#hudMisiones .cabeza.plegada::after, #hudMisiones .plegada .nombre::before { transform: rotate(90deg); }
+#hudMisiones .nombre { display: block; width: 100%; }
 
 /* cartel de interactuar: el rombo de la arena con la tecla */
 #hudAccion { left: 50%; bottom: 120px; transform: translateX(-50%); padding: 8px 14px 8px 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
@@ -103,6 +112,6 @@ canvas.mapa { display: block; max-width: 100%; max-height: 64vh; width: auto; he
 .diario-resumen p { margin: 0 0 8px; font-size: 14px; }
 .diario-resumen b { color: var(--oro); font-weight: 800; }
 /* minimapa: arriba a la izquierda, con la hora del día */
-#hudMini { left: 16px; top: 16px; padding: 6px; }
+#hudMini { right: 16px; top: 16px; padding: 6px; }
 #hudMini canvas { display: block; width: 190px; height: 190px; }
 #hudMini .rotulo { color: var(--oro); text-align: right; margin-top: 4px; padding-right: 4px; }
