@@ -893,6 +893,8 @@
     herreriaAsa: [420, "#FF8D71", 30, -40],
     hongoDorado: [380, "#FFD98A", 0, -60],
     piedraMuralla: [200, "#73D5DB", 0, -60],
+    piedraAncla: [300, "#73D5DB", 0, -110],
+    puertaNorte: [360, "#FFD98A", 0, -190],
     pedestalPaso: [260, "#73D5DB", 0, -50],
     soporteAtadura: [220, "#9A6BD8", 0, -40],
     santuario: [380, "#73D5DB", 0, -80],
@@ -911,6 +913,7 @@
       let f = 1;
       if (o.id === "runaRefugio" || o.id === "pedestalPaso" || o.id === "losaPatio") f = o.o.luz || 0;
       if (o.id === "soporteAtadura" && (o.o.roto || !o.o.visto)) f = 0.3;
+      if (o.id === "piedraAncla") f = o.o.fuerza;
       if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * (0.9 + Math.sin(J.t * 7 + o.x) * 0.06) });
     });
     if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
@@ -1071,7 +1074,7 @@
   function dibujarCosa(o) {
     let a = 1;
     if (o.alto > 90 && o.y > jug.y && o.y - jug.y < o.alto * 0.9) {
-      const ancho = o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20;
+      const ancho = o.o.ancho || (o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20);
       if (Math.abs(jug.x - o.x) < ancho) a = 0.62;
     }
     // la copa de los gigantes tapa desde muy arriba: [desde, hasta, ancho] medidos desde el pie del árbol

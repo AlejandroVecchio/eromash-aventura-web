@@ -473,7 +473,7 @@ window.INTERIORES = (function () {
       W = A.W;
       let n = 0;
       W.COSAS.forEach((o) => {
-        const tipo = TIPO_DE[o.id];
+        const tipo = o.id === "casaNordica" ? o.o.entra && "casa" : TIPO_DE[o.id];
         if (!tipo) return;
         puertas.push({ cosa: o, tipo, clave: tipo + "_" + n++ });
       });
