@@ -170,6 +170,31 @@ window.ICONOS = (function () {
       linea(c, [x, y - 3 * u, x + 1 * u, y - 6 * u], "#7A5634", 1.2 * u);
       pol(c, [x + 1 * u, y - 5 * u, x + 4.5 * u, y - 6.5 * u, x + 2.5 * u, y - 4 * u], "#7BC86C");
     },
+    // los lugares místicos (vida.js): el fresno, el anillo de hongos o la poza con su estrella
+    mistico(c, x, y, u, col, op) {
+      if (op.forma === "anilloAlfar") {
+        for (let k = 0; k < 7; k++) {
+          const a = (k / 7) * Math.PI * 2;
+          c.fillStyle = col;
+          c.beginPath();
+          c.arc(x + Math.cos(a) * 4.6 * u, y + Math.sin(a) * 3 * u, 1.3 * u, 0, Math.PI * 2);
+          c.fill();
+        }
+      } else if (op.forma === "pozaEstrellas") {
+        c.fillStyle = "#14202E";
+        c.beginPath();
+        c.ellipse(x, y + 1 * u, 6 * u, 3.6 * u, 0, 0, Math.PI * 2);
+        c.fill();
+        pol(c, [x, y - 2.6 * u, x + 1.6 * u, y + 0.8 * u, x, y + 4 * u, x - 1.6 * u, y + 0.8 * u], col);
+      } else {
+        pol(c, [x - 1.4 * u, y + 5 * u, x - 1 * u, y - 1 * u, x + 1 * u, y - 1 * u, x + 1.4 * u, y + 5 * u], "#9A927E");
+        c.fillStyle = col;
+        c.beginPath();
+        c.arc(x, y - 2.5 * u, 4.4 * u, 0, Math.PI * 2);
+        c.fill();
+        pol(c, [x, y - 4.6 * u, x + 1.2 * u, y - 2.6 * u, x, y - 0.6 * u, x - 1.2 * u, y - 2.6 * u], CLARO);
+      }
+    },
     puente(c, x, y, u, col) {
       pol(c, [x - 7 * u, y - 1 * u, x + 7 * u, y - 1 * u, x + 7 * u, y + 1 * u, x - 7 * u, y + 1 * u], col);
       for (let k = -6; k <= 6; k += 3) linea(c, [x + k * u, y + 1 * u, x + k * u, y + 4.5 * u], col, 1 * u);
@@ -177,7 +202,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

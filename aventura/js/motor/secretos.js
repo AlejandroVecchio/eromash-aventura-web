@@ -214,7 +214,7 @@ window.SECRETOS = (function () {
       const x = c.cosa.x,
         y = c.cosa.y + 10,
         total = cofres.filter((q) => st.cofres[q.id]).length;
-      PODERES.botinCofre(x, y, t("as." + c.tipo) + " " + t("sx.cofre_n", [total, cofres.length]), c.botin);
+      PODERES.botinCofre(x, y, t("as." + c.tipo) + " " + t("sx.cofre_n", [total, cofres.length]), c.botin, c.tipo !== "arconLenador");
       // uno de cada tres arcones guarda un mapa del tesoro: marca la zona de un arca enterrada que falta encontrar
       if (c.tipo === "arconLenador" && c.id % 3 === 0) J.retrasar(0.9, () => mapaTesoro(x, y));
     });
@@ -267,6 +267,7 @@ window.SECRETOS = (function () {
     A.ondaPor([[jug.x, jug.y], [p.cosa.x, p.cosa.y]], 1.4);
     // la piedra despierta levanta la niebla de alrededor en el mapa
     if (window.MAPA) MAPA.descubrir(p.cosa.x, p.cosa.y, 2400);
+    if (window.VIDA) VIDA.evento("piedra", p.cosa.x, p.cosa.y - 60);
     const n = Object.keys(st.piedras).length;
     // el pedazo de historia que guarda cada piedra
     A.dialogoLibre([["piedra", "sx.susurro_" + (p.id % 20)]], () => {

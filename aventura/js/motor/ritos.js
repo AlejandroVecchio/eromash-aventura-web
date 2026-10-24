@@ -156,6 +156,7 @@ window.RITOS = (function () {
     });
     r.cofre.o.sellado = false;
     J.sacudir(0.2);
+    if (window.VIDA) r.piedras.forEach((q) => VIDA.evento("rito", q.x, q.y - 70, { col: ASSETS.RITO[r.tipo].col, runa: ASSETS.RITO[r.tipo].runa }));
     const n = Object.keys(st.ritos).length;
     HUD.aviso(t("pr.rito_hecho", [t("pr.tipo_" + r.tipo), n, ritos.length]), ASSETS.RITO[r.tipo].col);
   }
@@ -171,7 +172,7 @@ window.RITOS = (function () {
     J.retrasar(0.18, () => {
       st.cofres[r.id] = true;
       r.cofre.o.abierto = true;
-      PODERES.botinCofre(r.cofre.x, r.cofre.y + 10, t("pr.cofre_rito"), Object.assign({}, r.botin, { frag: 1 }));
+      PODERES.botinCofre(r.cofre.x, r.cofre.y + 10, t("pr.cofre_rito"), Object.assign({}, r.botin, { frag: 1 }), true);
     });
   }
   function cancelar(avisar, clave) {

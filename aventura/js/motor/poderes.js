@@ -123,7 +123,8 @@ window.PODERES = (function () {
     }
   }
   // un cofre que se abre: crujido, un estallido dorado, el botín que vuela a Eromash y un solo cartel con lo que trajo
-  function botinCofre(x, y, nombre, b) {
+  function botinCofre(x, y, nombre, b, importante) {
+    if (window.VIDA) VIDA.evento("cofre", x, y, { importante });
     if (window.SONIDO) {
       SONIDO.tocar("crujido", { vol: 0.7, x, y });
       SONIDO.tono("triangle", 523, 784, 0.6, 0.05, { x, y, filtro: 2600, retraso: 0.1 });
@@ -161,6 +162,7 @@ window.PODERES = (function () {
       pj.nivel++;
       aplicar();
       if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.VIDA) VIDA.evento("nivel", jug.x, jug.y);
       HUD.aviso(t("pj.nivel_runico", [pj.nivel]), "#73D5DB");
     } else HUD.aviso(t("pj.fragmento", [pj.frag % 3]), "#73D5DB");
   }

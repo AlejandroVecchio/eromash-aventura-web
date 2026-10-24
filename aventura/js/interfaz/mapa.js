@@ -204,10 +204,10 @@ window.MAPA = (function () {
   const unicoMuerto = (id) => window.HORDAS && HORDAS.grupos.some((g) => g.unico === id && g.miembros.some((e) => e.lider && e.muerto > 0));
   const limpio = (g) => g && g.miembros.every((e) => e.muerto > 0);
   // las clases de marca: así se filtran en el mapa grande y se nombran en la leyenda (mp.ley_<clase>)
-  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano" };
-  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "puente"];
+  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano", mistico: "mistico" };
+  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "mistico", "puente"];
   // ícono de muestra de cada clase para la leyenda
-  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], puente: ["puente", {}] };
+  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], mistico: ["mistico", { forma: "fresnoEcos" }], puente: ["puente", {}] };
   const filtro = (cat) => !st || !st.ocultas || !st.ocultas[cat];
   function cadaMarca(fn) {
     const hechas = [],
@@ -250,6 +250,8 @@ window.MAPA = (function () {
       poner("cofre", q.cosa.x, q.cosa.y, { apagado: !!S.st.cofres[q.id], col: q.cosa.o.sellado ? "#9A6BD8" : null }, 3);
     });
     S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && poner("manzano", m.cosa.x, m.cosa.y, { apagado: m.cosa.o.cosechado }, 3));
+    // los lugares místicos del bosque vivo (vida.js)
+    if (window.VIDA) VIDA.lugares().forEach((l) => visto(l.x, l.y) && poner("mistico", l.x, l.y, { forma: l.id, nombre: t("as." + l.id), apagado: l.hecho }, 1));
     hechas.forEach((a) => fn(...a));
     pend.forEach((a) => fn(...a));
   }

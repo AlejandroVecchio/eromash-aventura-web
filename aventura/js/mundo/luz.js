@@ -33,6 +33,8 @@ window.LUZ = (function () {
     osc += (objetivo - osc) * (1 - Math.exp(-dt * 1.5));
     const o = ocaso(h);
     tono = [Math.round(8 + o * 40), Math.round(12 + o * 10), Math.round(26 - o * 10)];
+    // de noche cerrada el tono se va al azul de la luna
+    if (n > 0.7) tono = [tono[0], tono[1] + Math.round((n - 0.7) * 20), tono[2] + Math.round((n - 0.7) * 40)];
     return { h, n, o, osc };
   }
 
@@ -49,7 +51,11 @@ window.LUZ = (function () {
       c.fillRect(0, 0, cw, ch);
     }
     // rayos de sol que se cuelan entre las copas (de día, solo alta)
-    if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o));
+    // el color de los rayos sigue la hora (rosado al alba, oro a mediodía, ámbar al caer el sol); de noche, la luna;
+    // con lluvia casi no pasan (amb.lluvia lo pone vida.js)
+    const ll = amb.lluvia || 0;
+    if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o) * (1 - ll * 0.85), colorHora(amb.h));
+    else if (nv === "alta" && amb.n >= 0.6 && ll < 0.5) rayos(c, cw, ch, x0, t, ((amb.n - 0.6) / 0.4) * 0.55, "200,242,244");
     if (nv === "baja") {
       c.fillStyle = `rgba(${tono[0]},${tono[1]},${tono[2]},${Math.min(0.42, amb.osc * 0.55)})`;
       c.fillRect(0, 0, cw, ch);
@@ -111,7 +117,12 @@ window.LUZ = (function () {
     return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
   };
   // franjas diagonales de luz que se mueven despacio con la cámara (parallax suave)
-  function rayos(c, cw, ch, x0, t, a) {
+  function colorHora(h) {
+    if (h < 9) return "255,190,170"; // alba
+    if (h > 16) return "255,180,120"; // tarde
+    return "255,217,138";
+  }
+  function rayos(c, cw, ch, x0, t, a, rgb = "255,217,138") {
     if (a <= 0.02) return;
     c.globalCompositeOperation = "lighter";
     for (let i = 0; i < 4; i++) {
@@ -119,9 +130,9 @@ window.LUZ = (function () {
       const ancho = cw * (0.05 + (i % 2) * 0.04);
       const g = c.createLinearGradient(base, 0, base + ancho, 0);
       const al = a * (0.035 + 0.02 * Math.sin(t * 0.3 + i * 2));
-      g.addColorStop(0, "rgba(255,217,138,0)");
-      g.addColorStop(0.5, `rgba(255,217,138,${Math.max(0, al)})`);
-      g.addColorStop(1, "rgba(255,217,138,0)");
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(0.5, `rgba(${rgb},${Math.max(0, al)})`);
+      g.addColorStop(1, `rgba(${rgb},0)`);
       c.fillStyle = g;
       c.beginPath();
       c.moveTo(base, 0);

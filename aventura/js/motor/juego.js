@@ -239,6 +239,7 @@
       // el lugar entero queda a la vista en el mapa
       const L = W.LUGARES[dato];
       if (L && window.MAPA) MAPA.descubrir(L.p[0], L.p[1], L.r + 1200);
+      if (window.VIDA) VIDA.evento("lugar", jug.x, jug.y);
     }
     else if (tipo === "fin") setTimeout(mostrarFin, 1000);
   });
@@ -255,6 +256,7 @@
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
     ANIMA.gesto("feliz");
+    if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
     etapaVista = H.etapa();
     etapaDesde = J.t;
@@ -632,7 +634,7 @@
       }
     } else pasoAcum = 40;
     // el viento: más fuerte de noche y en lo alto
-    SONIDO.bucle("viento", "viento", 0.16 + amb.n * 0.08 + (jug.z ? 0.12 : 0), { filtro: 380 + Math.sin(J.t * 0.13) * 160 });
+    SONIDO.bucle("viento", "viento", 0.16 + amb.n * 0.08 + (jug.z ? 0.12 : 0) + (window.VIDA ? VIDA.viento() : 0), { filtro: 380 + Math.sin(J.t * 0.13) * 160 });
     // de noche, grillos; de día, de vez en cuando los cuervos
     if (amb.n > 0.5 && (grilloT -= dt) <= 0) {
       grilloT = 0.25 + Math.random() * 0.9;
@@ -1352,7 +1354,9 @@
       if (o.id === "soporteAtadura" && (o.o.roto || !o.o.visto)) f = 0.3;
       if (o.id === "piedraAncla" || o.id === "mojon") f = o.o.fuerza != null ? o.o.fuerza : o.o.luz;
       if ((o.id === "fogonOlla" && o.o.apagado) || (o.id === "posteFarol" && !o.o.encendido)) f = 0;
-      if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * (0.9 + Math.sin(J.t * 7 + o.x) * 0.06) });
+      // el fuego tiembla irregular (dos ondas); la luz rúnica late parejo
+      const tiembla = l[1] === "#FF8D71" ? 0.84 + Math.sin(J.t * 11 + o.x) * 0.08 + Math.sin(J.t * 23 + o.y) * 0.06 : 0.9 + Math.sin(J.t * 7 + o.x) * 0.06;
+      if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * tiembla });
     });
     if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
     for (const e of enemigos) if (e.activo && !e.muerto && e.d.luz && e.x > x0 - 300 && e.x < x1 + 300 && e.y > y0 - 300 && e.y < y1 + 300) L0.push({ x: e.x, y: e.y - 60, r: 240, col: ["#8CF0B4", "#73D5DB", "#9A6BD8"][e.pal || 0], f: 0.9 });
@@ -1417,10 +1421,12 @@
     lista.forEach((d) => d.f());
     siluetaJugador(lista);
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
+    cadaSis("aire", c, x0, y0, x1, y1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
-    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9);
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
     LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
     c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
+    cadaSis("sobreLuz", c, x0, y0, x1, y1); // lo que brilla en la oscuridad: luciérnagas, brasas, motas rúnicas
     J.fx.forEach((f) => DIB.alfa(c, Math.max(0, f.t / 0.35), () => DIB.R(c, f.x - f.s / 2, f.y - f.s / 2, f.s, f.s, f.c)));
     c.font = '800 18px "Eromash Text", system-ui, sans-serif';
     c.textAlign = "center";
@@ -1885,7 +1891,8 @@
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
       esc = escBase / alejar;
-      amb = LUZ.ambiente(H.E.tiempo, sombraAqui(), dt);
+      amb = LUZ.ambiente(H.E.tiempo, sombraAqui() + (window.VIDA ? VIDA.nubes() : 0), dt);
+      if (window.VIDA) VIDA.clima(amb);
       if (J.oscuro) amb = Object.assign({}, amb, { n: Math.max(amb.n, 0.8), o: 0 });
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
