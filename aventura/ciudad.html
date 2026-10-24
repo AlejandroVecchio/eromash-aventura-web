@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eromash · Eikholt</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #F2ECEC; font-family: "DM Sans", system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; touch-action: none; }
+  #panel { position: fixed; left: 12px; top: 12px; width: 300px; background: rgba(17,17,17,0.86); padding: 14px; box-sizing: border-box; border: 1px solid #5E130D; }
+  #panel h1 { font-size: 17px; margin: 0 0 6px; color: #FFD98A; }
+  #panel p { font-size: 12px; color: #E0B2B2; margin: 0 0 10px; line-height: 1.4; }
+  label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin: 6px 0; gap: 8px; }
+  input[type=range] { flex: 1; }
+  button { font: inherit; font-size: 12px; background: #2A1E1A; color: #F2ECEC; border: 1px solid #5E130D; padding: 5px 8px; margin: 3px 3px 3px 0; cursor: pointer; }
+  button:hover { background: #9C2315; }
+  @media (max-width: 600px) { #panel { width: calc(100% - 24px); } }
+</style>
+</head>
+<body>
+<canvas id="vista"></canvas>
+<div id="panel">
+  <h1 id="tTitulo"></h1>
+  <p id="tTexto"></p>
+  <label><span id="tGiro"></span><input id="giro" type="range" min="-180" max="180" value="-28" /></label>
+  <label><span id="tAltura"></span><input id="altura" type="range" min="40" max="100" value="55" /></label>
+  <label><span id="tCerca"></span><input id="cerca" type="range" min="4" max="120" value="40" /></label>
+  <label><span id="tGirar"></span><input id="girar" type="checkbox" /></label>
+  <div id="lugares"></div>
+</div>
+<script src="../juego/js/comun/calidad.js"></script>
+<script src="../juego/js/comun/i18n.js"></script>
+<script src="js/textos/aventura.js"></script>
+<script src="js/textos/capital.js"></script>
+<script src="js/textos/ciudad.js"></script>
+<script src="../juego/js/comun/vikingos.js"></script>
+<script src="js/comun/dibujo.js"></script>
+<script src="js/comun/futhark.js"></script>
+<script src="js/mundo/assets.js"></script>
+<script src="js/mundo/assets-eikholt.js"></script>
+<script src="js/mundo/assets-capital.js"></script>
+<script src="js/mundo/assets-ciudad.js"></script>
+<script src="js/personajes/vikingo.js"></script>
+<script src="js/personajes/gente.js"></script>
+<script src="js/motor/capital.js"></script>
+<script src="js/mundo/caminos.js"></script>
+<script src="js/ciudad/casas.js"></script>
+<script src="js/ciudad/plano.js"></script>
+<script src="js/ciudad/vista.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (q.get("lang")) I18N.setLang(q.get("lang"));
+  const t = (k) => I18N.t(k);
+  document.title = "Eromash · " + t("ci.muestra_titulo");
+  tTitulo.textContent = t("ci.muestra_titulo");
+  tTexto.textContent = t("ci.muestra_texto");
+  tGiro.textContent = t("ci.muestra_giro");
+  tAltura.textContent = t("ci.muestra_altura");
+  tCerca.textContent = t("ci.muestra_cerca");
+  tGirar.textContent = t("ci.muestra_girar");
+  if (q.get("panel") === "0") panel.style.display = "none";
+  const plano = PLANO25.armar();
+  VISTA25.iniciar(plano);
+  const c = vista.getContext("2d");
+  let cw = 0, ch = 0;
+  function medir() {
+    cw = vista.width = innerWidth;
+    ch = vista.height = innerHeight;
+  }
+  addEventListener("resize", medir);
+  medir();
+  const L = plano.lugares;
+  const LUGARES = {
+    plaza: [L.ting[0] + 900, L.ting[1] + 300],
+    ting: [L.ting[0], L.ting[1] + 200],
+    sur: plano.anclas.puerta_sur,
+    oficios: [L.herreria[0] + 400, L.herreria[1] + 900],
+    lindes: [L.lindes[0] + 300, L.lindes[1] + 500],
+    hongo: [L.hongo[0], L.hongo[1] + 900],
+    lejos: [0, 600],
+  };
+  const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
+  const objetivo = { x: cam.x, y: cam.y };
+  for (const k in LUGARES) {
+    const b = document.createElement("button");
+    b.textContent = t("ci.lugar_" + k);
+    b.onclick = () => {
+      objetivo.x = LUGARES[k][0];
+      objetivo.y = LUGARES[k][1];
+      if (k === "lejos") cerca.value = 4;
+      else if (cerca.value < 20) cerca.value = 40;
+    };
+    lugares.appendChild(b);
+  }
+  if (q.get("en")) {
+    const k = q.get("en");
+    if (LUGARES[k]) { cam.x = objetivo.x = LUGARES[k][0]; cam.y = objetivo.y = LUGARES[k][1]; }
+  }
+  if (q.get("g")) giro.value = q.get("g");
+  if (q.get("k")) altura.value = q.get("k");
+  if (q.get("z")) cerca.value = q.get("z");
+  // la gente de la plaza: vecinos parados y caminando, y Eromash
+  const gente = [];
+  const ids = Object.keys(GENTE.FICHAS);
+  const rr = (function (s) { let a = s; return () => ((a = (a * 16807) % 2147483647) / 2147483647); })(77);
+  for (let i = 0; i < 140; i++) {
+    const a = rr() * Math.PI * 2, d = 900 + rr() * 2700;
+    const x = Math.cos(a) * d, y = Math.sin(a) * d;
+    if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 40)) continue;
+    gente.push({ id: ids[i % ids.length], x, y, vx: rr() < 0.5 ? (rr() - 0.5) * 80 : 0, vy: 0, s: 1 });
+  }
+  const sur = plano.anclas.puerta_sur;
+  for (let i = 0; i < 40; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 500, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1 });
+  const VK = { S: VIKINGO.imagen("R", "S", "calm"), E: VIKINGO.imagen("R", "E", "calm"), N: VIKINGO.imagen("R", "N", "calm") };
+  const eromash = { x: LUGARES.plaza[0] - 200, y: LUGARES.plaza[1] - 100 };
+  function dibujarEromash(c, x, y) {
+    const k = 1 / 1.96;
+    c.save();
+    c.translate(x, y);
+    c.scale(k, k);
+    DIB.E(c, 0, 0, 58, 16, "rgba(0,0,0,0.45)");
+    const img = VK.S;
+    if (img.complete) c.drawImage(img, -62, -150, 125, 150);
+    c.restore();
+  }
+  const teclas = {};
+  addEventListener("keydown", (e) => (teclas[e.code] = true));
+  addEventListener("keyup", (e) => (teclas[e.code] = false));
+  vista.addEventListener("wheel", (e) => { cerca.value = Math.max(4, Math.min(120, +cerca.value - Math.sign(e.deltaY) * 4)); e.preventDefault(); }, { passive: false });
+  let arr = null;
+  vista.addEventListener("pointerdown", (e) => { arr = [e.clientX, e.clientY, cam.x, cam.y]; vista.setPointerCapture(e.pointerId); });
+  vista.addEventListener("pointermove", (e) => {
+    if (!arr) return;
+    const V = VISTA25.proyector(cam);
+    const a = V.inversa(cam.x - (e.clientX - arr[0]) / cam.esc, cam.y - (e.clientY - arr[1]) / cam.esc);
+    objetivo.x = a[0]; objetivo.y = a[1];
+    arr = [e.clientX, e.clientY, objetivo.x, objetivo.y];
+  });
+  vista.addEventListener("pointerup", () => (arr = null));
+  let t0 = performance.now(), tt = 0;
+  function cuadro(ahora) {
+    const dt = Math.min(0.05, (ahora - t0) / 1000);
+    t0 = ahora;
+    tt += dt;
+    if (girar.checked) giro.value = ((+giro.value + 180 + dt * 14) % 360) - 180;
+    if (teclas.KeyZ) giro.value = ((+giro.value + 180 - dt * 60 + 360) % 360) - 180;
+    if (teclas.KeyX) giro.value = ((+giro.value + 180 + dt * 60) % 360) - 180;
+    // mover con las flechas, relativo a la cámara
+    let mx = (teclas.KeyD || teclas.ArrowRight ? 1 : 0) - (teclas.KeyA || teclas.ArrowLeft ? 1 : 0);
+    let my = (teclas.KeyS || teclas.ArrowDown ? 1 : 0) - (teclas.KeyW || teclas.ArrowUp ? 1 : 0);
+    if (mx || my) {
+      const g = cam.g, v = 1400 * dt / Math.max(0.2, cam.esc * 2);
+      objetivo.x += (mx * Math.cos(g) + my * Math.sin(g)) * v;
+      objetivo.y += (-mx * Math.sin(g) + my * Math.cos(g)) * v;
+    }
+    const gObj = (+giro.value * Math.PI) / 180;
+    let dg = Math.atan2(Math.sin(gObj - cam.g), Math.cos(gObj - cam.g));
+    cam.g += dg * Math.min(1, dt * 8);
+    cam.k += (+altura.value / 100 - cam.k) * Math.min(1, dt * 6);
+    const escObj = (+cerca.value / 100) * Math.sqrt((cw * ch) / (1600 * 900));
+    cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
+    cam.x += (objetivo.x - cam.x) * Math.min(1, dt * 6);
+    cam.y += (objetivo.y - cam.y) * Math.min(1, dt * 6);
+    for (const p of gente) {
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; }
+    }
+    const extra = gente.map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0 }) }));
+    extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });
+    VISTA25.dibujar(c, cam, cw, ch, tt, extra);
+    // el aire de la tarde: un velo cálido y la viñeta del bosque
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.fillStyle = "rgba(255,141,113,0.05)";
+    c.fillRect(0, 0, cw, ch);
+    const g = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
+    g.addColorStop(0, "rgba(10,14,12,0)");
+    g.addColorStop(1, "rgba(10,14,12,0.55)");
+    c.fillStyle = g;
+    c.fillRect(0, 0, cw, ch);
+    requestAnimationFrame(cuadro);
+  }
+  requestAnimationFrame(cuadro);
+  window.MUESTRA = { cam, objetivo, plano };
+})();
+</script>
+</body>
+</html>

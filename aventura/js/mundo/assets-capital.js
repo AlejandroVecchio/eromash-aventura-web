@@ -1066,4 +1066,6 @@
     runaCupula: { runa: "othala", fuerza: 1 },
     cerca: { x2: 180, y2: 0 },
   });
+  // las piezas de la casa del bosque, para las casas de la capital que se arman con sus medidas (ciudad/casas.js)
+  ASSETS.PIEZAS_CASA = { troncos, matas, ventana, puerta, tablasCruzadas, humo, estandarteCiervo, PAREDES, POSTIGOS, TECHOS, MUSGO };
 })();
