@@ -65,6 +65,11 @@ window.PODERES = (function () {
   let rumor = 0;
   function hablarCon(n) {
     n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
+    if (window.SECUNDARIAS && SECUNDARIAS.hablarCon(n)) return;
+    if (n.id === "svend" && window.SECUNDARIAS && n.saludo !== SECUNDARIAS.renombre() + 1) {
+      n.saludo = SECUNDARIAS.renombre() + 1;
+      return A.dialogoLibre([["svend", "sc.svend_" + SECUNDARIAS.renombre()]]);
+    }
     if (n.id === "asa") {
       A.dialogoLibre([["asa", "pj.asa_hola"]], forja);
     } else if (n.id === "thora") {
@@ -77,7 +82,9 @@ window.PODERES = (function () {
   }
   // la forja de Ása: mejoras que se pagan con plata
   function forja() {
-    const linea = (clave, nivel, costos, fn) => {
+    const rebaja = 1 - (window.SECUNDARIAS ? SECUNDARIAS.descuento() : 0);
+    const linea = (clave, nivel, costos0, fn) => {
+      const costos = costos0.map((c) => Math.round(c * rebaja));
       const lleno = nivel >= costos.length;
       return {
         texto: t(clave, [nivel, costos.length]),

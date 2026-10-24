@@ -134,6 +134,14 @@ window.COMBATE = (function () {
     e.vida = d.vida;
     return e;
   }
+  // los semijefes siguen una rotación fija que se aprende (secundarias.js): abanico, círculo alrededor o franja al frente
+  function patron(e, dir, rgb) {
+    const d = e.d,
+      k = e.patron[(e.cuenta = (e.cuenta || 0) + 1) % e.patron.length];
+    if (k === "circulo") return aviso("circulo", e.x, e.y, d.aviso * 1.15, { radio: d.radioGolpe * 1.2, rgb });
+    if (k === "franja") return aviso("franja", e.x, e.y, d.aviso, { largo: d.largo || d.radioGolpe * 2.2, ancho: d.ancho || 1.6 * M, dir, rgb });
+    return aviso("abanico", e.x, e.y, d.aviso, { radio: d.radioGolpe, ang: d.angulo || 0.8, dir, rgb });
+  }
   const tiene = (e, af) => !!(e.lider && e.lider.afijos && e.lider.afijos.includes(af));
   function mover(e, dx, dy, r) {
     if (ELDERVALD.libre(e.x + dx, e.y, r)) e.x += dx;
@@ -242,7 +250,8 @@ window.COMBATE = (function () {
           const dir = Math.atan2(dy * 1.25, dx);
           let a;
           const rgb = e.lider ? RGB[e.lider.afijos[0]] : null;
-          if (lejos) a = aviso("circulo", p.x, p.y, d.aviso, { radio: d.radioGolpe, rgb: rgb || [154, 107, 216], lejos: true });
+          if (e.patron) a = patron(e, dir, rgb);
+          else if (lejos) a = aviso("circulo", p.x, p.y, d.aviso, { radio: d.radioGolpe, rgb: rgb || [154, 107, 216], lejos: true });
           else if (d.forma === "carga") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
           else if (d.forma === "franja") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
           else if (e.tipo === "trol" && (e.cuenta = (e.cuenta || 0) + 1) % 3 === 0) a = aviso("franja", e.x, e.y, d.aviso * 0.9, { largo: d.largo, ancho: d.ancho, dir, rgb });

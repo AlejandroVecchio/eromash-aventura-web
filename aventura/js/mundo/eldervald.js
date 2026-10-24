@@ -760,6 +760,27 @@ window.ELDERVALD = (function () {
     poner("escalonesRaices", mas(loma, 8.6, 3.6), { x2: mas(c, -5, -1)[0], y2: mas(c, -5, -1)[1], ancho: 70, sem: 9, piso: true, sinChoque: true });
     RECINTOS.push([loma[0] - 7 * M, loma[1] - 5 * M, c[0] + 10 * M, c[1] + 6 * M]);
   })();
+  // Las guaridas de los semijefes («Eldervald — etapas»): el nido del lobo viejo de zarzal al oeste del carro y la
+  // cueva de la loba madre en la ladera sur de la quebrada, al este del Paso. Un claro en el bosque para pelear.
+  (function () {
+    const lv = mas(LUGARES.carro.p, -16, 5);
+    poner("nidoZarzal", lv, { sem: 4, sinChoque: true });
+    [0, 1, 2, 3, 4].forEach((i) => poner("zarzas", [lv[0] + Math.cos(i * 1.3) * 9 * M, lv[1] + Math.sin(i * 1.3) * 6 * M], { sem: 60 + i }));
+    punto("semi_lobo_viejo", mas(lv, 0, 1));
+    RECINTOS.push([lv[0] - 11 * M, lv[1] - 8 * M, lv[0] + 11 * M, lv[1] + 8 * M]);
+    const cv = m(655, 214);
+    poner("bocaCueva", cv, { sem: 7 }, "cueva_loba");
+    poner("roca", mas(cv, -7, 1), { s: 0.9, sem: 71 });
+    poner("roca", mas(cv, 7.5, 0.5), { s: 0.75, sem: 72 });
+    punto("semi_loba", mas(cv, 0, 6));
+    RECINTOS.push([cv[0] - 12 * M, cv[1] - 3 * M, cv[0] + 12 * M, cv[1] + 14 * M]);
+    // la huldra espera al borde del claro del Puesto; los lobos con la campana, en un claro de zarzas más al oeste
+    punto("huldra", mas(LUGARES.puesto.p, -12.5, -3));
+    const lh = mas(LUGARES.puesto.p, -36, -16);
+    punto("lobos_huldra", lh);
+    [0, 1, 2].forEach((i) => poner("zarzas", [lh[0] + Math.cos(i * 2.1 + 0.4) * 7 * M, lh[1] + Math.sin(i * 2.1 + 0.4) * 5 * M], { sem: 80 + i }));
+    RECINTOS.push([lh[0] - 9 * M, lh[1] - 7 * M, lh[0] + 9 * M, lh[1] + 7 * M]);
+  })();
   // faroles y piedras de linde de los caminos (las de orientación)
   [[560, 690], [700, 414], [520, 530], [575, 300], [900, 540], [1010, 420], [1265, 300], [200, 880]].forEach((p) => poner("farol", mas(m(p[0], p[1]), 3.2, 0)));
   [[470, 745], [612, 360], [540, 250], [470, 240], [955, 470], [1150, 350], [1330, 250], [985, 585], [300, 860]].forEach((p, i) => poner("piedraLinde", mas(m(p[0], p[1]), -3.5, 2.5), { sem: i * 5 }));

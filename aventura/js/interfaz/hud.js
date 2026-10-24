@@ -5,7 +5,7 @@ window.HUD = (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
   const t = (k, v) => I18N.t(k, v);
-  const COLOR_HABLANTE = { eydis: "#7BC86C", orm: "#FF8D71", svanhild: "#B8C8E8", eromash: "#FFD98A", runa: "#73D5DB", trabajador: "#E0B2B2", ylva: "#E0B2B2" };
+  const COLOR_HABLANTE = { eydis: "#7BC86C", orm: "#FF8D71", svanhild: "#B8C8E8", eromash: "#FFD98A", runa: "#73D5DB", trabajador: "#E0B2B2", ylva: "#E0B2B2", huldra: "#7BC86C", nokk: "#73D5DB" };
 
   function armar() {
     document.body.insertAdjacentHTML(

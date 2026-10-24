@@ -60,10 +60,19 @@ window.RITOS = (function () {
           falta = 1500 + rnd() * 700;
           const nx = -(by - ay) / l,
             ny = (bx - ax) / l,
-            d = cm.w / 2 + 70,
-            p = [ax + ((bx - ax) * u) / l + nx * d * lado, ay + ((by - ay) * u) / l + ny * d * lado];
+            cx = ax + ((bx - ax) * u) / l,
+            cy = ay + ((by - ay) * u) / l;
+          // a un costado del camino; si ahí hay un árbol o una roca, del otro costado o un poco más afuera
+          let p = null;
+          for (const [sd, d] of [[lado, cm.w / 2 + 70], [-lado, cm.w / 2 + 70], [lado, cm.w / 2 + 140], [-lado, cm.w / 2 + 140]]) {
+            const q = [cx + nx * d * sd, cy + ny * d * sd];
+            if (W.libre(q[0], q[1], 26)) {
+              p = q;
+              break;
+            }
+          }
           lado = -lado;
-          if (enCiudad(p, 500) || !lejos(p, puestas, 1100) || !W.libre(p[0], p[1], 26)) continue;
+          if (!p || enCiudad(p, 500) || !lejos(p, puestas, 1100)) continue;
           claro(p, 90);
           const runas = [0, 1, 2].map(() => RUNAS_CAMINO[Math.floor(rnd() * RUNAS_CAMINO.length)]);
           camino.push({ id: camino.length, cosa: W.agregar("piedraCamino", p, { sem: rnd() * 10, runas, s: 1.05 }) });
