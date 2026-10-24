@@ -737,13 +737,16 @@ window.ELDERVALD = (function () {
     const c = LUGARES.aserradero.p;
     poner("galponSierra", mas(c, 0.4, -3), {}, "galpon");
     punto("dintel", mas(c, 0.4, -2));
-    poner("ruedaAgua", mas(c, 7.3, -3.5), { gira: false }, "rueda");
-    const toma = mas(c, 9.3, -12.2),
-      boca = mas(c, 8.1, -4.8);
+    // la rueda está en el río, contra la orilla: la corriente la toca por abajo y la canaleta le echa el agua del canal
+    // por arriba. El canal sale del río un poco más arriba (la toma), con la compuerta que lo abre, y baja por la
+    // orilla hasta la canaleta. El eje cruza la orilla sobre caballetes hasta el galpón.
+    const rueda = mas(c, 14.6, -3.5);
+    poner("ruedaAgua", rueda, { gira: false, enRio: true, canaleta: -1, largo: 240, eje: rueda[0] - mas(c, 0.4, 0)[0] - 190 }, "rueda");
+    const boca = [rueda[0] - 228, rueda[1] - 312],
+      toma = [boca[0] - 10, boca[1] - 300];
     poner("canal", toma, { x2: boca[0], y2: boca[1], piso: true, sinChoque: true }, "canal");
-    pintarLinea([toma, boca], 80, 1);
-    poner("compuerta", mas(c, 8.7, -9.4), { abierta: false, sinChoque: true }, "compuerta");
-    punto("compuerta", mas(c, 7.1, -9));
+    poner("compuerta", [toma[0] + (boca[0] - toma[0]) * 0.4, toma[1] + (boca[1] - toma[1]) * 0.4 + 10], { abierta: false, sinChoque: true }, "compuerta");
+    punto("compuerta", [toma[0] - 110, toma[1] + 130]);
     poner("pilaTroncos", mas(c, -3, -8), { sem: 1 });
     poner("pilaTroncos", mas(c, 0.5, -10), { sem: 2, filas: 2 });
     poner("pilaTroncos", mas(c, -6.8, -4.6), { sem: 3, filas: 2, s: 0.9 });
@@ -1157,6 +1160,9 @@ window.ELDERVALD = (function () {
     });
   }
 
+  // los canales son agua (no se cruzan): se marcan acá, ya con lo que el editor movió
+  COSAS.forEach((o) => o.id === "canal" && o.o.x2 !== undefined && pintarLinea([[o.x, o.y], [o.o.x2, o.o.y2]], 80, 1));
+
   // ---------- grilla espacial para dibujar y chocar solo lo cercano ----------
   const BALDE = 512,
     BW = Math.ceil(ANCHO / BALDE),
@@ -1348,7 +1354,7 @@ window.ELDERVALD = (function () {
     }
     // lo que va pintado en el piso: puentes, tablón, losa (se redibujan si cambian, ver invalidar)
     COSAS.forEach((o) => {
-      if (!o.o.piso) return;
+      if (!o.o.piso || o.oculto) return; // oculto: el editor lo movió o lo sacó
       const x2 = o.o.x2 !== undefined ? o.o.x2 : o.x;
       if (Math.max(o.x, x2) + 200 < x0 || Math.min(o.x, x2) - 200 > x1) return;
       ASSETS.dibujar(c, o.id, o.x, o.y, 0, o.o);

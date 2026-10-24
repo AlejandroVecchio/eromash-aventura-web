@@ -63,7 +63,8 @@
   let cw = 0,
     ch = 0,
     dpr = 1;
-  const cam = { x: W.CIUDAD.c[0], y: W.CIUDAD.c[1], z: 0.12 };
+  const cam = { x: W.CIUDAD.c[0], y: W.CIUDAD.c[1], z: 0.12, g: 0 };
+  let giroMeta = 0; // a dónde va girando la cámara (Z y X, la barra Cámara o el botón Norte)
   function medir() {
     dpr = Math.min(2, window.devicePixelRatio || 1);
     const r = cv.getBoundingClientRect();
@@ -72,7 +73,38 @@
   }
   addEventListener("resize", medir);
   medir();
-  const aMundo = (sx, sy) => [(sx * dpr - cw / 2) / cam.z + cam.x, (sy * dpr - ch / 2) / cam.z + cam.y];
+  // la cámara gira (cam.g, en radianes) alrededor del centro de la vista: el piso gira con ella y los objetos quedan
+// parados. V lleva un punto del mundo a la vista girada; aMundo, del puntero al mundo.
+  const V = (x, y) => {
+    if (!cam.g) return [x, y];
+    const co = Math.cos(cam.g),
+      si = Math.sin(cam.g),
+      dx = x - cam.x,
+      dy = y - cam.y;
+    return [cam.x + dx * co - dy * si, cam.y + dx * si + dy * co];
+  };
+  const desdeVista = (vx, vy) => {
+    if (!cam.g) return [vx, vy];
+    const co = Math.cos(cam.g),
+      si = Math.sin(cam.g),
+      dx = vx - cam.x,
+      dy = vy - cam.y;
+    return [cam.x + dx * co + dy * si, cam.y - dx * si + dy * co];
+  };
+  // un desplazamiento de la pantalla, pasado al mundo (para mover la vista)
+  const giroInverso = (dx, dy) => (cam.g ? [dx * Math.cos(cam.g) + dy * Math.sin(cam.g), -dx * Math.sin(cam.g) + dy * Math.cos(cam.g)] : [dx, dy]);
+  const aMundo = (sx, sy) => desdeVista((sx * dpr - cw / 2) / cam.z + cam.x, (sy * dpr - ch / 2) / cam.z + cam.y);
+  // lo que se dibuja parado, pasado a la vista: su pie (y las dos puntas de lo que va de punta a punta) giran con el
+  // piso; lo que tiene todas sus caras (ASSETS.LISTA[id].caras) además se ve desde el lado que mira la cámara
+  function enVista(d) {
+    if (!cam.g) return d;
+    const [x, y] = V(d.x, d.y),
+      o = Object.assign({}, d.o);
+    if (o.x2 !== undefined) [o.x2, o.y2] = V(o.x2, o.y2);
+    const def = ASSETS.LISTA[d.id];
+    if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
+    return Object.assign({}, d, { x, y, o, mundo: d });
+  }
   const croquis = new Image();
   croquis.src = "mapas/eldervald-croquis.png";
 
@@ -106,8 +138,10 @@
       dd = cam.z >= 0.15 ? decoEn(x, y) : null;
     if (!dd) return d;
     if (d) {
-      const ancho = d.choque ? (d.choque.w ? d.choque.w / 2 : d.choque.r) + 20 : 30;
-      if (Math.abs(x - d.x) < ancho && Math.abs(y - d.y) < 40) return d;
+      const ancho = d.choque ? (d.choque.w ? d.choque.w / 2 : d.choque.r) + 20 : 30,
+        [vx, vy] = V(x, y),
+        [dx, dy] = V(d.x, d.y);
+      if (Math.abs(vx - dx) < ancho && Math.abs(vy - dy) < 40) return d;
     }
     return { deco: dd };
   }
@@ -135,7 +169,16 @@
       const cosa = W.COSAS.find((o) => o.id === m.id && Math.abs(o.x - m.x) < 6 && Math.abs(o.y - m.y) < 6);
       if (cosa) movidos.set(cosa, i);
     });
+    // lo pintado en el piso (canal, puentes, tablones, losas) que se movió o se sacó deja de pintarse donde estaba
+    PISO0.forEach((o) => {
+      const oculto = movidos.has(o) || sacado(o);
+      if (!!o.oculto === oculto) return;
+      o.oculto = oculto;
+      W.invalidar(o.x, o.y);
+      if (o.o.x2 !== undefined) W.invalidar(o.o.x2, o.o.y2);
+    });
   }
+  const PISO0 = W.COSAS.filter((o) => o.o.piso);
   function opcionesDe(a) {
     const o = Object.assign({}, a.o || {});
     const k = W.ESCALA_CASA[a.id];
@@ -147,6 +190,13 @@
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 600, (o) => {
       if (movidos.has(o) || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o) || ahogado(o)) return;
       l.push({ id: o.id, x: o.x, y: o.y, o: o.o, alto: o.alto, choque: o.choque, cosa: o, piso: !!o.o.piso });
+    });
+    // lo de base pintado en el piso no está en la grilla de cercanas: se busca aparte (enPiso: ya lo pinta el piso)
+    PISO0.forEach((o) => {
+      const x2 = o.o.x2 !== undefined ? o.o.x2 : o.x,
+        y2 = o.o.y2 !== undefined ? o.o.y2 : o.y;
+      if (movidos.has(o) || sacado(o) || Math.max(o.x, x2) < x0 - 300 || Math.min(o.x, x2) > x1 + 300 || Math.max(o.y, y2) < y0 - 300 || Math.min(o.y, y2) > y1 + 300) return;
+      l.push({ id: o.id, x: o.x, y: o.y, o: o.o, alto: o.alto, choque: o.choque, cosa: o, piso: true, enPiso: true });
     });
     movidos.forEach((i, o) => {
       const m = est.mover[i];
@@ -187,7 +237,7 @@
     const den = (x, y) => x > x0 - 500 && x < x1 + 500 && y > y0 - 300 && y < y1 + 1200;
     return firmaCaminos(x0, y0, x1, y1) + "|" + firmaAgua(x0, y0, x1, y1) + "|" + est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
   }
-  function hornear(nv, tx, ty) {
+  function hornear(nv, tx, ty, soloPiso) {
     const x0 = tx * nv.T,
       y0 = ty * nv.T,
       x1 = x0 + nv.T,
@@ -198,6 +248,7 @@
     g.scale(nv.res, nv.res);
     g.translate(-x0, -y0);
     W.dibujarPiso(g, x0, y0, x1, y1, 0.2, true);
+    if (soloPiso) return { cv: cvb, firma: firma(x0, y0, x1, y1) };
     const l = [];
     W.cercanas(x0 - 400, y0 - 200, x1 + 400, y1 + 1200, (o) => {
       if (movidos.has(o) || sacado(o) || ahogado(o) || o.y < y0 - 60 || o.y - o.alto * 1.2 > y1 || o.x < x0 - 500 || o.x > x1 + 500) return;
@@ -205,12 +256,12 @@
       l.push(o);
     });
     l.filter((o) => o.o.piso).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
-    l.filter((o) => !o.o.piso).sort((a, b) => a.y - b.y).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
+    l.filter((o) => !o.o.piso).sort((a, b) => a.y + (a.o.orden || 0) - b.y - (b.o.orden || 0)).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
     return { cv: cvb, firma: firma(x0, y0, x1, y1) };
   }
   // dibuja las baldosas del nivel que tocan la vista; hornea a lo sumo una que falte o haya cambiado por cuadro.
   // Devuelve si quedó alguna sin hornear.
-  function baldosas(nv, x0, y0, x1, y1) {
+  function baldosas(nv, x0, y0, x1, y1, soloPiso) {
     let horneada = false,
       falta = false;
     const tx0 = Math.max(0, Math.floor(x0 / nv.T)),
@@ -219,11 +270,11 @@
       ty1 = Math.min(Math.ceil(W.ALTO / nv.T) - 1, Math.floor(y1 / nv.T));
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
-        const k = tx + "," + ty;
+        const k = tx + "," + ty + (soloPiso ? "p" : "");
         let b = nv.m.get(k);
         const vieja = b && b.firma !== firma(tx * nv.T, ty * nv.T, (tx + 1) * nv.T, (ty + 1) * nv.T);
         if ((!b || vieja) && !horneada) {
-          b = hornear(nv, tx, ty);
+          b = hornear(nv, tx, ty, soloPiso);
           nv.m.delete(k);
           nv.m.set(k, b);
           if (nv.m.size > 64) nv.m.delete(nv.m.keys().next().value); // las que hace más que no se ven
@@ -260,14 +311,29 @@
     c.fillRect(0, 0, cw, ch);
     const vw = cw / cam.z,
       vh = ch / cam.z,
-      x0 = cam.x - vw / 2,
-      y0 = cam.y - vh / 2,
-      x1 = x0 + vw,
-      y1 = y0 + vh;
-    c.setTransform(cam.z, 0, 0, cam.z, -x0 * cam.z, -y0 * cam.z);
+      xv0 = cam.x - vw / 2,
+      yv0 = cam.y - vh / 2,
+      rr = Math.hypot(vw, vh) / 2,
+      // con la cámara girada, lo que se ve del mundo es el círculo que toca las cuatro esquinas
+      x0 = cam.g ? cam.x - rr : xv0,
+      y0 = cam.g ? cam.y - rr : yv0,
+      x1 = cam.g ? cam.x + rr : xv0 + vw,
+      y1 = cam.g ? cam.y + rr : yv0 + vh;
+    // dos maneras de dibujar: vistaT para lo que está parado (ya pasado por V) y pisoT para lo que va en el piso
+    const vistaT = () => c.setTransform(cam.z, 0, 0, cam.z, -xv0 * cam.z, -yv0 * cam.z);
+    const pisoT = () => {
+      vistaT();
+      if (!cam.g) return;
+      c.translate(cam.x, cam.y);
+      c.rotate(cam.g);
+      c.translate(-cam.x, -cam.y);
+    };
+    pisoT();
     const lejos = cam.z < 0.07,
-      horno = cam.z < HORNO;
-    if (horno) faltan = baldosas(NIVELES[lejos ? 3 : cam.z < 0.16 ? 2 : cam.z < 0.3 ? 1 : 0], x0, y0, x1, y1);
+      horno = cam.z < HORNO,
+      // girada y no tan lejos: las baldosas llevan solo el piso y los objetos se dibujan parados encima
+      soloPiso = horno && cam.g && cam.z >= 0.25;
+    if (horno) faltan = baldosas(NIVELES[lejos ? 3 : cam.z < 0.16 ? 2 : cam.z < 0.3 ? 1 : 0], x0, y0, x1, y1, soloPiso);
     else {
       faltan = false;
       // el piso cacheado a dos resoluciones fijas, para no repintarlo en cada zoom
@@ -334,39 +400,49 @@
     }
     if (!lejos) {
       // horneado: lo de base ya está en las baldosas, en vivo solo lo cambiado (agregado o movido)
-      const lista = visibles(x0, y0, x1, y1).filter((d) => (horno ? d.agregado != null || d.movido != null : cam.z >= LIVIANO || !chico(d)));
-      lista.filter((d) => d.piso).forEach((d) => ASSETS.dibujar(c, d.id, d.x, d.y, tt, d.o));
-      lista.filter((d) => !d.piso).sort((a, b) => a.y - b.y).forEach((d) => {
+      const lista = visibles(x0, y0, x1, y1)
+        .filter((d) => (horno && !soloPiso ? d.agregado != null || d.movido != null : cam.z >= LIVIANO || !chico(d)))
+        .map(enVista);
+      vistaT();
+      pisoT();
+      lista.filter((d) => d.piso && !d.enPiso).forEach((d) => ASSETS.dibujar(c, d.id, (d.mundo || d).x, (d.mundo || d).y, tt, (d.mundo || d).o));
+      vistaT();
+      lista.filter((d) => !d.piso).sort((a, b) => a.y + (a.o.orden || 0) - b.y - (b.o.orden || 0)).forEach((d) => {
         if (sel && sel.d && sel.d.agregado === d.agregado && sel.d.cosa === d.cosa) c.globalAlpha = 0.55;
         ASSETS.dibujar(c, d.id, d.x, d.y, tt, d.o);
         c.globalAlpha = 1;
       });
       if ($("choques").checked) {
+        pisoT();
         c.lineWidth = 2 / cam.z;
         lista.forEach((d) => {
           if (!d.choque) return;
+          d = d.mundo || d;
           c.strokeStyle = d.agregado != null ? "#FFD98A" : "rgba(242,236,236,0.6)";
           c.beginPath();
           if (d.choque.r) c.ellipse(d.x, d.y, d.choque.r, d.choque.r / 1.6, 0, 0, Math.PI * 2);
           else c.rect(d.x - d.choque.w / 2, d.y - d.choque.h, d.choque.w, d.choque.h);
           c.stroke();
         });
+        vistaT();
       }
       // marca de lo agregado: un rombo dorado al pie
       est.poner.forEach((a) => {
         if (a.x < x0 || a.x > x1 || a.y < y0 || a.y > y1 + 200) return;
-        const r = 9 / cam.z;
+        const r = 9 / cam.z,
+          [ax, ay] = V(a.x, a.y);
         c.fillStyle = "#FFD98A";
         c.beginPath();
-        c.moveTo(a.x, a.y - r);
-        c.lineTo(a.x + r, a.y);
-        c.lineTo(a.x, a.y + r);
-        c.lineTo(a.x - r, a.y);
+        c.moveTo(ax, ay - r);
+        c.lineTo(ax + r, ay);
+        c.lineTo(ax, ay + r);
+        c.lineTo(ax - r, ay);
         c.closePath();
         c.fill();
       });
     } else {
       // de lejos, cada agregado es un punto dorado y cada sacado una cruz
+      pisoT();
       est.poner.forEach((a) => {
         c.fillStyle = "#FFD98A";
         c.beginPath();
@@ -375,14 +451,16 @@
       });
     }
     // el mapa original de Eldervald encima, con su transparencia, para comparar con lo hecho
+    pisoT();
     if ($("original").checked && croquis.complete && croquis.naturalWidth) {
       c.globalAlpha = +$("originalA").value;
       c.drawImage(croquis, 0, 0, W.ANCHO, (croquis.naturalHeight * W.ANCHO) / croquis.naturalWidth);
       c.globalAlpha = 1;
     }
     // lo de la historia: un rombo rúnico al pie; con el puntero encima, qué es
+    vistaT();
     if (!lejos) {
-      const lista2 = visibles(x0, y0, x1, y1);
+      const lista2 = visibles(x0, y0, x1, y1).map(enVista);
       lista2.forEach((d) => {
         if (!nombradas.has(d.cosa) || (horno && cam.z < 0.1)) return;
         const r = 8 / cam.z;
@@ -398,12 +476,13 @@
       });
       marcarElegida(lista2);
       const h = cursor && !arrastre && !sel ? (herr === "borrar" ? tocadoSacar(cursor.x, cursor.y) : tocado(cursor.x, cursor.y)) : null;
-      if (h && h.deco) etiqueta({ id: h.deco.id, x: h.deco.x, y: h.deco.y });
-      else if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(h);
+      if (h && h.deco) etiqueta(enVista({ id: h.deco.id, x: h.deco.x, y: h.deco.y, o: {} }));
+      else if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(enVista(h));
     }
     est.quitar.forEach((q) => {
       if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) return;
       const r = 10 / cam.z;
+      q = { x: V(q.x, q.y)[0], y: V(q.x, q.y)[1] };
       c.strokeStyle = "#C8402D";
       c.lineWidth = 3 / cam.z;
       c.beginPath();
@@ -417,7 +496,7 @@
     est.notas.forEach((n, i) => {
       const k = 1 / cam.z;
       c.save();
-      c.translate(n.x, n.y);
+      c.translate(...V(n.x, n.y));
       c.scale(k, k);
       c.fillStyle = "rgba(0,0,0,0.4)";
       c.beginPath();
@@ -455,8 +534,9 @@
       const x = arrastre && arrastre.dos ? arrastre.x : cursor.x,
         y = arrastre && arrastre.dos ? arrastre.y : cursor.y;
       if (arrastre && arrastre.dos) o.x2 = cursor.x;
+      const d = enVista({ id: elegido, x, y, o });
       c.globalAlpha = 0.6;
-      ASSETS.dibujar(c, elegido, x, y, tt, o);
+      ASSETS.dibujar(c, elegido, d.x, d.y, tt, d.o);
       c.globalAlpha = 1;
     }
     $("donde").textContent = cursor ? t("ed.donde", [Math.round(cursor.x / W.U), Math.round(cursor.y / W.U), cam.z.toFixed(2)]) : "";
@@ -511,7 +591,55 @@
   // est.mover (o: { esc, ex, ey, esp }). Lo que se pone con «Agregarle algo» queda pegado (pegado: clave del padre) y
   // se mueve con ella.
   let elegida = null, // { a } (de est.poner) o { cosa } (del mundo)
-    pegarA = null;
+    pegarA = null,
+    grupo = []; // con Ctrl+clic: varios elegidos (cada uno { a } o { cosa }); se mueven y se agrandan juntos
+  const mismo = (g, h) => (g.a ? g.a === h.a : !h.a && g.cosa === h.cosa);
+  const delGrupo = (d) => grupo.find((g) => (g.a ? d.agregado != null && est.poner[d.agregado] === g.a : d.cosa === g.cosa));
+  // la entrada de est.mover de una cosa del mundo (se crea si hace falta)
+  function entradaDe(cosa, crear) {
+    if (movidos.has(cosa)) return est.mover[movidos.get(cosa)];
+    if (!crear) return null;
+    est.mover.push({ id: cosa.id, x: r1(cosa.x), y: r1(cosa.y), nx: r1(cosa.x), ny: r1(cosa.y) });
+    armarMovidos();
+    return est.mover[est.mover.length - 1];
+  }
+  // dónde está cada uno del grupo, sus opciones y cómo se corre
+  function datosDe(g) {
+    if (g.a) {
+      const a = g.a,
+        o = a.o || (a.o = {});
+      return { p: [a.x, a.y], o, fijar: (x, y) => ((a.x = r1(x)), (a.y = r1(y))), hijos: hijosDe(a.u || "-") };
+    }
+    const m = entradaDe(g.cosa, true),
+      o = m.o || (m.o = {});
+    // lo que va de punta a punta: su segunda punta queda anotada en la entrada para poder correrla
+    if (g.cosa.o.x2 !== undefined && o.x2 === undefined) (o.x2 = r1(g.cosa.o.x2 + m.nx - g.cosa.x)), (o.y2 = r1(g.cosa.o.y2 + m.ny - g.cosa.y));
+    return { p: [m.nx, m.ny], o, fijar: (x, y) => ((m.nx = r1(x)), (m.ny = r1(y))), hijos: hijosDe(claveDe(g.cosa)) };
+  }
+  function correrGrupo(dx, dy, salvo) {
+    if (!dx && !dy) return;
+    grupo.forEach((g) => {
+      if (salvo && mismo(g, salvo)) return;
+      const d = datosDe(g);
+      d.fijar(d.p[0] + dx, d.p[1] + dy);
+      if (d.o.x2 !== undefined) (d.o.x2 = r1(d.o.x2 + dx)), (d.o.y2 = r1(d.o.y2 + dy));
+      correrHijos(d.hijos, dx, dy);
+    });
+  }
+  // agranda todo el grupo desde su centro: cada uno crece y se aleja (o se acerca) del centro en la misma medida
+  function agrandarGrupo(f) {
+    const ds = grupo.map(datosDe),
+      cx = ds.reduce((s, d) => s + d.p[0], 0) / ds.length,
+      cy = ds.reduce((s, d) => s + d.p[1], 0) / ds.length;
+    ds.forEach((d) => {
+      const nx = cx + (d.p[0] - cx) * f,
+        ny = cy + (d.p[1] - cy) * f;
+      if (d.o.x2 !== undefined) (d.o.x2 = r1(cx + (d.o.x2 - cx) * f)), (d.o.y2 = r1(cy + (d.o.y2 - cy) * f));
+      else d.o.esc = Math.round((d.o.esc || 1) * f * 1000) / 1000;
+      correrHijos(d.hijos, r1(nx) - d.p[0], r1(ny) - d.p[1]);
+      d.fijar(nx, ny);
+    });
+  }
   const uid = () => "a" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
   function nuevo(a) {
     a.u = uid();
@@ -543,6 +671,7 @@
   function soltarElegida() {
     elegida = null;
     pegarA = null;
+    grupo = [];
     $("selPanel").classList.add("oculto");
   }
   // la entrada de est.mover de lo del mundo elegido (se crea si hace falta)
@@ -586,7 +715,8 @@
       nom = t("as." + id),
       o = opcionesElegida(),
       hist = elegida.cosa && nombradas.get(elegida.cosa);
-    $("selNombre").textContent = nom === "as." + id ? id : nom;
+    $("selNombre").textContent = (nom === "as." + id ? id : nom) + (grupo.length > 1 ? " · " + t("ed.sel_grupo", [grupo.length]) : "");
+    $("selOrdenV").textContent = Math.round((o.orden || 0) / ORDEN);
     $("selTipo").textContent = hist ? t("ed.de_historia", [hist]) : elegida.a ? t("ed.sel_agregado", [hijosDe(elegida.a.u || "-").length]) : t("ed.sel_mundo", [hijosDe(claveDe(elegida.cosa)).length]);
     const dos = o.x2 !== undefined;
     deslizadores.forEach(([el, k, base]) => {
@@ -596,6 +726,8 @@
       $(el).disabled = dos && (k === "ex" || k === "ey" || k === "giro");
     });
     escPrevio = 1;
+    if (grupo.length > 1) $("selEsc").value = 1;
+    $("selEscV").textContent = (+$("selEsc").value).toFixed(2);
     $("selEsp").checked = !!o.esp;
     $("selDos").classList.toggle("oculto", !dos);
   }
@@ -605,6 +737,11 @@
     $(el).addEventListener("input", () => {
       const v = +$(el).value;
       $(el + "V").textContent = k === "rot" || k === "giro" ? Math.round(v) + "°" : v.toFixed(2);
+      if (grupo.length > 1 && k === "esc") {
+        agrandarGrupo(v / escPrevio);
+        escPrevio = v;
+        return;
+      }
       if (esDos() && k === "rot") return girarDos(v);
       if (esDos() && k === "esc") {
         estirarDos(v / escPrevio);
@@ -660,6 +797,21 @@
     if (Math.hypot(b[0] - a[0], b[1] - a[1]) * f < 20) return;
     fijar([cx + (a[0] - cx) * f, cy + (a[1] - cy) * f], [cx + (b[0] - cx) * f, cy + (b[1] - cy) * f]);
   }
+  // adelante / atrás: corre la línea con la que se ordena el dibujo (o.orden, en unidades del mundo), sin moverlo
+  const ORDEN = 40;
+  function cambiarOrden(paso) {
+    if (!elegida) return;
+    recordar();
+    (grupo.length > 1 ? grupo : [elegida]).forEach((g) => {
+      const o = g.a ? g.a.o || (g.a.o = {}) : datosDe(g).o;
+      o.orden = (o.orden || 0) + paso * ORDEN;
+      if (!o.orden) delete o.orden;
+    });
+    guardar();
+    pintarElegida();
+  }
+  $("selAtras").onclick = () => cambiarOrden(-1);
+  $("selAdelante").onclick = () => cambiarOrden(1);
   $("selEsp").addEventListener("change", () => {
     recordar();
     cambiarElegida("esp", true, !$("selEsp").checked);
@@ -686,7 +838,7 @@
     if (!elegida) return;
     const k = elegida.a ? elegida.a.u : claveDe(elegida.cosa);
     l.forEach((d) => {
-      const es = elegida.a ? d.agregado != null && est.poner[d.agregado] === elegida.a : d.cosa === elegida.cosa;
+      const es = (elegida.a ? d.agregado != null && est.poner[d.agregado] === elegida.a : d.cosa === elegida.cosa) || !!delGrupo(d);
       const hijo = d.agregado != null && k && est.poner[d.agregado].pegado === k;
       if (!es && !hijo) return;
       if (d.o && d.o.x2 !== undefined) {
@@ -1255,8 +1407,10 @@
   function notaEn(x, y) {
     let mejor = -1,
       dm = 26 / cam.z;
+    const [vx, vy] = V(x, y);
     est.notas.forEach((n, i) => {
-      const d = Math.hypot(x - n.x, y - (n.y - 20 / cam.z));
+      const [nx, ny] = V(n.x, n.y),
+        d = Math.hypot(vx - nx, vy - (ny - 20 / cam.z));
       if (d < dm) {
         dm = d;
         mejor = i;
@@ -1423,15 +1577,21 @@
   // el objeto bajo el puntero: el más cercano a su pie, o a la mitad de su altura
   function tocado(x, y) {
     const vw = cw / cam.z,
-      vh = ch / cam.z;
-    const l = visibles(cam.x - vw / 2, cam.y - vh / 2, cam.x + vw / 2, cam.y + vh / 2);
+      vh = ch / cam.z,
+      rr = cam.g ? Math.hypot(vw, vh) / 2 : 0;
+    const l = cam.g ? visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr) : visibles(cam.x - vw / 2, cam.y - vh / 2, cam.x + vw / 2, cam.y + vh / 2);
     let mejor = null,
       dm = Infinity;
-    l.forEach((d) => {
+    // con la cámara girada todo se compara en la vista, donde los objetos están parados
+    [x, y] = V(x, y);
+    l.forEach((d0) => {
+      const d = enVista(d0);
       // lo que va de punta a punta se toca en todo su largo
       if (d.o && d.o.x2 !== undefined) {
-        const dist = distSeg(x, y, d.x, d.y - 30, d.o.x2, d.o.y2 - 30) - (d.agregado != null ? 30 : 0);
-        if (dist < 70 && dist < dm) (dm = dist), (mejor = d);
+        // lo que va en el piso (un canal, una zanja) se toca en todo su ancho y gana a lo alto que tenga cerca
+        const sube = d.piso ? 0 : 30,
+          dist = distSeg(x, y, d.x, d.y - sube, d.o.x2, d.o.y2 - sube) - (d.agregado != null ? 30 : 0) - (d.piso ? (d.o.ancho || 46) + 14 : 0);
+        if (dist < 70 && dist < dm) (dm = dist), (mejor = d0);
         return;
       }
       const s = (d.o && d.o.s) || 1,
@@ -1441,7 +1601,7 @@
       const dist = Math.hypot(x - d.x, (y - (d.y - alto * 0.3)) * 0.6) - (d.agregado != null ? 30 : 0);
       if (dist < dm) {
         dm = dist;
-        mejor = d;
+        mejor = d0;
       }
     });
     return mejor;
@@ -1457,8 +1617,9 @@
     const [x, y] = aMundo(e.offsetX, e.offsetY);
     cursor = { x, y };
     if (arrastre && arrastre.pan) {
-      cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
-      cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
+      const [dx, dy] = giroInverso(((e.offsetX - arrastre.sx) * dpr) / cam.z, ((e.offsetY - arrastre.sy) * dpr) / cam.z);
+      cam.x = arrastre.cx - dx;
+      cam.y = arrastre.cy - dy;
     } else if (sel && sel.rioV != null) {
       if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
       if (sel.movio) sel.p[sel.rioV] = [r1(x), r1(y)];
@@ -1480,6 +1641,7 @@
         ny = r1(y - sel.dy);
       correrHijos(sel.hijos, nx - m.nx, ny - m.ny);
       if (m.o && m.o.x2 !== undefined) (m.o.x2 += nx - m.nx), (m.o.y2 += ny - m.ny);
+      correrGrupo(nx - m.nx, ny - m.ny, elegida);
       m.nx = nx;
       m.ny = ny;
     } else if (sel && sel.mueve) {
@@ -1494,9 +1656,12 @@
       if (sel.d.agregado != null) {
         const a = est.poner[sel.d.agregado];
         const ddx = x - sel.dx - a.x,
-          ddy = y - sel.dy - a.y;
+          ddy = y - sel.dy - a.y,
+          ax = a.x,
+          ay = a.y;
         a.x = r1(a.x + ddx);
         a.y = r1(a.y + ddy);
+        correrGrupo(a.x - ax, a.y - ay, elegida);
         if (a.o && a.o.x2 !== undefined) (a.o.x2 = r1(a.o.x2 + ddx)), (a.o.y2 = r1(a.o.y2 + ddy));
       }
     }
@@ -1627,8 +1792,26 @@
     } else if (herr === "mover") {
       const d = tocado(x, y);
       if (!d) return;
+      const g = d.agregado != null ? { a: est.poner[d.agregado] } : { cosa: d.cosa };
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+clic: lo suma al grupo o lo saca
+        if (!grupo.length && elegida) grupo.push(elegida);
+        const i = grupo.findIndex((h) => mismo(h, g));
+        if (i >= 0) grupo.splice(i, 1);
+        else grupo.push(g);
+        if (!grupo.length) soltarElegida();
+        else {
+          elegida = grupo[grupo.length - 1];
+          if (grupo.length === 1) grupo = [];
+          pintarElegida();
+        }
+        return;
+      }
+      if (!delGrupo(d)) grupo = [];
       recordar();
       elegir(d);
+      // al elegirlo puede haber quedado anotado ya (lo que va de punta a punta): se usa esa entrada
+      if (d.agregado == null && d.movido == null && movidos.has(d.cosa)) d.movido = movidos.get(d.cosa);
       const creado = d.agregado == null && d.movido == null;
       if (creado) {
         // mover algo del mundo (también lo de la historia): queda anotado dónde estaba y adónde va, y el juego lo
@@ -1756,6 +1939,7 @@
     }
     teclas[e.code] = true;
     if (e.key === "+" || e.key === "=") zoom(1.2);
+    if (!e.ctrlKey && !e.metaKey && (e.key === "z" || e.key === "x" || e.key === "Z" || e.key === "X")) girarCamara(e.key.toLowerCase() === "x" ? 15 : -15);
     if (e.key === "-") zoom(1 / 1.2);
     if (e.key === "1") ponerHerr("poner");
     if (e.key === "2") ponerHerr("mover");
@@ -1818,11 +2002,39 @@
   });
   setInterval(() => {
     const v = 14 / cam.z;
-    if (teclas.KeyW || teclas.ArrowUp) cam.y -= v;
-    if (teclas.KeyS || teclas.ArrowDown) cam.y += v;
-    if (teclas.KeyA || teclas.ArrowLeft) cam.x -= v;
-    if (teclas.KeyD || teclas.ArrowRight) cam.x += v;
+    let mx = 0,
+      my = 0;
+    if (teclas.KeyW || teclas.ArrowUp) my -= v;
+    if (teclas.KeyS || teclas.ArrowDown) my += v;
+    if (teclas.KeyA || teclas.ArrowLeft) mx -= v;
+    if (teclas.KeyD || teclas.ArrowRight) mx += v;
+    // arriba es arriba de la pantalla, gire como gire la cámara
+    const [dx, dy] = giroInverso(mx, my);
+    cam.x += dx;
+    cam.y += dy;
+    // la cámara gira despacio hasta el ángulo pedido
+    if (Math.abs(giroMeta - cam.g) > 1e-4) {
+      cam.g += (giroMeta - cam.g) * 0.25;
+      if (Math.abs(giroMeta - cam.g) < 0.002) cam.g = giroMeta;
+      if (Math.abs(cam.g) < 1e-4) cam.g = giroMeta = 0;
+      pedir();
+    }
   }, 16);
+  // girar la cámara: de a 15°, siempre entre -180° y 180°
+  function girarCamara(grados, absoluto) {
+    let g = absoluto ? grados : Math.round((giroMeta * 180) / Math.PI) + grados;
+    while (g > 180) g -= 360;
+    while (g < -180) g += 360;
+    // que dé la vuelta por el lado corto
+    let meta = (g * Math.PI) / 180;
+    while (meta - cam.g > Math.PI) cam.g += Math.PI * 2;
+    while (cam.g - meta > Math.PI) cam.g -= Math.PI * 2;
+    giroMeta = meta;
+    $("camara").value = g;
+    $("camaraV").textContent = g + "°";
+  }
+  $("camara").addEventListener("input", () => girarCamara(+$("camara").value, true));
+  $("norte").addEventListener("click", () => girarCamara(0, true));
   function deshacer() {
     const s = historial.pop();
     if (!s) return;
@@ -1955,5 +2167,5 @@
   armarLista();
   guardar();
   requestAnimationFrame(dibujar);
-  window.EDITOR = { est: () => est, cam, ponerHerr, elegir: (id) => (elegido = id) };
+  window.EDITOR = { est: () => est, cam, ponerHerr, elegir: (id) => (elegido = id), girarCamara };
 })();

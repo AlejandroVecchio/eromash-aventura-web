@@ -89,10 +89,16 @@
       cx = x,
       cy = y - 170 * s,
       a0 = o.gira ? t * 0.7 : 0.13;
-    sombra(c, x + 10 * s, y + 6 * s, 170 * s, 22 * s, 0.34);
-    // el agua donde muerde la rueda
-    P(c, poli(x, y - 6 * s, 190 * s, 34 * s, 14, 0.3), AGUA[0]);
-    P(c, poli(x + 10 * s, y - 8 * s, 150 * s, 24 * s, 14, 0.6), AGUA[1]);
+    // o.enRio: parada en la corriente (el río la mueve por abajo y la canaleta por arriba); si no, en su pozo
+    if (!o.enRio) {
+      sombra(c, x + 10 * s, y + 6 * s, 170 * s, 22 * s, 0.34);
+      // el agua donde muerde la rueda
+      P(c, poli(x, y - 6 * s, 190 * s, 34 * s, 14, 0.3), AGUA[0]);
+      P(c, poli(x + 10 * s, y - 8 * s, 150 * s, 24 * s, 14, 0.6), AGUA[1]);
+    } else {
+      // el pilar se moja: una franja oscura donde corta el agua
+      alfa(c, 0.5, () => P(c, poli(x, y - 4 * s, 120 * s, 20 * s, 12, 0.2), AGUA[0]));
+    }
     // el soporte de piedra detrás
     P(c, [x - 40 * s, y, x - 34 * s, y - 196 * s, x + 34 * s, y - 196 * s, x + 40 * s, y], PIEDRA[1]);
     P(c, [x + 8 * s, y, x + 8 * s, y - 196 * s, x + 34 * s, y - 196 * s, x + 40 * s, y], PIEDRA[2]);
@@ -122,13 +128,17 @@
     }
     E(c, cx, cy, 22 * s, 22 * s, C.hierro);
     E(c, cx + 4 * s, cy - 4 * s, 8 * s, 8 * s, C.hierroLuz);
-    // el eje que se va hacia el galpón
-    R(c, cx - 260 * s, cy - 6 * s, 260 * s, 12 * s, C.maderaSombra);
-    // la canaleta: baja desde el canal (atrás a la derecha) hasta la cresta de la rueda, sobre patas cortas
-    const ky = cy - rr - 30 * s,
-      kx = cx - 10 * s,
-      fx = cx + 110 * s,
-      fy = ky - 70 * s;
+    // el eje que se va hacia el galpón (o.eje: su largo, hasta la pared del galpón)
+    const eje = (o.eje || 260) * s;
+    R(c, cx - eje, cy - 6 * s, eje, 12 * s, C.maderaSombra);
+    if (o.enRio) for (let k = 1; k < eje / (90 * s); k++) L(c, cx - k * 90 * s, cy + 6 * s, cx - k * 90 * s - 6 * s, y - 2 * s, C.maderaSombra, 9 * s); // los caballetes del eje
+    // la canaleta: baja desde el canal (atrás a la derecha, o a la izquierda con o.canaleta -1) hasta la cresta de la
+    // rueda, sobre patas cortas
+    const lado = o.canaleta || 1,
+      ky = cy - rr - 30 * s,
+      kx = cx - 10 * s * lado,
+      fx = cx + (o.largo || 150) * s * lado,
+      fy = ky - 60 * s;
     [0.5, 0.95].forEach((u) => {
       const px = kx + (fx - kx) * u,
         py = ky + (fy - ky) * u;
@@ -150,6 +160,16 @@
       P(c, [cx + rr - 40 * s, cy + 50 * s, cx + rr + 30 * s, cy + 66 * s, cx + rr + 26 * s, cy + 80 * s, cx + rr - 44 * s, cy + 62 * s], C.maderaVieja);
       const g = (t * 0.8) % 1;
       E(c, kx - 4 * s, ky + 14 * s + g * 70 * s, 3 * s, 5 * s, AGUA[2]);
+    }
+    if (o.enRio) {
+      // la corriente le tapa las paletas de abajo y se rompe en espuma contra ellas
+      const ola = [];
+      for (let k = 0; k <= 10; k++) ola.push(x - 200 * s + k * 40 * s, y - 40 * s + Math.sin(t * 3 + k * 1.7) * 4 * s + (k % 2) * 5 * s);
+      alfa(c, 0.92, () => P(c, ola.concat([x + 200 * s, y + 6 * s, x - 200 * s, y + 6 * s]), "#2A4C56"));
+      for (let k = 0; k < 7; k++) {
+        const f = (t * (o.gira ? 0.9 : 0.25) + k / 7) % 1;
+        alfa(c, 0.7 * (1 - f), () => E(c, x - 150 * s + k * 50 * s, y - 34 * s + f * 30 * s, (12 + f * 10) * s, 4 * s, "#C8DCE0"));
+      }
     }
   }
 

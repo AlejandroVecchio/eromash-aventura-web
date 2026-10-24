@@ -1026,7 +1026,7 @@
     const lista = [];
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 420, (o) => {
       if (o.oculto || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1) return;
-      lista.push({ y: o.y, f: () => dibujarCosa(o), cosa: o });
+      lista.push({ y: o.y + (o.o.orden || 0), f: () => dibujarCosa(o), cosa: o }); // o.orden: adelante / atrás del editor
     });
     W.DECO.forEach((d) => {
       if (d.id === "hongosRocio" && d.x > x0 - 40 && d.x < x1 + 40 && d.y > y0 && d.y < y1 + 40) lista.push({ y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
