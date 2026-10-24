@@ -118,10 +118,22 @@
   .herr .ancho3 { grid-column: 1 / -1; }
   .herr .ancho2 { grid-column: span 2; }
   /* el generador de texturas: arriba a la izquierda, debajo del minimapa */
-  #txPanel { position: absolute; left: 12px; top: 152px; width: min(380px, calc(100vw - 32px)); max-height: calc(100% - 210px); overflow: auto; background: #1C1714; border: 1px solid #F5A524; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+  #txPanel { position: absolute; left: 12px; top: 152px; width: min(380px, calc(100vw - 32px)); max-height: calc(100% - 240px); overflow: auto; background: #1C1714; border: 1px solid #F5A524; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
   #txPanel .cab b { color: #F5A524; }
   #txPanel .txArriba { display: flex; gap: 10px; }
-  #txVista { width: 176px; height: 176px; flex: none; border: 1px solid #4A3630; }
+  #txVista { width: 176px; height: 176px; flex: none; border: 1px solid #4A3630; display: block; }
+  #txPanel .txVistaCol { display: flex; flex-direction: column; gap: 6px; width: 176px; flex: none; }
+  #txPanel.soltando { border-color: #FFD98A; box-shadow: inset 0 0 0 2px #FFD98A; }
+  #txMuestras { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; }
+  #txMuestras button { padding: 0; height: 16px; border: 1px solid #111111; }
+  #txPanel .txTonos button, #txPanel .txDatos .fila2 button { flex: 1; font-size: 12px; padding: 6px 4px; }
+  #txPanel .fila > span, #txPanel .fila2 > span { min-width: 64px; font-size: 12px; }
+  #txPanel .txColores input.activo { outline: 2px solid #FFD98A; outline-offset: 1px; }
+  #txVariantesL { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  #txVariantesL canvas { width: 100%; aspect-ratio: 1; cursor: pointer; border: 1px solid #4A3630; }
+  #txVariantesL canvas:hover { border-color: #FFD98A; }
+  #txPanel .txChk { display: flex; gap: 4px; align-items: center; font-size: 12px; white-space: nowrap; }
+  .txFicha small { font-size: 10px; color: #B5A5A0; }
   #txPanel .txDatos { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
   #txPanel input[type=text], #txPanel textarea, #txPanel select { font: inherit; font-size: 13px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 6px 8px; box-sizing: border-box; width: 100%; }
   #txPanel textarea { resize: vertical; }
@@ -232,6 +244,7 @@
         <option value="sotobosque" data-i18n="ed.pincel_sotobosque"></option>
         <option value="elegido" data-i18n="ed.pincel_elegido"></option>
         <option value="abrir" data-i18n="ed.pincel_abrir"></option>
+        <option value="textura" data-i18n="ed.pincel_textura"></option>
       </select></div>
       <div class="fila"><span data-i18n="ed.pincel_radio"></span><input id="pincelRadio" type="range" min="60" max="2400" step="20" value="600" /><b id="pincelRadioV"></b></div>
       <div class="fila" id="pincelFilaDensidad"><span data-i18n="ed.pincel_densidad"></span><input id="pincelDensidad" type="range" min="1" max="12" step="1" value="4" /><b id="pincelDensidadV"></b></div>
@@ -348,30 +361,53 @@
   <div id="iaPropuesta" class="oculto"><b id="iaResumen"></b><div class="botones"><button id="iaDescartar" data-i18n="ed.ia_descartar"></button><button id="iaAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
 </div>
 <div id="txPanel" class="oculto">
-  <div class="cab"><b data-i18n="ed.tx_titulo"></b><button id="txCerrar" data-i18n="ed.cerrar"></button></div>
+  <div class="cab"><b data-i18n="ed.tx_titulo"></b><span><button id="txVolver" data-i18n="ed.tx_volver"></button> <button id="txCerrar" data-i18n="ed.cerrar"></button></span></div>
   <div class="txArriba">
-    <canvas id="txVista" width="176" height="176"></canvas>
+    <div class="txVistaCol">
+      <canvas id="txVista" width="176" height="176"></canvas>
+      <select id="txVer"><option value="cuadro" data-i18n="ed.tx_ver_cuadro"></option><option value="piso" data-i18n="ed.tx_ver_piso"></option><option value="bloque" data-i18n="ed.tx_ver_bloque"></option></select>
+    </div>
     <div class="txDatos">
       <input id="txNomEs" type="text" spellcheck="false" data-i18n-ph="ed.tx_nombre_es" />
       <input id="txNomEn" type="text" spellcheck="false" data-i18n-ph="ed.tx_nombre_en" />
       <select id="txUso"><option value="parche" data-i18n="ed.tx_uso_parche"></option><option value="bloque" data-i18n="ed.tx_uso_bloque"></option><option value="ambos" data-i18n="ed.tx_uso_ambos"></option></select>
       <button id="txGuardar" class="listo" data-i18n="ed.tx_guardar"></button>
-      <button id="txNueva" data-i18n="ed.tx_nueva"></button>
+      <div class="fila2"><button id="txNueva" data-i18n="ed.tx_nueva"></button><button id="txDuplicar" data-i18n="ed.tx_duplicar"></button><button id="txBajar" data-i18n="ed.tx_bajar"></button></div>
     </div>
   </div>
   <div id="txManual">
-    <div class="fila2"><select id="txTipo"></select><button id="txSemilla" data-i18n="ed.tx_semilla"></button></div>
+    <div class="fila2"><select id="txTipo"></select><button id="txSemilla" data-i18n="ed.tx_semilla"></button><button id="txSorpresa" data-i18n="ed.tx_sorpresa"></button></div>
     <div class="fila2 txColores"><input id="txC0" type="color" /><input id="txC1" type="color" /><input id="txC2" type="color" /><input id="txC3" type="color" /></div>
+    <div id="txMuestras"></div>
+    <div class="fila2 txTonos"><button data-tono="claro" data-i18n="ed.tx_claro"></button><button data-tono="oscuro" data-i18n="ed.tx_oscuro"></button><button data-tono="calido" data-i18n="ed.tx_calido"></button><button data-tono="frio" data-i18n="ed.tx_frio"></button></div>
     <div class="fila"><span data-i18n="ed.tx_tam"></span><input id="txTam" type="range" min="6" max="80" step="1" value="24" /><b id="txTamV"></b></div>
     <div class="fila"><span data-i18n="ed.tx_dens"></span><input id="txDens" type="range" min="1" max="12" step="1" value="5" /><b id="txDensV"></b></div>
+    <div class="fila2"><button id="txVariantes" data-i18n="ed.tx_variantes"></button></div>
+    <div id="txVariantesL" class="oculto"></div>
+  </div>
+  <div id="txImagen" class="oculto">
+    <div class="fila"><span data-i18n="ed.tx_brillo"></span><input id="txBrillo" type="range" min="-0.6" max="0.6" step="0.05" value="0" /></div>
+    <div class="fila"><span data-i18n="ed.tx_contraste"></span><input id="txContraste" type="range" min="-0.6" max="0.8" step="0.05" value="0" /></div>
+    <div class="fila"><span data-i18n="ed.tx_saturacion"></span><input id="txSaturacion" type="range" min="-1" max="0.8" step="0.05" value="0" /></div>
+    <div class="fila2"><select id="txNColores"><option value="0" data-i18n="ed.tx_col_todos"></option><option value="16">16</option><option value="8">8</option><option value="4">4</option></select><label class="txChk"><input id="txLiviana" type="checkbox" /><span data-i18n="ed.tx_liviana"></span></label></div>
+  </div>
+  <b class="txSub" data-i18n="ed.tx_en_mapa"></b>
+  <div class="fila2"><span data-i18n="ed.tx_forma"></span><select id="txForma"><option value="quebrado" data-i18n="ed.tx_f_quebrado"></option><option value="redondo" data-i18n="ed.tx_f_redondo"></option><option value="alargado" data-i18n="ed.tx_f_alargado"></option><option value="manchas" data-i18n="ed.tx_f_manchas"></option></select></div>
+  <div class="fila"><span data-i18n="ed.tx_k"></span><input id="txK" type="range" min="0.4" max="3" step="0.1" value="1" /><b id="txKV"></b></div>
+  <div id="txMedBloque">
+    <div class="fila"><span data-i18n="ed.tx_alto"></span><input id="txAlto" type="range" min="8" max="140" step="2" value="26" /><b id="txAltoV"></b></div>
+    <div class="fila"><span data-i18n="ed.tx_fondo"></span><input id="txFondo" type="range" min="30" max="240" step="5" value="70" /><b id="txFondoV"></b></div>
   </div>
   <b class="txSub" data-i18n="ed.tx_con_ia"></b>
   <textarea id="txPedido" rows="2" data-i18n-ph="ed.tx_ph"></textarea>
-  <div class="fila2"><select id="txFuente"><option value="receta" data-i18n="ed.tx_f_receta"></option><option value="chatgpt" data-i18n="ed.tx_f_chatgpt"></option><option value="gemini" data-i18n="ed.tx_f_gemini"></option></select><button id="txGenerar" class="listo" data-i18n="ed.tx_generar"></button></div>
+  <div class="fila2"><select id="txFuente"><option value="receta" data-i18n="ed.tx_f_receta"></option><option value="chatgpt" data-i18n="ed.tx_f_chatgpt"></option><option value="gemini" data-i18n="ed.tx_f_gemini"></option></select><button id="txAfinar" data-i18n="ed.tx_afinar"></button><button id="txGenerar" class="listo" data-i18n="ed.tx_generar"></button></div>
   <div class="fila2 txOpc"><label><input id="txPaleta" type="checkbox" checked /><span data-i18n="ed.tx_paleta"></span></label><label><input id="txEspejo" type="checkbox" checked /><span data-i18n="ed.tx_espejo"></span></label><button id="txSubir" data-i18n="ed.tx_subir"></button></div>
   <input id="txArchivo" type="file" accept="image/*" hidden />
   <small id="txEstado"></small>
-  <div id="txTuyas" class="oculto"><b class="txSub" data-i18n="ed.tx_tuyas"></b><div id="txLista"></div></div>
+  <div id="txTuyas" class="oculto"><b class="txSub" data-i18n="ed.tx_tuyas"></b>
+    <div class="fila2"><button id="txElegirPuesto" data-i18n="ed.tx_elegir_puesto"></button><button id="txReemplazar" data-i18n="ed.tx_reemplazar"></button></div>
+    <div id="txLista"></div>
+  </div>
 </div>
 <div id="aviso"></div>
 <div id="notaCaja">

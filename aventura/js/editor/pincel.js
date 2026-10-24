@@ -63,6 +63,13 @@ window.EDITOR_PINCEL = (function () {
       tr.poner = tr.poner.filter((a) => Math.hypot(a.x - x, a.y - y) > radio || a.borde);
       return;
     }
+    // textura: un parche de la textura elegida por cada toque, del tamaño del pincel (los toques se pisan y se juntan)
+    if (tr.modo === "textura") {
+      const id = E.elegido();
+      if (!id || !/^tx_/.test(id)) return;
+      tr.poner.push({ id, x: Math.round(x), y: Math.round(y), o: { rx: Math.round(radio * 0.95), ry: Math.round(radio * 0.5), sem: Math.floor(Math.random() * 999) } });
+      return;
+    }
     // rociar: tantos intentos como pida la densidad por el área del círculo
     const elegido = E.elegido(),
       mezcla = modo() === "elegido" && elegido ? [[elegido, 1]] : MEZCLAS[modo()] || MEZCLAS.bosque,
@@ -103,7 +110,8 @@ window.EDITOR_PINCEL = (function () {
   }
   function clic(x, y, e) {
     if (E.herr() !== "pincel" || e.button !== 0) return false;
-    trazo = { modo: modo() === "abrir" ? "abrir" : "rociar", poner: [], quitar: new Map(), ultimo: [x, y], pasos: [[x, y]] };
+    if (modo() === "textura" && !/^tx_/.test(E.elegido() || "")) return E.avisar(t("ed.pincel_sin_textura")), true;
+    trazo = { modo: modo() === "abrir" ? "abrir" : modo() === "textura" ? "textura" : "rociar", poner: [], quitar: new Map(), ultimo: [x, y], pasos: [[x, y]] };
     pintarEn(x, y);
     E.pedir();
     return true;
@@ -151,7 +159,7 @@ window.EDITOR_PINCEL = (function () {
     $("pincelRadio").value = radio;
     $("pincelRadioV").textContent = Math.round(radio / 30) + " m";
     $("pincelDensidadV").textContent = $("pincelDensidad").value;
-    $("pincelFilaDensidad").classList.toggle("oculto", modo() === "abrir");
+    $("pincelFilaDensidad").classList.toggle("oculto", modo() === "abrir" || modo() === "textura");
     $("pincelFilaBordes").classList.toggle("oculto", modo() !== "abrir");
   }
   $("pincelRadio").addEventListener("input", () => ((radio = +$("pincelRadio").value), pintarPanel()));

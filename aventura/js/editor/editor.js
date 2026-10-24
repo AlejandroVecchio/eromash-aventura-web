@@ -3109,6 +3109,35 @@
       }
     },
     pedir: () => pedir(),
+    // elegir todo lo agregado con estos ids (texturas: «elegir lo puesto»); devuelve cuántos
+    elegirIds: (ids) => {
+      const l = est.poner.filter((a) => ids.includes(a.id));
+      if (!l.length) return 0;
+      ponerHerr("mover");
+      grupo = l.length > 1 ? l.map((a) => ({ a })) : [];
+      elegida = { a: l[l.length - 1] };
+      pintarElegida();
+      const ps = l.map((a) => [a.x, a.y]);
+      cam.x = ps.reduce((q, p) => q + p[0], 0) / ps.length;
+      cam.y = ps.reduce((q, p) => q + p[1], 0) / ps.length;
+      pedir();
+      return l.length;
+    },
+    // cambiarle el asset a lo elegido que es agregado (fn(id viejo) → id nuevo o null); devuelve cuántos cambió
+    reemplazarElegidos: (fn) => {
+      const l = elegidos().filter((g) => g.a);
+      let n = 0;
+      if (!l.length) return 0;
+      recordar();
+      l.forEach((g) => {
+        const nid = fn(g.a.id);
+        if (nid && nid !== g.a.id) (g.a.id = nid), n++;
+      });
+      if (!n) historial.pop();
+      guardar();
+      pintarElegida();
+      return n;
+    },
     // vista previa de objetos que todavía no están (pieza, IA, pincel): transparentes y de atrás para adelante
     fantasmas: (c, items, tt, alfa) => {
       c.save();
