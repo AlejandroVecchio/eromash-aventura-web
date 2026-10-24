@@ -31,6 +31,10 @@ I18N.textos({
   "as.armero": { es: "Armero", en: "Weapon rack" },
   "as.tablaSuelta": { es: "Tabla suelta", en: "Loose board" },
   "as.cofreSotano": { es: "Cofre del sótano", en: "Cellar chest" },
+  "as.cesto": { es: "Cesto de la despensa", en: "Pantry basket" },
+  "as.muroFalso": { es: "Muro falso del escondite", en: "Hideout's false wall" },
+  "as.sacos": { es: "Sacos de contrabando", en: "Smuggler's sacks" },
+  "as.cantaros": { es: "Cántaros sellados", en: "Sealed jars" },
   "as.huesos": { es: "Huesos viejos", en: "Old bones" },
 
   // el mirador y la campana

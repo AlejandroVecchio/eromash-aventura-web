@@ -190,16 +190,21 @@ window.INTERIORES = (function () {
       cofre(560, 840, false);
     } else if (clase === "despensa") {
       mueble("barriles", 640, FONDO + 40, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.sot_despensa_barriles"));
+      mueble("cesto", 1080, 800, { s: 1, sem: sem + 1 }, 90, "in.accion_cesto", examinar("in.sot_despensa_cesto"));
+      mueble("cesto", 520, 860, { s: 0.9, sem: sem + 2 }, 90, "in.accion_cesto", examinar("in.sot_despensa_cesto"));
       mueble(tipo === "sanacion" ? "estanteHierbas" : "estanteRollos", 980, FONDO + 15, { s: 0.9, sem }, 150, tipo === "sanacion" ? "in.accion_hierbas" : "in.accion_estante", examinar(tipo === "sanacion" ? "in.sot_despensa_hierbas" : "in.sot_despensa_estante"));
       mueble("cajas", 760, 820, { s: 0.95, vela: true }, 110, "in.accion_cajas", examinar("in.sot_despensa_cajas"));
       cofre(1330, 830, false);
     } else if (clase === "escondite") {
-      mueble("huesos", 1240, FONDO + 30, { s: 1 }, 110, "in.accion_huesos", examinar("in.sot_huesos"));
+      mueble("muroFalso", 1180, FONDO + 6, { s: 1 }, 130, "in.accion_tunel", examinar("in.sot_tunel"));
+      mueble("huesos", 620, FONDO + 30, { s: 0.9 }, 110, "in.accion_huesos", examinar("in.sot_huesos"));
+      mueble("sacos", 1440, 760, { s: 1 }, 80, "in.accion_sacos", examinar("in.sot_sacos"));
       atril(720, 780, "in.libro_escondite");
       tabla(940);
       cofre(1360, 850, true);
     } else {
       mueble("armero", 760, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.sot_viejo_armero"));
+      mueble("cantaros", 1180, FONDO + 30, { s: 1 }, 90, "in.accion_cantaros", examinar("in.sot_viejo_cantaros"));
       mueble("cajas", 560, 820, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
       mueble("barriles", 1100, FONDO + 40, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.sot_viejo_barriles"));
       cofre(1360, 830, false);
@@ -423,51 +428,123 @@ window.INTERIORES = (function () {
   function plancha(c, pts, col) {
     DIB.P(c, pts, col);
   }
-  // el sótano: piedra húmeda, vigas bajas sobre postes y piso de tierra con lajas
+  // el sótano, como en la lámina «Bajo las casas de Eikholt»: el piso de la casa arriba (tablas, vigas y la trampilla),
+  // postes sobre zócalos de piedra y un farol colgado. Las despensas, bodegas y escondites tienen pared de tablas; el
+  // sótano viejo es de piedra, más viejo que la casa, con runas en los pilares y raíces que bajan.
   function dibujarSotano(c, d, tt) {
-    const r = DIB.azar(d.sotano.length * 31 + 5);
-    c.fillStyle = "#0C0909";
+    const r = DIB.azar(d.sotano.length * 31 + 5),
+      viejo = d.sotano === "viejo",
+      M = { tabla: ["#4A3020", "#55382A", "#40281A", "#5C3E2C"], viga: "#2E1C12", vigaL: "#5C3E2C", poste: "#3E2818", posteL: "#6A4A34", piedra: ["#4A4A48", "#55554F", "#3E3E3C", "#5E5C56"], junta: "#24221F" };
+    c.fillStyle = "#0E0A08";
     c.fillRect(0, 0, RW, RH);
-    for (let fila = 0; fila * 70 < FONDO + 40; fila++) {
-      const y = FONDO - fila * 70;
-      for (let x = -60 + (fila % 2) * 70; x < RW + 60; ) {
-        const w = 110 + r() * 80,
-          tono = ["#2A2426", "#252022", "#2E2729", "#221C1E"][Math.floor(r() * 4)];
-        DIB.P(c, [x + 6, y - 4, x + w - 6, y - 6 + r() * 4, x + w - 2, y - 64 + r() * 6, x + 4, y - 66 + r() * 6], tono);
-        DIB.P(c, [x + 6, y - 60, x + w - 6, y - 62, x + w - 10, y - 66, x + 10, y - 66], "#3A3234");
+    if (viejo) {
+      // piedra grande, con musgo en las juntas
+      for (let fila = 0; fila * 96 < FONDO; fila++) {
+        const y = FONDO - fila * 96;
+        for (let x = -80 + (fila % 2) * 90; x < RW + 80; ) {
+          const w = 150 + r() * 90;
+          DIB.P(c, [x + 5, y - 4, x + w - 5, y - 6 + r() * 4, x + w - 2, y - 90 + r() * 6, x + 4, y - 92 + r() * 6], M.piedra[Math.floor(r() * 4)]);
+          DIB.P(c, [x + 5, y - 86, x + w - 5, y - 88, x + w - 8, y - 92, x + 8, y - 92], "#6A6862");
+          if (r() < 0.3) DIB.alfa(c, 0.6, () => DIB.E(c, x + w * r(), y - 4, 26, 6, "#4E6B3A"));
+          x += w;
+        }
+      }
+      // raíces que bajan por la piedra
+      for (let k = 0; k < 6; k++) {
+        const x = 80 + k * 280 + r() * 80;
+        c.beginPath();
+        c.moveTo(x, 130);
+        c.bezierCurveTo(x + 30, 260, x - 40, 380, x + 10 + r() * 30, 420 + r() * 160);
+        c.strokeStyle = "#3A2A1C";
+        c.lineWidth = 6 + r() * 6;
+        c.stroke();
+      }
+    } else {
+      // zócalo de piedra y tablas verticales
+      for (let x = -20; x < RW + 40; ) {
+        const w = 70 + r() * 30;
+        DIB.P(c, [x, FONDO - 90, x + w - 3, FONDO - 90, x + w - 3, 130, x, 130], M.tabla[Math.floor(r() * 4)]);
+        DIB.L(c, x + w - 3, 130, x + w - 3, FONDO - 90, "#24160C", 3);
+        if (r() < 0.5) DIB.E(c, x + w * 0.5, 160 + r() * 300, 3, 3, "#1E120A");
+        x += w;
+      }
+      for (let x = -40; x < RW + 40; ) {
+        const w = 120 + r() * 70;
+        DIB.P(c, [x + 4, FONDO, x + w - 4, FONDO, x + w - 2, FONDO - 88, x + 2, FONDO - 86], M.piedra[Math.floor(r() * 4)]);
+        DIB.P(c, [x + 4, FONDO - 80, x + w - 4, FONDO - 82, x + w - 2, FONDO - 88, x + 2, FONDO - 86], "#6A6862");
         x += w;
       }
     }
-    // humedad que baja por la piedra
-    for (let k = 0; k < 7; k++) {
-      const x = 120 + k * 230 + r() * 60;
-      DIB.alfa(c, 0.35, () => DIB.P(c, [x, 0, x + 26, 0, x + 18 + r() * 10, 260 + r() * 200, x + 6, 300 + r() * 160], "#141A18"));
+    // el techo: las tablas del piso de arriba, la viga madre y la trampilla abierta con la luz que baja
+    plancha(c, [0, 0, RW, 0, RW, 70, 0, 82], "#2A1A10");
+    for (let x = 0; x < RW; x += 64) DIB.L(c, x, 0, x - 4, 78, "#1A100A", 3);
+    plancha(c, [0, 70, RW, 58, RW, 130, 0, 142], M.viga);
+    plancha(c, [0, 70, RW, 58, RW, 72, 0, 84], M.vigaL);
+    plancha(c, [210, 0, 400, 0, 396, 66, 214, 74], "#120A06");
+    DIB.alfa(c, 0.18, () => DIB.P(c, [214, 74, 396, 66, 520, FONDO + 120, 120, FONDO + 120], "#FFD98A"));
+    if (!viejo) {
+      // la tapa de la trampilla, levantada
+      plancha(c, [214, 0, 396, 0, 380, -40, 230, -40], M.tabla[3]);
     }
-    // postes y vigas bajas
-    [520, 1100].forEach((x) => {
-      DIB.P(c, [x - 22, 120, x + 22, 120, x + 24, FONDO, x - 24, FONDO], "#2A0806");
-      DIB.P(c, [x + 10, 120, x + 22, 120, x + 24, FONDO, x + 12, FONDO], "#3E0E08");
+    // los postes sobre su piedra
+    [560, 1140].forEach((x) => {
+      DIB.P(c, [x - 26, 136, x + 26, 136, x + 26, FONDO - 24, x - 26, FONDO - 24], M.poste);
+      DIB.P(c, [x + 4, 136, x + 26, 136, x + 26, FONDO - 24, x + 4, FONDO - 24], M.posteL);
+      DIB.P(c, [x - 40, FONDO, x + 40, FONDO, x + 36, FONDO - 34, x - 36, FONDO - 34], "#5E5C56");
+      DIB.P(c, [x, FONDO, x + 40, FONDO, x + 36, FONDO - 34, x, FONDO - 34], "#6E6C66");
+      DIB.P(c, [x - 46, 136, x - 26, 136, x - 26, 170], M.viga);
+      DIB.P(c, [x + 46, 136, x + 26, 136, x + 26, 170], M.viga);
     });
-    plancha(c, [0, 70, RW, 58, RW, 126, 0, 138], "#2A0806");
-    plancha(c, [0, 126, RW, 114, RW, 126, 0, 138], "#120403");
-    // telarañas en las esquinas
-    DIB.alfa(c, 0.4, () => {
-      for (let i = 0; i < 5; i++) DIB.L(c, 0, 140, 70 + i * 26, 140 + 70 - i * 12, "#B5A5A0", 1.2);
-      for (let i = 0; i < 3; i++) c.beginPath(), (c.strokeStyle = "#B5A5A0"), (c.lineWidth = 1), c.arc(0, 140, 40 + i * 30, 0, Math.PI / 2), c.stroke();
+    if (viejo) {
+      // los pilares de piedra con runas que brillan
+      [["fehu", 160], ["mannaz", 1460]].forEach(([rn, x]) => {
+        DIB.P(c, [x - 70, FONDO + 20, x + 70, FONDO + 20, x + 70, 140, x - 70, 140], "#5E5C56");
+        DIB.P(c, [x - 70, FONDO + 20, x - 10, FONDO + 20, x - 10, 140, x - 70, 140], "#4A4A46");
+        for (let k = 1; k < 4; k++) DIB.L(c, x - 70, 140 + k * 120, x + 70, 140 + k * 120, M.junta, 3);
+        DIB.halo(c, x, 330, 90, "#73D5DB", 0.35 + 0.12 * Math.sin(tt * 1.6));
+        FUTHARK.dibujar(c, rn, x, 380, 90, "#73D5DB", 7);
+      });
+      ["gebo", "hagalaz"].forEach((rn, k) => FUTHARK.dibujar(c, rn, 760 + k * 120, 360, 50, "#73D5DB", 5));
+    } else {
+      // ristras de ajo, atados de hierbas y ajíes colgados de la viga
+      const ristra = (x, tipo) => {
+        DIB.L(c, x, 130, x, 170, "#8A7A5A", 2);
+        for (let k = 0; k < 6; k++) {
+          const y = 170 + k * 18;
+          if (tipo === 0) DIB.E(c, x + (k % 2 ? 5 : -5), y, 9, 9, k % 2 ? "#E8E0D0" : "#D8CCB8");
+          else if (tipo === 1) DIB.P(c, [x - 8, y - 6, x + 8, y - 6, x + 3, y + 14, x - 3, y + 14], k % 2 ? "#6F8F4E" : "#4E6B3A");
+          else DIB.P(c, [x - 3, y - 6, x + 3, y - 6, x + 1, y + 12], k % 2 ? "#C8402D" : "#9C2315");
+        }
+      };
+      [90, 130, 175, 1240, 1290, 1340].forEach((x, k) => ristra(x, k % 3));
+    }
+    // el farol colgado, con su luz cálida
+    const fx = 820,
+      fy = 250;
+    DIB.L(c, fx, 136, fx, fy - 40, "#2A2420", 3);
+    DIB.halo(c, fx, fy, 260, "#FFD98A", 0.55 + 0.06 * Math.sin(tt * 7));
+    DIB.P(c, [fx - 18, fy - 40, fx + 18, fy - 40, fx + 22, fy + 24, fx - 22, fy + 24], "#2A2420");
+    DIB.P(c, [fx - 12, fy - 30, fx + 12, fy - 30, fx + 15, fy + 16, fx - 15, fy + 16], "#FFD98A");
+    DIB.E(c, fx, fy + 2, 5, 9, "#FFF4D0");
+    DIB.P(c, [fx - 22, fy - 40, fx + 22, fy - 40, fx, fy - 56], "#2A2420");
+    // telarañas en la esquina
+    DIB.alfa(c, 0.35, () => {
+      for (let i = 0; i < 5; i++) DIB.L(c, RW, 142, RW - 70 - i * 26, 142 + 70 - i * 12, "#B5A5A0", 1.2);
     });
-    // el piso: tierra apisonada con lajas
-    plancha(c, [200, FONDO, 1400, FONDO, 1640, RH, -40, RH], "#24170F");
-    for (let i = 0; i < 46; i++) {
+    // el piso: tierra en los sótanos de tablas, lajas en el viejo
+    plancha(c, [200, FONDO, 1400, FONDO, 1640, RH, -40, RH], viejo ? "#34322E" : "#3A2A1C");
+    for (let i = 0; i < (viejo ? 60 : 30); i++) {
       const u = r(),
         v = r(),
         y = FONDO + 14 + v * (RH - FONDO - 20),
         a = (y - FONDO) / (RH - FONDO),
         x = 200 - a * 240 + u * (1200 + a * 480),
-        w = 50 + a * 50 + r() * 30,
-        hh = 12 + a * 18;
-      DIB.P(c, [x - w, y, x - w * 0.8, y - hh, x + w * 0.8, y - hh * 1.1, x + w, y + 2], ["#3A2E28", "#342823", "#2E241F"][i % 3]);
+        w = (viejo ? 60 : 30) + a * 50 + r() * 30,
+        hh = (viejo ? 14 : 6) + a * 18;
+      DIB.P(c, [x - w, y, x - w * 0.8, y - hh, x + w * 0.8, y - hh * 1.1, x + w, y + 2], viejo ? ["#4E4C46", "#45433E", "#5A5852"][i % 3] : ["#4A3826", "#443222", "#3E2E1E"][i % 3]);
     }
-    plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 16, 190, FONDO + 16], "rgba(0,0,0,0.55)");
+    if (!viejo) for (let k = 0; k < 5; k++) DIB.L(c, 300 + k * 260, FONDO + 30 + k * 40, 380 + k * 250, FONDO + 70 + k * 30, "#2A1E14", 4);
+    plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 16, 190, FONDO + 16], "rgba(0,0,0,0.5)");
   }
   function dibujarPared(c, d, tt) {
     if (d.pared === "sotano") return dibujarSotano(c, d, tt);
@@ -731,5 +808,5 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, salirA, adentro: () => !!dentro, cuarto: () => dentro };
+  return { puertas, entrar, salirA, adentro: () => !!dentro, cuarto: () => dentro };
 })();
