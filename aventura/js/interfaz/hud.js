@@ -23,6 +23,8 @@ window.HUD = (function () {
       <div id="hudMisiones" class="ui"></div>
       <div id="hudAccion" class="ui panel oculto"><span class="tecla" id="aTecla"></span><span id="aTexto"></span></div>
       <div id="hudAvisos" class="ui"></div>
+      <div id="hudCanal" class="ui oculto"><i></i></div>
+      <div id="hudGuardado" class="ui panel oculto"><span class="runa-guardado">ᛟ</span><span>${t("ui.guardado")}</span></div>
       <div id="hudJefe" class="ui oculto"><div class="nombre"><span id="jNombre"></span><small id="jAtaduras"></small></div><div class="barra"><i id="jVida"></i></div><div class="ataque" id="jAtaque"></div></div>
       <div id="hudDialogo" class="ui panel oculto"><div class="quien" id="dQuien"></div><div class="linea" id="dLinea"></div><div class="seguir"><span class="tecla" id="dTecla"></span><span>${t("av.dialogo_seguir")}</span></div></div>
       <div id="capa" class="capa oculto"><div class="caja panel" id="capaCaja"></div></div>
@@ -88,7 +90,22 @@ window.HUD = (function () {
   }
   // plata, fragmentos y nivel rúnico, debajo de las barras
   function bolsillo(plata, frag, nivel) {
-    if (cambia("plata", plata)) $("hPlata").textContent = plata;
+    const antes = ultimo.plata;
+    if (cambia("plata", plata)) {
+      $("hPlata").textContent = plata;
+      // cuando entra plata el número salta y asoma lo que entró
+      if (antes != null && plata > antes) {
+        const chip = $("hPlata").parentNode;
+        chip.classList.remove("sube");
+        void chip.offsetWidth;
+        chip.classList.add("sube");
+        const s = document.createElement("span");
+        s.className = "entra";
+        s.textContent = "+" + (plata - antes);
+        chip.appendChild(s);
+        setTimeout(() => s.remove(), 1100);
+      }
+    }
     if (cambia("frag", frag + "/" + nivel)) {
       $("hFrag").textContent = frag % 3 + "/3";
       $("hNivelR").textContent = nivel ? t("pj.nivel_corto", [nivel]) : "";
@@ -230,7 +247,27 @@ window.HUD = (function () {
     if (cambia("ag", glifo)) $("aTecla").textContent = glifo;
   }
   function aviso(texto, tipo, sub) {
+    // el mismo cartel otra vez mientras sigue a la vista: se suma «×2» en vez de apilarse
+    const igual = [...$("hudAvisos").children].find((q) => q.dataset.txt === texto + "|" + (sub || "") && !q.dataset.fin);
+    if (igual) {
+      const n = (Number(igual.dataset.n) || 1) + 1;
+      igual.dataset.n = n;
+      let b = igual.querySelector(".veces");
+      if (!b) {
+        b = document.createElement("b");
+        b.className = "veces";
+        igual.appendChild(b);
+      }
+      b.textContent = " ×" + n;
+      igual.style.animation = "none";
+      void igual.offsetWidth;
+      igual.style.animation = "";
+      clearTimeout(igual._fin);
+      igual._fin = setTimeout(() => igual.remove(), 3700);
+      return;
+    }
     const d = document.createElement("div");
+    d.dataset.txt = texto + "|" + (sub || "");
     d.className = "aviso " + (tipo === "lugar" ? "lugar" : "panel");
     if (tipo === "lugar") d.innerHTML = `<small></small><span></span>`;
     if (tipo === "lugar") {
@@ -239,7 +276,7 @@ window.HUD = (function () {
     } else d.textContent = texto;
     if (tipo && tipo[0] === "#") d.style.color = tipo;
     $("hudAvisos").appendChild(d);
-    setTimeout(() => d.remove(), 3700);
+    d._fin = setTimeout(() => d.remove(), 3700);
     while ($("hudAvisos").children.length > 3) $("hudAvisos").firstChild.remove();
   }
   function dialogo(quien, texto, glifo) {
@@ -260,6 +297,25 @@ window.HUD = (function () {
     const atq = d.ataque ? `<b>${d.ataque}</b> · ${d.accion}` : "";
     if (cambia("jq", atq)) $("jAtaque").innerHTML = atq;
   }
+  // la barrita de lo que se está haciendo (despertar una piedra, juntar luz para viajar): frac de 0 a 1 o null
+  function canal(frac) {
+    $("hudCanal").classList.toggle("oculto", frac == null);
+    if (frac != null) $("hudCanal").querySelector("i").style.width = Math.round(Math.min(1, frac) * 100) + "%";
+  }
+  // un golpe: el retrato tiembla y se tiñe de rojo un instante
+  function herido() {
+    const r = document.querySelector("#hudJugador .retrato");
+    r.classList.remove("golpe");
+    void r.offsetWidth;
+    r.classList.add("golpe");
+  }
+  // «Guardado» abajo a la derecha, con Othala girando
+  let guardadoT = 0;
+  function guardado() {
+    $("hudGuardado").classList.remove("oculto");
+    clearTimeout(guardadoT);
+    guardadoT = setTimeout(() => $("hudGuardado").classList.add("oculto"), 1600);
+  }
   function ocultarJuego(si) {
     ["hudJugador", "hudMisiones", "hudBarra"].forEach((id) => $(id).style.visibility = si ? "hidden" : "");
   }
@@ -275,6 +331,16 @@ window.HUD = (function () {
     const cont = document.createElement("div");
     $("capaCaja").appendChild(cont);
     menu = { botones: [], foco: undefined };
+    // abajo de todo, qué tecla elige y cuál vuelve (con el mando, sus glifos)
+    if (botones && botones.length) {
+      const pie = document.createElement("div");
+      pie.className = "pie-menu";
+      pie.innerHTML = `<span class="tecla"></span><span>${t("ui.elegir")}</span><span class="tecla"></span><span>${t("ui.volver")}</span>`;
+      const tk = pie.querySelectorAll(".tecla");
+      tk[0].textContent = CONTROLES.glifo("seguir");
+      tk[1].textContent = CONTROLES.glifo("pausa");
+      setTimeout(() => $("capaCaja").contains(cont) && $("capaCaja").appendChild(pie));
+    }
     (botones || []).forEach((b, i) => {
       const el = document.createElement("button");
       el.className = "boton";
@@ -317,5 +383,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, hayMenu: () => !!menu };
+  return { armar, jugador, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, canal, herido, guardado, hayMenu: () => !!menu };
 })();

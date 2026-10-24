@@ -131,6 +131,10 @@
     }
     jug.hp -= dano;
     jug.herido = 0.5;
+    HUD.herido();
+    // de qué lado vino: una cuña roja en ese borde de la pantalla
+    golpesDir.push({ a: Math.atan2(oy - jug.y, ox - jug.x), t0: J.t });
+    if (golpesDir.length > 4) golpesDir.shift();
     jug.inv = 0.6;
     jug.sinGolpe = 0;
     if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.75 });
@@ -140,6 +144,7 @@
     J.sacudir(0.35);
     if (jug.hp <= 0) morir();
   };
+  const golpesDir = [];
   let jefeAtaque = "",
     jefeAccion = "";
   J.anunciarJefe = (a, b) => {
@@ -669,7 +674,10 @@
     jug.inv = Math.max(0, jug.inv - dt);
     jug.vuelve = Math.max(0, (jug.vuelve || 0) - dt);
     jug.sinGolpe += dt;
+    // lo que dura más de medio segundo (despertar, juntar luz para viajar) muestra su barrita
+    if (jug.interactuando > (jug.canalAntes || 0) + 0.05) jug.canalTotal = jug.interactuando;
     jug.interactuando = Math.max(0, jug.interactuando - dt);
+    jug.canalAntes = jug.interactuando;
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
     // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
@@ -1427,7 +1435,35 @@
       c.fillStyle = g;
       c.fillRect(0, 0, cw, ch);
     }
+    cunasGolpe(cw, ch);
     flechasAmenaza(x0, y0, x1, y1);
+  }
+  // las cuñas rojas de los golpes recibidos, en el borde del lado de donde vinieron (se van en medio segundo)
+  function cunasGolpe(cw, ch) {
+    for (let i = golpesDir.length - 1; i >= 0; i--) {
+      const g = golpesDir[i],
+        e = J.t - g.t0;
+      if (e > 0.7 || e < 0) {
+        golpesDir.splice(i, 1);
+        continue;
+      }
+      const k = 1 - e / 0.7,
+        r = Math.max(cw, ch) / 2,
+        cx = cw / 2,
+        cy = ch / 2;
+      c.save();
+      c.globalAlpha = k;
+      const gr = c.createRadialGradient(cx, cy, r * 0.5, cx, cy, r);
+      gr.addColorStop(0, "rgba(200,64,45,0)");
+      gr.addColorStop(1, "rgba(200,64,45,0.9)");
+      c.fillStyle = gr;
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.arc(cx, cy, r * 1.5, g.a - 0.4, g.a + 0.4);
+      c.closePath();
+      c.fill();
+      c.restore();
+    }
   }
   // una flecha roja en el borde por cada criatura que viene a pegarle desde fuera de la pantalla
   function flechasAmenaza(x0, y0, x1, y1) {
@@ -1606,6 +1642,9 @@
     const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
     J.cerca = J.dentro ? null : cer;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
+    HUD.canal(J.modo === "juego" && jug.interactuando > 0 && jug.canalTotal >= 0.6 ? 1 - jug.interactuando / jug.canalTotal : null);
+    // en pelea el rastreador se aparta (queda tenue) para que se vea lo que importa
+    document.getElementById("hudMisiones").classList.toggle("atenuado", J.modo === "juego" && enPelea());
     cadaSis("hud");
     HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : J.jefeHud || null);
   }
@@ -1697,9 +1736,18 @@
     // al seguir una partida guardada, un recordatorio de en qué andaba
     if (!nueva && H.mision()) J.retrasar(1.5, () => HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.tu_mision")));
   }
+  // la tarjeta de la pausa: misión, dónde está, cuánto exploró, plata y tiempo de juego
+  function tarjetaPausa() {
+    const fila = (k, v) => `<div><small>${t(k)}</small><b>${v}</b></div>`;
+    let h = "";
+    if (H.mision()) h += fila("ui.pausa_mision", tav("mision_" + H.idMision()));
+    if (window.MAPA) h += fila("ui.pausa_lugar", MAPA.lugarAqui()) + fila("ui.pausa_explorado", Math.floor(MAPA.explorado() * 100) + " %");
+    h += fila("ui.pausa_jugado", tiempoTxt(H.E.tiempo || 0));
+    return `<div class="tarjeta-pausa">${h}</div>`;
+  }
   function pausa() {
     J.modo = "menu";
-    HUD.abrir(`<h2>${tav("pausa_titulo")}</h2>`, [
+    HUD.abrir(`<h2>${tav("pausa_titulo")}</h2>${tarjetaPausa()}`, [
       { texto: tav("pausa_seguir"), fn: cerrarMenu },
       { texto: tav("pausa_guardar"), fn: () => {
         if (H.guardar()) HUD.aviso(tav("partida_guardada"));
@@ -1889,6 +1937,13 @@
         if (lugar) HUD.aviso(t("av.lugar_" + lugar), "lugar", t("sx.viaje_llegaste"));
       }, 620);
     },
+  };
+  // cada guardado se ve un instante abajo a la derecha
+  const guardarHistoria = H.guardar;
+  H.guardar = (...a) => {
+    const ok = guardarHistoria.apply(H, a);
+    if (ok && J.modo !== "titulo") HUD.guardado();
+    return ok;
   };
   cadaSis("iniciar", A);
   if (q.get("jugar")) {

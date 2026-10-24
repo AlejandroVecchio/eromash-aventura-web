@@ -744,5 +744,5 @@ window.MAPA = (function () {
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   // descubre de golpe un pedazo del mapa (las piedras del camino): radio en unidades del mundo
-  return { abrir, marca, explorado, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
+  return { abrir, marca, explorado, lugarAqui, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
 })();

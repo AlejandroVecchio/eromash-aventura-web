@@ -22,5 +22,12 @@ I18N.textos({
   "ui.idioma": { es: "Idioma", en: "Language" },
   "ui.diario_vacio": { es: "Todavía no anotaste nada.", en: "Nothing written down yet." },
   "ui.cerrar": { es: "Cerrar", en: "Close" },
+  "ui.elegir": { es: "Elegir", en: "Select" },
+  "ui.volver": { es: "Volver", en: "Back" },
+  "ui.guardado": { es: "Guardado", en: "Saved" },
+  "ui.pausa_explorado": { es: "Explorado", en: "Explored" },
+  "ui.pausa_lugar": { es: "Dónde estás", en: "Where you are" },
+  "ui.pausa_mision": { es: "Tu misión", en: "Your quest" },
+  "ui.pausa_jugado": { es: "Tiempo de juego", en: "Time played" },
   "ui.mision": { es: "Misión {0}", en: "Quest {0}" },
 });

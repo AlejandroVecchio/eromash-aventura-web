@@ -140,9 +140,19 @@ window.PODERES = (function () {
     if (b.vida) partes.push(t("sx.botin_vida"));
     HUD.aviso(partes.join(" · "), "#FFD98A");
   }
+  // la plata que entra seguida se suma en un solo número (no una lluvia de «+9»)
   function darPlata(n) {
     pj.plata += n;
-    A.numero(jug.x, jug.y - 90, "+" + n);
+    const junto = J.textos.find((o) => o.plata && o.t < 0.6);
+    if (junto) {
+      junto.suma += n;
+      junto.n = "+" + junto.suma;
+      junto.t = Math.min(junto.t, 0.2);
+      return;
+    }
+    const antes = J.textos.length;
+    A.numero(jug.x, jug.y - 90, "+" + n, "#FFD98A");
+    if (J.textos.length > antes) Object.assign(J.textos[J.textos.length - 1], { plata: true, suma: n });
   }
   function darFragmento() {
     pj.frag++;
