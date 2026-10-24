@@ -416,14 +416,51 @@ window.ELDERVALD = (function () {
       const tirada = rnd();
       if (!(borde || tirada < 0.18 + dens * 0.55)) {
         if (rnd() < 0.12 && libreDeTodo(px, py, 10)) DECO.push({ id: rnd() < 0.8 ? "helechos" : "hongosRocio", x: px, y: py, sem: rnd() * 10 });
+        else if (rnd() < 0.05 + dens * 0.12 && libreDeTodo(px, py, 40)) DECO.push({ id: "alfombraMusgo", x: px, y: py, s: 0.9 + rnd() * 0.9, sem: rnd() * 10 });
         continue;
       }
       if (!libreDeTodo(px, py, 70)) continue;
+      // los gigantes del bosque viejo: abetos de tronco ancho (a unos se les ve la copa, a otros ni eso) y algún roble anciano
+      const g = rnd();
+      if (!borde && dens > 0.5 && g < 0.055 && libreDeTodo(px, py, 120)) {
+        const s = 1.5 + rnd() * 0.7,
+          alto = rnd() < 0.55,
+          h = alto ? 640 + rnd() * 420 : 250 + rnd() * 140,
+          runa = rnd() < 0.06 ? FUTHARK.NOMBRES[Math.floor(rnd() * FUTHARK.NOMBRES.length)] : null;
+        COSAS.push({ id: "abetoAnciano", x: px, y: py, o: { s, h, sem: rnd() * 10, runa, copa: [h * 0.6, h * 1.3 + 60 * s, 90 * s] }, choque: { r: 22 * s }, alto: h * 1.3 + 60 * s, arbol: true, gigante: 150 * s });
+        continue;
+      }
+      if (!borde && dens < 0.5 && g > 0.99 && libreDeTodo(px, py, 160)) {
+        const s = 1.1 + rnd() * 0.4;
+        COSAS.push({ id: "robleAnciano", x: px, y: py, o: { s, sem: rnd() * 10, runa: rnd() < 0.2 ? "algiz" : null, copa: [180 * s, 400 * s, 170 * s] }, choque: { r: 34 * s }, alto: 380 * s, arbol: true, gigante: 190 * s });
+        continue;
+      }
       const k = rnd(),
         tipo = dens > 0.55 ? (k < 0.75 ? "pino" : k < 0.9 ? "roble" : "abedul") : k < 0.45 ? "pino" : k < 0.75 ? "roble" : k < 0.9 ? "abedul" : "roca";
-      const s = tipo === "roca" ? 0.9 + rnd() * 0.8 : 1.7 + rnd() * 0.9 + (borde ? 0.4 : 0);
+      const s = tipo === "roca" ? 0.9 + rnd() * 0.8 : 1.8 + rnd() * 0.9 + (borde ? 0.4 : 0);
       COSAS.push({ id: tipo, x: px, y: py, o: { s, sem: rnd() * 10, pisos: 3 + Math.floor(rnd() * 3) }, choque: { r: ASSETS.LISTA[tipo].choque.r * s }, alto: ASSETS.LISTA[tipo].alto * s, arbol: tipo !== "roca" });
     }
+  // a la sombra de un gigante no crece otro árbol: se sacan los que quedaron pegados al tronco
+  {
+    const gig = COSAS.filter((c) => c.gigante),
+      celda = new Map(),
+      clave = (x, y) => Math.floor(x / 400) + "," + Math.floor(y / 400);
+    gig.forEach((g) => {
+      const k = clave(g.x, g.y);
+      if (!celda.has(k)) celda.set(k, []);
+      celda.get(k).push(g);
+    });
+    for (let i = COSAS.length - 1; i >= 0; i--) {
+      const c = COSAS[i];
+      if (!c.arbol || c.gigante) continue;
+      const cx = Math.floor(c.x / 400),
+        cy = Math.floor(c.y / 400);
+      let tapa = false;
+      for (let dy = -1; dy <= 1 && !tapa; dy++)
+        for (let dx = -1; dx <= 1 && !tapa; dx++) (celda.get(cx + dx + "," + (cy + dy)) || []).forEach((g) => (tapa = tapa || Math.hypot(c.x - g.x, (c.y - g.y) * 1.6) < g.gigante * 0.75));
+      if (tapa) COSAS.splice(i, 1);
+    }
+  }
   // helechos sueltos a los costados de los caminos
   CAMINOS.forEach((c) => {
     for (let i = 1; i < c.p.length; i++) {
@@ -442,6 +479,52 @@ window.ELDERVALD = (function () {
       }
     }
   });
+
+  // barro: charcos en los caminos (más en los húmedos, cerca del agua) y en las orillas de ríos y lagunas
+  const BARROS = [];
+  const ponerBarro = (x, y, s, huellas) => {
+    if (sueloEnInicial(x, y) !== 0) return;
+    const b = { id: "barro", x, y, s, sem: rnd() * 10, huellas };
+    DECO.push(b);
+    BARROS.push(b);
+  };
+  function sueloEnInicial(x, y) {
+    return x < 0 || y < 0 || x >= ANCHO || y >= ALTO ? 3 : suelo[Math.floor(y / CELDA) * GW + Math.floor(x / CELDA)];
+  }
+  CAMINOS.forEach((cm) => {
+    for (let i = 1; i < cm.p.length; i++) {
+      const [ax, ay] = cm.p[i - 1],
+        [bx, by] = cm.p[i],
+        n = Math.floor(Math.hypot(bx - ax, by - ay) / 260);
+      for (let k = 0; k < n; k++) {
+        if (rnd() > 0.16) continue;
+        const u = rnd();
+        ponerBarro(ax + (bx - ax) * u + (rnd() - 0.5) * cm.w * 0.4, ay + (by - ay) * u + (rnd() - 0.5) * cm.w * 0.3, 0.7 + rnd() * 0.6, 3 + Math.floor(rnd() * 4));
+      }
+    }
+  });
+  RIOS.forEach((rio) => {
+    for (let i = 1; i < rio.p.length; i++) {
+      const [ax, ay] = rio.p[i - 1],
+        [bx, by] = rio.p[i],
+        l = Math.hypot(bx - ax, by - ay),
+        n = Math.floor(l / 300);
+      for (let k = 0; k < n; k++) {
+        if (rnd() > 0.35) continue;
+        const u = rnd(),
+          lado = rnd() < 0.5 ? -1 : 1,
+          d = rio.w / 2 + 70 + rnd() * 50;
+        ponerBarro(ax + (bx - ax) * u + (-(by - ay) / l) * d * lado, ay + (by - ay) * u + ((bx - ax) / l) * d * lado, 0.9 + rnd() * 0.7, 5);
+      }
+    }
+  });
+  LAGOS.forEach((lg) => {
+    for (let k = 0; k < 7; k++) {
+      const a = rnd() * TAU;
+      ponerBarro(lg.p[0] + Math.cos(a) * (lg.rx + 110), lg.p[1] + Math.sin(a) * (lg.ry + 90), 0.9 + rnd() * 0.6, 4);
+    }
+  });
+  const barroEn = (x, y) => BARROS.some((b) => Math.abs(x - b.x) < 66 * b.s && Math.hypot((x - b.x) / (66 * b.s), (y - b.y) / (30 * b.s)) < 1);
 
   // ---------- grilla espacial para dibujar y chocar solo lo cercano ----------
   const BALDE = 512,
@@ -637,6 +720,11 @@ window.ELDERVALD = (function () {
       if (Math.max(o.x, x2) + 200 < x0 || Math.min(o.x, x2) - 200 > x1) return;
       ASSETS.dibujar(c, o.id, o.x, o.y, 0, o.o);
     });
+    // primero musgo y barro (planos), después los helechos encima
+    DECO.forEach((d) => {
+      if ((d.id !== "alfombraMusgo" && d.id !== "barro") || d.x < x0 - 140 || d.x > x1 + 140 || d.y < y0 - 70 || d.y > y1 + 70) return;
+      ASSETS.dibujar(c, d.id, d.x, d.y, 0, { s: d.s, sem: d.sem, huellas: d.huellas });
+    });
     DECO.forEach((d) => {
       if (d.id !== "helechos" || d.x < x0 - 40 || d.x > x1 + 40 || d.y < y0 - 40 || d.y > y1 + 40) return;
       ASSETS.dibujar(c, d.id, d.x, d.y, 0, { sem: d.sem });
@@ -693,7 +781,7 @@ window.ELDERVALD = (function () {
   }
 
   return {
-    U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO,
+    U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
     m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE,
   };
 })();

@@ -64,8 +64,11 @@ window.ASSETS = (function () {
     P(c, [x - 16 * s, y + 2 * s, x - 5 * s, y - 10 * s, x - 2 * s, y + 1 * s], C.troncoSombra);
     P(c, [x + 15 * s, y + 3 * s, x + 4 * s, y - 10 * s, x + 2 * s, y + 1 * s], C.tronco);
     // tronco
-    P(c, [x - 6 * s, y, x - 4 * s, y - 40 * s, x + 4 * s, y - 40 * s, x + 6 * s, y], C.tronco);
-    P(c, [x - 6 * s, y, x - 4 * s, y - 40 * s, x, y - 40 * s, x - 1 * s, y], C.troncoSombra);
+    P(c, [x - 9 * s, y, x - 6 * s, y - 40 * s, x + 6 * s, y - 40 * s, x + 9 * s, y], C.tronco);
+    P(c, [x - 9 * s, y, x - 6 * s, y - 40 * s, x, y - 40 * s, x - 1 * s, y], C.troncoSombra);
+    // musgo del lado de la sombra, trepando desde las raíces
+    P(c, [x - 16 * s, y + 2 * s, x - 9 * s, y - 4 * s, x - 7 * s, y - 22 * s, x - 3 * s, y - 14 * s, x - 2 * s, y + 1 * s], C.musgo2);
+    P(c, [x - 8 * s, y - 6 * s, x - 7 * s, y - 20 * s, x - 5 * s, y - 12 * s], C.musgoClaro);
     for (let k = 0; k < pisos; k++) {
       const w = (40 - k * (26 / pisos)) * s,
         base = y - (26 + k * (88 / pisos)) * s,
@@ -98,6 +101,8 @@ window.ASSETS = (function () {
     const cx = x + lado * 8 * s;
     P(c, [x - 10 * s, y, x - 8 * s, y - 34 * s, cx - 7 * s, y - 70 * s, cx + 7 * s, y - 72 * s, x + 9 * s, y - 34 * s, x + 10 * s, y], C.corteza);
     P(c, [x - 10 * s, y, x - 8 * s, y - 34 * s, cx - 7 * s, y - 70 * s, cx, y - 71 * s, x, y - 34 * s, x - 1 * s, y], C.tronco);
+    P(c, [x - 24 * s, y + 3 * s, x - 10 * s, y - 6 * s, x - 9 * s, y - 28 * s, x - 3 * s, y - 16 * s, x - 2 * s, y + 2 * s], C.musgo2);
+    P(c, [cx + lado * 4 * s, y - 52 * s, cx + lado * 22 * s, y - 70 * s, cx + lado * 10 * s, y - 64 * s], C.musgoClaro);
     // rama gruesa hacia un costado
     P(c, [cx, y - 58 * s, cx + lado * 34 * s, y - 84 * s, cx + lado * 38 * s, y - 78 * s, cx + lado * 4 * s, y - 50 * s], C.tronco);
     // copa: tres masas, la de atrás más oscura
@@ -132,6 +137,144 @@ window.ASSETS = (function () {
       P(c, pts, C.hojaAbedul[k]);
     });
     P(c, [x + v, y - 132 * s, x + 16 * s + v, y - 114 * s, x + 6 * s + v, y - 108 * s], C.hojaAbedul[2]);
+  }
+
+
+  // El abeto anciano: los gigantes del bosque viejo. Tronco ancho de corteza en placas, raíces como contrafuertes,
+  // ramas muertas a lo largo y la copa muy arriba: con o.h grande la copa queda fuera de la pantalla y solo se ven
+  // los troncos subiendo. o.h alto del tronco en unidades; o.runa: una runa vieja tallada que late apenas.
+  function abetoAnciano(c, x, y, t, o) {
+    const s = o.s || 1,
+      h = o.h || 520,
+      v = Math.sin(t * 0.5 + (o.sem || 0)) * 3 * s,
+      bw = 26 * s,
+      tw = 11 * s,
+      r = azar((o.sem || 1) * 613);
+    sombra(c, x + 30 * s, y + 4 * s, 70 * s, 16 * s, 0.38);
+    // raíces contrafuerte
+    [[-1, 46, 0.9], [1, 50, 1], [-0.4, 30, 0.6], [0.5, 34, 0.7]].forEach(([d, l, k], i) =>
+      P(c, [x + d * bw * 0.6, y - 34 * s * k, x + d * l * s, y + 4 * s, x + d * (l - 14) * s, y + 6 * s, x + d * bw * 0.2, y], i % 2 ? C.tronco : C.troncoSombra),
+    );
+    // tronco: cara clara a la derecha, sombra a la izquierda
+    P(c, [x - bw, y, x - tw, y - h, x + tw, y - h, x + bw, y], C.corteza);
+    P(c, [x - bw, y, x - tw, y - h, x - tw * 0.1, y - h, x - bw * 0.15, y], C.tronco);
+    P(c, [x - bw, y, x - tw, y - h, x - tw * 0.6, y - h, x - bw * 0.62, y], C.troncoSombra);
+    // placas de corteza
+    for (let k = 0; k < Math.floor(h / (34 * s)); k++) {
+      const u = (k + r()) / (h / (34 * s)),
+        w0 = bw + (tw - bw) * u,
+        yy = y - h * u,
+        dx = (r() - 0.3) * w0;
+      L(c, x + dx, yy, x + dx + (r() - 0.5) * 4 * s, yy - 22 * s, C.troncoSombra, 2 * s);
+    }
+    // musgo al pie y alguna mancha más arriba
+    P(c, [x - bw, y, x - bw * 0.9, y - 26 * s, x - bw * 0.2, y - 14 * s, x + bw * 0.3, y - 30 * s, x + bw * 0.6, y], C.musgo2);
+    E(c, x - bw * 0.4, y - h * 0.32, 8 * s, 14 * s, C.musgo);
+    // runa vieja tallada
+    if (o.runa) {
+      const late = 0.35 + Math.max(0, Math.sin(t * 0.8 + (o.sem || 0))) * 0.5;
+      alfa(c, late, () => FUTHARK.dibujar(c, o.runa, x + 3 * s, y - 58 * s, 22 * s, RUNICO, 3 * s));
+    }
+    // ramas muertas
+    for (let k = 0; k < 5; k++) {
+      const u = 0.25 + k * 0.1 + r() * 0.05,
+        lado = k % 2 ? 1 : -1,
+        w0 = bw + (tw - bw) * u,
+        yy = y - h * u;
+      P(c, [x + lado * w0 * 0.8, yy, x + lado * (w0 + (30 + r() * 30) * s), yy - (14 + r() * 10) * s, x + lado * w0 * 0.8, yy - 6 * s], C.troncoSombra);
+    }
+    // la copa, muy arriba
+    const pisos = 7,
+      base0 = y - h * 0.62;
+    for (let k = 0; k < pisos; k++) {
+      const u = k / pisos,
+        w = (96 - k * 10) * s,
+        base = base0 - (h * 0.46 + 60 * s) * u,
+        alto = (h * 0.16 + 30 * s),
+        dx = v * (k + 1) * 0.4,
+        top = base - alto;
+      P(c, [x + dx, top, x - w, base, x - w * 0.5, base - 8 * s, x - w * 0.15, base + 6 * s, x + w * 0.2, base - 6 * s, x + w * 0.55, base + 4 * s, x + w, base], C.pino[k % 3]);
+      P(c, [x + dx, top, x + w * 0.2, base - 6 * s, x + w * 0.55, base + 4 * s, x + w, base, x + w * 0.62, base - 12 * s], C.pinoLuz);
+    }
+  }
+
+  // El roble anciano: más ancho que alto, con el tronco partido en dos y una copa enorme que hace sombra en el claro.
+  function robleAnciano(c, x, y, t, o) {
+    const s = o.s || 1,
+      v = Math.sin(t * 0.5 + (o.sem || 0)) * 2 * s,
+      r = azar((o.sem || 1) * 389);
+    sombra(c, x + 40 * s, y + 6 * s, 150 * s, 34 * s, 0.4);
+    [[-1, 70], [1, 76], [-0.5, 48], [0.6, 52]].forEach(([d, l], i) => P(c, [x + d * 20 * s, y - 50 * s, x + d * l * s, y + 6 * s, x + d * (l - 22) * s, y + 8 * s, x, y], i % 2 ? C.tronco : C.troncoSombra));
+    P(c, [x - 40 * s, y, x - 30 * s, y - 150 * s, x - 70 * s, y - 230 * s, x - 40 * s, y - 240 * s, x, y - 170 * s, x + 44 * s, y - 250 * s, x + 74 * s, y - 236 * s, x + 32 * s, y - 150 * s, x + 42 * s, y], C.corteza);
+    P(c, [x - 40 * s, y, x - 30 * s, y - 150 * s, x - 70 * s, y - 230 * s, x - 40 * s, y - 240 * s, x - 4 * s, y - 172 * s, x - 6 * s, y], C.tronco);
+    P(c, [x - 8 * s, y - 40 * s, x + 6 * s, y - 40 * s, x + 4 * s, y - 70 * s, x - 6 * s, y - 70 * s], "#1E1610");
+    if (o.runa) alfa(c, 0.4 + Math.max(0, Math.sin(t * 0.8)) * 0.5, () => FUTHARK.dibujar(c, o.runa, x + 18 * s, y - 80 * s, 26 * s, RUNICO, 3 * s));
+    const masas = [];
+    for (let k = 0; k < 8; k++) masas.push([x + (r() - 0.5) * 300 * s, y - (250 + r() * 130) * s, (70 + r() * 40) * s, k % 3]);
+    masas.sort((a, b) => a[3] - b[3]).forEach(([mx, my, mr, k]) => {
+      P(c, poli(mx + v, my, mr, mr * 0.75, 8, k + 0.2, [1, 0.88, 1.05, 0.92, 1, 0.86, 1.04, 0.9]), C.roble[k]);
+      P(c, [mx + v, my - mr * 0.75, mx + mr * 0.9 + v, my - mr * 0.2, mx + mr * 0.3 + v, my], C.robleLuz);
+    });
+  }
+
+
+  // La alfombra de musgo: el piso del bosque viejo cubierto de musgo mullido, con matitas claras donde da la luz.
+  // Va pintada en el piso. o.s tamaño, o.sem forma.
+  function alfombraMusgo(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.round((o.sem || 1) * 1000) + 7);
+    const jit = () => Array.from({ length: 9 }, () => 0.75 + r() * 0.45);
+    P(c, poli(x, y, 70 * s, 34 * s, 9, r(), jit()), "#2E3A20");
+    for (let k = 0; k < 5; k++) P(c, poli(x + (r() - 0.5) * 90 * s, y + (r() - 0.5) * 36 * s, (22 + r() * 22) * s, (10 + r() * 10) * s, 8, r(), jit()), k % 2 ? C.musgo : C.musgo2);
+    for (let k = 0; k < 3; k++) P(c, poli(x + (r() - 0.2) * 70 * s, y + (r() - 0.6) * 26 * s, (10 + r() * 10) * s, (5 + r() * 4) * s, 7, r(), jit()), C.musgoClaro);
+    // matitas: estrellitas de musgo y alguna hebra roja de esporas
+    for (let k = 0; k < 14; k++) {
+      const mx = x + (r() - 0.5) * 120 * s,
+        my = y + (r() - 0.5) * 50 * s;
+      if (r() < 0.8) P(c, [mx - 3, my, mx, my - 5, mx + 3, my], r() < 0.5 ? "#7A9046" : C.musgoClaro);
+      else {
+        L(c, mx, my, mx, my - 7, "#6E5A3A", 1.2);
+        R(c, mx - 1.5, my - 9, 3, 3, "#9C2315");
+      }
+    }
+  }
+
+  // El barro: charco de tierra empapada con el borde removido, agua quieta que refleja el cielo y huellas de pezuñas
+  // y botas. Va pintado en el piso; juego.js salpica cuando Eromash lo pisa. o.s tamaño, o.huellas.
+  function barro(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.round((o.sem || 1) * 1000) + 3);
+    const jit = () => Array.from({ length: 16 }, (_, k) => 0.7 + r() * 0.3 + Math.sin(k * 1.7 + (o.sem || 0)) * 0.18);
+    const j0 = jit();
+    P(c, poli(x, y, 80 * s, 38 * s, 16, 0.2, j0.map((v) => v * 1.08)), "#3A2E1E");
+    P(c, poli(x, y, 72 * s, 33 * s, 16, 0.2, j0), "#2A2016");
+    P(c, poli(x - 6 * s, y + 2 * s, 52 * s, 22 * s, 16, 0.5, jit()), "#221A12");
+    // terrones del borde
+    for (let k = 0; k < 9; k++) {
+      const a = r() * TAU;
+      P(c, poli(x + Math.cos(a) * 76 * s, y + Math.sin(a) * 36 * s, (5 + r() * 5) * s, (3 + r() * 3) * s, 5, r()), r() < 0.5 ? "#4A3A28" : "#30261A");
+    }
+    // charquitos de agua: oscuros abajo, el cielo arriba a la derecha
+    for (let k = 0; k < 3; k++) {
+      const px = x + (r() - 0.5) * 70 * s,
+        py = y + (r() - 0.5) * 22 * s,
+        rx = (12 + r() * 16) * s,
+        ry = (5 + r() * 5) * s;
+      P(c, poli(px, py, rx, ry, 11, r(), Array.from({ length: 11 }, () => 0.7 + r() * 0.5)), "#2E3A3C");
+      P(c, [px, py - ry * 0.8, px + rx * 0.9, py - ry * 0.2, px + rx * 0.3, py], "#56686A");
+      L(c, px + rx * 0.2, py - ry * 0.5, px + rx * 0.6, py - ry * 0.3, "#8EA0A0", 1.5);
+    }
+    // huellas: pezuñas partidas (jabalíes, ciervos) y alguna bota
+    const n = o.huellas === undefined ? 4 : o.huellas,
+      a0 = r() * TAU;
+    for (let k = 0; k < n; k++) {
+      const hx = x + Math.cos(a0) * (k - n / 2) * 22 * s + (k % 2 ? 6 : -6) * s,
+        hy = y + Math.sin(a0) * (k - n / 2) * 10 * s;
+      if (r() < 0.7) {
+        P(c, poli(hx - 2.5 * s, hy, 2.5 * s, 4 * s, 5, 0), "#15100B");
+        P(c, poli(hx + 2.5 * s, hy, 2.5 * s, 4 * s, 5, 0), "#15100B");
+      } else P(c, poli(hx, hy, 4 * s, 7 * s, 6, 0.3), "#17110C");
+    }
   }
 
   // Los helechos del sotobosque: hojas en abanico, agrupados al pie de los troncos.
@@ -904,8 +1047,12 @@ window.ASSETS = (function () {
   const LISTA = {
     pino: { f: pino, alto: 150, choque: { r: 14 }, grupo: "naturaleza" },
     roble: { f: roble, alto: 170, choque: { r: 18 }, grupo: "naturaleza" },
+    abetoAnciano: { f: abetoAnciano, alto: 600, choque: { r: 22 }, grupo: "naturaleza" },
+    robleAnciano: { f: robleAnciano, alto: 380, choque: { r: 34 }, grupo: "naturaleza" },
     abedul: { f: abedul, alto: 140, choque: { r: 8 }, grupo: "naturaleza" },
     helechos: { f: helechos, alto: 26, choque: null, grupo: "naturaleza" },
+    alfombraMusgo: { f: alfombraMusgo, alto: 0, choque: null, grupo: "naturaleza", piso: true },
+    barro: { f: barro, alto: 0, choque: null, grupo: "naturaleza", piso: true },
     hongosRocio: { f: hongosRocio, alto: 20, choque: null, grupo: "naturaleza", luz: true },
     roca: { f: roca, alto: 34, choque: { r: 26 }, grupo: "naturaleza" },
     troncoCaido: { f: troncoCaido, alto: 30, choque: { w: 130, h: 20 }, grupo: "naturaleza" },

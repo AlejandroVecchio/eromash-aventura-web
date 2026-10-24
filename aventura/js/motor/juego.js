@@ -504,6 +504,14 @@
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
     }
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
+    // el barro salpica gotas marrones bajo las botas
+    if (mov && !jug.salto && W.barroEn(jug.x, jug.y)) {
+      jug.barro = (jug.barro || 0) - dt;
+      if (jug.barro <= 0) {
+        jug.barro = jug.correr ? 0.09 : 0.16;
+        for (let i = 0; i < 4; i++) J.fx.push({ x: jug.x + (Math.random() - 0.5) * 14, y: jug.y - 2, vx: (Math.random() - 0.5) * 160, vy: -60 - Math.random() * 120, t: 0.3, c: i % 2 ? "#3A2E1E" : "#5C4A32", s: 3 + Math.random() * 3 });
+      }
+    }
     if (CONTROLES.recien("interactuar")) interactuar();
     if (CONTROLES.recien("lente")) usarLente();
   }
@@ -990,6 +998,9 @@
       const ancho = o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20;
       if (Math.abs(jug.x - o.x) < ancho) a = 0.42;
     }
+    // la copa de los gigantes tapa desde muy arriba: [desde, hasta, ancho] medidos desde el pie del árbol
+    const cp = o.o.copa;
+    if (cp && o.y > jug.y && o.y - jug.y > cp[0] - 40 && o.y - jug.y < cp[1] && Math.abs(jug.x - o.x) < cp[2]) a = 0.42;
     if (a < 1) DIB.alfa(c, a, () => ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o));
     else ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o);
   }
