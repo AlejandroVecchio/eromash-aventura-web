@@ -362,6 +362,12 @@
         c.fill();
       });
     }
+    // el mapa original de Eldervald encima, con su transparencia, para comparar con lo hecho
+    if ($("original").checked && croquis.complete && croquis.naturalWidth) {
+      c.globalAlpha = +$("originalA").value;
+      c.drawImage(croquis, 0, 0, W.ANCHO, (croquis.naturalHeight * W.ANCHO) / croquis.naturalWidth);
+      c.globalAlpha = 1;
+    }
     // lo de la historia: un rombo rúnico al pie; con el puntero encima, qué es
     if (!lejos) {
       const lista2 = visibles(x0, y0, x1, y1);
@@ -1210,6 +1216,23 @@
   $("hNota").onclick = () => ponerHerr("nota");
   $("hCamino").onclick = () => ponerHerr("camino");
   $("hAgua").onclick = () => ponerHerr("agua");
+  // el mapa original: prendido o no y su transparencia quedan recordados en este navegador
+  try {
+    const o = JSON.parse(localStorage.getItem(CLAVE + "-original") || "null");
+    if (o) ($("original").checked = !!o.ver), ($("originalA").value = o.a);
+  } catch (e) {}
+  const pintarOriginal = () => {
+    $("originalV").textContent = Math.round(+$("originalA").value * 100) + "%";
+    try {
+      localStorage.setItem(CLAVE + "-original", JSON.stringify({ ver: $("original").checked, a: +$("originalA").value }));
+    } catch (e) {}
+  };
+  $("original").addEventListener("change", pintarOriginal);
+  $("originalA").addEventListener("input", () => {
+    if (!$("original").checked) $("original").checked = true;
+    pintarOriginal();
+  });
+  pintarOriginal();
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
   function nuevasOpciones() {

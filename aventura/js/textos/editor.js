@@ -51,6 +51,7 @@ I18N.textos({
   "ed.cam_b_agua": { es: "Barro mojado y charquitos", en: "Wet mud and puddles" },
   "ed.cam_b_tierra": { es: "Tierra y piedras sueltas", en: "Dirt and loose stones" },
   "ed.cam_fundir": { es: "Puntas que se deshacen (para unirlo con otro camino, pasto o agua)", en: "Ends that fade out (to join another road, grass or water)" },
+  "ed.original": { es: "Mapa original", en: "Original map" },
   "ed.agua": { es: "Agua", en: "Water" },
   "ed.cuenta_agua": { es: "{0} de agua", en: "{0} water" },
   "ed.agua_nueva": { es: "Agua nueva", en: "New water" },
