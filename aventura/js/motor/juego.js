@@ -20,12 +20,16 @@
   let c = principal; // se cambia un instante para dibujar la silueta de Eromash aparte
   let cw = 0,
     ch = 0,
-    esc = 1;
+    esc = 1,
+    escBase = 1, // la escala sin el alejamiento (el piso se cachea a esta escala)
+    alejar = 1,
+    alejarMeta = 1; // un sistema puede abrir la vista un rato (el mirador del Santuario)
   function medir() {
     const k = window.CALIDAD ? CALIDAD.escala() : Math.min(2, devicePixelRatio || 1);
     cw = lienzo.width = Math.round(innerWidth * k);
     ch = lienzo.height = Math.round(innerHeight * k);
-    esc = Math.sqrt((cw * ch) / VISTA);
+    escBase = Math.sqrt((cw * ch) / VISTA);
+    esc = escBase / alejar;
   }
   addEventListener("resize", medir);
   if (window.CALIDAD) CALIDAD.on(medir);
@@ -50,6 +54,7 @@
   const SIS = window.SISTEMAS || [];
   const cadaSis = (fn, ...a) => SIS.forEach((s0) => s0[fn] && s0[fn](...a));
   J.retrasar = (seg, fn) => J.timers.push({ t: seg, fn });
+  J.alejarA = (v) => (alejarMeta = Math.max(alejarMeta, v));
   const jug = (J.jugador = {
     x: 0, y: 0, vx: 0, vy: 0, hp: 100, hpMax: 100, sta: 100, staMax: 100,
     mira: { vista: "S", espejo: false }, dir: [0, 1], salto: 0, esq: 0, esqDir: [0, 1], atk: null, combo: 0, comboT: 0,
@@ -556,6 +561,7 @@
       chispa(ciervo.x, ciervo.y - 80);
       numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)));
     }
+    cadaSis("alGolpear", jug.x, jug.y, a.dir, d.reach);
   }
   function enemigoMurio(e) {
     if (lobos.includes(e) && lobos.every((l) => l.muerto)) H.marcar("lobos_vencidos");
@@ -957,7 +963,7 @@
       x1 = x0 + vw,
       y1 = y0 + vh;
     c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
-    W.dibujarPiso(c, x0, y0, x1, y1, esc);
+    W.dibujarPiso(c, x0, y0, x1, y1, escBase);
     // lo que va en el piso
     J.marcas.forEach(dibujarMarca);
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
@@ -1286,7 +1292,10 @@
         }
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
+      alejarMeta = 1;
       cadaSis("actualizar", dt);
+      alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
+      esc = escBase / alejar;
       amb = LUZ.ambiente(H.E.tiempo, sombraAqui(), dt);
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));

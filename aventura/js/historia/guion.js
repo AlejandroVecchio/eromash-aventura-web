@@ -79,6 +79,7 @@ window.HISTORIA = (function () {
     runa_refugio: D([["runa", "dlg_runa_refugio_1"], ["eromash", "dlg_runa_refugio_2"], ["eydis", "dlg_runa_refugio_3"], ["runa", "dlg_runa_refugio_4"]], "runa_refugio"),
     orm_lif: D([["orm", "dlg_orm_lif"]]),
     orm_lobos: D([["orm", "dlg_orm_lobos_1"], ["orm", "dlg_orm_lobos_2"]]),
+    orm_quilla: D([["orm", "dlg_orm_quilla_1"], ["orm", "dlg_orm_quilla_2"], ["orm", "dlg_orm_quilla_3"]]),
     svanhild_templar: D([["svanhild", "dlg_svanhild_templar_1"], ["svanhild", "dlg_svanhild_templar_2"]]),
     orm_fragmento: D([["orm", "dlg_orm_fragmento_1"], ["eydis", "dlg_orm_fragmento_2"]], "fragmento", "diario_fragmento"),
     trabajador: D([["trabajador", "dlg_trabajador_1"]]),
@@ -196,7 +197,7 @@ window.HISTORIA = (function () {
         if (m === "EL-03") return "orm_eikholt";
         if (m === "EL-04" || m === "EL-05") return "orm_paso";
         if (m === "EL-06") return h === "puente_reparado" ? "orm_puente" : h === "lobos_cabecera" ? "orm_lobos" : "orm_paso";
-        return "orm_despues";
+        return m === "fin" ? "orm_quilla" : "orm_despues";
       case "svanhild":
         if (m === "EL-03") {
           if (h === "fragmento_entregado") return "svanhild_inicio";
@@ -231,6 +232,7 @@ window.HISTORIA = (function () {
         if (m === "EL-01" || m === "EL-02") return "orm_refugio";
         if (m === "EL-03") return "orm_eikholt";
         if (m === "EL-04" || m === "EL-05") return "orm_paso";
+        if (m === "fin") return "orm_aserradero";
         return tiene("puente_reparado") ? "orm_puente" : "orm_paso";
       case "svanhild":
         return m === "EL-03" && h === "huella_patio" ? "svanhild_patio" : "svanhild_casa";

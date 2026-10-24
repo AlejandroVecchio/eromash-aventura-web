@@ -33,8 +33,8 @@ window.ELDERVALD = (function () {
     quebrada_rastreo: { p: m(318, 210), r: 8 },
     claro_entrada: { p: m(262, 205), r: 7 },
     claro: { p: m(175, 175), r: 30 },
-    aserradero: { p: m(1085, 330), r: 16 },
-    santuario: { p: m(1415, 215), r: 16 },
+    aserradero: { p: m(1150, 322), r: 22 },
+    santuario: { p: m(1415, 215), r: 24 },
     brunvik: { p: m(1240, 590), r: 14 },
     skarnholt: { p: m(200, 440), r: 14 },
     tumulo: { p: m(260, 690), r: 10 },
@@ -650,22 +650,115 @@ window.ELDERVALD = (function () {
     poner("fisura", fis, {}, "fisura");
     punto("hilo", [sop[0].x, sop[0].y + 40]);
   })();
-  // El aserradero de Orm
+  // El Aserradero de Orm (Alejandro, 23/10/2026): el taller de la familia sobre el río, de unos 45 m. La rueda con su
+  // canaleta y el canal con la compuerta junto a la orilla; el galpón de la sierra con el dintel tallado; el patio de
+  // troncos con la marca; el torno con la rampa que baja al barro de la orilla (ahí quedó hundido el buey); la casa
+  // de Orm con el banco, la leñera y el corral; el fogón (reaparición de EL-07) y la grada de la quilla (2.ª visita).
   (function () {
     const c = LUGARES.aserradero.p;
-    poner("aserradero", mas(c, 0, -3));
-    poner("farol", mas(c, -6, 8));
-    punto("aserradero", mas(c, -8, 10));
+    poner("galponSierra", mas(c, 0.4, -3), {}, "galpon");
+    punto("dintel", mas(c, 0.4, -2));
+    poner("ruedaAgua", mas(c, 7.3, -3.5), { gira: false }, "rueda");
+    const toma = mas(c, 9.3, -12.2),
+      boca = mas(c, 8.1, -4.8);
+    poner("canal", toma, { x2: boca[0], y2: boca[1], piso: true, sinChoque: true }, "canal");
+    pintarLinea([toma, boca], 80, 1);
+    poner("compuerta", mas(c, 8.7, -9.4), { abierta: false, sinChoque: true }, "compuerta");
+    punto("compuerta", mas(c, 7.1, -9));
+    poner("pilaTroncos", mas(c, -3, -8), { sem: 1 });
+    poner("pilaTroncos", mas(c, 0.5, -10), { sem: 2, filas: 2 });
+    poner("pilaTroncos", mas(c, -6.8, -4.6), { sem: 3, filas: 2, s: 0.9 });
+    poner("tornoRampa", mas(c, 4.2, -14.6), {}, "torno_buey");
+    punto("torno_buey", mas(c, 3.4, -13.6));
+    // la orilla de barro con el buey hundido (y el corral, donde queda después)
+    poner("barro", mas(c, 8.6, -15.6), { s: 2.2, sem: 4, piso: true, sinChoque: true });
+    poner("bueyBarro", mas(c, 8.6, -15.4), { hundido: 1, sinChoque: true }, "buey_barro");
+    punto("buey_barro", mas(c, 7.6, -14.2));
+    punto("lobos_buey", mas(c, 5, -18.5));
+    poner("casaNordica", mas(c, -9, 1), { v: 1, s: 0.85, pared: 0, techo: 2, sem: 7 }, "casa_orm");
+    poner("bancoTaco", mas(c, -6.4, 4.2), {}, "banco_orm");
+    poner("lenera", mas(c, -13.6, 2.6));
+    const co = mas(c, -13, 6.4),
+      cw = 7 * M,
+      chh = 4.6 * M;
+    poner("cerca", co, { x2: co[0] + cw * 0.4, y2: co[1] });
+    poner("cerca", [co[0] + cw * 0.65, co[1]], { x2: co[0] + cw, y2: co[1] });
+    poner("cerca", [co[0], co[1] + chh], { x2: co[0] + cw, y2: co[1] + chh });
+    poner("cerca", co, { x2: co[0], y2: co[1] + chh, sinChoque: true });
+    poner("cerca", [co[0] + cw, co[1]], { x2: co[0] + cw, y2: co[1] + chh, sinChoque: true });
+    pintarLinea([co, [co[0], co[1] + chh]], 30, 3);
+    pintarLinea([[co[0] + cw, co[1]], [co[0] + cw, co[1] + chh]], 30, 3);
+    poner("buey", mas(c, -10, 9), { sem: 5 }, "buey_corral").oculto = true;
+    poner("fogonOlla", mas(c, -1, 7), {}, "fogon_aserradero");
+    punto("aserradero", mas(c, -3, 9));
+    punto("ylva", mas(c, -2, 0.8));
+    punto("ylva_compuerta", mas(c, 6.6, -8.2));
+    punto("orm_aserradero", mas(c, 3.2, 5.6));
+    poner("posteFarol", mas(c, 4.5, 6.2), { encendido: true });
+    poner("posteFarol", mas(c, -5, -1.5), { encendido: true });
+    const grada = poner("gradaQuilla", mas(c, 5.2, 3.4), { enfermas: true, s: 0.9 }, "grada");
+    grada.oculto = true;
+    grada.roto = true;
+    RECINTOS.push([c[0] - 16 * M, c[1] - 20 * M, c[0] + 12 * M, c[1] + 12 * M]);
   })();
-  // Puentes del este
+  // Puentes del este; el oriental va sobre pilares de piedra mucho más viejos que el tablero, con runas casi apagadas
   [PUENTES[1], PUENTES[2], PUENTES[3]].forEach((p) => poner("puenteTablas", p.a, { x2: p.b[0], y2: p.b[1], sinChoque: true, piso: true }));
-  // Santuario de las Raíces
   (function () {
-    const c = LUGARES.santuario.p;
-    poner("santuario", c, { visto: false }, "santuario");
-    poner("zarzas", mas(c, 0, 3), { sinChoque: false });
-    punto("santuario", mas(c, -6, 9));
-    punto("sello", mas(c, 0, 4));
+    const p = PUENTES[2],
+      dx = p.b[0] - p.a[0],
+      dy = p.b[1] - p.a[1],
+      l = Math.hypot(dx, dy),
+      nx = -dy / l,
+      ny = dx / l,
+      off = p.ancho / 2 + 14;
+    const pil = [];
+    [0.18, 0.5, 0.82].forEach((u, i) =>
+      [-1, 1].forEach((sd) =>
+        pil.push(poner("pilarAntiguo", [p.a[0] + dx * u + nx * off * sd, p.a[1] + dy * u + ny * off * sd], { s: 0.8, sinChoque: true, luz: 0.12, sem: i * 2 + sd, runas: i % 2 ? ["raidho", "algiz"] : ["othala", "ehwaz"] }))
+      )
+    );
+    NOMBRADAS.pilares_oriental = pil;
+    // el cofre de abajo del puente, entre los pilares: solo lo muestra la Lente
+    const cp = [p.a[0] + dx * 0.1 + nx * 130, p.a[1] + dy * 0.1 + ny * 130];
+    poner("arconLenador", cp, { s: 1.1 }, "cofre_puente").oculto = true;
+    punto("cofre_puente", [cp[0], cp[1] + 40]);
+  })();
+  // El Santuario de las Raíces (Alejandro, 23/10/2026): una ladera de unos 60 m. Del puente oriental sube un sendero
+  // de escalones comidos por raíces, con estelas a los costados (tres se encienden al pasar). Arriba, la explanada:
+  // el portal de piedra encajado en la base de un árbol colosal, los restos con las zarzas espectrales que tejen la
+  // red sobre la puerta y el sello al alcance de la mano. A un costado, la loma del mirador con el cofre de zarzas.
+  (function () {
+    const c = LUGARES.santuario.p,
+      ux = -0.925,
+      uy = 0.381,
+      en = (d, lado) => [c[0] + ux * d * M - uy * lado * M, c[1] + uy * d * M + ux * lado * M];
+    const a = en(25, 0),
+      b = en(4.5, 0);
+    poner("escalonesRaices", a, { x2: b[0], y2: b[1], ancho: 110, sem: 3, piso: true, sinChoque: true });
+    const runas = ["algiz", "othala", "ehwaz", "eihwaz", "dagaz", "ingwaz", "laguz", "mannaz"];
+    NOMBRADAS.estelas = [6.5, 9, 11.5, 14, 16.5, 19, 21.5, 24].map((d, i) =>
+      poner("estela", en(d, i % 2 ? 2.7 : -2.7), { runa: runas[i], inclina: ((i * 7) % 5) - 2, s: 0.9 + (i % 3) * 0.08, despierta: i === 2 || i === 4 || i === 5, luz: 0 })
+    );
+    const portal = mas(c, 1, -6);
+    poner("arbolPortal", portal, { visto: false, sinChoque: true }, "santuario");
+    pintarLinea([[portal[0] - 560, portal[1] - 50], [portal[0] + 580, portal[1] - 50]], 120, 3);
+    const restos = mas(c, 1, -4.1);
+    poner("restosZarzas", restos, { sinChoque: true }, "zarzas_santuario");
+    pintarLinea([[restos[0] - 240, restos[1] - 20], [restos[0] + 240, restos[1] - 20]], 60, 3);
+    poner("selloPiedra", mas(c, 1, -2.3), { visto: false }, "sello");
+    punto("santuario", mas(c, -4, 4));
+    punto("sello", mas(c, 1, -1.2));
+    // la loma del mirador, separada de la puerta
+    const loma = mas(c, -15, -9);
+    poner("lomaMirador", loma, { r: 300, lado: 1, piso: true, sinChoque: true });
+    [0.9, 1.5, 2.1, 2.7, 3.3, 3.9, 4.6].forEach((ang, i) =>
+      poner("roca", [loma[0] + Math.cos(ang) * 320, loma[1] + Math.sin(ang) * 150 + 20], { s: 0.55 + (i % 3) * 0.12, sem: 30 + i })
+    );
+    poner("cofreZarzas", mas(loma, -1.4, -0.8), {}, "cofre_zarzas");
+    punto("cofre_zarzas", mas(loma, -1.4, 0.4));
+    punto("mirador_santuario", mas(loma, 1.2, 0.4));
+    poner("escalonesRaices", mas(loma, 8.6, 3.6), { x2: mas(c, -5, -1)[0], y2: mas(c, -5, -1)[1], ancho: 70, sem: 9, piso: true, sinChoque: true });
+    RECINTOS.push([loma[0] - 7 * M, loma[1] - 5 * M, c[0] + 10 * M, c[1] + 6 * M]);
   })();
   // faroles y piedras de linde de los caminos (las de orientación)
   [[560, 690], [700, 414], [520, 530], [575, 300], [900, 540], [1010, 420], [1265, 300], [200, 880]].forEach((p) => poner("farol", mas(m(p[0], p[1]), 3.2, 0)));
@@ -1074,7 +1167,7 @@ window.ELDERVALD = (function () {
           cv = pintarTrozo(tx, ty, esc);
           pintados++;
           cache.set(k, cv);
-          if (cache.size > 60) cache.delete(cache.keys().next().value);
+          if (cache.size > 120) cache.delete(cache.keys().next().value);
         } else {
           cache.delete(k);
           cache.set(k, cv);
