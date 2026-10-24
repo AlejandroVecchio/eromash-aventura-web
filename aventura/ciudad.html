@@ -25,6 +25,7 @@
   <label><span id="tGiro"></span><input id="giro" type="range" min="-180" max="180" value="-28" /></label>
   <label><span id="tAltura"></span><input id="altura" type="range" min="40" max="100" value="55" /></label>
   <label><span id="tCerca"></span><input id="cerca" type="range" min="4" max="120" value="40" /></label>
+  <label><span id="tHora"></span><input id="hora" type="range" min="0" max="24" step="0.25" value="17.5" /><span id="vHora" style="min-width:36px;text-align:right"></span></label>
   <label><span id="tGirar"></span><input id="girar" type="checkbox" /></label>
   <div id="lugares"></div>
 </div>
@@ -59,6 +60,7 @@
 <script src="js/ciudad/porton.js"></script>
 <script src="js/ciudad/plano.js"></script>
 <script src="js/ciudad/vista.js"></script>
+<script src="js/mundo/luz.js"></script>
 <script>
 (function () {
   const q = new URLSearchParams(location.search);
@@ -71,6 +73,7 @@
   tAltura.textContent = t("ci.muestra_altura");
   tCerca.textContent = t("ci.muestra_cerca");
   tGirar.textContent = t("ci.muestra_girar");
+  tHora.textContent = t("ci.muestra_hora");
   if (q.get("panel") === "0") panel.style.display = "none";
   const plano = PLANO25.armar();
   VISTA25.iniciar(plano);
@@ -117,6 +120,7 @@
   if (q.get("g")) giro.value = q.get("g");
   if (q.get("k")) altura.value = q.get("k");
   if (q.get("z")) cerca.value = q.get("z");
+  if (q.get("h")) hora.value = q.get("h");
   // la gente de la plaza: vecinos parados y caminando, y Eromash
   const gente = [];
   const ids = Object.keys(GENTE.FICHAS);
@@ -125,10 +129,10 @@
     const a = rr() * Math.PI * 2, d = 900 + rr() * 2700;
     const x = Math.cos(a) * d, y = Math.sin(a) * d;
     if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 40)) continue;
-    gente.push({ id: ids[i % ids.length], x, y, vx: rr() < 0.5 ? (rr() - 0.5) * 80 : 0, vy: 0, s: 1 });
+    gente.push({ id: ids[i % ids.length], x, y, vx: rr() < 0.5 ? (rr() - 0.5) * 80 : 0, vy: 0, s: 1, horas: i % 7 ? [7, 20] : [6, 23] });
   }
   const sur = plano.anclas.puerta_sur;
-  for (let i = 0; i < 18; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 300, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1 });
+  for (let i = 0; i < 18; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 300, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1, horas: i % 6 ? [6, 21] : [0, 24] });
   // la gente de cada barrio: los de la Guardia en el campo, los forasteros alrededor del fuego, los que esperan en
   // Sanación, los que toman afuera del Hongo, los de los oficios (parados, que hablan; alguno va y viene)
   const RONDAS = [
@@ -143,6 +147,21 @@
     ["hospederia", 4, 600, null],
     ["tablon", 4, 300, null],
   ];
+  // cada barrio tiene su hora: el campo de la Guardia de mañana, el Hongo y el fuego de los forasteros de noche,
+  // los oficios de día; nadie lo marca, se ve si se pasa a la hora justa
+  const HORARIO = {
+    entrenamiento: [6.5, 17], forasteros: [17, 6], sanacion: [7, 22], hongo: [16, 2], herreria: [6, 19],
+    carpinteria: [7, 18], corral: [5, 20], lindes: [8, 20], hospederia: [15, 1], tablon: [7, 19],
+  };
+  const aHora = (h, [a, b]) => (a < b ? h >= a && h < b : h >= a || h < b);
+  // lo que se ve y nadie explica: de madrugada alguien se queda solo frente a la piedra del Ting; al alba, los de la
+  // Guardia hacen la ronda por la vuelta de la plaza
+  const TING = plano.ting;
+  gente.push({ id: "eydis", x: TING[0] + 60, y: TING[1] + 230, vx: 0, vy: 0, s: 1, horas: [23, 4] });
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    gente.push({ id: i % 2 ? "orm" : "eydis", x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
+  }
   for (const [k, n, rad, quien] of RONDAS) {
     const c0 = L[k];
     if (!c0) continue;
@@ -151,7 +170,7 @@
       const x = c0[0] + Math.cos(a) * d, y = c0[1] + Math.sin(a) * d;
       if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 30)) continue;
       const lista = quien || ids;
-      gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5 });
+      gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5, horas: HORARIO[k] });
     }
   }
   // los choques del plano en una grilla, para preguntar rápido si un punto está libre
@@ -186,6 +205,22 @@
     return true;
   }
   for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
+  // lo que alumbra de noche: faroles, braseros y fuegos (y las runas), y las ventanas de cada casa
+  const luces = [];
+  for (const o of plano.cosas) {
+    if (o.tipo === "casa") {
+      if (/^(casa|hongo|lindes|herreria|sanacion|hospederia|cuartel|carpinteria|curtiembre|cordeleria)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 520, col: "#FFD98A", f: 0.45 });
+      if (/^(puerta_|atalaya)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 700, col: "#FFD98A", f: 0.8 });
+      continue;
+    }
+    const id = o.id || "";
+    if (/farol|Farol|brasero|fogon|posteHongo|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : /brasero/.test(id) ? 520 : 420, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: /brasero|fogon|chimenea/.test(id) });
+  }
+  // los faroles colgados de la copa del Roble
+  for (let i = 0; i < 6; i++) luces.push({ x: Math.cos(i * 1.05) * 700, y: Math.sin(i * 1.05) * 500, z: 0, r: 600, col: "#FFD98A", f: 0.7 });
+  // la piedra del Ting y las piedras rúnicas de las puertas, en azul rúnico
+  luces.push({ x: plano.ting[0], y: plano.ting[1], z: 0, r: 900, col: "#73D5DB", f: 0.6 });
+  for (const k of ["sur", "norte", "este", "oeste"]) { const a = plano.anclas["puerta_" + k]; if (a) luces.push({ x: a[0], y: a[1], z: 0, r: 800, col: "#73D5DB", f: 0.7 }); }
   const VK = { S: VIKINGO.imagen("R", "S", "calm"), E: VIKINGO.imagen("R", "E", "calm"), N: VIKINGO.imagen("R", "N", "calm") };
   const eromash = { x: LUGARES.plaza[0] - 200, y: LUGARES.plaza[1] - 100 };
   function dibujarEromash(c, x, y) {
@@ -239,24 +274,49 @@
     // los que caminan no atraviesan nada: si el paso siguiente choca, se dan vuelta
     for (const p of gente) {
       if (!p.vx && !p.vy) continue;
+      if (p.ronda) {
+        // la ronda sigue la vuelta de la plaza
+        const a = Math.atan2(p.y, p.x) + (50 / 3000) * dt;
+        p.x = Math.cos(a) * 3000; p.y = Math.sin(a) * 3000; p.vx = -Math.sin(a) * 50;
+        continue;
+      }
       const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
       if (!libre(nx, ny) || Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; continue; }
       p.x = nx; p.y = ny;
     }
-    const extra = gente.map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0, hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
+    const h = +hora.value;
+    vHora.textContent = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
+    const extra = gente.filter((p) => !p.horas || aHora(h, p.horas)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0, hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
     extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });
     VISTA25.dibujar(c, cam, cw, ch, tt, extra);
     // el aire de la tarde: un velo cálido y la viñeta del bosque
     c.setTransform(1, 0, 0, 1, 0, 0);
-    // la tarde ámbar de la ciudad (el primer respiro después del bosque frío); calidad baja deja solo el velo
+    // la luz según la hora: la tarde ámbar (el primer respiro después del bosque frío), la noche azul con los faroles,
+    // las ventanas y los fuegos encendidos; calidad baja deja solo el velo
+    const noche = h >= 17 && h < 21 ? (h - 17) / 4 : h >= 21 || h < 5 ? 1 : h < 7 ? (7 - h) / 2 : 0;
+    const ambar = Math.max(0.25, 1 - Math.min(Math.abs(h - 18), 24 - Math.abs(h - 18)) / 7);
     if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
       c.globalCompositeOperation = "soft-light";
       const am = c.createLinearGradient(0, 0, cw, ch);
-      am.addColorStop(0, "rgba(255,217,138,0.55)");
-      am.addColorStop(1, "rgba(255,141,113,0.35)");
+      am.addColorStop(0, "rgba(255,217,138," + (0.55 * ambar * (1 - noche * 0.7)) + ")");
+      am.addColorStop(1, "rgba(255,141,113," + (0.35 * ambar * (1 - noche * 0.7)) + ")");
       c.fillStyle = am;
       c.fillRect(0, 0, cw, ch);
       c.globalCompositeOperation = "source-over";
+    }
+    // la noche con la misma capa de oscuridad del bosque (LUZ): agujeros de luz en el piso donde alumbra algo
+    if (noche > 0.01) {
+      const V = VISTA25.proyector(cam);
+      const enVista = [];
+      for (const l of luces) {
+        const [vx, vy] = V(l.x, l.y);
+        const sx = (vx - cam.x) * cam.esc + cw / 2, sy = (vy - cam.y) * cam.esc + ch / 2 - l.z * cam.esc;
+        const r = l.r * cam.esc;
+        if (!(r > 1)) continue;
+        if (sx < -r || sy < -r || sx > cw + r || sy > ch + r) continue;
+        enVista.push({ x: sx, y: sy, r, col: l.col, f: l.fuego ? l.f * (0.9 + Math.sin(tt * 7 + l.x) * 0.08) : l.f });
+      }
+      LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n: noche, osc: Math.min(0.82, 0.06 + noche * 0.74) }, tt);
     }
     c.fillStyle = "rgba(255,141,113,0.05)";
     c.fillRect(0, 0, cw, ch);

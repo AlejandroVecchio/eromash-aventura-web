@@ -292,7 +292,7 @@ window.PLANO25 = (function () {
     // los braseros alrededor del Ting
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * TAU + PI / 6;
-      asset("brasero", tx + Math.cos(a) * 9.2, tz + Math.sin(a) * 9.2, { s: 1.3, sem: i });
+      asset("brasero", tx + Math.cos(a) * 9.2, tz + Math.sin(a) * 9.2, { encendido: true, s: 1.3, sem: i });
       circulo(tx + Math.cos(a) * 9.2, tz + Math.sin(a) * 9.2, 0.5);
     }
     anclas.ting = U([tx, tz + 9.5]);
@@ -480,7 +480,7 @@ window.PLANO25 = (function () {
         for (const u of [-9.5, -5]) asset("camaPieles", ...en(u, 11.5), { s: 0.4 });
         for (const u of [6, 9.5]) asset("secaderoHierbas", ...en(u, 11), { s: 1.3 });
         asset("estanteHierbas", ...en(8, 14.5), { s: 0.55 });
-        for (const u of [-2.6, 2.6]) asset("brasero", ...en(u, 8.5), { s: 1.1 });
+        for (const u of [-2.6, 2.6]) asset("brasero", ...en(u, 8.5), { encendido: true, s: 1.1 });
       }
       // la huerta de hierbas: canteros cercados, secaderos y el banco de los que se curan
       const [hx, hz] = LUGAR.hierbas;
@@ -526,7 +526,7 @@ window.PLANO25 = (function () {
       }
       asset("estanteArmas", ex - 10, ez + 7, { s: 1.4 });
       asset("estanteArmas", ex - 3, ez + 7, { s: 1.4 });
-      for (const [bx, bz] of [[-14, -9], [14, -9], [-14, 9], [14, 9]]) asset("brasero", ex + bx, ez + bz, { s: 1.3 });
+      for (const [bx, bz] of [[-14, -9], [14, -9], [-14, 9], [14, 9]]) asset("brasero", ex + bx, ez + bz, { encendido: true, s: 1.3 });
       asset("estandarteCiervo", ex - 15, ez - 10.5, { s: 1.5, sem: 1 });
       asset("estandarteCiervo", ex + 15, ez - 10.5, { s: 1.5, sem: 2 });
       // el ruedo de los que pelean de a dos: un círculo de piedras

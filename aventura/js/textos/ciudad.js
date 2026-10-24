@@ -12,6 +12,7 @@ I18N.textos({
   "ci.muestra_giro": { es: "Giro", en: "Rotation" },
   "ci.muestra_altura": { es: "Altura de la cámara", en: "Camera height" },
   "ci.muestra_cerca": { es: "Cerca", en: "Zoom" },
+  "ci.muestra_hora": { es: "Hora", en: "Time of day" },
   "ci.muestra_girar": { es: "Girar sola", en: "Auto-rotate" },
   "ci.lugar_plaza": { es: "Plaza del Roble", en: "Oak Square" },
   "ci.lugar_ting": { es: "Círculo del Ting", en: "Ting Circle" },

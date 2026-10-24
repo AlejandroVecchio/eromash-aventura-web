@@ -155,7 +155,7 @@ window.PORTON25 = (function () {
       };
       const brasero = (lado) => {
         const [bx, by] = pr(lado * (hueco - 50), T + 80, 0);
-        ASSETS.dibujar(c, "brasero", bx, by, t, { s: 1.4, sem: lado });
+        ASSETS.dibujar(c, "brasero", bx, by, t, { encendido: true, s: 1.4, sem: lado });
       };
       // de atrás para adelante según la cámara
       const partes = [
