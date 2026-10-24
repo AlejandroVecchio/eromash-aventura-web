@@ -14,6 +14,8 @@ window.AGREGADOS = {
   quitarLagos: [],
   // los interiores cambiados con el editor (pestaña Interiores)
   cuartos: {},
+  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>
+  casas: {},
   // regiones con nombre (el juego muestra el nombre al entrar) y piezas guardadas del editor
   regiones: [],
   piezas: {},

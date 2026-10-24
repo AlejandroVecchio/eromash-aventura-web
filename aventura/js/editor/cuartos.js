@@ -37,20 +37,20 @@ window.EDITOR_CUARTOS = (function () {
       p.cambios = p.cambios || {};
       p.poner = p.poner || [];
       fn(p);
-      if (!Object.keys(p.cambios).length && !p.poner.length && ["pared", "ventana", "estandarte", "repisa"].every((x) => p[x] === undefined)) delete est.cuartos[pl];
+      if (!Object.keys(p.cambios).length && !p.poner.length && ["pared", "ventana", "estandarte", "repisa", "nombre"].every((x) => p[x] === undefined)) delete est.cuartos[pl];
     });
     firma = "";
   }
   function armar() {
-    const f = pl + JSON.stringify(cf() || null);
+    const f = pl + JSON.stringify(cf() || null) + JSON.stringify(E.est().casas || {});
     if (f === firma && cuarto) return;
     firma = f;
-    cuarto = I.vista(pl, E.est().cuartos || {});
+    cuarto = I.vista(pl, E.est().cuartos || {}, E.est().casas || {});
+    llenarPlantillas();
     pintarPanel();
   }
 
   // ---------- el panel ----------
-  $("cuPlantilla").innerHTML = I.PLANTILLAS.map((p) => `<option value="${p}">${t("ed.cu_" + p)}</option>`).join("");
   $("cuPared").innerHTML = I.PAREDES.map((p) => `<option value="${p}">${t("ed.cu_pared_" + p)}</option>`).join("");
   $("cuPlantilla").addEventListener("change", () => elegirPlantilla($("cuPlantilla").value));
   $("cuPared").addEventListener("change", () => cambiar((p) => (p.pared = $("cuPared").value)));
@@ -74,7 +74,8 @@ window.EDITOR_CUARTOS = (function () {
   function pintarPanel() {
     if (!cuarto) return;
     $("cuPlantilla").value = pl;
-    const sot = pl.startsWith("sot_");
+    pintarCabeza();
+    const sot = pl.startsWith("sot_") || cuarto.pared === "sotano";
     $("cuPared").value = cuarto.pared;
     // los sótanos tienen su propia piedra y sus vigas: sin pared, ventana ni estandarte para elegir
     document.querySelectorAll("#cuartos .soloCuarto").forEach((f) => f.classList.toggle("oculto", sot));
@@ -307,7 +308,7 @@ window.EDITOR_CUARTOS = (function () {
     cuarto.muebles.forEach((q) => q.puesto && marco(q, "rgba(255,217,138,0.45)"));
     const q = actual();
     if (q) q.gente ? marco({ id: "", x: q.n.x, y: q.n.y, o: {}, r: 60 }, "#73D5DB") : marco(q.m, "#73D5DB");
-    if (!cuarto.sotano) {
+    if (!cuarto.sotano && !cuarto.sinSalida) {
       c.strokeStyle = "rgba(242,236,236,0.25)";
       c.setLineDash([6, 6]);
       c.lineWidth = 2;
@@ -315,9 +316,344 @@ window.EDITOR_CUARTOS = (function () {
     }
     c.restore();
   }
+  // ---------- los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos ----------
+  // Cada plantilla y cada casa de varios cuartos tiene un nombre que se ve arriba y se cambia escribiendo. Duplicar arma
+  // una variación (de una plantilla: una casa nueva de un cuarto con lo mismo; de una casa: otra casa igual); Copiar y
+  // Pegar pasan lo cambiado de un cuarto a otro. Las casas que el juego arma solas (auto_x_y) se guardan al tocarlas.
+  const esPlano = (p) => (p || pl).startsWith("plano:");
+  const partes = (p) => {
+    const [, id, n] = (p || pl).split(":");
+    return { id, n: +n || 0 };
+  };
+  const planoDe = (p) => (E.est().casas || {})[partes(p).id] || I.plano(partes(p).id);
+  // un plano que el juego arma solo pasa a lo guardado la primera vez que se cambia
+  const asegurarPlano = (est, id) => {
+    est.casas = est.casas || {};
+    if (!est.casas[id]) est.casas[id] = JSON.parse(JSON.stringify(I.plano(id)));
+    return est.casas[id];
+  };
+  const nombrePlantilla = (p) => {
+    if (esPlano(p)) {
+      const pd = planoDe(p);
+      return pd ? pd.nombre || partes(p).id : p;
+    }
+    const n = ((E.est().cuartos || {})[p] || {}).nombre;
+    return n || t("ed.cu_" + p);
+  };
+  const nombreCuarto = (pd, n) => (n + 1) + ". " + t("in.clase_" + ((pd.cuartos[n] || {}).clase || "sala"));
+  let firmaLista = "";
+  function llenarPlantillas() {
+    const casas = E.est().casas || {},
+      extra = esPlano() && !casas[partes().id] ? { [partes().id]: I.plano(partes().id) } : {};
+    const todas = Object.assign({}, casas, extra);
+    const f = JSON.stringify([Object.keys(todas).map((k) => [k, todas[k] && todas[k].nombre, todas[k] && todas[k].cuartos.map((c) => c.clase)]), Object.keys(E.est().cuartos || {}).map((k) => (E.est().cuartos[k] || {}).nombre || ""), I18N.lang]);
+    if (f === firmaLista) return;
+    firmaLista = f;
+    const esc = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    let h = `<optgroup label="${esc(t("ed.cu_plantillas"))}">` + I.PLANTILLAS.map((p) => `<option value="${p}">${esc(nombrePlantilla(p))}</option>`).join("") + "</optgroup>";
+    Object.keys(todas).forEach((id) => {
+      const pd = todas[id];
+      if (!pd) return;
+      h += `<optgroup label="${esc(pd.nombre || id)}">` + pd.cuartos.map((c, n) => `<option value="plano:${id}:${n}">${esc((pd.nombre || id) + " · " + nombreCuarto(pd, n))}</option>`).join("") + "</optgroup>";
+    });
+    $("cuPlantilla").innerHTML = h;
+    $("cuPlantilla").value = pl;
+  }
+  function pintarCabeza() {
+    const pd = esPlano() && planoDe();
+    if (document.activeElement !== $("cuNombre")) $("cuNombre").value = nombrePlantilla(pl);
+    $("cuQue").textContent = pd ? t("ed.cu_que_plano", [nombreCuarto(pd, partes().n), pd.cuartos.length]) : pl.startsWith("sot_") ? t("ed.cu_que_sotano") : t("ed.cu_que_plantilla");
+    $("cuPlano").classList.toggle("oculto", !pd);
+    document.querySelectorAll("#cuartos .soloPlano").forEach((f) => f.classList.toggle("oculto", !pd));
+    $("cuGenOtra").disabled = !pd;
+    if (pd) dibujarPlano(pd);
+  }
+  $("cuNombre").addEventListener("change", () => {
+    const v = $("cuNombre").value.trim().slice(0, 60);
+    if (esPlano()) {
+      const id = partes().id;
+      E.cambiar((est) => (asegurarPlano(est, id).nombre = v || t("in.plano_nombre", [planoDe().cuartos.length])));
+    } else cambiar((p) => (v && v !== t("ed.cu_" + pl) ? (p.nombre = v) : delete p.nombre));
+    firma = "";
+    firmaLista = "";
+    E.avisar(t("ed.cu_nombre_ok", [nombrePlantilla(pl)]));
+  });
+  $("cuNombre").addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") $("cuNombre").blur();
+    if (e.key === "Escape") ($("cuNombre").value = nombrePlantilla(pl)), $("cuNombre").blur();
+  });
+  const nuevoId = () => "c" + Date.now().toString(36) + Math.floor(Math.random() * 36 * 36).toString(36);
+  // «Casa del herrero» → «Casa del herrero 2» (o el número que siga libre)
+  const otroNombre = (n) => {
+    const usados = new Set(Object.values(E.est().casas || {}).map((c) => c.nombre));
+    const base = String(n).replace(/ \d+$/, "");
+    for (let i = 2; ; i++) if (!usados.has(base + " " + i)) return base + " " + i;
+  };
+  $("cuDuplicar").onclick = () => {
+    const id = nuevoId();
+    E.cambiar((est) => {
+      est.casas = est.casas || {};
+      est.cuartos = est.cuartos || {};
+      if (esPlano()) {
+        const viejo = partes().id,
+          pd = JSON.parse(JSON.stringify(planoDe()));
+        pd.nombre = otroNombre(pd.nombre || viejo);
+        delete pd.en;
+        est.casas[id] = pd;
+        pd.cuartos.forEach((c, n) => est.cuartos["plano:" + viejo + ":" + n] && (est.cuartos["plano:" + id + ":" + n] = JSON.parse(JSON.stringify(est.cuartos["plano:" + viejo + ":" + n]))));
+      } else {
+        // una plantilla duplicada es una casa nueva de un cuarto, con lo mismo y sin seguir los cambios de la plantilla
+        est.casas[id] = { nombre: otroNombre(nombrePlantilla(pl)), sem: 0.01, cuartos: [{ clase: pl.startsWith("sot_") ? "secreto" : "entrada", pared: cuarto.pared, sem: 0.01, base: pl, propio: true }], uniones: [] };
+        if (est.cuartos[pl]) {
+          const copia = JSON.parse(JSON.stringify(est.cuartos[pl]));
+          delete copia.nombre;
+          est.cuartos["plano:" + id + ":0"] = copia;
+        }
+      }
+    });
+    elegirPlantilla("plano:" + id + ":" + (esPlano() ? partes().n : 0));
+    E.avisar(t("ed.cu_duplicado", [nombrePlantilla(pl)]));
+  };
+  // copiar y pegar lo cambiado de un cuarto (queda en el navegador para pegarlo también en otra pestaña)
+  const CLAVE_COPIA = "eromash-editor-cuarto-copia";
+  $("cuCopiar").onclick = () => {
+    const v = JSON.parse(JSON.stringify(cf() || { cambios: {}, poner: [] }));
+    delete v.nombre;
+    try {
+      localStorage.setItem(CLAVE_COPIA, JSON.stringify({ de: nombrePlantilla(pl), v }));
+    } catch (e) {}
+    E.avisar(t("ed.cu_copiado", [nombrePlantilla(pl)]));
+  };
+  $("cuPegar").onclick = () => {
+    let c0 = null;
+    try {
+      c0 = JSON.parse(localStorage.getItem(CLAVE_COPIA) || "null");
+    } catch (e) {}
+    if (!c0) return E.avisar(t("ed.cu_nada_copiado"));
+    cambiar((p) => {
+      const nom = p.nombre;
+      Object.keys(p).forEach((x) => delete p[x]);
+      Object.assign(p, JSON.parse(JSON.stringify(c0.v)), { cambios: c0.v.cambios || {}, poner: c0.v.poner || [] });
+      if (nom) p.nombre = nom;
+    });
+    elegido = null;
+    E.avisar(t("ed.cu_pegado", [c0.de, nombrePlantilla(pl)]));
+  };
+  $("cuAsignar").onclick = () => {
+    const casa = E.casaElegida && E.casaElegida();
+    if (!casa || !(casa.id === "casaNordica" || casa.id === "casaEikholt")) return E.avisar(t("ed.cu_asignar_no"));
+    const id = partes().id;
+    E.cambiar((est) => asegurarPlano(est, id));
+    if (casa.id === "casaNordica" && !casa.o.entra) E.cambiarElegida("entra", true);
+    E.cambiarElegida("plano", id);
+    E.avisar(t("ed.cu_asignado", [nombrePlantilla(pl)]));
+  };
+  $("cuPonerCasa").onclick = () => {
+    const id = partes().id;
+    E.cambiar((est) => asegurarPlano(est, id));
+    E.aplicar({ poner: [{ id: "casaNordica", x: Math.round(E.cam.x), y: Math.round(E.cam.y), o: { entra: true, plano: id, sem: Math.round(Math.random() * 1000) / 1000 } }] });
+    cerrar();
+    E.avisar(t("ed.cu_casa_puesta", [nombrePlantilla(pl)]));
+  };
+  $("cuBorrarPlano").onclick = () => {
+    const id = partes().id;
+    if (!(E.est().casas || {})[id] || !confirm(t("ed.cu_borrar_seguro", [nombrePlantilla(pl)]))) return;
+    E.cambiar((est) => {
+      delete est.casas[id];
+      Object.keys(est.cuartos || {}).forEach((k) => k.startsWith("plano:" + id + ":") && delete est.cuartos[k]);
+    });
+    elegirPlantilla("casa_0");
+  };
+
+  // ---------- el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste ----------
+  let cajas = [];
+  function dibujarPlano(pd) {
+    const cvp = $("cuPlano"),
+      g = cvp.getContext("2d"),
+      W0 = cvp.width,
+      H0 = cvp.height;
+    // por niveles desde la entrada
+    const nivel = pd.cuartos.map(() => -1);
+    nivel[0] = 0;
+    for (let vuelta = 0; vuelta < pd.cuartos.length; vuelta++)
+      (pd.uniones || []).forEach((u) => {
+        if (nivel[u.a] >= 0 && nivel[u.b] < 0) nivel[u.b] = nivel[u.a] + 1;
+        if (nivel[u.b] >= 0 && nivel[u.a] < 0) nivel[u.a] = nivel[u.b] + 1;
+      });
+    const filas = {};
+    nivel.forEach((l, i) => (filas[Math.max(0, l)] = filas[Math.max(0, l)] || []).push(i));
+    const nf = Object.keys(filas).length,
+      bw = Math.min(190, (W0 - 40) / Math.max(1, nf) - 24),
+      bh = 64;
+    cajas = [];
+    Object.keys(filas).forEach((l) => {
+      const f = filas[l];
+      f.forEach((i, k) => {
+        const x = 20 + l * ((W0 - 40 - bw) / Math.max(1, nf - 1 || 1)),
+          y = (H0 / (f.length + 1)) * (k + 1) - bh / 2;
+        cajas[i] = { x: nf === 1 ? W0 / 2 - bw / 2 : x, y, w: bw, h: bh };
+      });
+    });
+    g.fillStyle = "#141010";
+    g.fillRect(0, 0, W0, H0);
+    (pd.uniones || []).forEach((u) => {
+      const a = cajas[u.a],
+        b = cajas[u.b];
+      if (!a || !b) return;
+      g.save();
+      g.strokeStyle = u.secreto ? "#73D5DB" : "#C9A45A";
+      g.lineWidth = 4;
+      if (u.secreto) g.setLineDash([10, 8]);
+      g.beginPath();
+      g.moveTo(a.x + a.w / 2, a.y + a.h / 2);
+      g.lineTo(b.x + b.w / 2, b.y + b.h / 2);
+      g.stroke();
+      g.restore();
+    });
+    const actual0 = partes().n;
+    pd.cuartos.forEach((c, i) => {
+      const b = cajas[i];
+      if (!b) return;
+      g.fillStyle = i === actual0 ? "#9C2315" : c.clase === "secreto" ? "#1E2A2C" : "#2A1E1A";
+      g.fillRect(b.x, b.y, b.w, b.h);
+      g.strokeStyle = i === actual0 ? "#FFD98A" : c.clase === "secreto" ? "#73D5DB" : "#4A3630";
+      g.lineWidth = 2;
+      g.strokeRect(b.x, b.y, b.w, b.h);
+      g.fillStyle = "#F2ECEC";
+      g.textAlign = "center";
+      g.textBaseline = "middle";
+      // el nombre corto, achicado hasta que entre en su cuadro
+      const txt = (i + 1) + ". " + t("in.clase_" + c.clase).replace(/^(la|el|los|las|the)\s+/i, "");
+      let fs = 26;
+      do g.font = "600 " + fs + "px system-ui, sans-serif";
+      while (g.measureText(txt).width > b.w - 10 && --fs > 13);
+      g.fillText(txt, b.x + b.w / 2, b.y + b.h / 2);
+      if (i === 0) {
+        g.fillStyle = "#E8DCA8";
+        g.fillRect(b.x + 6, b.y + b.h - 6, 30, 4);
+      }
+    });
+  }
+  $("cuPlano").addEventListener("pointerdown", (e) => {
+    const r = $("cuPlano").getBoundingClientRect(),
+      x = ((e.clientX - r.left) * $("cuPlano").width) / r.width,
+      y = ((e.clientY - r.top) * $("cuPlano").height) / r.height;
+    const i = cajas.findIndex((b) => b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
+    if (i >= 0) elegirPlantilla("plano:" + partes().id + ":" + i);
+  });
+
+  // ---------- el generador de casas: texto o controles → un plano nuevo ----------
+  $("cuGenComo").innerHTML = `<option value="">${t("ed.cu_gen_como_cualquiera")}</option>` + I.COMO.map((c) => `<option value="${c}">${t("ed.cu_gen_como_" + c)}</option>`).join("");
+  $("cuGenPared").innerHTML = `<option value="">${t("ed.cu_gen_pared_cualquiera")}</option>` + I.PAREDES.map((p) => `<option value="${p}">${t("ed.cu_pared_" + p)}</option>`).join("");
+  ["cuGenN", "cuGenS"].forEach((k) => $(k).addEventListener("input", () => ($(k + "V").textContent = $(k).value)));
+  $("cuGenTexto").addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("cuGenOk").click();
+  });
+  // leer el pedido escrito sin IA: números, cuartos por nombre, pasadizos y cómo se esconden
+  const NUM = { un: 1, una: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7 };
+  const PALABRAS = {
+    dormitorio: /dormitor|cama|bedroom|alcoba|dormir/,
+    cocina: /cocina|kitchen|fogón|fogon/,
+    sala: /\bsala\b|salón|salon|\bhall\b|living/,
+    taller: /taller|workshop|forja|telar/,
+    estudio: /estudio|biblioteca|library|study|escritorio/,
+    almacen: /dep[oó]sito|almac[eé]n|despensa|storage|storeroom|bodega/,
+  };
+  function leerPedido(txt) {
+    const s0 = " " + txt.toLowerCase() + " ",
+      op = {};
+    const num = (w) => (/^\d+$/.test(w) ? +w : NUM[w]);
+    const m1 = s0.match(/(\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|one|two|three|four|five|six|seven)\s+(habitaci|cuarto|ambiente|room|pieza)/);
+    const m2 = s0.match(/(\d+|un|una|uno|dos|tres|one|two|three|a|an)\s+(pasadizo|pasaje|paso|cuarto secreto|cuarto escondido|habitaci[oó]n secreta|secret|hidden)/);
+    const hay = /pasadizo|pasaje|secret|escondid|ocult|hidden/.test(s0);
+    const sec = m2 ? num(m2[1]) : hay ? 1 : 0;
+    if (m1) op.normales = num(m1[1]);
+    op.secretos = sec;
+    op.clases = Object.keys(PALABRAS).filter((k) => PALABRAS[k].test(s0));
+    if (/estante|librer|shelf|biblioteca/.test(s0) && hay) op.como = "estante";
+    else if (/tapiz|tapestry|cortina/.test(s0)) op.como = "tapiz";
+    else if (/tablas|muro falso|pared falsa|planks|false wall/.test(s0)) op.como = "tablas";
+    else if (/trampilla|alfombra|s[oó]tano|trapdoor|cellar|abajo/.test(s0)) op.como = "trampilla";
+    if (/piedra|stone/.test(s0)) op.pared = "piedra";
+    else if (/taberna|tavern/.test(s0)) op.pared = "taberna";
+    const q = txt.match(/[«"“]([^»"”]{2,60})[»"”]/);
+    if (q) op.nombre = q[1];
+    return op;
+  }
+  function opcionesGen() {
+    const txt = $("cuGenTexto").value.trim(),
+      op = txt ? leerPedido(txt) : {};
+    if (op.normales) $("cuGenN").value = Math.min(6, op.normales);
+    if (txt) $("cuGenS").value = Math.min(3, op.secretos);
+    if (op.como) $("cuGenComo").value = op.como;
+    if (op.pared) $("cuGenPared").value = op.pared;
+    ["cuGenN", "cuGenS"].forEach((k) => ($(k + "V").textContent = $(k).value));
+    return { cuartos: +$("cuGenN").value + +$("cuGenS").value, secretos: +$("cuGenS").value, clases: op.clases || [], como: $("cuGenComo").value || undefined, pared: $("cuGenPared").value || undefined, nombre: op.nombre, pedido: txt || undefined };
+  }
+  function generar(op, id) {
+    const nuevo = !id;
+    id = id || nuevoId();
+    const viejo = (E.est().casas || {})[id] || (id && I.plano(id));
+    const pd = I.generarPlano(op, Math.random());
+    pd.op = op;
+    if (viejo && !op.nombre) pd.nombre = viejo.nombre;
+    else if (op.nombre) pd.nombre = op.nombre;
+    if (viejo && viejo.en) pd.en = viejo.en;
+    E.cambiar((est) => {
+      est.casas = est.casas || {};
+      est.casas[id] = pd;
+      // otra semilla: lo cambiado a mano en los cuartos viejos ya no calza
+      Object.keys(est.cuartos || {}).forEach((k) => !nuevo && k.startsWith("plano:" + id + ":") && delete est.cuartos[k]);
+    });
+    elegirPlantilla("plano:" + id + ":0");
+    E.avisar(t(nuevo ? "ed.cu_gen_listo" : "ed.cu_gen_otra_listo", [pd.nombre, pd.cuartos.length]));
+  }
+  $("cuGenOk").onclick = () => generar(opcionesGen());
+  $("cuGenOtra").onclick = () => {
+    if (!esPlano()) return;
+    const pd = planoDe();
+    generar(Object.assign({}, pd.op || { cuartos: pd.cuartos.length, secretos: pd.cuartos.filter((c) => c.clase === "secreto").length }, pd.cuartos[0].base ? { base: pd.cuartos[0].base } : {}), partes().id);
+  };
+  // con IA: el pedido libre pasa a las mismas opciones (y lo que no entiende queda en los controles)
+  $("cuGenIA").onclick = async () => {
+    const txt = $("cuGenTexto").value.trim();
+    if (!txt) return E.avisar(t("ed.cu_gen_sin_texto"));
+    const ia = window.EDITOR_IA && EDITOR_IA.elegida();
+    if (!ia || (!ia.clave && ia.quien !== "otra")) return E.avisar(t("ed.cu_gen_sin_clave"));
+    const sistema =
+      "Convertís el pedido de una casa vikinga de un juego en JSON, solo JSON, sin texto alrededor: " +
+      '{"nombre": texto corto en el idioma del pedido, "cuartos": total de cuartos contando los secretos (1 a 7), "secretos": cuartos escondidos (0 a 3), ' +
+      '"clases": lista de los cuartos normales pedidos, de estos: ' + I.CLASES.filter((c) => c !== "entrada" && c !== "secreto").join(", ") + ', "como": cómo se esconden los pasadizos, uno de ' + I.COMO.join(", ") + ' o null, "pared": uno de ' + I.PAREDES.join(", ") + " o null}.";
+    $("cuGenIA").disabled = true;
+    E.avisar(t("ed.cu_gen_pensando"));
+    try {
+      const r = await EDITOR_IA.llamar(ia.quien, ia.modelo, ia.clave, [{ role: "user", content: txt }], sistema);
+      const js = JSON.parse((r.match(/\{[\s\S]*\}/) || ["{}"])[0]);
+      const op = {
+        cuartos: Math.max(1, Math.min(7, +js.cuartos || 3)),
+        secretos: Math.max(0, Math.min(3, +js.secretos || 0)),
+        clases: Array.isArray(js.clases) ? js.clases.filter((c) => I.CLASES.includes(c)) : [],
+        como: I.COMO.includes(js.como) ? js.como : undefined,
+        pared: I.PAREDES.includes(js.pared) ? js.pared : undefined,
+        nombre: typeof js.nombre === "string" ? js.nombre.slice(0, 60) : undefined,
+        pedido: txt,
+      };
+      $("cuGenN").value = Math.min(6, op.cuartos - op.secretos);
+      $("cuGenS").value = op.secretos;
+      ["cuGenN", "cuGenS"].forEach((k) => ($(k + "V").textContent = $(k).value));
+      generar(op);
+    } catch (e) {
+      E.avisar(t("ed.cu_gen_error", [e.message || e]));
+    } finally {
+      $("cuGenIA").disabled = false;
+    }
+  };
+
   // ---------- abrir y cerrar ----------
   function elegirPlantilla(p) {
-    if (I.PLANTILLAS.indexOf(p) < 0) return;
+    if (I.PLANTILLAS.indexOf(p) < 0 && !(p.startsWith("plano:") && planoDe(p))) return;
     pl = p;
     elegido = null;
     firma = "";
@@ -339,5 +675,5 @@ window.EDITOR_CUARTOS = (function () {
     arrastre = null;
     E.pedir();
   }
-  return { abrir, cerrar, abierta, tecla, alternar: () => (abierta() ? cerrar() : abrir()), plantilla: () => pl };
+  return { abrir, cerrar, abierta, tecla, alternar: () => (abierta() ? cerrar() : abrir()), plantilla: () => pl, generar: (op) => generar(op) };
 })();

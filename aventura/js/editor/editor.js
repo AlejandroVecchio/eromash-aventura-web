@@ -36,6 +36,7 @@
     if (!Array.isArray(e.regiones)) e.regiones = [];
     if (!e.piezas || typeof e.piezas !== "object") e.piezas = {};
     if (!e.texturas || typeof e.texturas !== "object") e.texturas = {};
+    if (!e.casas || typeof e.casas !== "object") e.casas = {};
   };
   completar(est);
   // las texturas hechas acá son assets: se suman a la lista antes de armarla
@@ -76,6 +77,7 @@
     $("guardadoV").textContent = t("ed.guardado_a", [String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0"), historial.length]);
     armarIr();
     pintarPendiente();
+    if (window.EDITOR_PLANO) EDITOR_PLANO();
     if (cargarTexturas()) armarLista();
     if (window.EDITOR_TEXTURAS) EDITOR_TEXTURAS.pintarLista();
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
@@ -961,7 +963,9 @@
     $("selEscV").textContent = (+$("selEsc").value).toFixed(2);
     $("selEsp").checked = !!o.esp;
     $("selDos").classList.toggle("oculto", !dos);
-    const pl = window.INTERIORES && INTERIORES.plantillaDe(id, o);
+    const ex = elegida.a ? elegida.a.x : elegida.cosa.x,
+      ey = elegida.a ? elegida.a.y : elegida.cosa.y;
+    const pl = window.INTERIORES && INTERIORES.plantillaDe(id, o, ex, ey);
     $("selInterior").classList.toggle("oculto", !pl);
     $("selInterior").onclick = () => window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(pl);
   }
@@ -2568,19 +2572,28 @@
     const b = leerBorradores();
     $("borradores").innerHTML = `<option value="">${t("ed.borradores")}</option>` + Object.keys(b).sort().map((k) => `<option value="${encodeURIComponent(k)}">${k.replace(/</g, "&lt;")} · ${b[k].fecha || ""}</option>`).join("");
   }
-  $("bBorrador").onclick = () => {
-    const nom = (prompt(t("ed.borrador_nombre")) || "").trim();
-    if (!nom) return;
+  // guarda lo de ahora como borrador con ese nombre (sin preguntar)
+  function guardarBorrador(nom, callado) {
     const b = leerBorradores(),
       h = new Date();
-    b[nom] = { est, fecha: h.toLocaleDateString() + " " + String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0") };
+    b[nom] = { est: JSON.parse(JSON.stringify(est)), fecha: h.toLocaleDateString() + " " + String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0") };
     try {
       localStorage.setItem(CLAVE + "-borradores", JSON.stringify(b));
-      avisar(t("ed.borrador_ok", [nom]));
+      if (!callado) avisar(t("ed.borrador_ok", [nom]));
     } catch (e) {
       avisar(t("ed.borrador_mal"));
     }
     armarBorradores();
+  }
+  $("bBorrador").onclick = () => {
+    const nom = (prompt(t("ed.borrador_nombre"), est.nombre || "") || "").trim();
+    if (!nom) return;
+    if (est.nombre !== nom) {
+      recordar();
+      est.nombre = nom;
+      guardar();
+    }
+    guardarBorrador(nom);
   };
   $("borradores").addEventListener("change", () => {
     const k = decodeURIComponent($("borradores").value);
@@ -2594,6 +2607,74 @@
     guardar();
   });
   armarBorradores();
+
+  // ---------- el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar ----------
+  // Arriba del panel se ve (y se cambia escribiendo) el nombre de lo que se está armando. Duplicar guarda el plano como
+  // borrador con su nombre y sigue en una copia con otro («Eldervald 2»), para probar variaciones sin perder la
+  // original. Copiar lo deja en el portapapeles como texto; Pegar abre un plano copiado (de otro navegador o de otra
+  // persona) y lo de ahora queda en Deshacer.
+  const nombrePlano = () => est.nombre || t("ed.plano_sin_nombre");
+  const otroPlano = (n) => {
+    const usados = new Set(Object.keys(leerBorradores()).concat([est.nombre]));
+    const base = String(n).replace(/ \d+$/, "");
+    for (let i = 2; ; i++) if (!usados.has(base + " " + i)) return base + " " + i;
+  };
+  window.EDITOR_PLANO = () => {
+    if (document.activeElement !== $("planoNombre")) $("planoNombre").value = est.nombre || "";
+    document.title = nombrePlano() + " · " + t("ed.titulo");
+  };
+  $("planoNombre").placeholder = t("ed.plano_sin_nombre");
+  $("planoNombre").title = t("ed.plano_titulo");
+  $("planoNombre").addEventListener("keydown", (e) => {
+    e.stopPropagation();
+    if (e.key === "Enter") $("planoNombre").blur();
+    if (e.key === "Escape") ($("planoNombre").value = est.nombre || ""), $("planoNombre").blur();
+  });
+  $("planoNombre").addEventListener("change", () => {
+    const v = $("planoNombre").value.trim().slice(0, 60);
+    recordar();
+    if (v) est.nombre = v;
+    else delete est.nombre;
+    guardar();
+    avisar(t("ed.plano_nombre_ok", [nombrePlano()]));
+  });
+  $("planoDup").onclick = () => {
+    const viejo = nombrePlano();
+    guardarBorrador(viejo, true);
+    recordar();
+    est.nombre = otroPlano(viejo);
+    guardar();
+    guardarBorrador(est.nombre, true);
+    avisar(t("ed.plano_dup_ok", [viejo, est.nombre]));
+  };
+  $("planoCopiar").onclick = () => {
+    const txt = JSON.stringify({ eromashPlano: 1, est });
+    const manual = () => prompt(t("ed.plano_copiar_manual"), txt);
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(() => avisar(t("ed.plano_copiado", [nombrePlano()])), manual);
+    else manual();
+  };
+  $("planoPegar").onclick = async () => {
+    let txt = "";
+    try {
+      txt = await navigator.clipboard.readText();
+    } catch (e) {}
+    if (!/eromashPlano/.test(txt || "")) txt = prompt(t("ed.plano_pegar_manual")) || "";
+    if (!txt.trim()) return;
+    let j = null;
+    try {
+      j = JSON.parse(txt);
+    } catch (e) {}
+    const nuevo = j && (j.est || j);
+    if (!nuevo || !Array.isArray(nuevo.poner)) return avisar(t("ed.plano_pegar_mal"));
+    if (!confirm(t("ed.plano_pegar_seguro", [nuevo.nombre || t("ed.plano_sin_nombre")]))) return;
+    recordar();
+    est = JSON.parse(JSON.stringify(nuevo));
+    completar(est);
+    if (est.nombre && Object.prototype.hasOwnProperty.call(leerBorradores(), est.nombre)) est.nombre = otroPlano(est.nombre);
+    soltarElegida();
+    guardar();
+    avisar(t("ed.plano_pegado", [nombrePlano()]));
+  };
 
   // ---------- minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí ----------
   const mini = $("mini"),
@@ -2705,7 +2786,7 @@
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.tecla(e)) return e.preventDefault();
-    if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida()) : null);
+    if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida(), (elegida.a || elegida.cosa).x, (elegida.a || elegida.cosa).y) : null);
     // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
     if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
       e.preventDefault();
@@ -2915,7 +2996,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  nombre: " + JSON.stringify(est.nombre || "") + ",\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>\n  casas: " + JSON.stringify(est.casas || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -3000,7 +3081,7 @@
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
     // las piezas son la biblioteca de este navegador: limpiar el mapa no las borra
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {}, texturas: est.texturas || {} };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {}, texturas: est.texturas || {}, casas: est.casas || {} };
     guardar();
   };
 
@@ -3039,6 +3120,15 @@
     ponerHerr,
     girarCamara,
     elegido: () => elegido,
+    // lo elegido en el mapa (para darle un plano a una casa) y cambiar una opción suya con su paso de Deshacer
+    casaElegida: () => (elegida ? { id: elegida.a ? elegida.a.id : elegida.cosa.id, x: (elegida.a || elegida.cosa).x, y: (elegida.a || elegida.cosa).y, o: opcionesElegida() } : null),
+    cambiarElegida: (k, v) => {
+      if (!elegida) return;
+      recordar();
+      cambiarElegida(k, v);
+      guardar();
+      pintarElegida();
+    },
     elegir: (id) => {
       elegido = id;
       variando = null;

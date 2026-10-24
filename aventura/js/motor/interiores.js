@@ -158,7 +158,12 @@ window.INTERIORES = (function () {
   const PLANTILLAS = ["casa_0", "casa_1", "casa_2", "casa_3", "casa_4", "lindes", "herreria", "sanacion", "taberna", "sot_bodega", "sot_archivo", "sot_carbonera", "sot_despensa", "sot_escondite", "sot_viejo"];
   const PAREDES = ["cabana", "taberna", "clara", "piedra"];
   // la plantilla de un edificio del mundo (para abrirla desde el editor)
-  function plantillaDe(id, o) {
+  // con x, y: si la casa tiene un plano de varios cuartos, su primer cuarto
+  function plantillaDe(id, o, x, y) {
+    if (x !== undefined) {
+      const pid = planoDe(id, o, x, y);
+      if (pid) return "plano:" + pid + ":0";
+    }
     const tipo = id === "casaNordica" ? o && o.entra && "casa" : TIPO_DE[id];
     if (!tipo) return null;
     if (tipo !== "casa") return tipo;
@@ -183,7 +188,7 @@ window.INTERIORES = (function () {
   }
   function aplicarCambios(res, plantilla, clave) {
     const todo = fuente || (window.AGREGADOS && AGREGADOS.cuartos),
-      cf = todo && todo[plantilla];
+      cf = saltar === plantilla ? null : todo && todo[plantilla];
     res.plantilla = plantilla;
     const claves = claveMueble(res.muebles);
     res.muebles.forEach((q, i) => (q.clave = claves[i]));
@@ -281,6 +286,260 @@ window.INTERIORES = (function () {
     }
     return aplicarCambios({ muebles: m, gente: [], pared: "sotano", ventana: 0, estandarte: null, repisa: false, sotano: clase }, "sot_" + clase, clave);
   }
+  // ---------- las casas de varios cuartos (planos) ----------
+  // Un plano es { nombre, sem, cuartos: [{ clase, pared, sem, base }], uniones: [{ a, b, secreto, como }] }. El cuarto 0
+  // da a la calle; cada unión es una puerta en la pared del fondo o, si es secreta, algo que la tapa (un estante, un
+  // tapiz, unas tablas flojas o una alfombra sobre una trampilla) y que hay que examinar para encontrar el paso. Del
+  // otro lado el paso se ve siempre. Los planos del editor viven en AGREGADOS.casas[id] (la casa lo toma con o.plano o
+  // por su lugar, en: { x, y }); algunas casas del mundo arman el suyo con su semilla. Cada cuarto es la plantilla
+  // "plano:<id>:<n>", así se edita como cualquier otro cuarto con la pestaña Interiores.
+  const CLASES = ["entrada", "sala", "dormitorio", "cocina", "taller", "estudio", "almacen", "secreto"];
+  const COMO = ["estante", "tapiz", "tablas", "trampilla"];
+  const RUNA_CLASE = { entrada: "raidho", sala: "gebo", dormitorio: "berkano", cocina: "jera", taller: "tiwaz", estudio: "ansuz", almacen: "fehu", secreto: "perthro" };
+  const RANURAS = [800, 1270, 330, 560, 1040];
+  let fuentePlanos = null,
+    saltar = null;
+  const autos = {};
+  const planosDe = () => fuentePlanos || (window.AGREGADOS && AGREGADOS.casas) || {};
+  const plano = (id) => planosDe()[id] || autos[id] || null;
+  // arma un plano nuevo: op = { cuartos, secretos, clases: [...], como, pared, nombre, base }
+  function generarPlano(op, sem) {
+    op = op || {};
+    const r = DIB.azar(Math.round((sem || 0) * 100000) + 4111);
+    const n = Math.max(1, Math.min(7, op.cuartos || 2 + Math.floor(r() * 3)));
+    const sec = Math.max(0, Math.min(n - 1, op.secretos != null ? op.secretos : r() < 0.5 ? 1 : 0));
+    const pedidas = (op.clases || []).filter((c) => CLASES.includes(c) && c !== "secreto" && c !== "entrada");
+    const pool = ["dormitorio", "cocina", "sala", "taller", "estudio", "almacen", "dormitorio"];
+    const pared = op.pared || ["cabana", "cabana", "clara", "taberna"][Math.floor(r() * 4)];
+    const cuartos = [{ clase: "entrada", pared, sem: Math.round(r() * 1000) / 1000 }];
+    if (op.base) cuartos[0].base = op.base;
+    for (let i = 1; i < n - sec; i++) cuartos.push({ clase: pedidas[i - 1] || pool[Math.floor(r() * pool.length)], pared, sem: Math.round(r() * 1000) / 1000 });
+    const uniones = [],
+      pared0 = cuartos.map(() => 0),
+      piso0 = cuartos.map(() => 0);
+    const unir = (b, secreto, como) => {
+      // a qué cuarto anterior se pega: uno con lugar en la pared (o en el piso, para la trampilla)
+      const ok = [];
+      for (let a = 0; a < b; a++) if (cuartos[a].clase !== "secreto" && (como === "trampilla" ? piso0[a] < 1 : pared0[a] < 3)) ok.push(a);
+      const a = ok.length ? ok[Math.floor(r() * ok.length)] : 0;
+      if (como === "trampilla") piso0[a]++;
+      else pared0[a]++;
+      pared0[b]++;
+      uniones.push(secreto ? { a, b, secreto: true, como } : { a, b });
+    };
+    for (let b = 1; b < cuartos.length; b++) unir(b, false);
+    for (let i = 0; i < sec; i++) {
+      const como = COMO.includes(op.como) ? op.como : COMO[Math.floor(r() * COMO.length)];
+      cuartos.push({ clase: "secreto", pared: como === "trampilla" ? "sotano" : r() < 0.5 ? "piedra" : pared, sem: Math.round(r() * 1000) / 1000 });
+      unir(cuartos.length - 1, true, como);
+    }
+    return { nombre: op.nombre || t("in.plano_nombre", [cuartos.length]), sem: Math.round((sem || 0) * 1000) / 1000, cuartos, uniones };
+  }
+  // qué plano usa una casa: el que dice o.plano, uno del editor puesto en su lugar o, en una de cada tres casas, uno
+  // armado con su semilla (siempre el mismo, con la casa de siempre como primer cuarto). o.sinPlano: un solo cuarto.
+  function planoDe(id, o, x, y) {
+    o = o || {};
+    if ((id === "casaNordica" ? !o.entra : TIPO_DE[id] !== "casa") || o.sinPlano) return null;
+    if (o.plano && plano(o.plano)) return o.plano;
+    const cerca = Object.entries(planosDe()).find(([, pl]) => pl.en && Math.hypot(pl.en.x - x, pl.en.y - y) < 80);
+    if (cerca) return cerca[0];
+    const sem = o.sem || Math.abs(x * 0.0013 + y * 0.0007) % 1;
+    if (DIB.azar(Math.round(sem * 10000) + 313)() >= 0.35) return null;
+    const pid = "auto_" + Math.round(x) + "_" + Math.round(y);
+    if (!autos[pid]) autos[pid] = generarPlano({ base: plantillaDe(id, o) }, sem);
+    return pid;
+  }
+  // el cuarto n de un plano. pk: la clave del plano (lo encontrado se guarda por plano, no por cuarto)
+  function armarPlanoCuarto(pid, pl, n, pk, editor) {
+    const cu = pl.cuartos[n] || pl.cuartos[0],
+      clave = pk + "_" + n,
+      sotano = cu.pared === "sotano";
+    const rs = DIB.azar(Math.round((cu.sem || 0) * 100000) + n * 37 + 1);
+    let res;
+    if (cu.base) {
+      // un cuarto armado sobre una plantilla; «propio» (una variación duplicada) no toma lo cambiado en la plantilla
+      const ed = { o: { sem: cu.sem || 0.01, v: +String(cu.base).slice(5) || 0 } };
+      saltar = cu.propio ? cu.base : null;
+      try {
+        res = String(cu.base).startsWith("sot_") ? armarSotano("casa", ed, clave, cu.base.slice(4)) : armarCuarto(cu.base.startsWith("casa_") ? "casa" : cu.base, ed, clave, editor);
+      } finally {
+        saltar = null;
+      }
+    } else res = { muebles: [], gente: [], pared: sotano ? "sotano" : cu.pared || "cabana", ventana: 0, estandarte: null, repisa: false, sotano: sotano ? "viejo" : undefined };
+    const m = res.muebles;
+    const mueble = (id, x, y, o, r, accion, fn) => {
+      const q = { id, x, y, o: Object.assign({ s: 1 }, o), r, accion, fn };
+      m.push(q);
+      return q;
+    };
+    const examinar = (k) => () => A.dialogoLibre([["eromash", k]]);
+    // ---- los pasos a los otros cuartos ----
+    const pared = () => m.filter((q) => !q.piso && q.y < FONDO + 80);
+    const ranura = () => {
+      const libre = RANURAS.find((x) => !pared().some((q) => Math.abs(q.x - x) < (q.r || 80) + 80));
+      return libre != null ? libre : RANURAS[pared().length % RANURAS.length];
+    };
+    const ir = (b, ui) => () => irA(b, ui);
+    const nombreCuarto = (b) => t("in.clase_" + ((pl.cuartos[b] || {}).clase || "sala"));
+    (pl.uniones || []).forEach((u, ui) => {
+      if (u.a !== n && u.b !== n) return;
+      const lado = u.a === n ? "a" : "b",
+        otro = lado === "a" ? u.b : u.a,
+        k = pk + "_u" + ui,
+        abierto = editor || !!st.cofres[k];
+      const marcar = (q) => ((q.union = ui), (q.acceso = true), q);
+      if (!u.secreto) {
+        const q = marcar(mueble("puertaInterior", ranura(), FONDO + 6, { runa: RUNA_CLASE[(pl.cuartos[otro] || {}).clase] }, 90, null, ir(otro, ui)));
+        q.etiqueta = () => t("in.accion_ir", [nombreCuarto(otro)]);
+        return;
+      }
+      if (lado === "b") {
+        // del lado de adentro el paso se ve siempre
+        if (u.como === "trampilla") marcar(mueble("escaleraMano", 300, FONDO + 8, {}, 80, "in.accion_subir", ir(otro, ui)));
+        else marcar(mueble("pasoSecreto", ranura(), FONDO + 4, {}, 90, "in.accion_paso", ir(otro, ui)));
+        return;
+      }
+      const encontrar = (q, fn) => {
+        if (st.cofres[k]) return;
+        st.cofres[k] = true;
+        if (window.SONIDO) SONIDO.tocar("crujido", { vol: 0.8 });
+        HUD.aviso(t("in.pasadizo"), "#73D5DB");
+        fn();
+      };
+      if (u.como === "trampilla") {
+        const libres = [[1060, 760], [560, 760], [820, 840]].filter(([x, y]) => !m.some((q) => Math.abs(q.x - x) < (q.r || 80) + 90 && Math.abs(q.y - y) < 90));
+        const [tx, ty] = libres[0] || [1060, 760];
+        const tr = marcar(mueble("trampilla", tx, ty, { abierta: abierto }, 100, null, (q) => (q.o.abierta ? irA(otro, ui) : ((q.o.abierta = true), (st.cofres[k + "_t"] = true)))));
+        tr.piso = true;
+        tr.texto = (q) => (q.o.abierta ? "in.accion_bajar" : "in.accion_trampilla");
+        if (!abierto) {
+          tr.o.abierta = !!st.cofres[k + "_t"];
+          const al = mueble("alfombra", tx, ty + 8, { s: 0.62, pista: true }, 130, "in.accion_alfombra", (q) =>
+            encontrar(q, () => {
+              q.o.movida = true;
+              q.o.s = 0.5;
+              q.x = tr.x - 190;
+              q.fn = null;
+              tr.tapada = null;
+            }),
+          );
+          al.piso = true;
+          tr.tapada = al;
+        } else mueble("alfombra", tx - 190, ty + 8, { s: 0.5, movida: true }, 0).piso = true;
+        return;
+      }
+      const x = ranura();
+      const paso = marcar(mueble("pasoSecreto", x, FONDO + 2, {}, 90, "in.accion_paso", null));
+      const abrir = () => (paso.fn = ir(otro, ui));
+      if (abierto) abrir();
+      if (u.como === "estante") {
+        const e = mueble("estanteRollos", abierto ? x + 190 : x, FONDO + 10, { s: 0.9, sem: cu.sem }, abierto ? 120 : 140, "in.accion_rollos", null);
+        if (!abierto) e.fn = (q) => encontrar(q, () => ((q.x += 190), (q.r = 120), (q.fn = null), abrir()));
+      } else if (u.como === "tapiz") {
+        const e = mueble("tapizPared", x, FONDO + 3, { corrido: abierto }, 0, "in.accion_tapiz", null);
+        if (!abierto) e.fn = (q) => encontrar(q, () => ((q.o.corrido = true), (q.fn = null), abrir()));
+      } else {
+        // las tablas flojas tapan el hueco hasta que se arrancan: el paso queda detrás del muro falso
+        paso.id = "muroFalso";
+        paso.oculto = !abierto;
+        if (!abierto) {
+          const e = mueble("tablasFlojas", x, FONDO + 3, {}, 0, "in.accion_tablas", null);
+          e.fn = (q) => encontrar(q, () => ((paso.oculto = false), (q.oculto = true), (q.fn = null), abrir()));
+        }
+      }
+    });
+    // ---- los muebles de cada clase, donde no estorben los pasos ----
+    if (!cu.base) amueblar(res, cu, clave, rs, mueble, examinar);
+    if (!sotano && !cu.base) {
+      const libre = (x) => !pared().some((q) => Math.abs(q.x - x) < (q.r || 80) + 140);
+      res.ventana = cu.clase === "secreto" ? 0 : [1150, 560, 1380, 300].find(libre) || 0;
+      if (cu.clase === "sala" || (cu.clase === "entrada" && rs() < 0.5)) res.estandarte = [560, 1040, 1270].find((x) => libre(x) && Math.abs(x - res.ventana) > 260) || null;
+      res.repisa = cu.clase === "estudio";
+    }
+    res.muebles = m;
+    return aplicarCambios(res, "plano:" + pid + ":" + n, clave);
+  }
+  // los muebles por clase: [id, en la pared, probabilidad]
+  const RECETAS = {
+    entrada: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["armero", 1, 0.5], ["barriles", 1, 0.5], ["arconCasa", 0, 0.3]],
+    sala: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["mesaBanco", 0, 0.7], ["estanteRollos", 1, 0.4], ["barriles", 1, 0.4]],
+    dormitorio: [["camaPieles", 0, 1], ["arconCasa", 0, 0.8], ["telar", 1, 0.5], ["cesto", 0, 0.4], ["hogarPiedra", 1, 0.3]],
+    cocina: [["hogarPiedra", 1, 1], ["barriles", 1, 1], ["mesaBanco", 0, 1], ["cantaros", 1, 0.7], ["cesto", 0, 0.7], ["sacos", 0, 0.4]],
+    taller: [["telar", 1, 0.8], ["armero", 1, 0.8], ["yunque", 0, 0.6], ["cajas", 0, 1], ["barriles", 1, 0.4]],
+    estudio: [["escritorioRunico", 0, 1], ["estanteRollos", 1, 1], ["atril", 0, 0.8], ["estanteRollos", 1, 0.4], ["arconCasa", 0, 0.4]],
+    almacen: [["barriles", 1, 1], ["cajas", 0, 1], ["sacos", 0, 0.8], ["cantaros", 1, 0.7], ["cesto", 0, 0.6], ["barriles", 1, 0.5]],
+    secreto: [["cofreSotano", 0, 1], ["atril", 0, 0.8], ["huesos", 1, 0.6], ["estanteRollos", 1, 0.5], ["cajas", 0, 0.5]],
+  };
+  const PIEZA = {
+    hogarPiedra: { r: 150, s: 0.85, dy: 30, accion: "in.accion_hogar" },
+    camaPieles: { r: 210, s: 0.9, accion: "in.accion_cama" },
+    mesaBanco: { r: 170, s: 0.95, accion: "in.accion_mesa", dlg: "in.casa_mesa" },
+    arconCasa: { r: 90, s: 1, accion: "in.accion_arcon" },
+    telar: { r: 120, s: 1, dy: 60, accion: "in.accion_telar", dlg: "in.casa_telar" },
+    barriles: { r: 100, s: 0.8, dy: 40, accion: "in.accion_barriles", dlg: "in.casa_barriles" },
+    armero: { r: 140, s: 0.9, dy: 20, accion: "in.accion_armero", dlg: "in.casa_armero" },
+    estanteRollos: { r: 140, s: 0.9, dy: 10, accion: "in.accion_rollos", dlg: "in.casa_rollos" },
+    escritorioRunico: { r: 260, s: 0.85, accion: "in.accion_escritorio", dlg: "in.casa_escritorio" },
+    atril: { r: 70, s: 1, accion: "in.accion_atril", dlg: "in.casa_atril" },
+    cajas: { r: 110, s: 0.95, accion: "in.accion_cajas", dlg: "in.sot_bodega_cajas" },
+    cesto: { r: 90, s: 1, accion: "in.accion_cesto", dlg: "in.sot_despensa_cesto" },
+    cantaros: { r: 90, s: 1, dy: 30, accion: "in.accion_cantaros", dlg: "in.sot_viejo_cantaros" },
+    sacos: { r: 80, s: 1, accion: "in.accion_sacos", dlg: "in.sot_sacos" },
+    huesos: { r: 110, s: 0.9, dy: 30, accion: "in.accion_huesos", dlg: "in.sot_huesos" },
+    yunque: { r: 80, s: 1.1, accion: "in.accion_yunque", dlg: "in.herreria_yunque" },
+    cofreSotano: { r: 110, s: 1, accion: "in.accion_cofre" },
+  };
+  function amueblar(res, cu, clave, rs, mueble, examinar) {
+    const m = res.muebles;
+    const mezclar = (l) => l.map((v) => [rs(), v]).sort((a, b) => a[0] - b[0]).map((v) => v[1]);
+    const enPared = mezclar([220, 450, 680, 920, 1150, 1380]),
+      enPiso = mezclar([[560, 800], [1080, 800], [820, 865], [330, 860], [1300, 865]]);
+    (RECETAS[cu.clase] || RECETAS.sala).forEach(([id, alPared, p], i) => {
+      if (rs() > p) return;
+      const d = PIEZA[id],
+        r = d.r;
+      let x, y;
+      if (alPared) {
+        x = enPared.find((xx) => !m.some((q) => !q.piso && q.y < FONDO + 80 && Math.abs(q.x - xx) < (q.r || 80) + r + 10) && xx - r > 120 && xx + r < 1480);
+        y = FONDO + (d.dy || 0);
+      } else {
+        const lugar = enPiso.find(([xx, yy]) => !m.some((q) => (q.piso || q.y >= FONDO + 80) && Math.abs(q.x - xx) < (q.r || 80) + r && Math.abs(q.y - yy) < 90));
+        if (lugar) [x, y] = lugar;
+      }
+      if (x == null) return;
+      const k = clave + "_m" + i;
+      let fn = d.dlg ? examinar(d.dlg) : null;
+      const o = { s: d.s };
+      if (id === "camaPieles") fn = dormir;
+      if (id === "hogarPiedra") fn = calentarse;
+      if (id === "cajas") o.vela = rs() < 0.6;
+      if (id === "estanteRollos") o.sem = rs();
+      if (id === "cesto") o.sem = rs() * 3;
+      if (id === "arconCasa") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirArcon(q, k));
+      if (id === "cofreSotano") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirCofre(q, k, cu.clase === "secreto"));
+      if (id === "atril" && cu.clase === "secreto") (o.leido = !!st.cofres[k]), (fn = (q) => leerLibro(q, k, "in.libro_escondite"));
+      else if (id === "atril") o.leido = true;
+      mueble(id, x, y, o, r, d.accion, fn);
+    });
+  }
+  // pasar de un cuarto a otro del mismo plano
+  function cuartoPlano(p, n) {
+    const pl = plano(p.plano);
+    const c0 = armarPlanoCuarto(p.plano, pl, n, p.clave, false);
+    return Object.assign(c0, { n, sinSalida: n > 0, plano: p.plano, clase: pl.cuartos[n].clase });
+  }
+  function irA(n, ui) {
+    const p = dentro.puerta;
+    if (!p || !plano(p.plano)) return;
+    const nuevo = cuartoPlano(p, n);
+    const q = nuevo.muebles.find((m) => m.acceso && m.union === ui);
+    const ix = q ? (q.piso ? q.x + 130 : q.x) : 800,
+      iy = q ? (q.piso ? Math.min(RH - 40, q.y + 30) : FONDO + 120) : 780;
+    dentro = Object.assign(nuevo, { tipo: "plano", puerta: p, ix, iy, fundido: 1, saliendo: 0 });
+    jug.mira = { vista: "S", espejo: false };
+    if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.35 });
+    HUD.aviso(t("in.clase_" + nuevo.clase), "#E0B2B2");
+  }
   function bajar(q) {
     const arriba = dentro;
     arriba.vuelta = { x: q.x + 130, y: Math.min(RH - 40, q.y + 30) };
@@ -337,14 +596,14 @@ window.INTERIORES = (function () {
 
   // ---------- entrar y salir ----------
   function entrar(p) {
-    const cuarto = armarCuarto(p.tipo, p.cosa, p.clave);
+    const cuarto = p.tipo === "plano" ? cuartoPlano(p, 0) : armarCuarto(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(cuarto, { tipo: p.tipo, puerta: p, ix: 240, iy: 830, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;
     jug.atk = null;
     jug.anda = 0;
     jug.mira = { vista: "N", espejo: false };
     if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.45 });
-    HUD.aviso(t("in.nombre_" + p.tipo), "#FFD98A");
+    HUD.aviso(p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : t("in.nombre_" + p.tipo), "#FFD98A");
   }
   function salir() {
     if (!dentro || dentro.saliendo) return;
@@ -416,7 +675,7 @@ window.INTERIORES = (function () {
     const [a, b] = bordes(y);
     if (x < a || x > b) return true;
     for (const q of dentro.muebles) {
-      if (q.piso) continue;
+      if (q.piso || q.oculto) continue;
       const fondo = q.y < FONDO + 80; // los pegados a la pared tapan una franja ancha
       const ry = fondo ? 70 : 34;
       if (Math.abs(x - q.x) < q.r && Math.abs(y - (q.y - 10)) < ry) return true;
@@ -435,22 +694,22 @@ window.INTERIORES = (function () {
       }
     };
     // la puerta, abajo a la izquierda
-    const dp = dentro.sotano ? Infinity : Math.hypot(dentro.ix - 220, dentro.iy - 860);
+    const dp = dentro.sotano || dentro.sinSalida ? Infinity : Math.hypot(dentro.ix - 220, dentro.iy - 860);
     if (dp < 150) prueba(dp, t("in.accion_salir"), salir);
     for (const q of dentro.muebles) {
-      if (!q.fn || q.tapada) continue;
+      if (!q.fn || q.tapada || q.oculto) continue;
       if ((q.id === "arconCasa" || q.id === "cofreSotano") && q.o.abierto) continue;
       if (q.id === "tablaSuelta" && q.o.abierta) continue;
       if (q.piso) {
         const d = Math.hypot(dentro.ix - q.x, (dentro.iy - (q.y - 20)) * 1.4) - q.r * 0.6;
-        if (d < 90) prueba(Math.max(0, d), t(q.texto ? q.texto(q) : q.accion), () => q.fn(q));
+        if (d < 90) prueba(Math.max(0, d), q.etiqueta ? q.etiqueta() : t(q.texto ? q.texto(q) : q.accion), () => q.fn(q));
         continue;
       }
       const fondo = q.y < FONDO + 80,
         dx = Math.max(0, Math.abs(dentro.ix - q.x) - q.r * 0.8),
         dy = fondo ? Math.max(0, dentro.iy - (q.y + 70)) : Math.abs(dentro.iy - q.y);
       const d = Math.hypot(dx, dy);
-      if (d < 110) prueba(d, t(q.accion), () => q.fn(q));
+      if (d < 110) prueba(d, q.etiqueta ? q.etiqueta() : t(q.accion), () => q.fn(q));
     }
     for (const n of dentro.gente) {
       const d = Math.hypot(dentro.ix - n.x, dentro.iy - n.y);
@@ -485,7 +744,7 @@ window.INTERIORES = (function () {
       jug.dir = [e.x / l, e.y / l];
       jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
       // salir caminando por la puerta
-      if (!dentro.sotano && dentro.iy > RH - 50 && dentro.ix < 330 && e.y > 0.5) salir();
+      if (!dentro.sotano && !dentro.sinSalida && dentro.iy > RH - 50 && dentro.ix < 330 && e.y > 0.5) salir();
     }
     jug.anda = mov ? 1 : 0;
     // la gente mira a Eromash
@@ -725,7 +984,7 @@ window.INTERIORES = (function () {
     }
     plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 14, 190, FONDO + 14], "rgba(0,0,0,0.5)");
     // la puerta de salida, abajo a la izquierda: un rectángulo de luz de afuera en el piso
-    DIB.alfa(c, 0.5 + Math.sin(tt * 2) * 0.1, () => plancha(c, [150, RH - 30, 300, RH - 30, 320, RH, 130, RH], "#E8DCA8"));
+    if (!d.sinSalida) DIB.alfa(c, 0.5 + Math.sin(tt * 2) * 0.1, () => plancha(c, [150, RH - 30, 300, RH - 30, 320, RH, 130, RH], "#E8DCA8"));
   }
   function dibujarDentro(c, cw, ch) {
     const d = dentro,
@@ -758,7 +1017,7 @@ window.INTERIORES = (function () {
   function escena(c, d, tt, jugador) {
     dibujarPared(c, d, tt);
     const lista = [];
-    d.muebles.forEach((q) => lista.push({ y: q.piso ? -1 : q.y, f: () => ASSETS.dibujar(c, q.id, q.x, q.y, tt, q.o) }));
+    d.muebles.forEach((q) => !q.oculto && lista.push({ y: q.piso ? -1 : q.y, f: () => ASSETS.dibujar(c, q.id, q.x, q.y, tt, q.o) }));
     d.gente.forEach((n) =>
       lista.push({ y: n.y, f: () => {
         const s = escala(n.y);
@@ -777,17 +1036,25 @@ window.INTERIORES = (function () {
   }
   // para el editor: arma la plantilla con todo a la vista (arcón y trampilla siempre, la alfombra corrida)
   let fuente = null; // en el editor: lo que se está armando, en vez de AGREGADOS
-  function vista(plantilla, cuartos) {
+  function vista(plantilla, cuartos, casas) {
     if (!st) st = { cofres: {} };
     fuente = cuartos || null;
+    fuentePlanos = casas || null;
     try {
       return vista0(plantilla);
     } finally {
       fuente = null;
+      fuentePlanos = null;
     }
   }
   function vista0(plantilla) {
     const ed = { o: { sem: 0.01, v: 0 } };
+    if (plantilla.startsWith("plano:")) {
+      const [, pid, n] = plantilla.split(":"),
+        pl = plano(pid);
+      if (!pl) return armarCuarto("casa", ed, "editor", true);
+      return Object.assign(armarPlanoCuarto(pid, pl, +n || 0, "editor", true), { sinSalida: +n > 0, clase: (pl.cuartos[+n] || {}).clase });
+    }
     if (plantilla.startsWith("sot_")) return armarSotano("casa", ed, "editor", plantilla.slice(4));
     if (plantilla.startsWith("casa_")) return (ed.o.v = +plantilla.slice(5)), armarCuarto("casa", ed, "editor", true);
     return armarCuarto(plantilla, ed, "editor", true);
@@ -881,7 +1148,12 @@ window.INTERIORES = (function () {
       W.COSAS.forEach((o) => {
         const tipo = o.id === "casaNordica" ? o.o.entra && "casa" : TIPO_DE[o.id];
         if (!tipo) return;
-        puertas.push({ cosa: o, tipo, clave: tipo + "_" + n++ });
+        const p = { cosa: o, tipo, clave: tipo + "_" + n++ };
+        if (tipo === "casa") {
+          p.plano = planoDe(o.id, o.o, o.x, o.y);
+          if (p.plano) p.tipo = "plano";
+        }
+        puertas.push(p);
       });
       st = { cofres: {} };
     },
@@ -891,18 +1163,27 @@ window.INTERIORES = (function () {
       dentro = null;
       J.dentro = null;
       // ?cuarto=plantilla (el botón «Probar» del editor de interiores): arranca adentro de ese cuarto
-      const m = location.search.match(/[?&]cuarto=([a-z_0-9]+)/);
+      const m = location.search.match(/[?&]cuarto=([a-zA-Z_0-9:]+)/);
       if (m) setTimeout(() => probar(m[1]), 400);
     },
     cercanos(dar) {
       for (const p of puertas) {
         const d = Math.hypot(p.cosa.x - jug.x, p.cosa.y + 40 - jug.y);
-        if (d < 140) dar(d, t("in.accion_entrar", [t("in.nombre_" + p.tipo)]), () => entrar(p));
+        if (d < 140) dar(d, t("in.accion_entrar", [p.tipo === "plano" ? plano(p.plano).nombre : t("in.nombre_" + p.tipo)]), () => entrar(p));
       }
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   function probar(pl) {
+    if (pl.startsWith("plano:")) {
+      const [, pid, n] = pl.split(":");
+      if (!plano(pid)) return;
+      const casa = puertas.find((q) => q.plano === pid) || puertas.find((q) => q.tipo === "casa" || q.tipo === "plano") || puertas[0];
+      if (!casa) return;
+      entrar(Object.assign({}, casa, { tipo: "plano", plano: pid, clave: casa.plano === pid ? casa.clave : "prueba_" + pid }));
+      if (+n > 0) irA(+n, -1);
+      return;
+    }
     const sot = pl.startsWith("sot_"),
       clase = pl.slice(4);
     const p =
@@ -929,5 +1210,5 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, entrar, salirA, adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe };
+  return { puertas, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe };
 })();
