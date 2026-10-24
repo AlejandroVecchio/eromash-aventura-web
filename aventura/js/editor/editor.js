@@ -152,7 +152,7 @@
       const m = est.mover[i];
       if (!m || m.nx < x0 - 400 || m.nx > x1 + 400 || m.ny < y0 - 60 || m.ny > y1 + 900) return;
       const op = Object.assign({}, o.o, m.o || {});
-      if (op.x2 !== undefined) (op.x2 += m.nx - o.x), (op.y2 += m.ny - o.y);
+      if (op.x2 !== undefined && !(m.o && m.o.x2 !== undefined)) (op.x2 += m.nx - o.x), (op.y2 += m.ny - o.y);
       const md = m.o ? ASSETS.medidas(o.id, op) : o;
       l.push({ id: o.id, x: m.nx, y: m.ny, o: op, alto: md.alto, choque: md.choque, cosa: o, movido: i, piso: !!o.o.piso });
     });
@@ -546,10 +546,12 @@
     $("selTipo").textContent = hist ? t("ed.de_historia", [hist]) : elegida.a ? t("ed.sel_agregado", [hijosDe(elegida.a.u || "-").length]) : t("ed.sel_mundo", [hijosDe(claveDe(elegida.cosa)).length]);
     const dos = o.x2 !== undefined;
     deslizadores.forEach(([el, k, base]) => {
-      $(el).value = o[k] || base;
+      $(el).value = dos ? (k === "rot" ? anguloDos() : base) : o[k] || base;
       $(el + "V").textContent = k === "rot" ? Math.round(+$(el).value) + "°" : (+$(el).value).toFixed(2);
-      $(el).disabled = dos;
+      // lo que va de punta a punta: el tamaño es su largo y el giro lo da vuelta sobre su centro
+      $(el).disabled = dos && (k === "ex" || k === "ey");
     });
+    escPrevio = 1;
     $("selEsp").checked = !!o.esp;
     $("selDos").classList.toggle("oculto", !dos);
   }
@@ -559,10 +561,61 @@
     $(el).addEventListener("input", () => {
       const v = +$(el).value;
       $(el + "V").textContent = k === "rot" ? Math.round(v) + "°" : v.toFixed(2);
+      if (esDos() && k === "rot") return girarDos(v);
+      if (esDos() && k === "esc") {
+        estirarDos(v / escPrevio);
+        escPrevio = v;
+        return;
+      }
       cambiarElegida(k, v, Math.abs(v - base) < 0.001);
     });
     $(el).addEventListener("change", guardar);
   });
+  // lo que va de punta a punta (cercos, muralla, puentes): sus dos puntas, en lo agregado (x, y → o.x2, o.y2) o en su
+  // entrada de est.mover (nx, ny → o.x2, o.y2, ya en su lugar final)
+  let escPrevio = 1;
+  const esDos = () => elegida && opcionesElegida().x2 !== undefined;
+  function puntasDos() {
+    if (elegida.a) {
+      const a = elegida.a;
+      return { a: [a.x, a.y], b: [a.o.x2, a.o.y2], fijar: (p, q) => ((a.x = r1(p[0])), (a.y = r1(p[1])), (a.o.x2 = r1(q[0])), (a.o.y2 = r1(q[1]))) };
+    }
+    const cosa = elegida.cosa,
+      m = entrada(true),
+      b = m.o && m.o.x2 !== undefined ? [m.o.x2, m.o.y2] : [cosa.o.x2 + m.nx - cosa.x, cosa.o.y2 + m.ny - cosa.y];
+    return {
+      a: [m.nx, m.ny],
+      b,
+      fijar: (p, q) => {
+        correrHijos(hijosDe(claveDe(cosa)), r1(p[0]) - m.nx, r1(p[1]) - m.ny);
+        m.nx = r1(p[0]);
+        m.ny = r1(p[1]);
+        m.o = Object.assign(m.o || {}, { x2: r1(q[0]), y2: r1(q[1]) });
+      },
+    };
+  }
+  function anguloDos() {
+    const { a, b } = puntasDos();
+    return Math.round((Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI);
+  }
+  function girarDos(grados) {
+    cambiarElegida("rot", 0, true); // el giro de un objeto suelto no va acá
+    const { a, b, fijar } = puntasDos(),
+      cx = (a[0] + b[0]) / 2,
+      cy = (a[1] + b[1]) / 2,
+      l = Math.hypot(b[0] - a[0], b[1] - a[1]) / 2,
+      ang = (grados * Math.PI) / 180,
+      dx = Math.cos(ang) * l,
+      dy = Math.sin(ang) * l;
+    fijar([cx - dx, cy - dy], [cx + dx, cy + dy]);
+  }
+  function estirarDos(f) {
+    const { a, b, fijar } = puntasDos(),
+      cx = (a[0] + b[0]) / 2,
+      cy = (a[1] + b[1]) / 2;
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) * f < 20) return;
+    fijar([cx + (a[0] - cx) * f, cy + (a[1] - cy) * f], [cx + (b[0] - cx) * f, cy + (b[1] - cy) * f]);
+  }
   $("selEsp").addEventListener("change", () => {
     recordar();
     cambiarElegida("esp", true, !$("selEsp").checked);
@@ -572,6 +625,8 @@
     if (!elegida) return;
     recordar();
     ["esc", "ex", "ey", "esp", "rot"].forEach((k) => cambiarElegida(k, 0, true));
+    const m = elegida.cosa && entrada(false);
+    if (m && m.o) delete m.o.x2, delete m.o.y2;
     guardar();
     pintarElegida();
   };
@@ -590,6 +645,24 @@
       const es = elegida.a ? d.agregado != null && est.poner[d.agregado] === elegida.a : d.cosa === elegida.cosa;
       const hijo = d.agregado != null && k && est.poner[d.agregado].pegado === k;
       if (!es && !hijo) return;
+      if (d.o && d.o.x2 !== undefined) {
+        // lo que va de punta a punta: una línea punteada de punta a punta, con un punto en cada una
+        c.save();
+        c.strokeStyle = c.fillStyle = es ? "#FFD98A" : "rgba(255,217,138,0.6)";
+        c.lineWidth = (es ? 2.5 : 1.5) / cam.z;
+        c.setLineDash([10 / cam.z, 6 / cam.z]);
+        c.beginPath();
+        c.moveTo(d.x, d.y + 12);
+        c.lineTo(d.o.x2, d.o.y2 + 12);
+        c.stroke();
+        [[d.x, d.y], [d.o.x2, d.o.y2]].forEach(([x, y]) => {
+          c.beginPath();
+          c.arc(x, y + 12, 6 / cam.z, 0, Math.PI * 2);
+          c.fill();
+        });
+        c.restore();
+        return;
+      }
       const w = d.choque ? (d.choque.w ? d.choque.w : d.choque.r * 2) + 30 : 70 * ((d.o && d.o.esc) || 1),
         h = Math.min(d.alto, 900) + 20;
       c.save();
@@ -1079,6 +1152,12 @@
     let mejor = null,
       dm = Infinity;
     l.forEach((d) => {
+      // lo que va de punta a punta se toca en todo su largo
+      if (d.o && d.o.x2 !== undefined) {
+        const dist = distSeg(x, y, d.x, d.y - 30, d.o.x2, d.o.y2 - 30) - (d.agregado != null ? 30 : 0);
+        if (dist < 70 && dist < dm) (dm = dist), (mejor = d);
+        return;
+      }
       const s = (d.o && d.o.s) || 1,
         ancho = d.choque ? (d.choque.w ? d.choque.w / 2 : d.choque.r) + 20 : 40 * s,
         alto = Math.min(d.alto, 400);
@@ -1118,6 +1197,7 @@
       const nx = r1(x - sel.dx),
         ny = r1(y - sel.dy);
       correrHijos(sel.hijos, nx - m.nx, ny - m.ny);
+      if (m.o && m.o.x2 !== undefined) (m.o.x2 += nx - m.nx), (m.o.y2 += ny - m.ny);
       m.nx = nx;
       m.ny = ny;
     } else if (sel && sel.mueve) {
@@ -1340,7 +1420,12 @@
       guardar();
       pintarElegida();
     }
-    if (elegida && (e.key === "q" || e.key === "e" || e.key === "Q" || e.key === "E")) {
+    if (elegida && esDos() && (e.key === "q" || e.key === "e" || e.key === "Q" || e.key === "E")) {
+      recordar();
+      girarDos(anguloDos() + (e.key.toLowerCase() === "e" ? 15 : -15));
+      guardar();
+      pintarElegida();
+    } else if (elegida && (e.key === "q" || e.key === "e" || e.key === "Q" || e.key === "E")) {
       recordar();
       let r = (opcionesElegida().rot || 0) + (e.key.toLowerCase() === "e" ? 15 : -15);
       r = ((((r + 180) % 360) + 360) % 360) - 180;

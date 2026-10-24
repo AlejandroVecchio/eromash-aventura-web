@@ -72,7 +72,7 @@ I18N.textos({
   "ed.sel_soltar": { es: "Soltar", en: "Deselect" },
   "ed.sel_agregado": { es: "Agregado por vos · {0} cosas pegadas", en: "Added by you · {0} attached things" },
   "ed.sel_mundo": { es: "Del mundo · {0} cosas pegadas", en: "From the world · {0} attached things" },
-  "ed.sel_dos": { es: "Va de punta a punta: su tamaño se cambia moviendo sus puntas.", en: "It goes end to end: change its size by moving its ends." },
+  "ed.sel_dos": { es: "Va de punta a punta: Tamaño cambia su largo y Girar (o Q y E) lo gira sobre su centro.", en: "It goes end to end: Size changes its length and Rotate (or Q and E) turns it around its center." },
   "ed.sel_pegar": { es: "Elegí qué agregarle a «{0}» y ponelo: queda pegado y se mueve con eso. Esc para dejar de pegar.", en: "Pick what to add to \"{0}\" and place it: it stays attached and moves with it. Esc to stop attaching." },
   "ed.historia_grupo": { es: "Lo de la historia", en: "Story things" },
   "ed.nombres": { es: "Nombres", en: "Names" },
