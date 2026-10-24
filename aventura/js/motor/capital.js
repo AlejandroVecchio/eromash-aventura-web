@@ -153,6 +153,9 @@ window.CAPITAL = (function () {
       if (cerca(N.tablillas, 130, 40)) dar(85, t("cap.accion_tablillas"), () => A.dialogoLibre([["eromash", A.H.completa("EL-02") ? "cap.tablillas_claras" : "cap.tablillas"]]));
       for (const p of N.anclas || []) if (cerca(p, 120, 40)) dar(90, t("cap.accion_piedra"), () => A.dialogoLibre([["eromash", p.o.fuerza > 0 ? "cap.piedra" : "cap.piedra_rota"]]));
     },
+    cuerpos(f) {
+      for (const n of gente) if (!n.fuera) f(n.x, n.y, 36);
+    },
     objetos(lista, visible, c) {
       for (const n of gente) {
         if (n.fuera || !visible(n.x, n.y)) continue;

@@ -281,6 +281,9 @@ window.PODERES = (function () {
         if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablarCon(n));
       }
     },
+    cuerpos(f) {
+      for (const n of GENTE_CIUDAD) f(n.x, n.y, 36);
+    },
     objetos(lista, visible, c) {
       for (const n of GENTE_CIUDAD) {
         if (!visible(n.x, n.y)) continue;

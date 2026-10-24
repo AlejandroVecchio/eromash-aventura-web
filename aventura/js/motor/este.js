@@ -259,6 +259,9 @@ window.ESTE = (function () {
       }
       return algo;
     },
+    cuerpos(f) {
+      if (W.NOMBRADAS.rueda) f(ylva.x, ylva.y, 36);
+    },
     objetos(lista, visible, c) {
       const N = W.NOMBRADAS;
       if (!N.rueda) return;

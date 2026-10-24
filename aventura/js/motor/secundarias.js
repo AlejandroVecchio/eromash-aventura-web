@@ -401,6 +401,9 @@ window.SECUNDARIAS = (function () {
       });
       return algo;
     },
+    cuerpos(f) {
+      f(huldra.x, huldra.y, 36);
+    },
     objetos(lista, visible, c) {
       // la huldra: la cola de vaca asoma por debajo de la falda
       if (visible(huldra.x, huldra.y)) {

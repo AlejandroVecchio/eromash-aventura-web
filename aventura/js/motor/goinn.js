@@ -383,6 +383,9 @@ window.GOINN = (function () {
           else DIB.alfa(c, 0.6 + Math.sin(J.t * 5 + h.x) * 0.25, () => DIB.E(c, h.x, h.y, 50, 20, "#73D5DB"));
         }
     },
+    cuerpos(f) {
+      if (aqui()) f(svan.x, svan.y, 36);
+    },
     objetos(lista, visible, c) {
       if (!aqui()) return;
       // la pared de la cámara, al fondo, con el portal

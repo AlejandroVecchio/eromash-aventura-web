@@ -155,6 +155,13 @@ window.NORTE = (function () {
       }
       return algo;
     },
+    cuerpos(f) {
+      if (!H.completa("EL-06")) return;
+      for (const g of guardias) {
+        const p = W.PUNTOS[g.p];
+        if (p) f(p[0], p[1], 36);
+      }
+    },
     objetos(lista, visible, c) {
       const P = W.PUNTOS,
         PU = W.PUENTES[0];

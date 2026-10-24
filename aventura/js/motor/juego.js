@@ -560,8 +560,30 @@
     if (window.ALTURAS && ALTURAS.mover(dx, dy)) return; // escaleras y adarves
     // las cercas frenan, salvo saltando
     const valla = (nx, ny) => jug.salto <= 0 && !(jug.z > 0) && W.vallaEntre(jug.x, jug.y, nx, ny, R);
-    if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y)) jug.x += dx;
-    if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy)) jug.y += dy;
+    const cuerpos = cuerposCerca();
+    if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y) && !choca(cuerpos, jug.x + dx, jug.y)) jug.x += dx;
+    if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy) && !choca(cuerpos, jug.x, jug.y + dy)) jug.y += dy;
+  }
+  // la gente y los enemigos tienen cuerpo: Eromash no los atraviesa (si ya quedó encimado, puede salir)
+  function cuerposCerca() {
+    const l = [],
+      f = (x, y, r) => Math.abs(x - jug.x) < 160 && Math.abs(y - jug.y) < 160 && l.push(x, y, r);
+    if (jug.z > 0) return l; // arriba de la muralla no hay nadie con quien chocar
+    Object.values(npcs).forEach((n) => f(n.x, n.y, 36));
+    trabajadores.forEach((n) => f(n.x, n.y, 36));
+    enemigos.forEach((e) => e.activo && !e.muerto && f(e.x, e.y, (e.d.radio || 18) * (e.s || 1) * 1.2));
+    if (ciervo.activo && !ciervo.derrotado) f(ciervo.x, ciervo.y, 60);
+    cadaSis("cuerpos", f);
+    return l;
+  }
+  function choca(l, x, y) {
+    for (let i = 0; i < l.length; i += 3) {
+      const ax = x - l[i],
+        ay = (y - l[i + 1]) * 1.6,
+        m = R + l[i + 2];
+      if (ax * ax + ay * ay < m * m && Math.hypot(ax, ay) < Math.hypot(jug.x - l[i], (jug.y - l[i + 1]) * 1.6)) return true;
+    }
+    return false;
   }
   function golpear(a) {
     a.pego = true;
