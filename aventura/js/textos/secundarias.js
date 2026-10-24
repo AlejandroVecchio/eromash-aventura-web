@@ -156,4 +156,20 @@ I18N.textos({
   "sc.nokk_gracias_0": { es: "Ahí está mi roca. Escuchá cómo suena ahora.", en: "There's my rock. Listen to how it sounds now." },
   "sc.nokk_gracias_1": { es: "El secreto: entre los pilares viejos, abajo del tablero, hay un arcón. El puentero no lo vino a buscar nunca.", en: "The secret: between the old pillars, under the deck, there's a chest. The bridgekeeper never came back for it." },
   "sc.nokk_rato": { es: "Si alguna vez oís un violín abajo de un puente, no te acerques al agua. Salvo a este.", en: "If you ever hear a fiddle under a bridge, stay away from the water. Except this one." },
+
+  // lo que se lleva en la mochila
+  "sc.obj_cepillo": { es: "Cepillo de Orm", en: "Orm's plane" },
+  "sc.obj_cepillo_d": { es: "Un cepillo de carpintero con un hacha y una runa Othala en el mango. Orm lo da por perdido.", en: "A carpenter's plane with an axe and an Othala rune on the handle. Orm thinks it's lost." },
+  "sc.obj_tablilla": { es: "Tablilla de Geir", en: "Geir's tablet" },
+  "sc.obj_tablilla_d": { es: "La tablilla del hermano de Grim. Hay que llevársela a Eikholt.", en: "The tablet of Grim's brother. It has to go back to Eikholt." },
+  "sc.obj_cuaderno": { es: "Cuaderno de cuentas", en: "Ledger" },
+  "sc.obj_cuaderno_d": { es: "Las cuentas de Orm con la letra apretada. Casi todas las hojas se pueden leer todavía.", en: "Orm's accounts in his cramped hand. Most pages can still be read." },
+  "sc.obj_cinta": { es: "Cinta del arco", en: "Ribbon from the arch" },
+  "sc.obj_cinta_d": { es: "Una cinta descolorida con dos cuentas de madera. Eydis sabe de quién es.", en: "A faded ribbon with two wooden beads. Eydis knows whose it is." },
+  "sc.obj_campana": { es: "Campana de la huldra", en: "The huldra's bell" },
+  "sc.obj_campana_d": { es: "Una campanita de bronce verde. Los lobos la llevaban; la huldra la quiere de vuelta.", en: "A small green bronze bell. The wolves had it; the huldra wants it back." },
+  "sc.obj_herrajes": { es: "Herrajes de la quilla", en: "Keel fittings" },
+  "sc.obj_herrajes_d": { es: "Los herrajes que forjó Ása con el hierro de Grim. Son para Orm.", en: "The fittings Ása forged with Grim's iron. They're for Orm." },
+  "sc.obj_calcos": { es: "Calcos de inscripciones", en: "Inscription rubbings" },
+  "sc.obj_calcos_d": { es: "Inscripciones calcadas con la Lente. Torvald las espera en Eikholt.", en: "Inscriptions rubbed with the Lens. Torvald is waiting for them in Eikholt." },
 });

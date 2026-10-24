@@ -536,6 +536,20 @@ window.SECUNDARIAS = (function () {
     proezas: () => (st && A ? proezas() : 0),
     marcarGoinn: () => st && (st.goinn = 1),
     renombre: () => (st && A ? nivelRenombre() : 0),
+    // lo que Eromash lleva encima por los encargos (lo muestra la mochila de inventario.js)
+    llevas() {
+      if (!st || !A) return [];
+      const l = [];
+      if (sub("senda").cepillo === 1) l.push({ id: "cepillo", icono: "cepillo" });
+      if (sub("norte").geir && !st.grim) l.push({ id: "tablilla", icono: "tablilla" });
+      if (sub("norte").cuaderno === 1) l.push({ id: "cuaderno", icono: "libro" });
+      if (sub("claro").cinta === 1) l.push({ id: "cinta", icono: "cinta" });
+      if (st.huldra === 2) l.push({ id: "campana", icono: "campana" });
+      if (st.herrajes === 1) l.push({ id: "herrajes", icono: "herrajes" });
+      const calcos = (st.calcos || []).filter((v, k) => v && !(st.entregados || [])[k]).length;
+      if (calcos) l.push({ id: "calcos", icono: "pergamino", cant: calcos });
+      return l;
+    },
     // Ása: los herrajes de la quilla cuando ya le llegó el hierro de Grim
     hablarCon(n) {
       if (!st || n.id !== "asa") return false;

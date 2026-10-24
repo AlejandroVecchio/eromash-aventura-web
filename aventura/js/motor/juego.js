@@ -1145,6 +1145,22 @@
   // ---------- HUD de cada cuadro ----------
   function actualizarHud() {
     HUD.jugador(jug.hp, jug.hpMax, jug.sta, jug.staMax, jug.cansado);
+    // el retrato, la plata y la barra de acciones de abajo
+    const pr = H.E.extra.prologo,
+      ren = window.SECUNDARIAS ? SECUNDARIAS.renombre() : 0;
+    HUD.retrato((pr && pr.nombre) || "Eromash", t("sc.renombre_" + ren), jug.hp < jug.hpMax * 0.3 ? "hurt" : "calm");
+    const pe = PODERES.estado();
+    if (pe) {
+      HUD.bolsillo(pe.plata, pe.frag, pe.nivel);
+      HUD.barra([
+        { id: "atacar", icono: "espada", accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
+        { id: "esquivar", icono: "esquivar", accion: "esquivar", nombre: t("inv.b_esquivar"), listo: jug.sta >= 20 && !jug.cansado },
+        { id: "saltar", icono: "saltar", accion: "saltar", nombre: t("inv.b_saltar"), listo: true },
+        { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },
+        { id: "lente", icono: "lente", accion: "lente", nombre: t("inv.b_lente"), listo: tieneLente() && lenteEspera <= 0, espera: tieneLente() ? lenteEspera / 1.2 : 0 },
+        { id: "mochila", icono: "mochila", accion: "inventario", nombre: t("inv.b_mochila"), listo: true },
+      ]);
+    }
     const o = H.objetivo(),
       m = H.idMision();
     const p = dondeObjetivo();
@@ -1271,15 +1287,17 @@
       } },
     ]);
   }
-  function diario() {
-    J.modo = "menu";
+  // el diario se lee en la pestaña Diario de la mochila (inventario.js)
+  function htmlDiario() {
     const lista = H.E.diario.length ? H.E.diario.map((k) => `<p>${tav(k)}</p>`).join("") : `<p>${t("ui.diario_vacio")}</p>`;
     let extra = "";
     const pr = H.E.extra.prologo;
     if (pr && pr.nombre) extra += `<div class="diario-resumen"><p>${t("pl.diario", [pr.nombre, t("pl.signo_corto_" + pr.signo)])}</p></div>`;
     SIS.forEach((s0) => s0.diario && (extra += s0.diario()));
-    HUD.abrir(`<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`, [{ texto: t("ui.cerrar"), fn: cerrarMenu }]);
+    return `<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`;
   }
+  J.htmlDiario = htmlDiario;
+  const diario = () => INVENTARIO.abrir("diario");
   function mostrarFin() {
     J.modo = "menu";
     HUD.abrir(`<h2>${tav("fin_titulo")}</h2><p>${tav("fin_texto")}</p>`, [{ texto: tav("fin_seguir"), fn: cerrarMenu }]);
@@ -1298,7 +1316,7 @@
     antes = ahora;
     CONTROLES.actualizar();
     if (J.modo === "menu") {
-      HUD.pasoMenu();
+      if (!INVENTARIO.paso()) HUD.pasoMenu();
       if (CONTROLES.recien("mapa") && document.getElementById("mapaLienzo")) cerrarMenu();
       if (CONTROLES.recien("pausa") && H.E && J.cam.x) {
         if (document.querySelector("#capaCaja h1") == null) cerrarMenu();

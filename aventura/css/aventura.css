@@ -16,8 +16,31 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .rotulo { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; }
 
 /* vida y estamina, como el panel del jugador de la arena */
-#hudJugador { left: 16px; bottom: 16px; width: 280px; padding: 12px 14px; }
-#hudJugador .nombre { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+/* el jugador: el retrato en el rombo rojo, el nombre con su renombre, vida, estamina y lo que lleva en el bolsillo */
+#hudJugador { left: 16px; bottom: 16px; display: flex; align-items: flex-end; }
+#hudJugador .retrato { width: 112px; height: 112px; flex: none; margin-right: -26px; z-index: 1; filter: drop-shadow(0 4px 6px #000a); }
+#hudJugador .retrato canvas { width: 112px; height: 112px; display: block; }
+#hudJugador .datos { width: 270px; padding: 10px 14px 10px 36px; }
+#hudJugador .nombre { font-weight: 800; font-size: 15px; margin-bottom: 6px; display: flex; align-items: baseline; gap: 8px; }
+#hudJugador .nombre small { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--oro); font-weight: 700; }
+#hudJugador .barra.est { height: 10px; }
+#hudJugador .barra.est span { line-height: 10px; font-size: 8px; }
+#hudJugador .chips { display: flex; gap: 14px; margin-top: 7px; font-size: 13px; }
+#hudJugador .chip { display: flex; align-items: center; gap: 4px; }
+#hudJugador .chip canvas { width: 18px; height: 18px; }
+#hudJugador .chip b { color: var(--hueso); }
+#hudJugador .chip em { font-style: normal; color: var(--runico); font-size: 11px; margin-left: 4px; }
+/* la barra de acciones: abajo al centro, la runa más grande en el medio */
+#hudBarra { left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 8px; }
+.casilla { position: relative; width: 58px; height: 58px; background: rgba(17, 17, 17, 0.88); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); transition: opacity 0.15s; }
+.casilla canvas { height: calc(100% - 12px); aspect-ratio: 1; display: block; margin: 0 auto; }
+.casilla.grande { width: 78px; height: 78px; }
+.casilla .tecla { position: absolute; right: 3px; top: 3px; min-width: 16px; height: 16px; font-size: 9px; padding: 0 3px; }
+.casilla small { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rosa); font-weight: 700; text-shadow: 0 1px 0 #000; }
+.casilla .espera { position: absolute; inset: 0; background: conic-gradient(rgba(8, 8, 6, 0.7) calc(var(--f, 0) * 360deg), transparent 0); pointer-events: none; }
+.casilla.apagada canvas { opacity: 0.35; }
+.casilla .poder { position: absolute; left: 8px; right: 8px; bottom: 15px; height: 4px; background: #1E2A2C; }
+.casilla .poder i { position: absolute; inset: 0 auto 0 0; background: var(--runico); }
 .barra { position: relative; height: 16px; background: #2A1A18; margin-top: 4px; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
 .barra i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--rojo), var(--rojo2)); transition: width 0.15s; }
 .barra.est i { background: linear-gradient(90deg, #A8822E, var(--oro)); }
@@ -55,7 +78,7 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudMisiones .nombre { display: block; width: 100%; }
 
 /* cartel de interactuar: el rombo de la arena con la tecla */
-#hudAccion { left: 50%; bottom: 120px; transform: translateX(-50%); padding: 8px 14px 8px 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+#hudAccion { left: 50%; bottom: 112px; transform: translateX(-50%); padding: 8px 14px 8px 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
 .tecla { min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background: var(--hueso); color: var(--negro); font-weight: 800; font-size: 12px; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
 
 /* avisos centrales */
@@ -133,3 +156,48 @@ canvas.mapa { cursor: crosshair; }
 #hudMini { right: 16px; top: 16px; padding: 6px; }
 #hudMini canvas { display: block; width: 190px; height: 190px; }
 #hudMini .rotulo { color: var(--oro); text-align: right; margin-top: 4px; padding-right: 4px; }
+
+/* ---------- la mochila (inventario.js) ---------- */
+.inv .inv-caja { width: min(980px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; padding: 18px 22px 14px; box-sizing: border-box; border-top: 3px solid var(--rojo); }
+.inv header { display: flex; align-items: center; gap: 18px; margin-bottom: 14px; }
+.inv header h2 { margin: 0; color: var(--oro); font-size: 26px; }
+.inv nav { display: flex; gap: 4px; flex: 1; }
+.inv button { font: inherit; color: var(--hueso); background: #221B18; border: 1px solid #3A2A26; cursor: pointer; }
+.inv button:focus-visible { outline: 2px solid var(--oro); outline-offset: 1px; }
+.inv-tab { padding: 7px 16px; font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+.inv-tab.activa { background: var(--rojo); border-color: var(--rojo2); }
+.inv-cerrar { padding: 7px 14px; font-size: 13px; }
+.inv-cuerpo { flex: 1; min-height: 0; overflow: auto; }
+.inv-cuerpo.equipo { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; }
+.inv-figura { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.inv-lado { display: flex; flex-direction: column; gap: 12px; }
+.inv-centro canvas { width: 100%; max-width: 300px; display: block; margin: 0 auto; }
+.inv-celda { position: relative; width: 84px; height: 84px; padding: 0; background: #1A1513 !important; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.inv-celda canvas { width: 100%; height: 100%; display: block; }
+.inv-celda.foco { background: #3A1A14 !important; box-shadow: inset 0 0 0 2px var(--oro); }
+.inv-celda.falta canvas { opacity: 0.28; filter: grayscale(1); }
+.inv-celda.elegida { box-shadow: inset 0 0 0 2px var(--runico); }
+.inv-celda.elegida.foco { box-shadow: inset 0 0 0 2px var(--oro), inset 0 0 0 4px var(--runico); }
+.inv-celda .cant { position: absolute; right: 6px; bottom: 4px; font-weight: 800; font-size: 14px; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+.inv-celda .niv { position: absolute; left: 6px; top: 4px; font-weight: 800; font-size: 12px; color: var(--oro); text-shadow: 0 1px 0 #000; }
+.inv .rotulo { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rosa); margin: 4px 0 8px; }
+.inv-runas { margin-top: 10px; }
+.inv-runas .fila { display: flex; gap: 12px; justify-content: center; }
+.inv-stats { background: rgba(255, 255, 255, 0.03); padding: 12px 14px; align-self: start; }
+.inv-stats .st { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #2A221E; font-size: 13px; }
+.inv-stats .st span { color: var(--rosa); }
+.inv-stats .st b { text-align: right; }
+.inv-rejilla { display: grid; grid-template-columns: repeat(auto-fill, 84px); gap: 12px; }
+.inv-nota { color: #8A8080; font-size: 13px; }
+.inv footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-top: 1px solid #2A221E; margin-top: 14px; padding-top: 10px; }
+.inv-detalle { min-height: 44px; }
+.inv-detalle b { color: var(--oro); font-size: 15px; }
+.inv-detalle p { margin: 3px 0 0; font-size: 13px; color: var(--hueso); line-height: 1.4; max-width: 560px; }
+.inv-ayuda { font-size: 11px; color: #8A8080; text-align: right; max-width: 320px; }
+@media (max-width: 760px) {
+  .inv-cuerpo.equipo { grid-template-columns: 1fr; }
+  .inv-celda { width: 64px; height: 64px; }
+  .inv-rejilla { grid-template-columns: repeat(auto-fill, 64px); }
+  .inv footer { flex-direction: column; align-items: stretch; }
+  .inv-ayuda { text-align: left; }
+}

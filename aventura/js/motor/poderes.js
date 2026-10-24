@@ -226,10 +226,6 @@ window.PODERES = (function () {
         if (escudo <= 0) escudoT = 0;
         return d - q;
       };
-      document.getElementById("capa").insertAdjacentHTML(
-        "beforebegin",
-        `<div id="hudRuna" class="ui panel oculto"><canvas id="runaIcono" width="56" height="56"></canvas><div class="info"><div class="rotulo" id="runaNombre"></div><div class="barra run"><i id="runaBarra"></i></div><div class="plata"><b id="plataN">0</b> <span>${t("pj.plata")}</span><em id="runaNivel"></em></div></div></div>`,
-      );
     },
     alEmpezar(extra) {
       extra.pj = Object.assign(base(), extra.pj || {});
@@ -305,38 +301,6 @@ window.PODERES = (function () {
         if (f.tipo === "hielo") dar({ x: f.x, y: f.y, r: 260, col: "#C8F2F4", f: 1 - f.t / f.dur });
       }
       if (sol > 0) dar({ x: jug.x, y: jug.y - 30, r: 620, col: "#F5A524", f: Math.min(1, sol / 3) });
-    },
-    hud() {
-      if (!pj) return;
-      const el = document.getElementById("hudRuna");
-      el.classList.toggle("oculto", J.modo === "menu");
-      const r = pj.runas[pj.sel];
-      const clave = (r || "-") + "|" + Math.floor(energia) + "|" + pj.plata + "|" + pj.nivel + "|" + (escudo > 0) + "|" + I18N.lang;
-      if (el.dataset.k === clave) return;
-      el.dataset.k = clave;
-      document.getElementById("runaNombre").textContent = r ? t("pj.runa_" + r) + " · " + CONTROLES.glifo("runa") : t("pj.sin_runa_corto");
-      document.getElementById("runaBarra").style.width = energia + "%";
-      document.getElementById("runaBarra").style.opacity = r && energia >= RUNAS[r].coste ? 1 : 0.45;
-      document.getElementById("plataN").textContent = pj.plata;
-      document.getElementById("runaNivel").textContent = pj.nivel ? t("pj.nivel_corto", [pj.nivel]) : "";
-      const cv = document.getElementById("runaIcono"),
-        cx = cv.getContext("2d");
-      cx.clearRect(0, 0, 56, 56);
-      cx.fillStyle = "#1A1614";
-      cx.beginPath();
-      cx.moveTo(28, 2);
-      cx.lineTo(54, 28);
-      cx.lineTo(28, 54);
-      cx.lineTo(2, 28);
-      cx.closePath();
-      cx.fill();
-      if (r) FUTHARK.dibujar(cx, r, 28, 44, 30, RUNAS[r].col, 4);
-      else FUTHARK.dibujar(cx, "isa", 28, 44, 30, "#3A3634", 4);
-      if (pj.runas.length > 1)
-        pj.runas.forEach((q, i) => {
-          cx.fillStyle = i === pj.sel ? RUNAS[q].col : "#4A4442";
-          cx.fillRect(14 + i * 8, 52, 5, 3);
-        });
     },
     diario() {
       if (!pj) return "";
@@ -415,5 +379,16 @@ window.PODERES = (function () {
   }
 
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { hablarCon, soltar, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  // lo que muestran la barra de acciones del HUD y la mochila
+  function estado() {
+    if (!pj) return null;
+    const r = pj.runas[pj.sel];
+    return { runa: r || null, col: r ? RUNAS[r].col : "#3A3634", coste: r ? RUNAS[r].coste : 0, energia, escudo: escudo > 0, runas: pj.runas.slice(), sel: pj.sel, plata: pj.plata, frag: pj.frag, nivel: pj.nivel, espada: pj.espada, cota: pj.cota, lampara: pj.lampara, manzanas: pj.manzanas, pechera: !!pj.pechera, poder: poder() };
+  }
+  function elegirRuna(r) {
+    const i = pj ? pj.runas.indexOf(r) : -1;
+    if (i >= 0) pj.sel = i;
+    return i >= 0;
+  }
+  return { estado, elegirRuna, hablarCon, soltar, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();

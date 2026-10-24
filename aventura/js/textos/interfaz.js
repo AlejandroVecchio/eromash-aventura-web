@@ -6,12 +6,12 @@ I18N.textos({
   "ui.tecla.espacio": { es: "Espacio", en: "Space" },
   "ui.tecla.clic": { es: "Clic", en: "Click" },
   "ui.controles": {
-    es: "Trotar WASD · Correr Shift (gasta estamina) · Saltar Espacio · Atacar Clic · Esquivar C · Interactuar E · Lente R · Runa Q (cambiar T) · Mapa M · Misiones L · Diario J",
-    en: "Jog WASD · Run Shift (uses stamina) · Jump Space · Attack Click · Dodge C · Interact E · Lens R · Rune Q (switch T) · Map M · Quests L · Journal J",
+    es: "Trotar WASD · Correr Shift (gasta estamina) · Saltar Espacio · Atacar Clic · Esquivar C · Interactuar E · Lente R · Runa Q (cambiar T) · Mapa M · Misiones L · Mochila I · Diario J",
+    en: "Jog WASD · Run Shift (uses stamina) · Jump Space · Attack Click · Dodge C · Interact E · Lens R · Rune Q (switch T) · Map M · Quests L · Pack I · Journal J",
   },
   "ui.controles_mando": {
-    es: "Mover palanca (apenas inclinada: caminar) · Correr L3 una vez · Saltar ✕ · Atacar □ · Esquivar L1 · Interactuar ○ · Lente △ · Runa R1 (cambiar R3) · Mapa panel · Diario Select",
-    en: "Move stick (slight tilt: walk) · Run tap L3 · Jump ✕ · Attack □ · Dodge L1 · Interact ○ · Lens △ · Rune R1 (switch R3) · Map touchpad · Journal Select",
+    es: "Mover palanca (apenas inclinada: caminar) · Correr L3 una vez · Saltar ✕ · Atacar □ · Esquivar L1 · Interactuar ○ · Lente △ · Runa R1 (cambiar R3) · Mapa panel · Mochila y diario Select",
+    en: "Move stick (slight tilt: walk) · Run tap L3 · Jump ✕ · Attack □ · Dodge L1 · Interact ○ · Lens △ · Rune R1 (switch R3) · Map touchpad · Pack and journal Select",
   },
   "ui.misiones": { es: "Misiones ({0})", en: "Quests ({0})" },
   "ui.lugar_descubierto": { es: "Lugar descubierto", en: "Place discovered" },

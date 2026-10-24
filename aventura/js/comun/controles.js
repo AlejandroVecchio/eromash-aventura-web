@@ -19,6 +19,7 @@ window.CONTROLES = (function () {
     mapa: ["KeyM"],
     misiones: ["KeyL"],
     diario: ["KeyJ", "Tab"],
+    inventario: ["KeyI", "KeyB"],
     pausa: ["Escape", "KeyP"],
     seguir: ["Enter", "Space", "KeyE", "KeyF"],
   };
@@ -34,7 +35,7 @@ window.CONTROLES = (function () {
     cambiarRuna: [11],
     mapa: [16, 17],
     correr: [10, 6],
-    diario: [8],
+    inventario: [8],
     pausa: [9],
     seguir: [0, 1],
     arriba: [12],
@@ -42,8 +43,8 @@ window.CONTROLES = (function () {
     izquierda: [14],
     derecha: [15],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L" };
 
   const abajo = new Set();
   let antes = {},
