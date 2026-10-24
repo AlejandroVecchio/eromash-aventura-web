@@ -53,6 +53,7 @@
   #aguaPanel select { flex: 1; }
   #aguaPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
   #aguaPanel button { font-size: 12px; padding: 7px 6px; }
+  #aguaPanel .ayudita { display: block; padding: 4px 12px 0; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
   #selPanel { margin: 4px 12px 6px; padding: 10px 4px 10px; border: 1px solid #FFD98A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
   #selPanel > b { padding: 0 12px; color: #FFD98A; font-size: 15px; }
   #selPanel > small { padding: 0 12px; color: #B5A5A0; font-size: 12px; }
@@ -121,6 +122,11 @@
         <div class="fila"><span data-i18n="ed.sel_ancho"></span><input id="aguaRx" type="range" min="150" max="2400" step="10" value="600" /><b id="aguaRxV">600</b></div>
         <div class="fila"><span data-i18n="ed.sel_alto"></span><input id="aguaRy" type="range" min="100" max="1800" step="10" value="400" /><b id="aguaRyV">400</b></div>
       </div>
+      <div id="aguaTramo" class="oculto">
+        <div class="fila"><span id="aguaTramoN"></span><input id="aguaTramoAncho" type="range" min="80" max="900" step="10" value="300" /><b id="aguaTramoV">300</b></div>
+        <div class="botones3"><button id="aguaTramoComo" data-i18n="ed.agua_como_rio"></button></div>
+      </div>
+      <small id="aguaAyuda" class="ayudita" data-i18n="ed.agua_puntos"></small>
       <div id="aguaElegida" class="oculto"><div class="botones3"><button id="aguaSacar" data-i18n="ed.agua_sacar"></button><button id="aguaSoltar" data-i18n="ed.sel_soltar"></button></div></div>
     </div>
     <div id="selPanel" class="oculto">

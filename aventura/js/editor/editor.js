@@ -16,7 +16,7 @@
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], notas: [] };
+  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -30,7 +30,7 @@
   if (!est.estiloCaminos) est.estiloCaminos = [];
   if (!est.mover) est.mover = [];
   if (!est.quitarDeco) est.quitarDeco = [];
-  const completar = (e) => ["rios", "lagos", "quitarRios", "quitarLagos"].forEach((k) => !e[k] && (e[k] = []));
+  const completar = (e) => ["rios", "lagos", "quitarRios", "quitarLagos", "estiloRios", "estiloLagos"].forEach((k) => !e[k] && (e[k] = []));
   completar(est);
   const historial = [];
   const recordar = () => {
@@ -933,14 +933,18 @@
   // mundo lo deja marcado seco, sin correr la lista); lo nuevo va en est.rios ({ p, w }) y est.lagos ({ x, y, rx, ry }).
   // Todo se vuelca en W.RIOS y W.LAGOS, que es lo que pinta el piso. En el juego lo que queda adentro del agua nueva
   // se saca y donde la cruza un camino queda un vado.
+  // lo de base que se cambia (recorrido, ancho, anchos por tramo, laguna corrida) va en est.estiloRios /
+  // est.estiloLagos por su número; p0, w0… es cómo era
   const RIOS0 = W.RIOS.filter((r) => !r.agregado),
     LAGOS0 = W.LAGOS.filter((l) => !l.agregado);
+  RIOS0.forEach((r) => Object.assign(r, { p0: r.p, w0: r.w, an0: r.anchos }));
+  LAGOS0.forEach((l) => Object.assign(l, { c0: l.p, rx0: l.rx, ry0: l.ry }));
   let rio = null, // el río que se está trazando: { p, w }
     aguaSel = null; // { rio | lago: índice en W.RIOS / W.LAGOS }
   const cajaRio = (r) => {
     const xs = r.p.map((q) => q[0]),
       ys = r.p.map((q) => q[1]),
-      m = r.w / 2 + 120;
+      m = Math.max(r.w, ...(r.anchos || []).filter((v) => v)) / 2 + 120;
     return [Math.min(...xs) - m, Math.min(...ys) - m, Math.max(...xs) + m, Math.max(...ys) + m];
   };
   const cajaLago = (l) => [l.p[0] - l.rx - 120, l.p[1] - l.ry - 120, l.p[0] + l.rx + 120, l.p[1] + l.ry + 120];
@@ -952,14 +956,20 @@
     RIOS0.forEach((r, i) => (r.seco = est.quitarRios.includes(i)));
     LAGOS0.forEach((l, i) => (l.seco = est.quitarLagos.includes(i)));
     W.RIOS.length = 0;
-    RIOS0.forEach((r, i) => W.RIOS.push(Object.assign(r, { base: i })));
-    est.rios.forEach((r, i) => W.RIOS.push({ p: r.p, w: r.w, agregado: true, nuevo: i }));
+    RIOS0.forEach((r, i) => {
+      const e = est.estiloRios.find((q) => q.i === i);
+      W.RIOS.push(Object.assign(r, { base: i, p: (e && e.p) || r.p0, w: (e && e.w) || r.w0, anchos: e ? e.anchos : r.an0 }));
+    });
+    est.rios.forEach((r, i) => W.RIOS.push({ p: r.p, w: r.w, anchos: r.anchos, agregado: true, nuevo: i }));
     W.LAGOS.length = 0;
-    LAGOS0.forEach((l, i) => W.LAGOS.push(Object.assign(l, { base: i })));
+    LAGOS0.forEach((l, i) => {
+      const e = est.estiloLagos.find((q) => q.i === i);
+      W.LAGOS.push(Object.assign(l, { base: i, p: e ? [e.x, e.y] : l.c0, rx: e ? e.rx : l.rx0, ry: e ? e.ry : l.ry0 }));
+    });
     est.lagos.forEach((l, i) => W.LAGOS.push({ p: [l.x, l.y], rx: l.rx, ry: l.ry, agregado: true, nuevo: i }));
     // se repintan los trozos de lo que cambió
     const nuevas = new Map();
-    W.RIOS.forEach((r) => !r.seco && nuevas.set(JSON.stringify([r.p, r.w]), cajaRio(r)));
+    W.RIOS.forEach((r) => !r.seco && nuevas.set(JSON.stringify([r.p, r.w, r.anchos]), cajaRio(r)));
     W.LAGOS.forEach((l) => !l.seco && nuevas.set(JSON.stringify([l.p, l.rx, l.ry]), cajaLago(l)));
     nuevas.forEach((cj, k) => !firmasAgua.has(k) && invalidarCaja(cj));
     firmasAgua.forEach((cj, k) => !nuevas.has(k) && invalidarCaja(cj));
@@ -969,12 +979,46 @@
   function firmaAgua(x0, y0, x1, y1) {
     const toca = (cj) => cj[0] < x1 && cj[2] > x0 && cj[1] < y1 + 1200 && cj[3] > y0 - 300;
     let f = "";
-    W.RIOS.forEach((r, i) => (r.agregado || r.seco) && toca(cajaRio(r)) && (f += "r" + i + (r.seco ? "s" : JSON.stringify([r.p, r.w]))));
-    W.LAGOS.forEach((l, i) => (l.agregado || l.seco) && toca(cajaLago(l)) && (f += "l" + i + (l.seco ? "s" : JSON.stringify([l.p, l.rx, l.ry]))));
+    W.RIOS.forEach((r, i) => (r.agregado || r.seco || r.p !== r.p0 || r.anchos) && toca(cajaRio(r)) && (f += "r" + i + (r.seco ? "s" : JSON.stringify([r.p, r.w, r.anchos]))));
+    W.LAGOS.forEach((l, i) => (l.agregado || l.seco || l.p !== l.c0 || l.rx !== l.rx0 || l.ry !== l.ry0) && toca(cajaLago(l)) && (f += "l" + i + (l.seco ? "s" : JSON.stringify([l.p, l.rx, l.ry]))));
     return f;
   }
   // ¿(x, y) cae en el agua? (con un margen de m)
-  const enRio = (r, x, y, m = 0) => r.p.some((q, k) => k && distSeg(x, y, r.p[k - 1][0], r.p[k - 1][1], q[0], q[1]) < r.w / 2 + m);
+  const enRio = (r, x, y, m = 0) => r.p.some((q, k) => k && distSeg(x, y, r.p[k - 1][0], r.p[k - 1][1], q[0], q[1]) < ((r.anchos && r.anchos[k - 1]) || r.w) / 2 + m);
+  // dónde se guarda lo que se cambia de un río o una laguna (lo tuyo en est.rios / est.lagos; lo de base en su estilo)
+  function estiloRio(r) {
+    if (r.nuevo != null) return est.rios[r.nuevo];
+    let e = est.estiloRios.find((q) => q.i === r.base);
+    if (!e) est.estiloRios.push((e = { i: r.base, p: r.p.map((q) => [r1(q[0]), r1(q[1])]), w: r.w }));
+    return e;
+  }
+  function estiloLago(l) {
+    if (l.nuevo != null) return est.lagos[l.nuevo];
+    let e = est.estiloLagos.find((q) => q.i === l.base);
+    if (!e) est.estiloLagos.push((e = { i: l.base, x: r1(l.p[0]), y: r1(l.p[1]), rx: l.rx, ry: l.ry }));
+    return e;
+  }
+  // el punto del río elegido bajo (x, y), o su tramo (para meterle uno o elegirlo)
+  function verticeRio(r, x, y) {
+    const rr = 12 / cam.z;
+    for (let k = 0; k < r.p.length; k++) if (Math.hypot(x - r.p[k][0], y - r.p[k][1]) < rr) return { k };
+    for (let k = 1; k < r.p.length; k++) if (distSeg(x, y, r.p[k - 1][0], r.p[k - 1][1], r.p[k][0], r.p[k][1]) < ((r.anchos && r.anchos[k - 1]) || r.w) / 2) return { k, nuevo: true };
+    return null;
+  }
+  // la punta de un río bajo (x, y): { r, alInicio, q }
+  function puntaRio(x, y) {
+    let mejor = null,
+      dm = Infinity;
+    W.RIOS.forEach((r) => {
+      if (r.seco) return;
+      [[r.p[0], true], [r.p[r.p.length - 1], false]].forEach(([q, alInicio]) => {
+        const d = Math.hypot(x - q[0], y - q[1]);
+        if (d < Math.max(r.w / 2, 14 / cam.z) && d < dm) (dm = d), (mejor = { r, alInicio, q });
+      });
+    });
+    return mejor;
+  }
+  let tramoRio = null; // el tramo elegido del río elegido
   const enLago = (l, x, y, m = 0) => Math.hypot((x - l.p[0]) / (l.rx + m), (y - l.p[1]) / (l.ry + m)) < 1;
   function aguaEn(x, y) {
     const m = 8 / cam.z;
@@ -992,6 +1036,7 @@
     !W.CAMINOS.some((cm) => cm.p.some((q, k) => k && distSeg(o.x, o.y, cm.p[k - 1][0], cm.p[k - 1][1], q[0], q[1]) < cm.w / 2));
   const aguaElegida = () => (!aguaSel ? null : aguaSel.rio != null ? W.RIOS[aguaSel.rio] : W.LAGOS[aguaSel.lago]) || null;
   function elegirAgua(a) {
+    if (!a || !aguaSel || a.rio !== aguaSel.rio) tramoRio = null;
     aguaSel = a;
     pintarPanelAgua();
   }
@@ -1001,6 +1046,7 @@
     $("aguaPanel").classList.toggle("oculto", herr !== "agua" && !a);
     $("aguaNueva").classList.toggle("oculto", !!a);
     $("aguaElegida").classList.toggle("oculto", !a);
+    $("aguaTramo").classList.add("oculto");
     $("aguaFilaAncho").classList.toggle("oculto", esLago || (!a && $("aguaForma").value !== "rio"));
     $("aguaFilasLago").classList.toggle("oculto", !esLago);
     if (!a) return ($("aguaTitulo").textContent = t("ed.agua_nueva"));
@@ -1014,17 +1060,38 @@
       $("aguaAncho").value = a.w;
       $("aguaAnchoV").textContent = Math.round(a.w);
     }
-    // lo de base se saca pero no se cambia de tamaño
-    ["aguaAncho", "aguaRx", "aguaRy"].forEach((id) => ($(id).disabled = !a.agregado));
+    const conTramo = !esLago && tramoRio != null && tramoRio < a.p.length - 1;
+    $("aguaTramo").classList.toggle("oculto", !conTramo);
+    if (conTramo) {
+      $("aguaTramoN").textContent = t("ed.cam_tramo", [tramoRio + 1]);
+      $("aguaTramoAncho").value = (a.anchos && a.anchos[tramoRio]) || a.w;
+      $("aguaTramoV").textContent = Math.round(+$("aguaTramoAncho").value);
+    }
   }
   function cambiarAgua() {
     const a = aguaElegida();
-    if (!a || !a.agregado) return;
+    if (!a) return;
     recordar();
-    if (aguaSel.lago != null) Object.assign(est.lagos[a.nuevo], { rx: +$("aguaRx").value, ry: +$("aguaRy").value });
-    else est.rios[a.nuevo].w = +$("aguaAncho").value;
+    if (aguaSel.lago != null) Object.assign(estiloLago(a), { rx: +$("aguaRx").value, ry: +$("aguaRy").value });
+    else estiloRio(a).w = +$("aguaAncho").value;
     guardar();
   }
+  // el ancho de un tramo solo
+  $("aguaTramoAncho").addEventListener("input", () => ($("aguaTramoV").textContent = $("aguaTramoAncho").value));
+  const anchoTramo = (v) => {
+    const a = aguaElegida();
+    if (!a || tramoRio == null) return;
+    recordar();
+    const e = estiloRio(a),
+      an = e.anchos || (e.anchos = []);
+    while (an.length < a.p.length - 1) an.push(null);
+    an[tramoRio] = v;
+    if (an.every((q) => !q)) delete e.anchos;
+    guardar();
+    pintarPanelAgua();
+  };
+  $("aguaTramoAncho").addEventListener("change", () => anchoTramo(+$("aguaTramoAncho").value));
+  $("aguaTramoComo").onclick = () => anchoTramo(null);
   [["aguaAncho", "aguaAnchoV"], ["aguaRx", "aguaRxV"], ["aguaRy", "aguaRyV"]].forEach(([id, v]) => {
     $(id).addEventListener("input", () => ($(v).textContent = $(id).value));
     $(id).addEventListener("change", () => (aguaElegida() ? cambiarAgua() : 0));
@@ -1049,12 +1116,38 @@
   function terminarRio() {
     if (rio && rio.p.length >= 2) {
       recordar();
-      est.rios.push({ p: rio.p, w: rio.w });
+      if (rio.sigue) {
+        // seguir un río desde una punta: los puntos nuevos se le suman, con su mismo ancho
+        const e = estiloRio(rio.sigue.r),
+          nuevos = rio.p.slice(1);
+        if (rio.sigue.alInicio) {
+          e.p.unshift(...nuevos.reverse());
+          if (e.anchos) e.anchos.unshift(...nuevos.map(() => null));
+        } else e.p.push(...nuevos);
+      } else est.rios.push({ p: rio.p, w: rio.w });
       guardar();
     }
     rio = null;
   }
-  cv.addEventListener("dblclick", () => herr === "agua" && terminarRio());
+  cv.addEventListener("dblclick", (e) => {
+    const a = !rio && aguaSel && aguaSel.rio != null && aguaElegida();
+    if (a && (herr === "agua" || herr === "mover")) {
+      // doble clic en un punto del río elegido lo saca (si le quedan dos o más)
+      const [x, y] = aMundo(e.offsetX, e.offsetY),
+        v = verticeRio(a, x, y);
+      if (v && !v.nuevo && a.p.length > 2) {
+        recordar();
+        const st = estiloRio(a);
+        st.p.splice(v.k, 1);
+        if (st.anchos) st.anchos.splice(v.k, 1);
+        tramoRio = null;
+        guardar();
+        pintarPanelAgua();
+      }
+      return;
+    }
+    if (herr === "agua") terminarRio();
+  });
   // el río a medio trazar, la laguna que se arrastra y el contorno de lo elegido
   function pintaRio(p, w, alfa) {
     c.save();
@@ -1094,8 +1187,45 @@
       const [rx, ry] = medidaLago(arrastre, cursor);
       pintaLago(arrastre.x, arrastre.y, rx, ry, 0.75);
     }
-    const a = aguaElegida();
-    if (!a) return;
+    const a0 = aguaElegida();
+    if (!a0) return;
+    const a = sel && sel.rioV != null ? Object.assign({}, a0, { p: sel.p, anchos: sel.anchos }) : a0;
+    if (sel && sel.rioV != null) W.tramosAgua(a).forEach((tr) => pintaRio(tr.p, tr.w, 0.85));
+    if (aguaSel.rio != null) {
+      if (tramoRio != null && a.p[tramoRio + 1]) {
+        c.save();
+        c.strokeStyle = "rgba(255,217,138,0.8)";
+        c.lineWidth = Math.max(8 / cam.z, a.w * 0.2);
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(a.p[tramoRio][0], a.p[tramoRio][1]);
+        c.lineTo(a.p[tramoRio + 1][0], a.p[tramoRio + 1][1]);
+        c.stroke();
+        c.restore();
+      }
+      a.p.forEach(([x, y], k) => {
+        c.fillStyle = "#111111";
+        c.beginPath();
+        c.arc(x, y, 9 / cam.z, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "#73D5DB";
+        c.beginPath();
+        c.arc(x, y, 6 / cam.z, 0, Math.PI * 2);
+        c.fill();
+        if (!k) return;
+        const mx = (x + a.p[k - 1][0]) / 2,
+          my = (y + a.p[k - 1][1]) / 2,
+          r = 5 / cam.z;
+        c.strokeStyle = "#73D5DB";
+        c.lineWidth = 2 / cam.z;
+        c.beginPath();
+        c.moveTo(mx - r, my);
+        c.lineTo(mx + r, my);
+        c.moveTo(mx, my - r);
+        c.lineTo(mx, my + r);
+        c.stroke();
+      });
+    }
     let lx = a.p[0],
       ly = a.p[1];
     if (sel && sel.lago != null && sel.movio) (lx = cursor.x - sel.dx), (ly = cursor.y - sel.dy);
@@ -1328,6 +1458,9 @@
     if (arrastre && arrastre.pan) {
       cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
       cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
+    } else if (sel && sel.rioV != null) {
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
+      if (sel.movio) sel.p[sel.rioV] = [r1(x), r1(y)];
     } else if (sel && sel.vertice != null) {
       if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
       if (sel.movio) sel.p[sel.vertice] = [r1(x), r1(y)];
@@ -1423,8 +1556,27 @@
       }
       return;
     }
+    // el río elegido: arrastrar sus puntos, agregarle uno desde un tramo, o elegir un tramo (para su ancho)
+    if ((herr === "agua" || herr === "mover") && !rio && aguaSel && aguaSel.rio != null && aguaElegida()) {
+      const r = aguaElegida(),
+        v = verticeRio(r, x, y),
+        punta = v && !v.nuevo && (v.k === 0 || v.k === r.p.length - 1);
+      if (v && !(punta && herr === "agua")) {
+        const p = r.p.map((q) => q.slice()),
+          anchos = r.anchos ? r.anchos.slice() : null;
+        if (v.nuevo) {
+          p.splice(v.k, 0, [r1(x), r1(y)]);
+          if (anchos) anchos.splice(v.k, 0, anchos[v.k - 1] || null);
+        }
+        sel = { rioV: v.k, p, anchos, r, x0: x, y0: y, seg: v.nuevo ? v.k - 1 : null };
+        return;
+      }
+    }
     if (herr === "agua") {
       if (aguaSel) elegirAgua(null);
+      // tocar la punta de un río lo sigue desde ahí, con su mismo ancho
+      const pr = !rio && $("aguaForma").value === "rio" && puntaRio(x, y);
+      if (pr) return (rio = { p: [pr.q.slice()], w: pr.r.w, sigue: { r: pr.r, alInicio: pr.alInicio } });
       if ($("aguaForma").value === "laguna") return (arrastre = { lago: true, x, y });
       const p = [r1(x), r1(y)];
       if (!rio) rio = { p: [p], w: +$("aguaAncho").value };
@@ -1442,7 +1594,7 @@
       elegirCamino(null);
       elegirAgua(a);
       const l = a.lago != null && W.LAGOS[a.lago];
-      if (l && l.agregado) sel = { lago: l.nuevo, dx: x - l.p[0], dy: y - l.p[1], x0: x, y0: y };
+      if (l) sel = { lago: a.lago, dx: x - l.p[0], dy: y - l.p[1], x0: x, y0: y };
       return;
     }
     if (herr === "borrar" && caminoEn(x, y) && !tocadoSacar(x, y)) {
@@ -1524,7 +1676,18 @@
       est.lagos.push({ x: r1(arrastre.x), y: r1(arrastre.y), rx, ry });
       guardar();
     }
-    if (sel && sel.vertice != null) {
+    if (sel && sel.rioV != null) {
+      if (sel.movio) {
+        recordar();
+        const e = estiloRio(sel.r);
+        e.p = sel.p;
+        if (sel.anchos) e.anchos = sel.anchos;
+        guardar();
+      } else if (sel.seg != null) {
+        tramoRio = tramoRio === sel.seg ? null : sel.seg;
+        pintarPanelAgua();
+      }
+    } else if (sel && sel.vertice != null) {
       if (sel.movio) {
         recordar();
         const p = puntosDe(sel.cm);
@@ -1544,7 +1707,7 @@
     } else if (sel && sel.lago != null) {
       if (sel.movio) {
         recordar();
-        Object.assign(est.lagos[sel.lago], { x: r1(x - sel.dx), y: r1(y - sel.dy) });
+        Object.assign(estiloLago(W.LAGOS[sel.lago]), { x: r1(x - sel.dx), y: r1(y - sel.dy) });
         guardar();
       }
     } else if (sel && sel.nota != null) {
@@ -1699,7 +1862,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -1739,7 +1902,7 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "rios" || k === "lagos" || k === "quitarRios" || k === "quitarLagos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "rios" || k === "lagos" || k === "quitarRios" || k === "quitarLagos" || k === "estiloRios" || k === "estiloLagos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
@@ -1766,7 +1929,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], notas: [] };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [] };
     guardar();
   };
 

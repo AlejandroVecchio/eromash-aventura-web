@@ -181,14 +181,28 @@ window.ELDERVALD = (function () {
     return false;
   }
 
+  // un río con anchos por tramo (anchos: [w | null, …], uno por tramo) se parte en pedazos del mismo ancho
+  function tramosAgua(r) {
+    const an = r.anchos;
+    if (!an || !an.some((v) => v)) return [{ p: r.p, w: r.w }];
+    const out = [],
+      wDe = (k) => an[k] || r.w;
+    let ini = 0;
+    for (let k = 1; k <= r.p.length - 1; k++) {
+      if (k < r.p.length - 1 && wDe(k) === wDe(ini)) continue;
+      out.push({ p: r.p.slice(ini, k + 1), w: wDe(ini) });
+      ini = k;
+    }
+    return out;
+  }
   // vuelve a marcar el agua en la grilla: la de base que no se secó y la agregada (menos donde la cruza un camino)
   function pintarAgua() {
     for (let k = 0; k < suelo.length; k++) if (suelo[k] === 1) suelo[k] = 0;
-    RIOS.forEach((r) => !r.seco && !r.agregado && pintarLinea(r.p, r.w, 1));
+    RIOS.forEach((r) => !r.seco && !r.agregado && tramosAgua(r).forEach((t) => pintarLinea(t.p, t.w, 1)));
     LAGOS.forEach((l) => !l.seco && !l.agregado && pintarLago(l));
     const nueva = new Uint8Array(GW * GH),
       vado = new Uint8Array(GW * GH);
-    RIOS.forEach((r) => r.agregado && pintarLinea(r.p, r.w, 1, nueva));
+    RIOS.forEach((r) => r.agregado && tramosAgua(r).forEach((t) => pintarLinea(t.p, t.w, 1, nueva)));
     LAGOS.forEach((l) => l.agregado && pintarLago(l, nueva));
     CAMINOS.forEach((cm) => pintarLinea(cm.p, cm.w, 1, vado));
     for (let k = 0; k < suelo.length; k++) if (nueva[k] && !vado[k] && suelo[k] === 0) suelo[k] = 1;
@@ -1044,7 +1058,10 @@ window.ELDERVALD = (function () {
     // un camino cruza agua agregada queda un vado. Los puentes agregados también se cruzan.
     (AG.quitarRios || []).forEach((i) => RIOS[i] && (RIOS[i].seco = true));
     (AG.quitarLagos || []).forEach((i) => LAGOS[i] && (LAGOS[i].seco = true));
-    (AG.rios || []).forEach((r) => r.p && r.p.length > 1 && RIOS.push({ p: r.p, w: r.w || 300, agregado: true }));
+    // los de base que se cambiaron (recorrido, ancho, anchos por tramo; lagunas corridas o de otro tamaño)
+    (AG.estiloRios || []).forEach((e) => RIOS[e.i] && Object.assign(RIOS[e.i], { p: e.p || RIOS[e.i].p, w: e.w || RIOS[e.i].w, anchos: e.anchos }));
+    (AG.estiloLagos || []).forEach((e) => LAGOS[e.i] && Object.assign(LAGOS[e.i], { p: [e.x, e.y], rx: e.rx, ry: e.ry }));
+    (AG.rios || []).forEach((r) => r.p && r.p.length > 1 && RIOS.push({ p: r.p, w: r.w || 300, anchos: r.anchos, agregado: true }));
     (AG.lagos || []).forEach((l) => LAGOS.push({ p: [l.x, l.y], rx: l.rx || 600, ry: l.ry || 400, agregado: true }));
     (AG.poner || []).forEach((a, i) => {
       if ((a.id === "puenteTablas" || a.id === "puentePaso") && a.o && a.o.x2 !== undefined) {
@@ -1052,7 +1069,7 @@ window.ELDERVALD = (function () {
         puenteSano["agregado" + i] = true;
       }
     });
-    if ((AG.quitarRios || []).length || (AG.quitarLagos || []).length || (AG.rios || []).length || (AG.lagos || []).length) {
+    if (["quitarRios", "quitarLagos", "rios", "lagos", "estiloRios", "estiloLagos"].some((k) => (AG[k] || []).length)) {
       pintarAgua();
       const historia = new Set();
       Object.values(NOMBRADAS).forEach((v) => (Array.isArray(v) ? v : [v]).forEach((x) => x && historia.add(x)));
@@ -1282,24 +1299,19 @@ window.ELDERVALD = (function () {
     trazo(c, QUEBRADA.p, QUEBRADA.w - 40, "#1E1F1C");
     trazo(c, QUEBRADA.p, QUEBRADA.w - 160, "#151513");
     trazo(c, QUEBRADA.p.map(([x, y]) => [x, y + 40]), 30, "#24424A");
-    // ríos: orilla, agua y el brillo del medio
-    RIOS.forEach((rio) => {
-      if (rio.seco) return;
-      trazo(c, rio.p, rio.w + 70, "#2E3324");
-      trazo(c, rio.p, rio.w + 30, "#4A4A3A");
-      trazo(c, rio.p, rio.w, "#2A4C56");
-      trazo(c, rio.p, rio.w * 0.55, "#30586A");
-      trazo(c, rio.p, rio.w * 0.12, "#3E6E7E");
+    // ríos y lagunas, de a capas (orilla oscura, orilla, agua, y el brillo del medio) para que cuando se tocan se
+    // junten en una sola agua
+    const tramosR = [];
+    RIOS.forEach((rio) => !rio.seco && tramosAgua(rio).forEach((t) => tramosR.push(t)));
+    const lagosV = LAGOS.filter((l) => !l.seco && l.p[0] + l.rx + 200 > x0 && l.p[0] - l.rx - 200 < x1 && l.p[1] + l.ry + 200 > y0 && l.p[1] - l.ry - 200 < y1);
+    const jit = [1, 0.92, 1.05, 0.95, 1.02, 0.9, 1.04, 0.97, 1, 0.93, 1.06, 0.96];
+    [[70, 60, 50, "#2E3324"], [30, 24, 20, "#4A4A3A"], [0, 0, 0, "#2A4C56"]].forEach(([mr, mx, my, col]) => {
+      tramosR.forEach((t) => trazo(c, t.p, t.w + mr, col));
+      lagosV.forEach((l) => P(c, poli(l.p[0], l.p[1], l.rx + mx, l.ry + my, 12, 0.1, jit), col));
     });
-    // lagunas
-    LAGOS.forEach((l) => {
-      if (l.seco || l.p[0] + l.rx + 200 < x0 || l.p[0] - l.rx - 200 > x1 || l.p[1] + l.ry + 200 < y0 || l.p[1] - l.ry - 200 > y1) return;
-      const jit = [1, 0.92, 1.05, 0.95, 1.02, 0.9, 1.04, 0.97, 1, 0.93, 1.06, 0.96];
-      P(c, poli(l.p[0], l.p[1], l.rx + 60, l.ry + 50, 12, 0.1, jit), "#2E3324");
-      P(c, poli(l.p[0], l.p[1], l.rx + 24, l.ry + 20, 12, 0.1, jit), "#4A4A3A");
-      P(c, poli(l.p[0], l.p[1], l.rx, l.ry, 12, 0.1, jit), "#2A4C56");
-      P(c, poli(l.p[0] + l.rx * 0.1, l.p[1] - l.ry * 0.1, l.rx * 0.6, l.ry * 0.55, 10, 0.3), "#30586A");
-    });
+    lagosV.forEach((l) => P(c, poli(l.p[0] + l.rx * 0.1, l.p[1] - l.ry * 0.1, l.rx * 0.6, l.ry * 0.55, 10, 0.3), "#30586A"));
+    tramosR.forEach((t) => trazo(c, t.p, t.w * 0.55, "#30586A"));
+    tramosR.forEach((t) => trazo(c, t.p, t.w * 0.12, "#3E6E7E"));
     // Eikholt por dentro: tierra apisonada en la plaza del Roble y las calles hacia las puertas
     if (CIUDAD.c[0] + CIUDAD.rx + mg > x0 && CIUDAD.c[0] - CIUDAD.rx - mg < x1 && CIUDAD.c[1] + CIUDAD.ry + mg > y0 && CIUDAD.c[1] - CIUDAD.ry - mg < y1) {
       const [cx, cy] = CIUDAD.c;
@@ -1404,6 +1416,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, vallaEntre, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();

@@ -62,6 +62,8 @@ I18N.textos({
   "ed.agua_rio_base": { es: "Río del mundo", en: "World river" },
   "ed.agua_lago_tuyo": { es: "Laguna tuya", en: "Your pond" },
   "ed.agua_lago_base": { es: "Laguna del mundo", en: "World pond" },
+  "ed.agua_como_rio": { es: "Como el río", en: "Same as the river" },
+  "ed.agua_puntos": { es: "Con Mover, un clic en el agua la elige. A un río le arrastrás sus puntos, le agregás uno arrastrando desde un tramo (+), lo sacás con doble clic, y un clic en un tramo le cambia el ancho solo a él. Con Agua, tocá la punta de un río para seguirlo. Las lagunas se arrastran. El agua que se toca se junta.", en: "With Move, a click on water selects it. Drag a river's points, add one by dragging from a stretch (+), remove one with a double click, and click a stretch to change only its width. With Water, click a river's end to continue it. Ponds can be dragged. Water that touches merges." },
   "ed.agua_sacar": { es: "Sacar agua", en: "Remove water" },
   "ed.agua_seca": { es: "Queda el lecho seco: si tenía puentes, siguen ahí", en: "The bed is left dry: any bridges stay where they were" },
   "ed.cam_puntos": { es: "Arrastrá un punto para moverlo, o arrastrá desde un tramo (+) para agregarle uno; doble clic en un punto lo saca. Un clic en un tramo lo elige para cambiarle el tipo solo a él. Con Camino, tocá una punta para seguirlo con el mismo ancho.", en: "Drag a point to move it, or drag from a stretch (+) to add one; double click a point to remove it. One click on a stretch selects it to change only its type. With Road, click an end to continue it at the same width." },
