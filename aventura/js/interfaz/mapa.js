@@ -93,10 +93,9 @@ window.MAPA = (function () {
     n.fillRect(0, 0, niebla.width, niebla.height);
     for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (vista[y * GW + x]) agujero(x, y);
   }
-  function marcar() {
-    const cx = Math.floor(jug.x / CEL),
-      cy = Math.floor(jug.y / CEL),
-      r = 2;
+  function marcar(px = jug.x, py = jug.y, r = 2) {
+    const cx = Math.floor(px / CEL),
+      cy = Math.floor(py / CEL);
     let cambio = false;
     for (let y = cy - r; y <= cy + r; y++)
       for (let x = cx - r; x <= cx + r; x++) {
@@ -111,6 +110,43 @@ window.MAPA = (function () {
     if (cambio) st.v = Array.from(vista).join("");
   }
   const visto = (x, y) => vista[Math.floor(y / CEL) * GW + Math.floor(x / CEL)] === 1;
+
+
+  // ---------- las miniaturas ----------
+  // Recorre todo lo que tiene miniatura en el mapa: lugares, estructuras, campamentos, puentes, piedras, altares,
+  // cofres y manzanos. fn(tipo, x, y, op, prioridad) · prioridad 0 = lugar grande … 3 = cosa chica.
+  const TIPO_LUGAR = { puesto: "puesto", refugio: "casa", casa_lindes: "casa", eikholt: "ciudad", paso: "paso", claro: "claro", aserradero: "aserradero", santuario: "santuario", brunvik: "casa", skarnholt: "salon", tumulo: "tumulo", caravana: "caravana", torre: "torre", carro: "caravana" };
+  let totems = null;
+  function cadaMarca(fn) {
+    for (const id in TIPO_LUGAR) {
+      const L = W.LUGARES[id];
+      if (L && visto(L.p[0], L.p[1])) fn(TIPO_LUGAR[id], L.p[0], L.p[1], { nombre: A.H.E.vistos.includes(id) ? t("av.lugar_" + id) : null }, 0);
+    }
+    if (!totems) totems = W.COSAS.filter((o) => o.id === "totemCampamento");
+    totems.forEach((o) => visto(o.x, o.y) && fn("campamento", o.x, o.y, {}, 1));
+    W.PUENTES.forEach((p) => {
+      const x = (p.a[0] + p.b[0]) / 2,
+        y = (p.a[1] + p.b[1]) / 2;
+      if (visto(x, y)) fn("puente", x, y, {}, 2);
+    });
+    const S = SECRETOS.lista();
+    S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && fn("altar", a.cosa.x, a.cosa.y, { runa: a.runa, col: ASSETS.COL_RUNA[a.runa], apagado: a.cosa.o.tomada }, 1));
+    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && fn("piedra", p.cosa.x, p.cosa.y, { runa: "ansuz", col: S.st.piedras[p.id] ? "#73D5DB" : "#4A5A60" }, 2));
+    if (window.RITOS) {
+      const R = RITOS.lista();
+      R.camino.forEach((p) => visto(p.cosa.x, p.cosa.y) && fn("piedraCamino", p.cosa.x, p.cosa.y, { col: R.st.camino[p.id] ? "#C8402D" : "#6E4A3A" }, 2));
+      R.ritos.forEach((r) => {
+        const d = ASSETS.RITO[r.tipo];
+        r.piedras.forEach((q) => visto(q.x, q.y) && fn("piedra", q.x, q.y, { runa: d.runa, col: R.st.ritos[r.id] ? d.col : "#5A5A64", borde: d.col }, 2));
+        if (visto(r.cofre.x, r.cofre.y) && !R.st.cofres[r.id]) fn("cofre", r.cofre.x, r.cofre.y, { col: r.cofre.o.sellado ? "#9A6BD8" : "#FFD98A" }, 3);
+      });
+    }
+    S.cofres.forEach((q) => {
+      if (!visto(q.cosa.x, q.cosa.y) || q.cosa.o.oculto) return;
+      fn("cofre", q.cosa.x, q.cosa.y, { apagado: !!S.st.cofres[q.id], col: q.cosa.o.sellado ? "#9A6BD8" : null }, 3);
+    });
+    S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && fn("manzano", m.cosa.x, m.cosa.y, { apagado: m.cosa.o.cosechado }, 3));
+  }
 
   function abrir() {
     A.menu(`<h2>${t("mp.titulo")}</h2><canvas id="mapaLienzo" class="mapa"></canvas><div class="sub mapa-ley">${t("mp.leyenda")}</div>`, [{ texto: t("ui.cerrar"), fn: A.cerrarMenu }]);
@@ -127,38 +163,21 @@ window.MAPA = (function () {
     c.drawImage(base, 0, 0);
     const k = base.width / W.ANCHO;
     c.drawImage(niebla, 0, 0);
-    const S = SECRETOS.lista();
-    const punto = (x, y, col, r = 4) => {
-      c.fillStyle = col;
-      c.beginPath();
-      c.moveTo(x * k, y * k - r);
-      c.lineTo(x * k + r, y * k);
-      c.lineTo(x * k, y * k + r);
-      c.lineTo(x * k - r, y * k);
-      c.fill();
-    };
-    S.cofres.forEach((q) => {
-      if (!visto(q.cosa.x, q.cosa.y) || q.cosa.o.oculto) return;
-      punto(q.cosa.x, q.cosa.y, S.st.cofres[q.id] ? "#5E4A36" : "#FFD98A", 3.5);
+    const nombres = [];
+    cadaMarca((tipo, x, y, op, pri) => {
+      ICONOS.dibujar(c, tipo, x * k, y * k, [16, 12, 10, 7][pri], op);
+      if (op.nombre) nombres.push([op.nombre, x * k, y * k - 17]);
     });
-    S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && punto(m.cosa.x, m.cosa.y, m.cosa.o.cosechado ? "#5E4A36" : "#F5A524", 5));
-    S.piedras.forEach((p) => {
-      if (!visto(p.cosa.x, p.cosa.y)) return;
-      FUTHARK.dibujar(c, "ansuz", p.cosa.x * k, p.cosa.y * k + 7, 14, S.st.piedras[p.id] ? "#73D5DB" : "#4A5A60", 2.5);
-    });
-    S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && FUTHARK.dibujar(c, a.runa, a.cosa.x * k, a.cosa.y * k + 9, 18, a.cosa.o.tomada ? "#5A5450" : ASSETS.COL_RUNA[a.runa], 3));
     // nombres de los lugares descubiertos
     c.font = '700 13px "Eromash Text", system-ui, sans-serif';
     c.textAlign = "center";
-    for (const id of A.H.E.vistos) {
-      const L = W.LUGARES[id];
-      if (!L) continue;
+    nombres.forEach(([n, x, y]) => {
       c.lineWidth = 3;
       c.strokeStyle = "#111111";
-      c.strokeText(t("av.lugar_" + id), L.p[0] * k, L.p[1] * k - 10);
+      c.strokeText(n, x, y);
       c.fillStyle = "#F2ECEC";
-      c.fillText(t("av.lugar_" + id), L.p[0] * k, L.p[1] * k - 10);
-    }
+      c.fillText(n, x, y);
+    });
     // el objetivo y Eromash
     const o = A.H.objetivo();
     const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
@@ -225,18 +244,10 @@ window.MAPA = (function () {
       c.lineTo(px - r, py);
       c.fill();
     };
-    const S = SECRETOS.lista();
-    S.cofres.forEach((q) => dentro(q.cosa.x, q.cosa.y) && visto(q.cosa.x, q.cosa.y) && !q.cosa.o.oculto && !S.st.cofres[q.id] && rombo(q.cosa.x, q.cosa.y, "#FFD98A", 3));
-    S.manzanos.forEach((m) => dentro(m.cosa.x, m.cosa.y) && visto(m.cosa.x, m.cosa.y) && !m.cosa.o.cosechado && rombo(m.cosa.x, m.cosa.y, "#F5A524", 4));
-    S.piedras.forEach((p) => {
-      if (!dentro(p.cosa.x, p.cosa.y) || !visto(p.cosa.x, p.cosa.y)) return;
-      const [px, py] = aqui(p.cosa.x, p.cosa.y);
-      FUTHARK.dibujar(c, "ansuz", px, py + 5, 10, S.st.piedras[p.id] ? "#73D5DB" : "#4A5A60", 2);
-    });
-    S.altares.forEach((a) => {
-      if (!dentro(a.cosa.x, a.cosa.y) || !visto(a.cosa.x, a.cosa.y) || a.cosa.o.tomada) return;
-      const [px, py] = aqui(a.cosa.x, a.cosa.y);
-      FUTHARK.dibujar(c, a.runa, px, py + 6, 12, ASSETS.COL_RUNA[a.runa], 2.2);
+    cadaMarca((tipo, x, y, op, pri) => {
+      if (!dentro(x, y) || (op.apagado && pri === 3)) return;
+      const [px, py] = aqui(x, y);
+      ICONOS.dibujar(c, tipo, px, py, [9, 7, 6, 5][pri], op);
     });
     // criaturas despiertas o cerca (no se muestran las dormidas lejos: el bosque sigue teniendo sorpresas)
     for (const e of A.enemigos) {
@@ -344,5 +355,6 @@ window.MAPA = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { abrir };
+  // descubre de golpe un pedazo del mapa (las piedras del camino): radio en unidades del mundo
+  return { abrir, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
 })();

@@ -74,6 +74,25 @@
       });
     });
   });
+  // las piedras del rito: cada tipo dormido y despierto
+  const gr = grupo("cat.rito");
+  Object.keys(ASSETS.RITO).forEach((tipo) =>
+    [false, true].forEach((viva) =>
+      ficha(gr, I18N.t("pr.tipo_" + tipo).replace(/^./, (l) => l.toUpperCase()) + (viva ? " · ✦" : ""), 180, 240, (c, t) => {
+        piso(c, 180, 240);
+        ASSETS.dibujar(c, "piedraRito", 90, 210, t, { s: 1.25, sem: 3, tipo, viva, marca: 2, carga: viva ? 0 : 0.35 });
+      }),
+    ),
+  );
+  // las miniaturas del mapa
+  const gi = grupo("cat.iconos");
+  ICONOS.TIPOS.forEach((tipo) =>
+    ficha(gi, I18N.t("cat.ic_" + tipo), 120, 120, (c) => {
+      c.fillStyle = "#2C3A24";
+      c.fillRect(0, 0, 120, 120);
+      ICONOS.dibujar(c, tipo, 60, 60, 36, { runa: tipo === "altar" ? "kenaz" : "ansuz", col: tipo === "altar" ? "#FF8D71" : null });
+    }),
+  );
   // Eromash
   const ge = grupo("as.grupo.eromash");
   ["R", "W", "B", "V"].forEach((col) =>

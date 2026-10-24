@@ -78,7 +78,7 @@ window.HUD = (function () {
     caja.appendChild(cab);
     if (plegado.todo) return;
     lista.forEach((m) => {
-      const id = m.secundaria ? "secretos" : "historia";
+      const id = m.id || (m.secundaria ? "secretos" : "historia");
       const cerrada = !!plegado.una[id];
       const d = document.createElement("div");
       d.className = "mision" + (m.secundaria ? " secundaria" : "") + (cerrada ? " plegada" : "");

@@ -181,5 +181,11 @@ window.HORDAS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { grupos };
+  // un líder nuevo con nombre y afijos, ya rotulado en el idioma actual (para los guardianes de las piedras)
+  const liderNuevo = (extra) => {
+    const l = lider(extra);
+    rotular(l);
+    return l;
+  };
+  return { grupos, liderNuevo };
 })();
