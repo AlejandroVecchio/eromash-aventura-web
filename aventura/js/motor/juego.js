@@ -1194,7 +1194,7 @@
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
   // lo que los sistemas pueden usar del motor
   const A = {
-    J, jug, W, H, CB, P, N, enemigos, npcs, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano,
+    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano,
     avisar: (k, col) => HUD.aviso(t(k), col),
     menu: (html, botones) => {
       J.modo = "menu";

@@ -89,3 +89,7 @@ canvas.mapa { display: block; max-width: 100%; max-height: 64vh; width: auto; he
 .mapa-ley { margin: 10px 0 0 !important; font-size: 12px !important; }
 .diario-resumen p { margin: 0 0 8px; font-size: 14px; }
 .diario-resumen b { color: var(--oro); font-weight: 800; }
+/* minimapa: arriba a la izquierda, con la hora del día */
+#hudMini { left: 16px; top: 16px; padding: 6px; }
+#hudMini canvas { display: block; width: 190px; height: 190px; }
+#hudMini .rotulo { color: var(--oro); text-align: right; margin-top: 4px; padding-right: 4px; }

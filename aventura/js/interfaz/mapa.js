@@ -14,15 +14,15 @@ window.MAPA = (function () {
     paso = 0;
   const ANCHO_MAPA = 1000;
 
-  function pintarBase() {
-    const k = ANCHO_MAPA / W.ANCHO,
+  function pintarBase(ancho) {
+    const k = ancho / W.ANCHO,
       h = Math.round(W.ALTO * k);
     const cv = document.createElement("canvas");
-    cv.width = ANCHO_MAPA;
+    cv.width = ancho;
     cv.height = h;
     const c = cv.getContext("2d");
     c.fillStyle = "#1E2019";
-    c.fillRect(0, 0, ANCHO_MAPA, h);
+    c.fillRect(0, 0, ancho, h);
     c.scale(k, k);
     // el bosque
     c.fillStyle = "#2C3A24";
@@ -67,6 +67,32 @@ window.MAPA = (function () {
     c.stroke();
     return cv;
   }
+  // la niebla de lo no explorado, a la escala del mapa grande: negra con agujeros suaves donde ya caminaste.
+  // Se arma entera al cargar la partida y después solo se le abren los agujeros nuevos.
+  let niebla = null;
+  function agujero(x, y) {
+    const n = niebla.getContext("2d"),
+      k = niebla.width / W.ANCHO,
+      r = CEL * k * 1.25,
+      px = (x + 0.5) * CEL * k,
+      py = (y + 0.5) * CEL * k,
+      g = n.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, "rgba(0,0,0,1)");
+    g.addColorStop(0.55, "rgba(0,0,0,0.9)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    n.globalCompositeOperation = "destination-out";
+    n.fillStyle = g;
+    n.fillRect(px - r, py - r, r * 2, r * 2);
+  }
+  function armarNiebla() {
+    niebla = document.createElement("canvas");
+    niebla.width = ANCHO_MAPA;
+    niebla.height = Math.round(W.ALTO * (ANCHO_MAPA / W.ANCHO));
+    const n = niebla.getContext("2d");
+    n.fillStyle = "#111111";
+    n.fillRect(0, 0, niebla.width, niebla.height);
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (vista[y * GW + x]) agujero(x, y);
+  }
   function marcar() {
     const cx = Math.floor(jug.x / CEL),
       cy = Math.floor(jug.y / CEL),
@@ -79,6 +105,7 @@ window.MAPA = (function () {
         if (!vista[i]) {
           vista[i] = 1;
           cambio = true;
+          if (niebla) agujero(x, y);
         }
       }
     if (cambio) st.v = Array.from(vista).join("");
@@ -93,34 +120,13 @@ window.MAPA = (function () {
   function dibujar() {
     const cv = document.getElementById("mapaLienzo");
     if (!cv) return;
-    if (!base) base = pintarBase();
+    if (!base) base = pintarBase(ANCHO_MAPA);
     cv.width = base.width;
     cv.height = base.height;
     const c = cv.getContext("2d");
     c.drawImage(base, 0, 0);
     const k = base.width / W.ANCHO;
-    // niebla de lo no explorado: una capa negra con agujeros suaves donde ya caminaste
-    const nb = document.createElement("canvas");
-    nb.width = cv.width;
-    nb.height = cv.height;
-    const n = nb.getContext("2d");
-    n.fillStyle = "#111111";
-    n.fillRect(0, 0, nb.width, nb.height);
-    n.globalCompositeOperation = "destination-out";
-    const r = CEL * k * 1.25;
-    for (let y = 0; y < GH; y++)
-      for (let x = 0; x < GW; x++) {
-        if (!vista[y * GW + x]) continue;
-        const px = (x + 0.5) * CEL * k,
-          py = (y + 0.5) * CEL * k,
-          g = n.createRadialGradient(px, py, 0, px, py, r);
-        g.addColorStop(0, "rgba(0,0,0,1)");
-        g.addColorStop(0.55, "rgba(0,0,0,0.9)");
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        n.fillStyle = g;
-        n.fillRect(px - r, py - r, r * 2, r * 2);
-      }
-    c.drawImage(nb, 0, 0);
+    c.drawImage(niebla, 0, 0);
     const S = SECRETOS.lista();
     const punto = (x, y, col, r = 4) => {
       c.fillStyle = col;
@@ -180,6 +186,121 @@ window.MAPA = (function () {
     c.restore();
   }
 
+  // ---------- el minimapa ----------
+  // Arriba a la izquierda: lo que rodea a Eromash en un cuadrado de 3600 unidades (unos 120 m), con la misma niebla.
+  // Cofres y piedras vistos, criaturas despiertas cerca (los líderes más grandes y de su color), la gente de la
+  // historia y el objetivo; si el objetivo queda afuera, una flecha en el borde.
+  const MINI = 190,
+    LADO = 3600;
+  let baseMini = null,
+    paseMini = 0;
+  function dibujarMini() {
+    const cv = document.getElementById("minimapa");
+    if (!cv || !niebla) return;
+    const k0 = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== MINI * k0) {
+      cv.width = cv.height = MINI * k0;
+    }
+    const c = cv.getContext("2d");
+    c.setTransform(k0, 0, 0, k0, 0, 0);
+    if (!baseMini) baseMini = pintarBase(2400);
+    const x0 = jug.x - LADO / 2,
+      y0 = jug.y - LADO / 2,
+      k = MINI / LADO;
+    c.fillStyle = "#111111";
+    c.fillRect(0, 0, MINI, MINI);
+    const kb = baseMini.width / W.ANCHO;
+    c.drawImage(baseMini, x0 * kb, y0 * kb, LADO * kb, LADO * kb, 0, 0, MINI, MINI);
+    const kn = niebla.width / W.ANCHO;
+    c.drawImage(niebla, x0 * kn, y0 * kn, LADO * kn, LADO * kn, 0, 0, MINI, MINI);
+    const aqui = (x, y) => [(x - x0) * k, (y - y0) * k];
+    const dentro = (x, y) => x > x0 && x < x0 + LADO && y > y0 && y < y0 + LADO;
+    const rombo = (x, y, col, r) => {
+      const [px, py] = aqui(x, y);
+      c.fillStyle = col;
+      c.beginPath();
+      c.moveTo(px, py - r);
+      c.lineTo(px + r, py);
+      c.lineTo(px, py + r);
+      c.lineTo(px - r, py);
+      c.fill();
+    };
+    const S = SECRETOS.lista();
+    S.cofres.forEach((q) => dentro(q.cosa.x, q.cosa.y) && visto(q.cosa.x, q.cosa.y) && !q.cosa.o.oculto && !S.st.cofres[q.id] && rombo(q.cosa.x, q.cosa.y, "#FFD98A", 3));
+    S.manzanos.forEach((m) => dentro(m.cosa.x, m.cosa.y) && visto(m.cosa.x, m.cosa.y) && !m.cosa.o.cosechado && rombo(m.cosa.x, m.cosa.y, "#F5A524", 4));
+    S.piedras.forEach((p) => {
+      if (!dentro(p.cosa.x, p.cosa.y) || !visto(p.cosa.x, p.cosa.y)) return;
+      const [px, py] = aqui(p.cosa.x, p.cosa.y);
+      FUTHARK.dibujar(c, "ansuz", px, py + 5, 10, S.st.piedras[p.id] ? "#73D5DB" : "#4A5A60", 2);
+    });
+    S.altares.forEach((a) => {
+      if (!dentro(a.cosa.x, a.cosa.y) || !visto(a.cosa.x, a.cosa.y) || a.cosa.o.tomada) return;
+      const [px, py] = aqui(a.cosa.x, a.cosa.y);
+      FUTHARK.dibujar(c, a.runa, px, py + 6, 12, ASSETS.COL_RUNA[a.runa], 2.2);
+    });
+    // criaturas despiertas o cerca (no se muestran las dormidas lejos: el bosque sigue teniendo sorpresas)
+    for (const e of A.enemigos) {
+      if (!e.activo || e.muerto || !dentro(e.x, e.y)) continue;
+      const d = Math.hypot(e.x - jug.x, e.y - jug.y);
+      if (e.estado === "quieto" && d > 900) continue;
+      const col = e.lider ? (e.lider.unico ? "#FFD98A" : A.CB.AFIJOS[e.lider.afijos[0]].col) : "#C8402D";
+      const [px, py] = aqui(e.x, e.y);
+      c.fillStyle = col;
+      c.beginPath();
+      c.arc(px, py, e.lider ? 3.6 : 2.2, 0, Math.PI * 2);
+      c.fill();
+    }
+    for (const id in A.npcs) {
+      const n = A.npcs[id];
+      if (dentro(n.x, n.y)) rombo(n.x, n.y, "#7BC86C", 3);
+    }
+    if (A.ciervo && A.ciervo.activo) rombo(A.ciervo.x, A.ciervo.y, "#9A6BD8", 5);
+    // el objetivo: anillo rúnico si se ve, flecha en el borde si no
+    const o = A.H.objetivo();
+    const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
+    if (p) {
+      if (dentro(p[0], p[1])) {
+        const [px, py] = aqui(p[0], p[1]);
+        c.strokeStyle = "#73D5DB";
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(px, py, 6 + Math.sin(J.t * 4) * 1.5, 0, Math.PI * 2);
+        c.stroke();
+      } else {
+        const a = Math.atan2(p[1] - jug.y, p[0] - jug.x),
+          m = MINI / 2 - 9,
+          f = m / Math.max(Math.abs(Math.cos(a)), Math.abs(Math.sin(a)));
+        c.save();
+        c.translate(MINI / 2 + Math.cos(a) * f, MINI / 2 + Math.sin(a) * f);
+        c.rotate(a);
+        c.fillStyle = "#73D5DB";
+        c.beginPath();
+        c.moveTo(7, 0);
+        c.lineTo(-5, -6);
+        c.lineTo(-2, 0);
+        c.lineTo(-5, 6);
+        c.fill();
+        c.restore();
+      }
+    }
+    // Eromash en el centro, apuntando a donde mira
+    c.save();
+    c.translate(MINI / 2, MINI / 2);
+    c.rotate(Math.atan2(jug.dir[1], jug.dir[0]));
+    c.fillStyle = "#C8402D";
+    c.strokeStyle = "#F2ECEC";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(8, 0);
+    c.lineTo(-6, -6);
+    c.lineTo(-2, 0);
+    c.lineTo(-6, 6);
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+
   const sistema = {
     iniciar(api) {
       A = api;
@@ -189,12 +310,26 @@ window.MAPA = (function () {
       GW = Math.ceil(W.ANCHO / CEL);
       GH = Math.ceil(W.ALTO / CEL);
       vista = new Uint8Array(GW * GH);
+      document.getElementById("capa").insertAdjacentHTML("beforebegin", `<div id="hudMini" class="ui panel oculto"><canvas id="minimapa"></canvas><div class="rotulo" id="miniLugar"></div></div>`);
+    },
+    hud() {
+      const el = document.getElementById("hudMini");
+      el.classList.toggle("oculto", !st || J.modo === "menu");
+      paseMini -= 1;
+      if (paseMini > 0) return;
+      paseMini = 4; // cada cuatro cuadros alcanza
+      dibujarMini();
+      const h = A.hora(),
+        txt = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.floor((h % 1) * 6) * 10).padStart(2, "0");
+      const lug = document.getElementById("miniLugar");
+      if (lug.textContent !== txt) lug.textContent = txt;
     },
     alEmpezar(extra) {
       extra.mapa = extra.mapa || { v: "" };
       st = extra.mapa;
       vista = new Uint8Array(GW * GH);
       for (let i = 0; i < st.v.length && i < vista.length; i++) vista[i] = st.v[i] === "1" ? 1 : 0;
+      armarNiebla();
       marcar();
     },
     actualizar(dt) {
