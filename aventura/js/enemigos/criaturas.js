@@ -278,14 +278,37 @@ window.CRIATURAS = (function () {
     DIBUJO[id] = f;
     if (!LISTA.includes(id)) LISTA.push(id);
   }
+  // destello al recibir un golpe, como los esbirros de la arena: un cuadro sí y otro no, en blanco.
+  // Se arma en un lienzo chico. c.filter sobre el lienzo del juego repinta todo el cuadro y lo deja en cámara lenta.
+  const flashCv = document.createElement("canvas");
+  const FLASH_PIX = 2,
+    FLASH_OX = 280,
+    FLASH_OY = 360,
+    FLASH_W = 560,
+    FLASH_H = 520;
+  flashCv.width = FLASH_W * FLASH_PIX;
+  flashCv.height = FLASH_H * FLASH_PIX;
+  const flashC = flashCv.getContext("2d");
   function dibujar(c, id, x, y, t, o = {}) {
     c.save();
     c.translate(x, y);
     const s = o.s || 1;
     c.scale(s * (o.espejo ? -1 : 1), s);
-    // destello claro al recibir un golpe, como los esbirros de la arena
-    if (o.herido > 0) c.filter = `brightness(${1 + o.herido * 1.6})`;
-    DIBUJO[id](c, t, o);
+    const blanco = o.herido > 0 && Math.floor(o.herido * 18) % 2 === 0;
+    if (blanco) {
+      flashC.setTransform(1, 0, 0, 1, 0, 0);
+      flashC.globalAlpha = 1;
+      flashC.globalCompositeOperation = "source-over";
+      flashC.clearRect(0, 0, flashCv.width, flashCv.height);
+      flashC.setTransform(FLASH_PIX, 0, 0, FLASH_PIX, FLASH_OX * FLASH_PIX, FLASH_OY * FLASH_PIX);
+      DIBUJO[id](flashC, t, o);
+      flashC.globalCompositeOperation = "source-in";
+      flashC.setTransform(1, 0, 0, 1, 0, 0);
+      flashC.fillStyle = "#F2ECEC";
+      flashC.fillRect(0, 0, flashCv.width, flashCv.height);
+      flashC.globalCompositeOperation = "source-over";
+      c.drawImage(flashCv, -FLASH_OX, -FLASH_OY, FLASH_W, FLASH_H);
+    } else DIBUJO[id](c, t, o);
     c.restore();
   }
   return { LISTA, dibujar, registrar };
