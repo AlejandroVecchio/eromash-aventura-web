@@ -165,28 +165,45 @@ window.SENDAS = (function () {
     // una punta redonda: el cordón y el fondo se cortan derechos en el borde del otro, y de ahí para adentro las piedras
     // o ladrillos se van soltando hasta perderse en la tierra o en las piedras del otro
     const cede = (o) => (o.tipo || "tierra") === "tierra" || lista.indexOf(o) < yo;
-    const metido = (x, y) => cerca.some((o) => cede(o) && distLinea(x, y, o.p) < (o.w || 110) / 2);
+    const metido = (x, y, m = 0) => cerca.some((o) => cede(o) && distLinea(x, y, o.p) < (o.w || 110) / 2 + m);
     const entra = (k) => {
       if (tipo === "tierra" || !cerca.length || (cm.puntas && !cm.puntas[k])) return 0;
       const q = p[k ? p.length - 1 : 0];
       if (!metido(q[0], q[1])) return 0;
+      // el corte va donde las dos esquinas del cordón siguen adentro del otro camino (si el cruce es en diagonal, una
+      // esquina sale antes que el centro y asomaría al pasto)
+      const m = (w + 28) / 2,
+        adentro = (d) => {
+          const q2 = recortar(p, Math.max(0, d - 3), Math.min(L, d + 3)),
+            [ax, ay] = q2[0],
+            [bx, by] = q2[q2.length - 1],
+            l = Math.hypot(bx - ax, by - ay) || 1,
+            nx = -(by - ay) / l,
+            ny = (bx - ax) / l,
+            x = (ax + bx) / 2,
+            y = (ay + by) / 2;
+          // (hasta el contorno oscuro del otro, que también tapa)
+          return metido(x, y) && metido(x + nx * m, y + ny * m, 12) && metido(x - nx * m, y - ny * m, 12);
+        };
       let d = 0;
-      for (; d < L / 2; d += 6) {
-        const [[x, y]] = recortar(p, k ? L - d : d, k ? L - d : d);
-        if (!metido(x, y)) break;
-      }
-      return d;
+      while (d < L / 2 && metido(...recortar(p, k ? L - d : d, k ? L - d : d)[0])) d += 6;
+      // del borde para atrás, hasta que las dos esquinas entren
+      let c0 = Math.max(0, d - 6);
+      while (c0 > 0 && !adentro(k ? L - c0 : c0)) c0 -= 6;
+      return { d, c: Math.max(0, c0) };
     };
-    const ea = entra(0),
-      eb = entra(1);
+    const za = entra(0) || { d: 0, c: 0 },
+      zb = entra(1) || { d: 0, c: 0 },
+      ea = za.d,
+      eb = zb.d;
     // cuánto queda del empedrado en ese punto por estar metido en otro camino (1 entero, 0 nada)
     const suelto = (d) => Math.min(1, ea ? 1 - (ea - d) / (w * 1.2) : 1, eb ? 1 - (d - (L - eb)) / (w * 1.2) : 1);
     // el empedrado entero: con punta redonda en las puntas libres y cortado derecho donde entra en otro
     const losa = (pts, ancho, col) => {
       if (!(ea || eb)) return trazo(c, pts, ancho, col);
       // el cuerpo (pts ≠ p) ya viene recortado por las puntas que se funden
-      const a = Math.max(ea, pts !== p && fa ? FUNDE * 0.75 : 0),
-        b = Math.min(L - eb, pts !== p && fb ? L - FUNDE * 0.75 : L);
+      const a = Math.max(za.c, pts !== p && fa ? FUNDE * 0.75 : 0),
+        b = Math.min(L - zb.c, pts !== p && fb ? L - FUNDE * 0.75 : L);
       losaEntre(a, b, ancho, col);
     };
     const losaEntre = (a, b, ancho, col) => {
