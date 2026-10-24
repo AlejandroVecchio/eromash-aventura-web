@@ -101,8 +101,19 @@ window.VISTA25 = (function () {
     }
     // las calles (mundo/caminos.js), de a capas para que se junten donde se cruzan
     ["base", "cuerpo", "borde"].forEach((capa) => cmCalles.forEach((cm) => SENDAS.pintar(c, cm, cm.sem, x0 - 200, y0 - 200, x1 + 200, y1 + 200, capa, cmCalles)));
+    gastado(c, x0, y0, x1, y1);
+    pastito(c, x0, y0, x1, y1, r);
     if (Math.abs((x0 + x1) / 2) < PL + TROZO && Math.abs((y0 + y1) / 2) < PL + TROZO) {
       for (const [x, y, rx, ry, g, col] of losas) if (x > x0 - 60 && x < x1 + 60 && y > y0 - 60 && y < y1 + 60) P(c, poli(x, y, rx, ry, 6, g), col);
+      // las hojas del Roble juntadas en la plaza (más cerca del tronco, más hojas)
+      const rh = azar(tx * 31 + ty * 7 + 3);
+      for (let k = 0; k < 90; k++) {
+        const x = x0 + rh() * TROZO,
+          y = y0 + rh() * TROZO,
+          d = Math.hypot(x, y);
+        if (d > PL || d < 1300 || rh() > 1.2 - d / PL) continue;
+        E(c, x, y, 7 + rh() * 4, 4, ["#A8782E", "#C8A040", "#8A6A2A", "#C86A2E"][k % 4], rh() * 3);
+      }
       // el pie del Roble: un montículo de musgo entre las raíces, con un cordón de piedra alrededor y vetas azules
       const [rx0, ry0] = plano.roble;
       const RR = 1080;
@@ -208,6 +219,86 @@ window.VISTA25 = (function () {
       }
     }
     return cv;
+  }
+  // Lo gastado de las calles: en la tierra, las dos huellas de las ruedas y charcos que reflejan el cielo; en el
+  // adoquín, musgo entre las piedras y alguna que falta. Cada tramo con su semilla, así no cambia de un trozo a otro.
+  function gastado(c, x0, y0, x1, y1) {
+    for (const cm of cmCalles) {
+      for (let i = 0; i < cm.p.length - 1; i++) {
+        const [ax, ay] = cm.p[i],
+          [bx, by] = cm.p[i + 1];
+        if (Math.max(ax, bx) < x0 - cm.w || Math.min(ax, bx) > x1 + cm.w || Math.max(ay, by) < y0 - cm.w || Math.min(ay, by) > y1 + cm.w) continue;
+        const l = Math.hypot(bx - ax, by - ay) || 1,
+          ux = (bx - ax) / l,
+          uy = (by - ay) / l,
+          nx = -uy,
+          ny = ux;
+        const r = azar(cm.sem * 131 + i * 17);
+        if (cm.tipo === "tierra") {
+          // las huellas de las ruedas
+          c.lineCap = "round";
+          for (const s of [-1, 1]) {
+            const o = s * cm.w * 0.17;
+            c.strokeStyle = "rgba(42,32,22,0.32)";
+            c.lineWidth = 9;
+            c.beginPath();
+            c.moveTo(ax + nx * o, ay + ny * o);
+            c.lineTo(bx + nx * o, by + ny * o);
+            c.stroke();
+            c.strokeStyle = "rgba(140,112,78,0.18)";
+            c.lineWidth = 3;
+            c.beginPath();
+            c.moveTo(ax + nx * (o + 7), ay + ny * (o + 7));
+            c.lineTo(bx + nx * (o + 7), by + ny * (o + 7));
+            c.stroke();
+          }
+          // charcos en los pozos del camino, con el cielo reflejado
+          const n = Math.floor(l / 900);
+          for (let k = 0; k < n; k++) {
+            if (r() < 0.45) continue;
+            const s = r(),
+              o = (r() - 0.5) * cm.w * 0.5,
+              px = ax + ux * l * s + nx * o,
+              py = ay + uy * l * s + ny * o,
+              rx = 40 + r() * 50,
+              ry = 18 + r() * 16,
+              g = Math.atan2(uy, ux);
+            E(c, px, py, rx + 8, ry + 6, "#4A3A28", g);
+            E(c, px, py, rx, ry, "#3A4A52", g);
+            E(c, px - rx * 0.25, py - ry * 0.2, rx * 0.5, ry * 0.35, "#6E8A94", g);
+          }
+        } else {
+          // musgo entre las piedras, más en los bordes; alguna piedra que falta
+          const n = Math.floor(l / 60);
+          for (let k = 0; k < n; k++) {
+            const s = r(),
+              borde = r() < 0.7,
+              o = (borde ? (r() < 0.5 ? -1 : 1) * (0.38 + r() * 0.1) : r() - 0.5) * cm.w;
+            const px = ax + ux * l * s + nx * o,
+              py = ay + uy * l * s + ny * o;
+            if (r() < 0.06) E(c, px, py, 16, 10, "#3A3226", r() * 3);
+            else E(c, px, py, 7 + r() * 9, 3 + r() * 3, r() < 0.5 ? "rgba(86,102,44,0.55)" : "rgba(74,90,46,0.45)", r() * 3);
+          }
+        }
+      }
+    }
+  }
+  // el pasto de adentro con flores chicas y matas (blancas, amarillas y alguna roja), solo lejos de las calles
+  function pastito(c, x0, y0, x1, y1, r) {
+    const RM = plano.R_MURO;
+    for (let k = 0; k < 70; k++) {
+      const x = x0 + r() * TROZO,
+        y = y0 + r() * TROZO;
+      if (Math.hypot(x, y) > RM - 100 || Math.hypot(x, y) < plano.plaza + 100) continue;
+      if (plano.aCalle(x, y) < 60) continue;
+      const tipo = r();
+      if (tipo < 0.55) {
+        for (let j = 0; j < 4; j++) P(c, [x + j * 5 - 8, y, x + j * 5 - 6 + (r() - 0.5) * 6, y - 14 - r() * 10, x + j * 5 - 4, y], j % 2 ? "#56662C" : "#4A5A2E");
+      } else {
+        const col = tipo < 0.8 ? "#E8E4DC" : tipo < 0.95 ? "#FFD98A" : "#C8402D";
+        for (let j = 0; j < 3; j++) E(c, x + (r() - 0.5) * 30, y + (r() - 0.5) * 16, 3.5, 3, col);
+      }
+    }
   }
   function dibujarPiso(c, cam, rad, escPiso) {
     if (Math.abs(escPiso - escCache) > 0.02) {
@@ -372,7 +463,8 @@ window.VISTA25 = (function () {
   }
 
   // dibuja todo: el piso, las cosas del plano y lo que traiga extra ([{ x, y (mundo), f(c, sx, sy) }])
-  function dibujar(c, cam, cw, ch, t, extra = []) {
+  // sobrePiso(c): lo que va pintado sobre el piso (en coordenadas del mundo, girado y achicado), antes de lo parado
+  function dibujar(c, cam, cw, ch, t, extra = [], sobrePiso) {
     const V = proyector(cam);
     nuevasEsteCuadro = 0;
     const vw = cw / cam.esc,
@@ -383,6 +475,7 @@ window.VISTA25 = (function () {
     c.fillRect(0, 0, cw, ch);
     aPiso(c, cam, cw, ch);
     dibujarPiso(c, cam, rad, Math.min(1, cam.esc * 1.25));
+    if (sobrePiso) sobrePiso(c);
     aVista(c, cam, cw, ch);
     const lista = [];
     cosasVisibles(cam, rad + 1400, V, t, lista);

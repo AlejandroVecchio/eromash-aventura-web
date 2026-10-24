@@ -34,8 +34,10 @@
 <script src="js/textos/aventura.js"></script>
 <script src="js/textos/capital.js"></script>
 <script src="js/textos/ciudad.js"></script>
+<script src="js/textos/eikholt.js"></script>
 <script src="../juego/js/comun/vikingos.js"></script>
 <script src="js/comun/dibujo.js"></script>
+<script src="js/comun/controles.js"></script>
 <script src="js/comun/futhark.js"></script>
 <script src="js/mundo/assets.js"></script>
 <script src="js/mundo/assets-eikholt.js"></script>
@@ -61,6 +63,7 @@
 <script src="js/ciudad/porton.js"></script>
 <script src="js/ciudad/plano.js"></script>
 <script src="js/ciudad/vista.js"></script>
+<script src="js/ciudad/recorrer.js"></script>
 <script src="js/mundo/luz.js"></script>
 <script>
 (function () {
@@ -175,6 +178,30 @@
       gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5, horas: HORARIO[k] });
     }
   }
+  // los vecinos con nombre, cada uno en su lugar y a su hora (lo que dicen sale de sus frases de la historia):
+  // Gudrun tararea junto al pozo, Håkon mira desde el campo, Ivar con su copa en la galería del Hongo, Sølve canta de
+  // noche, Ragna cuida sus hongos, los chicos corretean por la plaza
+  const VECINOS = [
+    ["gudrun", L.pozo, 140, 60, [7, 21], { canta: true }],
+    ["hakon", L.entrenamiento, 300, 500, [6, 18]],
+    ["ivar", plano.anclas.hongo_puerta, -200, 160, [17, 2]],
+    ["solve", plano.anclas.hongo_puerta, 160, 220, [19, 2], { habla: true }],
+    ["ragna", L.camas_hongos, 0, 140, [7, 19]],
+    ["folke", L.paseo_sogas, 0, 200, [7, 19]],
+    ["grim", L.corral, -300, 380, [0, 24]],
+    ["sigrun", plano.anclas.sanacion, 120, 120, [8, 21]],
+    ["bergljot", plano.ting, 260, 260, [9, 16]],
+    ["torvald", plano.anclas.svanhild_casa, 200, 260, [8, 18]],
+    ["kolbrun", [L.ting[0] + 1700, L.ting[1] - 400], 0, 0, [8, 18]],
+    ["maren", [0, 0], 1150, 400, [10, 17]],
+    ["sten", plano.anclas.carpinteria, 140, 160, [7, 18]],
+    ["ketil", plano.anclas.puerta_sur, 260, -260, [0, 24]],
+    ["ingrid", L.forasteros, 300, 300, [7, 22]],
+    ["tyra", [0, 0], 2300, 900, [8, 19], { vx: 110 }],
+    ["eirik", [0, 0], -2000, 1500, [8, 19], { vx: -90 }],
+    ["arvid", L.forasteros, -200, 500, [8, 20]],
+  ];
+  for (const [id, c0, dx, dy, horas, op] of VECINOS) if (c0) gente.push(Object.assign({ id, x: c0[0] + dx, y: c0[1] + dy, vx: 0, vy: 0, s: 1, horas }, op || {}));
   // los choques del plano en una grilla, para preguntar rápido si un punto está libre
   const CELDA = 400, grilla = new Map();
   for (const h of plano.choques) {
@@ -212,11 +239,18 @@
   for (const o of plano.cosas) {
     // lo que alumbra por sí (faroles, braseros, fuegos), sea dibujo o volumen
     const id = o.id || "";
-    if (/farol|Farol|brasero|fogon|posteHongo|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : /brasero/.test(id) ? 520 : 420, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: /brasero|fogon|chimenea/.test(id) });
+    // los faroles no se encienden todos juntos: cada uno tiene su hora entre las cinco y las siete de la tarde (el
+    // farolero da la vuelta), y se apagan al alba de a uno
+    const enc = 17 + (Math.abs(Math.round(o.x * 7 + o.y * 13)) % 100) / 60;
+    if (/farol|Farol|posteHongo/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: 420, col: "#FFD98A", f: 0.85, enc });
+    else if (/brasero|fogon|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : 520, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: true });
     if (o.tipo === "casa") {
-      if (/^(casa|hongo|lindes|herreria|sanacion|hospederia|cuartel|carpinteria|curtiembre|cordeleria)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 520, col: "#FFD98A", f: 0.45 });
+      // las casas tapiadas quedan a oscuras; las demás prenden la ventana a su hora
+      if (/^(casa|hongo|lindes|herreria|sanacion|hospederia|cuartel|carpinteria|curtiembre|cordeleria)/.test(o.nombre || "") && !(o.casa.ficha && o.casa.ficha.tapiada)) luces.push({ x: o.x, y: o.y, z: 0, r: 520, col: "#FFD98A", f: 0.45, enc: enc + 0.4 });
       if (/^(puerta_|atalaya)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 700, col: "#FFD98A", f: 0.8 });
-      if (/^piedraCupula/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 600, col: "#73D5DB", f: 0.6 });
+      if (/^piedraCupula/.test(o.nombre || "") && o.estado !== "apagada") luces.push({ x: o.x, y: o.y, z: 0, r: 600, col: "#73D5DB", f: 0.6, parpadea: o.estado === "parpadea" });
+      if (o.id === "camaHongos") luces.push({ x: o.x, y: o.y, z: 0, r: 260, col: "#FFD98A", f: 0.35 });
+      if (o.id === "ofrendaRoble") luces.push({ x: o.x, y: o.y, z: 0, r: 200, col: "#FFD98A", f: 0.6, fuego: true });
       continue;
     }
   }
@@ -225,21 +259,8 @@
   // la piedra del Ting y las piedras rúnicas de las puertas, en azul rúnico
   luces.push({ x: plano.ting[0], y: plano.ting[1], z: 0, r: 900, col: "#73D5DB", f: 0.6 });
   for (const k of ["sur", "norte", "este", "oeste"]) { const a = plano.anclas["puerta_" + k]; if (a) luces.push({ x: a[0], y: a[1], z: 0, r: 800, col: "#73D5DB", f: 0.7 }); }
-  const VK = { S: VIKINGO.imagen("R", "S", "calm"), E: VIKINGO.imagen("R", "E", "calm"), N: VIKINGO.imagen("R", "N", "calm") };
-  const eromash = { x: LUGARES.plaza[0] - 200, y: LUGARES.plaza[1] - 100 };
-  function dibujarEromash(c, x, y) {
-    const k = 1 / 1.96;
-    c.save();
-    c.translate(x, y);
-    c.scale(k, k);
-    DIB.E(c, 0, 0, 58, 16, "rgba(0,0,0,0.45)");
-    const img = VK.S;
-    if (img.complete) c.drawImage(img, -62, -150, 125, 150);
-    c.restore();
-  }
-  const teclas = {};
-  addEventListener("keydown", (e) => (teclas[e.code] = true));
-  addEventListener("keyup", (e) => (teclas[e.code] = false));
+  // Eromash camina por la ciudad (RECORRER25): curiosidades, cofres, barrios, la gente y los animales que reaccionan
+  RECORRER25.iniciar({ plano, libre, gente, inicio: [LUGARES[q.get("en") || "plaza"][0] - 200, LUGARES[q.get("en") || "plaza"][1] - 100] });
   vista.addEventListener("wheel", (e) => { cerca.value = Math.max(4, Math.min(120, +cerca.value - Math.sign(e.deltaY) * 4)); e.preventDefault(); }, { passive: false });
   let arr = null;
   vista.addEventListener("pointerdown", (e) => { arr = [e.clientX, e.clientY, cam.x, cam.y]; vista.setPointerCapture(e.pointerId); });
@@ -257,16 +278,10 @@
     t0 = ahora;
     tt += dt;
     if (girar.checked) giro.value = ((+giro.value + 180 + dt * 14) % 360) - 180;
-    if (teclas.KeyZ) giro.value = ((+giro.value + 180 - dt * 60 + 360) % 360) - 180;
-    if (teclas.KeyX) giro.value = ((+giro.value + 180 + dt * 60) % 360) - 180;
-    // mover con las flechas, relativo a la cámara
-    let mx = (teclas.KeyD || teclas.ArrowRight ? 1 : 0) - (teclas.KeyA || teclas.ArrowLeft ? 1 : 0);
-    let my = (teclas.KeyS || teclas.ArrowDown ? 1 : 0) - (teclas.KeyW || teclas.ArrowUp ? 1 : 0);
-    if (mx || my) {
-      const g = cam.g, v = 1400 * dt / Math.max(0.2, cam.esc * 2);
-      objetivo.x += (mx * Math.cos(g) + my * Math.sin(g)) * v;
-      objetivo.y += (-mx * Math.sin(g) + my * Math.cos(g)) * v;
-    }
+    if (CONTROLES.pulsado("camaraIzq")) giro.value = ((+giro.value + 180 - dt * 60 + 360) % 360) - 180;
+    if (CONTROLES.pulsado("camaraDer")) giro.value = ((+giro.value + 180 + dt * 60) % 360) - 180;
+    // Eromash camina (las flechas o WASD, relativo a la cámara) y la cámara lo sigue
+    RECORRER25.actualizar(dt, tt, +hora.value, cam, objetivo);
     const gObj = (+giro.value * Math.PI) / 180;
     let dg = Math.atan2(Math.sin(gObj - cam.g), Math.cos(gObj - cam.g));
     cam.g += dg * Math.min(1, dt * 8);
@@ -285,7 +300,7 @@
         continue;
       }
       const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
-      if (!libre(nx, ny) || Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; continue; }
+      if (!libre(nx, ny) || (!p.huye && Math.random() < dt * 0.15)) { p.vx = -p.vx; p.vy = -p.vy; continue; }
       p.x = nx; p.y = ny;
     }
     const h = +hora.value;
@@ -296,13 +311,17 @@
     const coG = Math.cos(cam.g), siG = Math.sin(cam.g);
     const mirada = (p) => {
       if (p.vx || p.vy) p.rumbo = Math.atan2(p.vy, p.vx);
+      else if (p.miraA) p.rumbo = Math.atan2(p.miraA[1], p.miraA[0]); // lo miran pasar
       if (p.rumbo === undefined) p.rumbo = ((p.x * 13 + p.y * 7) % 628) / 100;
       const dx = Math.cos(p.rumbo), dy = Math.sin(p.rumbo);
       return GENTE.vistaDe(dx * coG - dy * siG, (dx * siG + dy * coG) * cam.k);
     };
-    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => !p.horas || aHora(h, p.horas)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
-    extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });
-    VISTA25.dibujar(c, cam, cw, ch, tt, extra);
+    for (const p of gente) p.visible = !p.horas || aHora(h, p.horas);
+    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => p.visible).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
+    extra.push(...RECORRER25.extra(cam, tt));
+    ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
+    VISTA25.dibujar(c, cam, cw, ch, tt, extra, (cx) => RECORRER25.piso(cx, cam, tt, h));
+    RECORRER25.encima(c, cam, cw, ch, tt, h, "mundo");
     // el aire de la tarde: un velo cálido y la viñeta del bosque
     c.setTransform(1, 0, 0, 1, 0, 0);
     // la luz según la hora: la tarde ámbar (el primer respiro después del bosque frío), la noche azul con los faroles,
@@ -328,7 +347,12 @@
         const r = l.r * cam.esc;
         if (!(r > 1)) continue;
         if (sx < -r || sy < -r || sx > cw + r || sy > ch + r) continue;
-        enVista.push({ x: sx, y: sy, r, col: l.col, f: l.fuego ? l.f * (0.9 + Math.sin(tt * 7 + l.x) * 0.08) : l.f });
+        // el farol a su hora (y apagado de nuevo al alba), la piedra que parpadea, los fuegos que tiemblan
+        let f = l.fuego ? l.f * (0.9 + Math.sin(tt * 7 + l.x) * 0.08) : l.f;
+        if (l.enc) f *= h >= 12 ? Math.max(0, Math.min(1, (h - l.enc) * 3)) : Math.max(0, Math.min(1, (l.enc - 11.5 - h) * 3));
+        if (l.parpadea) f *= Math.sin(tt * 2.3) + Math.sin(tt * 7.1 + 1) * 0.6 > 0.7 ? 0.05 : 1;
+        if (f <= 0.01) continue;
+        enVista.push({ x: sx, y: sy, r, col: l.col, f });
       }
       LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n: noche, osc: Math.min(0.82, 0.06 + noche * 0.74) }, tt);
     }
@@ -339,6 +363,7 @@
     g.addColorStop(1, "rgba(10,14,12,0.55)");
     c.fillStyle = g;
     c.fillRect(0, 0, cw, ch);
+    RECORRER25.encima(c, cam, cw, ch, tt, h, "hud");
     requestAnimationFrame(cuadro);
   }
   requestAnimationFrame(cuadro);

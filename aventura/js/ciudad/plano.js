@@ -186,6 +186,9 @@ window.PLANO25 = (function () {
     const cosas = [], // { tipo: "casa" | "asset", x, y (unidades), ... }
       choques = [], // { poli: [[x, y]…] } | { circulo: [x, y, r] }
       anclas = {};
+    // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
+    const curiosidades = [];
+    const curiosidad = (clave, x, z, r = 3.5) => curiosidades.push({ clave, x: x * M, y: z * M, r: r * M });
     const U = (p) => [p[0] * M, p[1] * M];
     // lo que tiene forma va en volumen (ENSERES25), con su giro en el piso: nada queda de frente a la pantalla. Solo la
     // gente, los animales y lo redondo (pinos, barriles, braseros, el pozo) siguen siendo dibujos de ASSETS.
@@ -218,6 +221,21 @@ window.PLANO25 = (function () {
       posteFarol: (sem) => E5.farol(sem, { alto: 130 }),
       roca: (sem) => E5.roca(sem),
       munecoPractica: (sem) => E5.muneco(sem),
+      tablillasRoble: (sem, o) => E5.tablillas(sem, o),
+      cintasPromesa: (sem) => E5.cintas(sem),
+      cofre: (sem, o) => E5.cofre(sem, o),
+      secaderoPescado: (sem) => E5.secaderoPescado(sem),
+      hnefatafl: (sem) => E5.hnefatafl(sem),
+      ofrendaRoble: (sem) => E5.ofrenda(sem),
+      colmenas: (sem) => E5.colmenas(sem),
+      gallinero: (sem) => E5.gallinero(sem),
+      posteCrecidas: (sem) => E5.posteCrecidas(sem),
+      tableroSendas: (sem) => E5.tableroSendas(sem),
+      cartelOficio: (sem, o) => E5.cartelOficio(sem, o),
+      camaHongos: (sem) => E5.camaHongos(sem),
+      balsaTrabada: (sem) => E5.balsa(sem),
+      piedraFundadores: (sem) => Object.assign(TING25.runica(sem, { lados: 6, ru: 70, rw: 44, alto: 300, angosta: 0.66, tonos: ["#4A4844", "#5A5852", "#6E6C66", "#7E7C74"], runa: "othala", rh: 110, zr: 190, luz: 0.3 }), { pie: [80, 52] }),
+      piedraCaidos: (sem) => Object.assign(TING25.runica(sem, { lados: 5, ru: 46, rw: 30, alto: 210, angosta: 0.7, tonos: ["#3E3C3A", "#4E4C48", "#62605A", "#72706A"], runa: "algiz", rh: 80, zr: 140, luz: 0.25 }), { pie: [52, 36] }),
     };
     // agranda un volumen alrededor de su pie (la escala del dibujo de antes)
     const escalado = (v, s) =>
@@ -264,14 +282,14 @@ window.PLANO25 = (function () {
         // sin giro dado, el frente mira al Roble
         const ry = o.ry !== undefined ? o.ry : Math.atan2(x, -z);
         const v = escalado(VOLUMEN[id](sem, o), o.s || 1);
-        if (!o.fijo && v.pie && !lugarLibre(x, z, ry, v.pie)) return;
+        if (!o.fijo && v.pie && !lugarLibre(x, z, ry, v.pie)) return false;
         cosas.push({ tipo: "casa", id, x: x * M, y: z * M, ry, casa: v, piso: v.piso, nombre: id + nVol++ });
         // su choque: el mismo rectángulo del pie (la gente no lo atraviesa)
         if (v.pie && !v.piso) {
           const co = Math.cos(ry), si = Math.sin(ry), [hu, hw] = v.pie;
           choques.push({ poli: [[-hu, -hw], [hu, -hw], [hu, hw], [-hu, hw]].map(([u, w]) => [x * M + u * co - w * si, z * M + u * si + w * co]) });
         }
-        return;
+        return true;
       }
       // los bueyes miran hacia un lado fijo del mundo
       if (id === "buey" && o.rumbo === undefined) o = Object.assign({}, o, { rumbo: o.espejo ? Math.PI : ((o.sem || 0) * 1.7) % (Math.PI * 2) });
@@ -328,7 +346,7 @@ window.PLANO25 = (function () {
           const largo = Math.hypot(x1 - x0, z1 - z0) * M;
           if (largo < 20) continue;
           // un tramo de la muralla doble en volumen (u a lo largo, w hacia adentro); una escalera cada tanto
-          cosas.push({ tipo: "casa", x: xm * M, y: zm * M, ry: Math.atan2(z1 - z0, x1 - x0), casa: MURALLA25.tramo(largo, i, i % 9 === 4, [37, 101, 163].includes(i)), nombre: "muralla" + i + (b0 > a0 ? "b" : "") });
+          cosas.push({ tipo: "casa", x: xm * M, y: zm * M, ry: Math.atan2(z1 - z0, x1 - x0), casa: MURALLA25.tramo(largo, i, i % 9 === 4, [37, 101, 163].includes(i), Math.abs(corto((b0 + b1) / 2 + PI / 2 - 0.3)) < 0.07 ? "garras" : Math.abs(corto((b0 + b1) / 2 - 0.2)) < 0.06 ? "remiendo" : null), nombre: "muralla" + i + (b0 > a0 ? "b" : "") });
         }
       }
       // el choque de la empalizada: un anillo de círculos (con los huecos de las puertas)
@@ -347,7 +365,9 @@ window.PLANO25 = (function () {
       for (let i = 0; i < 12; i++) {
         const a = (i / 12) * TAU + 0.13;
         const [x, z] = polar(a, R_MURO + 6);
-        cosas.push({ tipo: "casa", x: x * M, y: z * M, ry: Math.atan2(Math.cos(a), -Math.sin(a)), casa: TING25.cupula(i + 1), nombre: "piedraCupula" + i });
+        // la cúpula se apaga de a una runa por vez: la del noroeste ya está muerta y la del este se corta a ratos
+        const estado = i === 7 ? "apagada" : i === 0 ? "parpadea" : null;
+        cosas.push({ tipo: "casa", x: x * M, y: z * M, ry: Math.atan2(Math.cos(a), -Math.sin(a)), casa: TING25.cupula(i + 1, { estado }), nombre: "piedraCupula" + i, estado });
         circulo(x, z, 1.4);
       }
       // las puertas: el portón con sus dos torres (la del norte, la de hierro)
@@ -580,7 +600,7 @@ window.PLANO25 = (function () {
     {
       const [hx, hz] = LUGAR.herreria;
       const ry = mirando(hx, hz, 0, 0);
-      especial("herreria", hx - 4, hz - 3, ry, { W: 14 * M, D: 9 * M, pisos: 1, H: 190, RT: 190, tipo: "dosAguas", techo: 0, piedra: 60, porche: null, galeria: true, anexo: { lado: -1, W: 5 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: false, chimenea: null, entra: true, lena: true, pared: 1 }, 7201);
+      especial("herreria", hx - 4, hz - 3, ry, { cartel: "yunque", W: 14 * M, D: 9 * M, pisos: 1, H: 190, RT: 190, tipo: "dosAguas", techo: 0, piedra: 60, porche: null, galeria: true, anexo: { lado: -1, W: 5 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: false, chimenea: null, entra: true, lena: true, pared: 1 }, 7201);
       // el galpón de la fragua al costado del taller (del lado sin anexo) y la chimenea de piedra detrás de la fragua
       const [gx2, gz2] = aMundoE(hx - 4, hz - 3, ry, 10.6, 0.6);
       asset("herreriaAsa", gx2, gz2, { s: 1.4, ry, fijo: true });
@@ -593,7 +613,7 @@ window.PLANO25 = (function () {
     {
       const [cx, cz] = LUGAR.carpinteria;
       const ry = mirando(cx, cz, 0, 0);
-      especial("carpinteria", cx, cz, ry, { W: 14 * M, D: 9 * M, pisos: 1, H: 200, RT: 200, tipo: "dosAguas", techo: 1, piedra: 0, galeria: true, porche: null, anexo: { lado: 1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 1 }, 7701);
+      especial("carpinteria", cx, cz, ry, { cartel: "hacha", W: 14 * M, D: 9 * M, pisos: 1, H: 200, RT: 200, tipo: "dosAguas", techo: 1, piedra: 0, galeria: true, porche: null, anexo: { lado: 1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 1 }, 7701);
       for (let i = 0; i < 3; i++) asset("pilaTroncos", ...aMundoE(cx, cz, ry, -9 + i * 6.5, 9.5), { s: 1, sem: i, ry });
       asset("carroCuadrilla", ...aMundoE(cx, cz, ry, 10, 10), { s: 1.2 });
       asset("lenera", ...aMundoE(cx, cz, ry, -12, 2), { s: 1.2 });
@@ -603,7 +623,7 @@ window.PLANO25 = (function () {
     {
       const [cx, cz] = LUGAR.curtiembre;
       const ry = mirando(cx, cz, 0, 0);
-      especial("curtiembre", cx, cz, ry, { W: 11 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 2, piedra: 0, galeria: true, porche: null, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 5 }, 7801);
+      especial("curtiembre", cx, cz, ry, { cartel: "piel", W: 11 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 2, piedra: 0, galeria: true, porche: null, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 5 }, 7801);
       for (let i = 0; i < 3; i++) asset("tendedero", ...aMundoE(cx, cz, ry, -7 + i * 5, 8), { s: 1.4, sem: 10 + i });
       asset("sacosAbiertos", ...aMundoE(cx, cz, ry, 8, 6), { s: 1.4 });
       asset("ahumadero", ...aMundoE(cx, cz, ry, 0, -8), { s: 1.1 });
@@ -614,7 +634,7 @@ window.PLANO25 = (function () {
     {
       // la Casa de Sanación de Thora: dos pisos, paredes claras, galería para los que esperan, mirando a la plaza
       const [sx, sz] = LUGAR.sanacion;
-      especial("sanacion", sx, sz, mirando(sx, sz, 0, 0), { W: 22 * M, D: 11 * M, pisos: 2, H: 300, RT: 220, tipo: "dosAguas", techo: 2, piedra: 90, galeria: true, porche: null, anexo: { lado: 1, W: 7 * M, D: 7 * M }, escalera: false, buhardilla: 2, dragones: true, chimenea: { u: -0.25, w: -0.1 }, entra: true, lena: true, pared: 0 }, 7301);
+      especial("sanacion", sx, sz, mirando(sx, sz, 0, 0), { cartel: "hierbas", W: 22 * M, D: 11 * M, pisos: 2, H: 300, RT: 220, tipo: "dosAguas", techo: 2, piedra: 90, galeria: true, porche: null, anexo: { lado: 1, W: 7 * M, D: 7 * M }, escalera: false, buhardilla: 2, dragones: true, chimenea: { u: -0.25, w: -0.1 }, entra: true, lena: true, pared: 0 }, 7301);
       anclas.sanacion = U(aMundoE(sx, sz, mirando(sx, sz, 0, 0), 0, 8));
       // el patio de adelante: los catres bajo la lona para los que no entran, los secaderos, el banco de los que
       // esperan y dos braseros; la senda de lajas que lleva de la calle a la puerta
@@ -638,7 +658,7 @@ window.PLANO25 = (function () {
       circulo(hx - 13, hz - 6, 1.2);
       // la hospedería de los caminantes: larga, dos pisos, de frente a la avenida del norte, con su galpón y carros
       const [px, pz] = LUGAR.hospederia;
-      especial("hospederia", px, pz, mirando(px, pz, 0, pz), { W: 24 * M, D: 11 * M, pisos: 2, H: 300, RT: 230, tipo: "dosAguas", techo: 0, piedra: 0, galeria: true, porche: { fondo: 2.4 * M }, anexo: null, escalera: true, buhardilla: 3, dragones: true, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 4 }, 7401);
+      especial("hospederia", px, pz, mirando(px, pz, 0, pz), { cartel: "cama", W: 24 * M, D: 11 * M, pisos: 2, H: 300, RT: 230, tipo: "dosAguas", techo: 0, piedra: 0, galeria: true, porche: { fondo: 2.4 * M }, anexo: null, escalera: true, buhardilla: 3, dragones: true, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 4 }, 7401);
       asset("carroCaravana", px - 2, pz + 17, { s: 1.4, sem: 3 });
       asset("buey", px + 4, pz + 18, { s: 1.3, sem: 7 });
       asset("fardoHeno", px - 8, pz + 15, { s: 1.4 });
@@ -646,7 +666,7 @@ window.PLANO25 = (function () {
       anclas.hospederia = U([px + 8, pz]);
       // la cordelería de Folke: el taller y, junto a la avenida del oeste, el paseo de las sogas
       const [cx, cz] = LUGAR.cordeleria;
-      especial("cordeleria", cx, cz, mirando(cx, cz, cx, 0), { W: 12 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 1, piedra: 0, galeria: false, porche: { fondo: 2 * M }, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 3 }, 7501);
+      especial("cordeleria", cx, cz, mirando(cx, cz, cx, 0), { cartel: "soga", W: 12 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 1, piedra: 0, galeria: false, porche: { fondo: 2 * M }, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 3 }, 7501);
       const [sx2, sz2] = LUGAR.paseo_sogas;
       cosas.push({ tipo: "casa", x: sx2 * M, y: sz2 * M, ry: 0, casa: OFICIOS25.paseoSogas(38 * M, 3), nombre: "paseo_sogas" });
       anclas.cordeleria = U([cx, cz + 6]);
@@ -656,7 +676,7 @@ window.PLANO25 = (function () {
     {
       // el cuartel de la Guardia: largo y bajo, de piedra abajo, mirando al campo
       const [gx, gz] = LUGAR.guardia;
-      especial("cuartel", gx, gz, mirando(gx, gz, 0, gz), { W: 26 * M, D: 10 * M, pisos: 1, H: 210, RT: 210, tipo: "dosAguas", techo: 0, piedra: 120, galeria: true, porche: null, anexo: { lado: -1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: true, chimenea: { u: 0.35, w: -0.1 }, entra: true, lena: true, pared: 2, colTecho: AZUL_GRIS }, 7601);
+      especial("cuartel", gx, gz, mirando(gx, gz, 0, gz), { cartel: "escudo", W: 26 * M, D: 10 * M, pisos: 1, H: 210, RT: 210, tipo: "dosAguas", techo: 0, piedra: 120, galeria: true, porche: null, anexo: { lado: -1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: true, chimenea: { u: 0.35, w: -0.1 }, entra: true, lena: true, pared: 2, colTecho: AZUL_GRIS }, 7601);
       anclas.guardia = U([gx - 8, gz]);
       // el campo de entrenamiento: tierra apisonada y arena, cercado, con muñecos, dianas, estantes y braseros
       const [ex, ez] = LUGAR.entrenamiento;
@@ -850,7 +870,8 @@ window.PLANO25 = (function () {
     const puestas = [];
     const levantadas = [];
     for (const cc of elegidas) {
-      const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: levantadas.length % 4 === 1 }, cc.sem);
+      // una de cada veinte quedó tapiada: la gente que subió al Paso con la cuadrilla y no volvió
+      const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: levantadas.length % 4 === 1, tapiada: levantadas.length % 20 === 13 }, cc.sem);
       const h = casa.huella(cc.x * M, cc.z * M, cc.ry);
       if (h.some((A) => puestas.some((B) => !separadas(A, B, 2.5 * M)))) continue; // dos metros y medio de aire entre casa y casa (los aleros salen de la huella)
       puestas.push(...h);
@@ -863,6 +884,7 @@ window.PLANO25 = (function () {
     const patios = [];
     levantadas.forEach(([cc, casa], i) => {
       cosas.push({ tipo: "casa", x: cc.x * M, y: cc.z * M, ry: cc.ry, casa, nombre: "casa" + i });
+      if (casa.ficha.tapiada) curiosidad("tapiada", cc.x - (cc.fondo / 2 + 1.5) * Math.sin(cc.ry), cc.z + (cc.fondo / 2 + 1.5) * Math.cos(cc.ry), 4);
       for (const h of casa.huella(cc.x * M, cc.z * M, cc.ry)) choques.push({ poli: h });
       const W2 = cc.ancho / 2,
         D2 = cc.fondo / 2;
@@ -1053,10 +1075,85 @@ window.PLANO25 = (function () {
         }
     }
 
+    // ---------- lo que cuenta algo: detalles con historia y cofres escondidos (revisión 7) ----------
+    // cerca(id, x, z, o): lo pone en el primer lugar libre de una espiral alrededor de (x, z); devuelve dónde quedó
+    const cerca = (id, x, z, o = {}, paso = 1.2, vueltas = 60) => {
+      for (let i = 0; i < vueltas; i++) {
+        const a = i * 2.4,
+          d = Math.sqrt(i) * paso;
+        const px = x + Math.cos(a) * d,
+          pz = z + Math.sin(a) * d;
+        if (asset(id, px, pz, Object.assign({ ry: o.ry !== undefined ? o.ry : Math.atan2(px, -pz) }, o))) return [px, pz];
+      }
+      return null;
+    };
+    const conCuriosidad = (clave, donde, r) => donde && curiosidad(clave, donde[0], donde[1], r);
+    // al pie del Roble: el árbol de tablillas, las cintas de promesa, la ofrenda y las camas de hongos de Ragna
+    conCuriosidad("tablillas", cerca("tablillasRoble", -14.5, -14.5, { oscuras: 7, ry: Math.atan2(-14.5, 14.5) }, 0.8), 5.5);
+    for (let i = 0; i < 5; i++) {
+      const a = -2.9 + i * 1.25;
+      const d = cerca("cintasPromesa", Math.cos(a) * 16.5, Math.sin(a) * 16.5, { sem: i }, 0.6, 30);
+      if (i === 2) conCuriosidad("cintas", d, 3);
+    }
+    conCuriosidad("ofrenda", cerca("ofrendaRoble", Math.cos(2.0) * 16, Math.sin(2.0) * 16, {}, 0.6), 3);
+    conCuriosidad("hongos", cerca("camaHongos", -20, -14, { ry: Math.atan2(-20, 14) }, 0.8), 3.5);
+    curiosidad("raices", 9, -9, 4);
+    curiosidad("menhir", LUGAR.ting[0], LUGAR.ting[1] + 3.5, 4);
+    curiosidad("pozo", LUGAR.pozo[0], LUGAR.pozo[1] + 2.5, 3.5);
+    curiosidad("campana", LUGAR.campana[0], LUGAR.campana[1] + 2.5, 3.5);
+    curiosidad("tablon", LUGAR.tablon[0], LUGAR.tablon[1] + 2.5, 3.5);
+    // la mesa de hnefatafl de los viejos, en la franja de afuera de la plaza
+    conCuriosidad("hnefatafl", cerca("hnefatafl", -30, -40, {}, 1.2), 3.5);
+    // la piedra de los fundadores junto a la Casa de las Lindes y la de los caídos junto al cuartel
+    conCuriosidad("fundadores", cerca("piedraFundadores", -92, 74, {}, 1.2), 4);
+    conCuriosidad("caidos", cerca("piedraCaidos", 38, -98, {}, 1.2), 3.5);
+    // el muelle: el secadero de pescado y el poste de las crecidas; el Tablero de las Sendas en la Puerta del Sur
+    conCuriosidad("secadero", cerca("secaderoPescado", 160, 60, { ry: 0.3 }, 1.2), 3.5);
+    conCuriosidad("crecidas", cerca("posteCrecidas", 163, 44, {}, 1) || (asset("posteCrecidas", 165, 47, { fijo: true }) && [165, 47]), 3);
+    conCuriosidad("sendas", cerca("tableroSendas", 9, 130, { ry: 0 }, 1.2), 4);
+    // las colmenas de la huerta del este y de las hierbas de Sanación; los gallineros del corral (Trueno les tiene miedo)
+    conCuriosidad("colmenas", cerca("colmenas", 118, 62, {}, 1.4), 3.5);
+    cerca("colmenas", -60, -104, {}, 1.4);
+    conCuriosidad("gallinero", cerca("gallinero", 106, -16, {}, 1.4), 4);
+    cerca("gallinero", 76, 88, {}, 1.4);
+    cerca("gallinero", -84, 52, {}, 1.4);
+    // los oficios y los lugares que tienen algo para contar
+    curiosidad("forja", anclas.herreria[0] / M, anclas.herreria[1] / M, 4);
+    curiosidad("hongo", anclas.hongo_puerta[0] / M, anclas.hongo_puerta[1] / M, 4);
+    curiosidad("losa", anclas.losa[0] / M, anclas.losa[1] / M, 3.5);
+    curiosidad("sanacion", anclas.sanacion[0] / M, anclas.sanacion[1] / M, 4);
+    curiosidad("cordeleria", LUGAR.paseo_sogas[0], LUGAR.paseo_sogas[1], 5);
+    curiosidad("curtiembre", anclas.curtiembre[0] / M, anclas.curtiembre[1] / M, 4);
+    curiosidad("carpinteria", anclas.carpinteria[0] / M, anclas.carpinteria[1] / M, 4);
+    curiosidad("muneco", anclas.entrenamiento[0] / M, anclas.entrenamiento[1] / M, 5);
+    curiosidad("caravanas", anclas.corral[0] / M, anclas.corral[1] / M, 5);
+    curiosidad("forasteros", anclas.forasteros[0] / M, anclas.forasteros[1] / M, 5);
+    curiosidad("hospederia", anclas.hospederia[0] / M, anclas.hospederia[1] / M, 4);
+    curiosidad("puerta_sur", anclas.puerta_sur[0] / M, anclas.puerta_sur[1] / M - 6, 5);
+    curiosidad("garras", Math.cos(-PI / 2 + 0.3) * (R_MURO - 7), Math.sin(-PI / 2 + 0.3) * (R_MURO - 7), 6);
+    curiosidad("remiendo", R_MURO - 6, 30, 5);
+    curiosidad("cupula_apagada", Math.cos((7 / 12) * TAU + 0.13) * (R_MURO - 7), Math.sin((7 / 12) * TAU + 0.13) * (R_MURO - 7), 6);
+    curiosidad("cupula_parpadea", Math.cos(0.13) * (R_MURO - 7), Math.sin(0.13) * (R_MURO - 7), 6);
+    // la balsa de sal trabada en la curva del río, contra la orilla de adentro
+    asset("balsaTrabada", 176, -40, { fijo: true, ry: Math.atan2(-60 - -150, 181 - 190) + 0.25 });
+    curiosidad("balsa", 170, -40, 6);
+    curiosidad("puente", 178, 95, 6);
+    // cinco cofres escondidos en rincones que solo encuentra el que mira: el que lo abre se lleva lo que cuenta
+    const cofres = [];
+    const escondido = (n, x, z) => {
+      const d = cerca("cofre", x, z, { sem: n, ry: (n * 1.3) % TAU }, 0.8, 40);
+      if (d) cofres.push({ n, x: d[0] * M, y: d[1] * M });
+    };
+    escondido(1, 14, -12); // entre las raíces del Roble
+    escondido(2, 62, 50); // detrás del Hongo Dorado
+    escondido(3, 172, 54); // al final del muelle
+    escondido(4, -80, 114); // detrás de la curtiembre, donde nadie quiere ir
+    escondido(5, -140, -10); // pegado a la empalizada del oeste, detrás del paseo de las sogas
+
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

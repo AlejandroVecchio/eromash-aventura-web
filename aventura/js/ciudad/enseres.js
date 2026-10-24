@@ -621,5 +621,342 @@ window.ENSERES25 = (function () {
     return { dibujar, alto: 110, pie: [30, 16] };
   }
 
-  return { farol, roca, muneco, caja, estirado, disco, huerta, espantapajaros, carro, lenera, forja, chimenea, tablon, mesa, estante, tendedero, ahumadero, lona, tronco, pilaTroncos, fardo, diana, campana, catre, estandarte, posteHongo };
+
+  // ---------- lo que cuenta algo de la ciudad (revisión 7) ----------
+
+  // El árbol de tablillas del Roble: un travesaño en dos postes del que cuelgan las tablillas de los que salieron por
+  // las sendas. Del lado claro, volvieron; las oscuras siguen afuera (la de Geir, el hermano de Grim; las de la cuadrilla).
+  // op: { oscuras }
+  function tablillas(sem, op = {}) {
+    const LA = 300,
+      H = 190,
+      r = azar(sem * 53 + 11);
+    const osc = op.oscuras != null ? op.oscuras : 7;
+    const tabs = [];
+    for (let f = 0; f < 3; f++)
+      for (let i = 0; i < 11; i++) {
+        if (r() < 0.12) continue;
+        tabs.push({ u: -LA / 2 + 22 + i * ((LA - 44) / 10) + (r() - 0.5) * 6, z: H - 26 - f * 46, larga: 10 + r() * 14, fase: r() * 6, oscura: false });
+      }
+    for (let k = 0; k < osc; k++) tabs[Math.floor(r() * tabs.length)].oscura = true;
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 12, y + 4, LA * 0.55, 14, 0.32);
+      for (const u of [-LA / 2, LA / 2]) caja(c, pr, k, u - 8, u + 8, -8, 8, 0, H + 14, MAD);
+      for (const z of [H, H - 46, H - 92]) caja(c, pr, k, -LA / 2 - 14, LA / 2 + 14, -4, 4, z, z + 8, MAD);
+      const lista = tabs.slice().sort((a, b) => pr.fondo(a.u, 0) - pr.fondo(b.u, 0));
+      for (const tb of lista) {
+        const v = Math.sin(t * 1.6 + tb.fase) * 3;
+        const zt = tb.z - tb.larga;
+        palo(c, pr, [tb.u, 0, tb.z], [tb.u + v * 0.4, v, zt], "#8A7A5A", 1.5);
+        caja(c, pr, k, tb.u - 7 + v * 0.4, tb.u + 7 + v * 0.4, v - 1.5, v + 1.5, zt - 22, zt, tb.oscura ? ["#1A1612", "#2A2420", "#3A322C"] : ["#A8987A", "#D8C8A4", "#E8DCC0"]);
+      }
+    }
+    return { dibujar, alto: H + 20, pie: [LA / 2 + 14, 12] };
+  }
+
+  // Las cintas de promesa atadas a una estaca entre las raíces: si atás una, la tenés que cumplir.
+  function cintas(sem) {
+    const r = azar(sem * 19 + 4);
+    const COL = ["#9C2315", "#FFD98A", "#7BC86C", "#4A78D0", "#F2ECEC", "#C8402D", "#9A6BD8"];
+    const lista = Array.from({ length: 6 + Math.floor(r() * 4) }, (_, i) => ({ col: COL[(i + sem) % COL.length], z: 70 + r() * 30, l: 30 + r() * 30, a: r() * Math.PI * 2, f: r() * 6 }));
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 4, y + 2, 12, 4, 0.3);
+      caja(c, pr, k, -4, 4, -4, 4, 0, 104, MAD);
+      for (const cn of lista) {
+        const v = Math.sin(t * 2.2 + cn.f) * 0.4;
+        const du = Math.cos(cn.a + v),
+          dw = Math.sin(cn.a + v);
+        const p = [];
+        for (let j = 0; j <= 4; j++) {
+          const s = j / 4;
+          p.push([du * cn.l * s * 0.7, dw * cn.l * s * 0.7, cn.z - cn.l * s + Math.sin(t * 3 + cn.f + j) * 3 * s]);
+        }
+        const a = p.map((q) => pr(...q));
+        c.strokeStyle = cn.col;
+        c.lineWidth = 4;
+        c.lineCap = "round";
+        c.beginPath();
+        a.forEach(([sx, sy], j) => (j ? c.lineTo(sx, sy) : c.moveTo(sx, sy)));
+        c.stroke();
+      }
+    }
+    return { dibujar, alto: 110, pie: [10, 10] };
+  }
+
+  // Un cofre de madera con flejes de hierro y cerradura; op.abierto: la tapa atrás y el brillo de adentro
+  function cofre(sem, op = {}) {
+    const U = 38,
+      W = 24,
+      Z = 30;
+    const TM = ["#4A3020", "#6E4A2E", "#8A6040"];
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 8, y + 3, 46, 12, 0.36);
+      caja(c, pr, k, -U, U, -W, W, 0, Z, TM, op.abierto ? "#1A120C" : undefined);
+      const arco = [[-W, Z], [W, Z], [W * 0.7, Z + 12], [0, Z + 16], [-W * 0.7, Z + 12]];
+      if (op.abierto) {
+        const s = Math.sin(t * 3) * 0.15 + 0.85;
+        const m = pr(0, 0, Z);
+        alfa(c, 0.8 * s, () => E(c, m[0], m[1] - 2, 22, 7, C.ambar));
+        if (!window.CALIDAD || CALIDAD.nivel !== "baja") halo(c, m[0], m[1] - 6, 50, C.ambar, 0.3 * s);
+        estirado(c, pr, k, -U, U, arco.map(([w, z]) => [-W - (z - Z) * 0.9, Z + (w + W) * 0.95]), TM);
+      } else estirado(c, pr, k, -U, U, arco, TM);
+      // los flejes y la cerradura del frente que se ve
+      for (const u of [-U * 0.6, U * 0.6]) for (const s of [-1, 1]) if (ve(pr, k, 0, s, 0)) palo(c, pr, [u, s * (W + 0.5), 0], [u, s * (W + 0.5), Z + (op.abierto ? 0 : 10)], C.hierro, 3);
+      const fr = ve(pr, k, 0, 1, 0) ? 1 : -1;
+      if (!op.abierto) {
+        const q = pr(0, fr * (W + 1), Z - 4);
+        c.fillStyle = C.hierroLuz || "#9A9A9A";
+        c.fillRect(q[0] - 4, q[1] - 4, 8, 9);
+      }
+    }
+    return { dibujar, alto: 60, pie: [U, W] };
+  }
+
+  // El secadero de pescado del muelle: dos caballetes con una vara y los pescados colgados (el de la noche tarda un día más)
+  function secaderoPescado(sem) {
+    const LA = 210,
+      H = 150,
+      r = azar(sem * 23 + 9);
+    const peces = Array.from({ length: 11 }, (_, i) => ({ u: -LA / 2 + 16 + i * ((LA - 32) / 10), l: 34 + r() * 14, f: r() * 6, col: r() < 0.5 ? ["#5E6A72", "#8A98A0", "#A8B4BA"] : ["#6E6252", "#8E806C", "#A8987E"] }));
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 10, y + 4, LA * 0.55, 14, 0.3);
+      for (const u of [-LA / 2, LA / 2]) {
+        palo(c, pr, [u, -30, 0], [u, 0, H], C.maderaSombra, 5);
+        palo(c, pr, [u, 30, 0], [u, 0, H], C.madera, 5);
+      }
+      palo(c, pr, [-LA / 2 - 8, 0, H - 4], [LA / 2 + 8, 0, H - 4], C.maderaLuz, 5);
+      for (const p of peces) {
+        const v = Math.sin(t * 1.4 + p.f) * 2;
+        const a = pr(p.u, v, H - 8),
+          b = pr(p.u - 5, v, H - 8 - p.l * 0.55),
+          cc = pr(p.u, v, H - 8 - p.l),
+          d = pr(p.u + 5, v, H - 8 - p.l * 0.55);
+        P(c, [...a, ...b, ...cc, ...d], p.col[1]);
+        P(c, [...a, ...d, ...cc], p.col[2]);
+        const co = pr(p.u, v, H - 8 - p.l);
+        P(c, [co[0], co[1], co[0] - 6, co[1] + 7, co[0] + 6, co[1] + 7], p.col[0]);
+      }
+    }
+    return { dibujar, alto: H + 10, pie: [LA / 2 + 8, 30] };
+  }
+
+  // La mesa de hnefatafl de la plaza: el tablero de nueve por nueve, las piezas a medio jugar y dos banquitos
+  function hnefatafl(sem) {
+    const r = azar(sem * 31 + 2);
+    const piezas = [];
+    for (let i = 0; i < 16; i++) piezas.push([Math.floor(r() * 9), Math.floor(r() * 9), i < 6 ? "#F2ECEC" : "#2A1E14"]);
+    function dibujar(c, x, y, giro, k) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 10, y + 4, 60, 18, 0.32);
+      const partes = [
+        [pr.fondo(0, -78), () => caja(c, pr, k, -22, 22, -92, -64, 0, 40, MAD)],
+        [pr.fondo(0, 78), () => caja(c, pr, k, -22, 22, 64, 92, 0, 40, MAD)],
+        [pr.fondo(0, 0), () => {
+          for (const [u, w] of [[-38, -38], [38, -38], [38, 38], [-38, 38]]) caja(c, pr, k, u - 4, u + 4, w - 4, w + 4, 0, 62, MAD, false);
+          caja(c, pr, k, -46, 46, -46, 46, 62, 70, MAD);
+          const T = 36,
+            p = (i, j, z) => pr(-T + (i * 2 * T) / 9, -T + (j * 2 * T) / 9, z);
+          for (let i = 0; i < 9; i++)
+            for (let j = 0; j < 9; j++) {
+              if ((i + j) % 2) continue;
+              P(c, [...p(i, j, 71), ...p(i + 1, j, 71), ...p(i + 1, j + 1, 71), ...p(i, j + 1, 71)], "#5E4430");
+            }
+          const rey = pr(0, 0, 71);
+          E(c, rey[0], rey[1] - 5, 4, 6, "#FFD98A");
+          for (const [i, j, col] of piezas) {
+            const q = p(i + 0.5, j + 0.5, 71);
+            E(c, q[0], q[1] - 2.5, 3, 3.5, col);
+          }
+        }],
+      ];
+      enOrden(partes);
+    }
+    return { dibujar, alto: 80, pie: [46, 92] };
+  }
+
+  // La ofrenda al pie del Roble: una losa chata con cuencos de leche, un pan y una vela que nadie deja apagar
+  function ofrenda(sem) {
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 6, y + 3, 50, 14, 0.3);
+      caja(c, pr, k, -44, 44, -28, 28, 0, 14, PIEDRA);
+      for (const [u, w, col] of [[-24, -8, "#F2ECEC"], [6, 10, "#F2ECEC"], [24, -12, "#C8A060"]]) {
+        const q = pr(u, w, 14);
+        E(c, q[0], q[1] - 3, 11, 6, "#6E5038");
+        E(c, q[0], q[1] - 5, 8, 3.5, col);
+      }
+      const v = pr(-6, -14, 14);
+      c.fillStyle = "#E8DCC4";
+      c.fillRect(v[0] - 2.5, v[1] - 18, 5, 18);
+      const fl = 1 + Math.sin(t * 9 + sem) * 0.15;
+      P(c, [v[0] - 3 * fl, v[1] - 18, v[0], v[1] - 28 * fl, v[0] + 3 * fl, v[1] - 18], C.ambar);
+      if (!window.CALIDAD || CALIDAD.nivel !== "baja") halo(c, v[0], v[1] - 22, 40, C.ambar, 0.35);
+    }
+    return { dibujar, alto: 40, pie: [44, 28] };
+  }
+
+  // Las colmenas de paja en su banco, con abejas que van y vienen
+  function colmenas(sem) {
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 8, y + 3, 64, 14, 0.3);
+      caja(c, pr, k, -70, 70, -18, 18, 0, 26, MAD);
+      for (const u of [-46, 0, 46]) {
+        const b = pr(u, 0, 26);
+        for (let i = 0; i < 5; i++) E(c, b[0], b[1] - 6 - i * 9, 22 - i * 3.6, 7, i % 2 ? "#B8A060" : "#C8B070");
+        const bo = pr(u, ve(pr, k, 0, 1, 0) ? 18 : -18, 32);
+        E(c, bo[0], bo[1], 4, 3, "#2A1E14");
+      }
+      if (!window.CALIDAD || CALIDAD.nivel !== "baja")
+        for (let i = 0; i < 9; i++) {
+          const a = t * (1.5 + (i % 3) * 0.4) + i * 2.1;
+          const q = pr(Math.cos(a) * (40 + i * 6), Math.sin(a * 1.3) * 40, 50 + Math.sin(a * 2) * 20);
+          c.fillStyle = "#1E1814";
+          c.fillRect(q[0] - 1.5, q[1] - 1.5, 3, 3);
+        }
+    }
+    return { dibujar, alto: 80, pie: [70, 18] };
+  }
+
+  // El gallinero: una casita de tablas con techo a un agua, la rampa y el agujero de la puerta
+  function gallinero(sem) {
+    function dibujar(c, x, y, giro, k) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 10, y + 4, 64, 18, 0.34);
+      const partes = [
+        [pr.fondo(0, 0), () => {
+          for (const [u, w] of [[-44, -32], [44, -32], [44, 32], [-44, 32]]) caja(c, pr, k, u - 4, u + 4, w - 4, w + 4, 0, 26, MAD, false);
+          caja(c, pr, k, -46, 46, -34, 34, 26, 86, ["#5E4430", "#7A5A3A", "#9A7A52"], false);
+          const fr = ve(pr, k, 0, 1, 0) ? 1 : -1;
+          const h = pr(-16, fr * 35, 40);
+          E(c, h[0], h[1] - 10, 9, 11, "#1A120C");
+          estirado(c, pr, k, -54, 54, [[-42, 78], [42, 96], [42, 102], [-42, 84]], ["#3A2A1E", "#5E4430", "#6E5038"]);
+        }],
+        [pr.fondo(-16, 70), () => P(c, [...pr(-26, 35, 30), ...pr(-6, 35, 30), ...pr(-6, 90, 0), ...pr(-26, 90, 0)], C.madera)],
+      ];
+      enOrden(partes);
+    }
+    return { dibujar, alto: 110, pie: [54, 42] };
+  }
+
+  // El poste de las crecidas del muelle: un palo cuadrado con muescas y la marca roja del año en que el río tapó el muelle
+  function posteCrecidas(sem) {
+    const H = 300;
+    const MARCAS = [60, 92, 118, 150, 176, 232];
+    function dibujar(c, x, y, giro, k) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 6, y + 2, 16, 5, 0.3);
+      caja(c, pr, k, -9, 9, -9, 9, 0, H, MAD);
+      for (const [nu, nw] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+        if (!ve(pr, k, nu, nw, 0)) continue;
+        for (const z of MARCAS) {
+          const a = pr(nu * 9.5 - nw * 9, nw * 9.5 + nu * 9, z),
+            b = pr(nu * 9.5 + nw * 9, nw * 9.5 - nu * 9, z);
+          L(c, a[0], a[1], b[0], b[1], z === 232 ? C.rojoEromash : "#2A1E14", z === 232 ? 4 : 2);
+        }
+      }
+    }
+    return { dibujar, alto: H + 10, pie: [10, 10] };
+  }
+
+  // El Tablero de las Sendas en la Puerta del Sur: las sendas de Eldervald pintadas en tablas, con un techito
+  function tableroSendas(sem) {
+    const LA = 240,
+      H = 200;
+    const SENDAS = [[[0.5, 0.95], [0.5, 0.55], [0.48, 0.1]], [[0.5, 0.55], [0.9, 0.42]], [[0.5, 0.55], [0.1, 0.6]], [[0.48, 0.1], [0.3, 0.05]]];
+    const LUGARES = [[0.5, 0.55, "#FFD98A"], [0.48, 0.1, "#73D5DB"], [0.9, 0.42, "#7BC86C"], [0.1, 0.6, "#E0B2B2"], [0.5, 0.95, "#F2ECEC"]];
+    function dibujar(c, x, y, giro, k) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 10, y + 4, LA * 0.55, 14, 0.3);
+      for (const u of [-LA / 2, LA / 2]) caja(c, pr, k, u - 7, u + 7, -7, 7, 0, H + 20, MAD);
+      caja(c, pr, k, -LA / 2 + 6, LA / 2 - 6, -5, 5, H - 140, H, ["#4A3A28", "#6E5A3E", "#8A7452"]);
+      const s = ve(pr, k, 0, 1, 0) ? 1 : -1;
+      const en = (a, b) => pr((a - 0.5) * (LA - 30) * s, s * 6, H - 8 - b * 124);
+      P(c, [...en(0, 0), ...en(1, 0), ...en(1, 1), ...en(0, 1)], "#C8B48C");
+      c.lineCap = "round";
+      for (const sd of SENDAS) {
+        c.strokeStyle = "#6E4A2E";
+        c.lineWidth = 4;
+        c.beginPath();
+        sd.forEach(([a, b], i) => {
+          const q = en(a, b);
+          i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]);
+        });
+        c.stroke();
+      }
+      for (const [a, b, col] of LUGARES) {
+        const q = en(a, b);
+        E(c, q[0], q[1], 6, 5, col);
+      }
+      estirado(c, pr, k, -LA / 2 - 16, LA / 2 + 16, [[-22, H + 18], [22, H + 18], [0, H + 42]], MAD);
+    }
+    return { dibujar, alto: H + 50, pie: [LA / 2 + 16, 22] };
+  }
+
+  // Las marcas de un oficio en su poste: el cartel colgado con el dibujo tallado de los dos lados
+  function cartelOficio(sem, op = {}) {
+    function dibujar(c, x, y, giro, k) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 4, y + 2, 14, 4, 0.3);
+      caja(c, pr, k, -5, 5, -5, 5, 0, 190, MAD);
+      palo(c, pr, [0, 0, 184], [62, 0, 184], C.hierro, 3);
+      for (const u of [14, 50]) palo(c, pr, [u, 0, 184], [u, 0, 172], C.hierro, 2);
+      caja(c, pr, k, 6, 58, -3, 3, 120, 172, ["#4A3020", "#6E4A2E", "#8A6040"]);
+      const s = ve(pr, k, 0, 1, 0) ? 1 : -1;
+      const m = pr(32, s * 4, 146);
+      CASAS25.iconoOficio(c, op.icono || "yunque", m[0], m[1], 0.95);
+    }
+    return { dibujar, alto: 200, pie: [62, 8] };
+  }
+
+  // Las camas de hongos dorados de Ragna, a la sombra de las raíces: marco de tablas, tierra negra y los hongos, que de
+  // noche brillan apenas (op.noche lo pide quien dibuja; los chicos juran que hablan)
+  function camaHongos(sem) {
+    const r = azar(sem * 37 + 5);
+    const hongos = Array.from({ length: 14 }, () => [(r() - 0.5) * 120, (r() - 0.5) * 36, 7 + r() * 6, r() * 6]);
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      sombra(c, x + 6, y + 3, 76, 16, 0.3);
+      caja(c, pr, k, -72, 72, -26, 26, 0, 18, MAD, "#2E241A");
+      const lista = hongos.slice().sort((a, b) => pr.fondo(a[0], a[1]) - pr.fondo(b[0], b[1]));
+      const noche = ENSERES25.noche || 0;
+      for (const [u, w, h, f] of lista) {
+        const q = pr(u, w, 18);
+        c.fillStyle = "#E8DCC4";
+        c.fillRect(q[0] - 1.5, q[1] - h, 3, h);
+        E(c, q[0], q[1] - h, h * 0.8, h * 0.45, "#E8B04A");
+        E(c, q[0] + 1, q[1] - h - 1, h * 0.4, h * 0.2, C.ambar);
+        if (noche > 0.3 && (!window.CALIDAD || CALIDAD.nivel !== "baja")) halo(c, q[0], q[1] - h, 26, C.ambar, 0.18 * noche * (0.8 + Math.sin(t * 1.3 + f) * 0.2));
+      }
+    }
+    return { dibujar, alto: 40, pie: [72, 26] };
+  }
+
+  // La balsa trabada en los troncos de la curva: seis troncos atados, medio hundida de un lado, con los sacos de sal de
+  // Skeldra y la pértiga clavada; el agua le pega contra el costado
+  function balsa(sem) {
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      const v = Math.sin(t * 1.1 + sem) * 2;
+      c.save();
+      c.translate(0, v);
+      const filas = [-75, -45, -15, 15, 45, 75].map((w, i) => [w, -10 + i * 3]);
+      filas.sort((a, b) => pr.fondo(0, a[0]) - pr.fondo(0, b[0]));
+      for (const [w, z] of filas) leno(c, pr, k, -150, 150, w, z, 15);
+      for (const [u, w] of [[-60, -30], [-10, 20], [40, -25]]) caja(c, pr, k, u - 26, u + 26, w - 18, w + 18, 18, 58, ["#A8987A", "#C8B898", "#E0D4BC"]);
+      palo(c, pr, [110, 40, 10], [150, 70, 220], C.maderaSombra, 5);
+      c.restore();
+      // la espuma donde la corriente le pega
+      const a = pr(-160, -90, 0),
+        b = pr(-160, 90, 0);
+      alfa(c, 0.5 + Math.sin(t * 3) * 0.2, () => L(c, a[0], a[1], b[0], b[1], "#C8E0E4", 6));
+    }
+    return { dibujar, alto: 230, pie: [160, 95] };
+  }
+
+  return { balsa, camaHongos, tablillas, cintas, cofre, secaderoPescado, hnefatafl, ofrenda, colmenas, gallinero, posteCrecidas, tableroSendas, cartelOficio, farol, roca, muneco, caja, estirado, disco, huerta, espantapajaros, carro, lenera, forja, chimenea, tablon, mesa, estante, tendedero, ahumadero, lona, tronco, pilaTroncos, fardo, diana, campana, catre, estandarte, posteHongo };
 })();

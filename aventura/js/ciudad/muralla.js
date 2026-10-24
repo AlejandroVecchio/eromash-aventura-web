@@ -53,8 +53,32 @@ window.MURALLA25 = (function () {
   }
 
   // un tramo de muralla de largo l (centrado en u = 0)
-  function tramo(l, sem, conEscalera, conCofre) {
+  // marcas: "garras" (los zarpazos de los lobos, del lado de afuera y del de adentro) o "remiendo" (tablas nuevas, claras)
+  function tramo(l, sem, conEscalera, conCofre, marcas) {
     const U = l / 2 + 2;
+    // tres zarpazos paralelos a la altura de un hombre, o las tablas claras del remiendo, sobre una cara (w fijo)
+    const marcar = (c, pr, w) => {
+      if (marcas === "garras") {
+        for (const [u0, z0] of [[-U * 0.4, 120], [U * 0.15, 95], [U * 0.5, 130]])
+          for (let j = 0; j < 3; j++) {
+            const a = pr(u0 + j * 12, w, z0 + j * 4),
+              b = pr(u0 + j * 12 + 26, w, z0 - 52 + j * 4);
+            L(c, a[0], a[1], b[0], b[1], "#C8B48C", 3);
+            L(c, a[0] + 1, a[1] + 2, b[0] + 1, b[1] + 2, "#2A1E14", 1.5);
+          }
+      } else if (marcas === "remiendo") {
+        for (const [u0, ancho, z1] of [[-U * 0.3, 30, 210], [-U * 0.3 + 34, 28, 190], [U * 0.25, 32, 160]]) {
+          P(c, [...pr(u0, w, 0), ...pr(u0 + ancho, w, 0), ...pr(u0 + ancho, w, z1), ...pr(u0, w, z1)], "#A88A60");
+          const a = pr(u0 + 2, w, 0),
+            b = pr(u0 + 2, w, z1);
+          L(c, a[0], a[1], b[0], b[1], "#C8AA7A", 2);
+          for (const z of [40, z1 - 30]) {
+            const q = pr(u0 + ancho / 2, w, z);
+            E(c, q[0], q[1], 2, 2, C.hierro);
+          }
+        }
+      }
+    };
     function dibujar(c, x, y, giro, k, t) {
       const pr = CASAS25.proyector(x, y, giro, k);
       const lx = (nu, nw) => pr.mira(nu, nw)[0];
@@ -67,6 +91,7 @@ window.MURALLA25 = (function () {
         // la empalizada de afuera: la cara de afuera (alta, en punta) o la de adentro, por encima del adarve
         if (!desdeAdentro) {
           troncos(c, pr, -U, WF - GR, U, WF - GR, 0, ZF, VIEJO, lx(0, -1), r, true);
+          marcar(c, pr, WF - GR - 1);
           for (const z of [70, 190]) {
             const a = pr(-U, WF - GR, z),
               b = pr(U, WF - GR, z);
@@ -91,6 +116,7 @@ window.MURALLA25 = (function () {
         // la empalizada de adentro (hasta el adarve) y la baranda con sus postes
         if (desdeAdentro) {
           troncos(c, pr, -U, WI + GR, U, WI + GR, 0, ZD, TRONCO, lx(0, 1), r, false);
+          marcar(c, pr, WI + GR + 1);
           const a = pr(-U, WI + GR, ZD),
             b = pr(U, WI + GR, ZD);
           L(c, a[0], a[1], b[0], b[1], C.maderaSombra, 6);

@@ -67,7 +67,8 @@ window.TING25 = (function () {
         lc = Math.hypot(u1 - u0, w1 - w0),
         du = (u1 - u0) / lc,
         dw = (w1 - w0) / lc;
-      const late = (op.luz || 0.35) + Math.sin(t * 0.9 + sem) * 0.2;
+      const late = op.brillo ? op.brillo(t) : (op.luz || 0.35) + Math.sin(t * 0.9 + sem) * 0.2;
+      if (late <= 0.02) return;
       const h = op.rh,
         zb = op.zr;
       const punto = (a, b) => {
@@ -98,14 +99,24 @@ window.TING25 = (function () {
 
   // El menhir de la piedra dormida: alto, negro, de cinco caras con la punta quebrada, y la runa de Tiwaz raspada que
   // apenas se enciende de azul rúnico (la piedra "casi contesta").
+  // TING25.despierta (0..1) lo sube quien recorre la ciudad cuando Eromash se acerca: la runa casi contesta
+  const estado = { despierta: 0 };
   function menhir(sem) {
-    return runica(sem, { lados: 5, ru: 92, rw: 66, alto: 340, angosta: 0.62, tonos: ["#141416", "#1C1C1E", "#2C2C30", "#38383E"], punta: [0, 0.12, 0.04, 0.18, 0.08], runa: "tiwaz", rh: 130, zr: 120, luz: 0.35 });
+    const brillo = (t) => 0.14 + Math.sin(t * 0.9 + sem) * 0.08 + estado.despierta * (0.95 + Math.sin(t * 5) * 0.1);
+    return runica(sem, { lados: 5, ru: 92, rw: 66, alto: 340, angosta: 0.62, tonos: ["#141416", "#1C1C1E", "#2C2C30", "#38383E"], punta: [0, 0.12, 0.04, 0.18, 0.08], runa: "tiwaz", rh: 130, zr: 120, brillo });
   }
 
   // Las piedras de la cúpula al pie de la muralla: menhires grises más altos que la empalizada, con Algiz (la
   // protección) encendida en azul rúnico.
-  function cupula(sem) {
-    return runica(sem, { lados: 6, ru: 80, rw: 50, alto: 520, angosta: 0.6, tonos: ["#3A3E42", "#4A4E52", "#5E6266", "#6A6E72"], runa: "algiz", rh: 170, zr: 330, luz: 0.7 });
+  // op.estado: "parpadea" (la que se está apagando: se corta a ratos) o "apagada" (ya no alumbra nada)
+  function cupula(sem, op = {}) {
+    const brillo =
+      op.estado === "apagada"
+        ? () => 0
+        : op.estado === "parpadea"
+          ? (t) => (Math.sin(t * 2.3) + Math.sin(t * 7.1 + 1) * 0.6 > 0.7 ? 0.04 : 0.45 + Math.sin(t * 13) * 0.15)
+          : (t) => 0.7 + Math.sin(t * 0.9 + sem) * 0.2;
+    return runica(sem, { lados: 6, ru: 80, rw: 50, alto: 520, angosta: 0.6, tonos: op.estado === "apagada" ? ["#2E3034", "#3A3C40", "#4A4C50", "#55575B"] : ["#3A3E42", "#4A4E52", "#5E6266", "#6A6E72"], runa: "algiz", rh: 170, zr: 330, brillo });
   }
 
   // Una de las doce piedras del círculo: piedras paradas, más altas que una persona, de seis caras con la punta gastada
@@ -138,5 +149,5 @@ window.TING25 = (function () {
     return { dibujar, alto: ALTO + 10 };
   }
 
-  return { menhir, asiento, cupula, runica, prisma };
+  return { menhir, asiento, cupula, runica, prisma, estado };
 })();

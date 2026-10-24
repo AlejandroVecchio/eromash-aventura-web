@@ -68,6 +68,45 @@ window.CASAS25 = (function () {
     c.restore();
   }
 
+  // el dibujo tallado del cartel de cada oficio (centrado en x, y; s = escala): yunque, hierbas, soga, piel, hacha, cama, escudo
+  function iconoOficio(c, tipo, x, y, s) {
+    const os = "#2A1E14";
+    if (tipo === "yunque") {
+      P(c, [x - 16 * s, y - 6 * s, x + 14 * s, y - 6 * s, x + 18 * s, y - 2 * s, x + 6 * s, y, x + 4 * s, y + 6 * s, x + 10 * s, y + 10 * s, x - 10 * s, y + 10 * s, x - 4 * s, y + 6 * s, x - 6 * s, y, x - 12 * s, y - 2 * s], C.hierro);
+      L(c, x - 14 * s, y - 6 * s, x + 12 * s, y - 6 * s, C.hierroLuz, 1.5 * s);
+    } else if (tipo === "hierbas") {
+      L(c, x, y + 12 * s, x, y - 10 * s, "#4E6A2E", 2 * s);
+      for (let i = 0; i < 4; i++) {
+        const yy = y + 6 * s - i * 5 * s;
+        E(c, x - 5 * s, yy, 5 * s, 2.5 * s, "#7BC86C", -0.5);
+        E(c, x + 5 * s, yy - 2 * s, 5 * s, 2.5 * s, "#6E9A44", 0.5);
+      }
+    } else if (tipo === "soga") {
+      c.strokeStyle = "#C8B48C";
+      c.lineWidth = 3 * s;
+      for (const r of [11, 7, 3]) {
+        c.beginPath();
+        c.ellipse(x, y, r * s, r * 0.8 * s, 0, 0, Math.PI * 2);
+        c.stroke();
+      }
+    } else if (tipo === "piel") {
+      P(c, [x - 8 * s, y - 12 * s, x + 8 * s, y - 12 * s, x + 14 * s, y - 8 * s, x + 10 * s, y, x + 14 * s, y + 10 * s, x + 4 * s, y + 8 * s, x, y + 13 * s, x - 4 * s, y + 8 * s, x - 14 * s, y + 10 * s, x - 10 * s, y, x - 14 * s, y - 8 * s], "#A07A52");
+      E(c, x, y, 5 * s, 6 * s, "#8A6440");
+    } else if (tipo === "hacha") {
+      L(c, x - 10 * s, y + 12 * s, x + 8 * s, y - 10 * s, "#8A6440", 3 * s);
+      P(c, [x + 2 * s, y - 14 * s, x + 14 * s, y - 6 * s, x + 12 * s, y + 2 * s, x + 6 * s, y - 6 * s], C.hierroLuz);
+    } else if (tipo === "cama") {
+      R(c, x - 14 * s, y - 2 * s, 28 * s, 8 * s, "#C8B48C");
+      R(c, x - 14 * s, y - 8 * s, 5 * s, 18 * s, os);
+      R(c, x + 10 * s, y - 2 * s, 4 * s, 12 * s, os);
+      E(c, x - 6 * s, y - 4 * s, 4 * s, 3 * s, "#F2ECEC");
+    } else if (tipo === "escudo") {
+      E(c, x, y, 12 * s, 12 * s, "#2C4226");
+      E(c, x, y, 3.5 * s, 3.5 * s, C.hierroLuz);
+      L(c, x - 12 * s, y, x + 12 * s, y, "#1E3018", 1.5 * s);
+    }
+  }
+
   function crear(ficha, sem) {
     const f = completar(ficha || {}, sem || 1);
     const pal = PZ.PAREDES[f.pared % PZ.PAREDES.length],
@@ -128,6 +167,13 @@ window.CASAS25 = (function () {
       }
       filaVentanas(len, len / 2 + pdx, 30 * S);
       PZ.puerta(c0, len / 2 + pdx, 0, S, colP);
+      if (f.tapiada) {
+        tapiar(len, 30 * S);
+        cruz(len / 2 + pdx, 0, 36 * S, 62 * S);
+        // la tablilla oscura clavada en la puerta
+        R(c0, len / 2 + pdx - 6 * S, -50 * S, 12 * S, 16 * S, "#2A2420");
+        E(c0, len / 2 + pdx, -48 * S, 1.5 * S, 1.5 * S, C.hierro);
+      }
       if (f.cartel) cartel(len / 2 + pdx - 70 * S, -118 * S);
       if (f.entra) {
         const fx = len / 2 + pdx + 34 * S;
@@ -147,20 +193,33 @@ window.CASAS25 = (function () {
         R(c0, x - 3 * S, y + 4 * S, 6 * S, 14 * S, "#E8DCC4");
         P(c0, [x - 16 * S, y + 6 * S, x - 10 * S, y - 4 * S, x + 10 * S, y - 4 * S, x + 16 * S, y + 6 * S], "#E8B04A");
         P(c0, [x, y - 4 * S, x + 10 * S, y - 4 * S, x + 16 * S, y + 6 * S, x + 2 * S, y + 6 * S], C.ambar);
-      }
+      } else if (f.cartel) iconoOficio(c0, f.cartel, x, y + 7 * S, S);
     }
+    // las tablas clavadas en cruz de una casa vacía (f.tapiada): la gente que se fue al Paso y no volvió
+    const cruz = (x, y, w, h) => {
+      P(c0, [x - w / 2, y - h, x - w / 2 + 5 * S, y - h, x + w / 2, y - 5 * S, x + w / 2, y, x + w / 2 - 5 * S, y, x - w / 2, y - h + 5 * S], "#8A6E4C");
+      P(c0, [x + w / 2, y - h, x + w / 2 - 5 * S, y - h, x - w / 2, y - 5 * S, x - w / 2, y, x - w / 2 + 5 * S, y, x + w / 2, y - h + 5 * S], "#A0845E");
+      for (const [cx, cy] of [[x - w / 2 + 3 * S, y - h + 3 * S], [x + w / 2 - 3 * S, y - h + 3 * S], [x - w / 2 + 3 * S, y - 3 * S], [x + w / 2 - 3 * S, y - 3 * S]]) E(c0, cx, cy, 1.4 * S, 1.4 * S, C.hierro);
+    };
+    const tapiar = (len, alto) => {
+      if (!f.tapiada) return;
+      const n = Math.max(1, Math.round(len / 190));
+      for (let k = 0; k < n; k++) cruz(((k + 0.5) / n) * len, -alto + 2 * S, 30 * S, 30 * S);
+    };
     const paredAtras = (len) => {
       PZ.troncos(c0, 0, -H, len, H, S, [-2 * S, len + 2 * S]);
       piedra(len, H);
       zocalo(len);
       filaVentanas(len, null, 30 * S);
       if (dos) filaVentanas(len, null, H * 0.6);
+      tapiar(len, 30 * S);
     };
     const paredCostado = (len) => {
       PZ.troncos(c0, 0, -H, len, H, S, null);
       piedra(len, H);
       zocalo(len);
       PZ.ventana(c0, len / 2, -H * 0.38, 18 * S, 26 * S, pos, S);
+      if (f.tapiada) cruz(len / 2, -H * 0.38 + 2 * S, 24 * S, 28 * S);
       R(c0, 0, -H, 6 * S, H, pal[2]);
       R(c0, len - 6 * S, -H, 6 * S, H, pal[2]);
     };
@@ -445,5 +504,5 @@ window.CASAS25 = (function () {
     return { ficha: f, W, D, H, alto: HR, dibujar, huella, puertaLocal, radio: Math.hypot(W2 + (f.anexo ? f.anexo.W : 0), D2) + 40 };
   }
 
-  return { crear, completar, proyector, S };
+  return { crear, completar, proyector, iconoOficio, S };
 })();
