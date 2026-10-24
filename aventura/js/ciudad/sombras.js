@@ -1,7 +1,8 @@
 // ---------- las sombras de la capital (módulo SOMBRAS25) ----------
 // Lo que está parado en Eikholt tira su sombra sobre el piso según la hora: larga y de costado a la mañana y a la
 // tarde, corta al mediodía, azulada y corta con la luna. La luz sigue viniendo de arriba a la derecha de la pantalla
-// (la cara izquierda de las casas queda en sombra), así que la sombra cae hacia la izquierda y gira apenas con el sol.
+// (la cara izquierda de las casas queda en sombra), así que con la vista de entrada la sombra cae hacia la izquierda y
+// gira apenas con el sol; el sol está quieto en el mundo, así que al girar la cámara las sombras giran con el piso.
 // Cada cosa guarda su huella en el piso (la misma de los choques); la sombra es la huella estirada hacia donde cae, y
 // todas se juntan en un solo trazo para que dos que se pisan no se oscurezcan el doble.
 // También: el borde oscuro al pie de cada pared (donde la pared toca el piso) y la sombra debajo de los toldos.
@@ -109,6 +110,7 @@ window.SOMBRAS25 = (function () {
   // cuadro. preparar() arma la clave de este momento (el rumbo de la sombra en 96 pasos, el largo y la fuerza en
   // escalones, la calidad y lo que se ve a esa distancia); si cambia, VISTA25 repinta las baldosas de a pocas.
   const MARGEN = 2700; // lo más larga que puede ser una sombra
+  const G0 = (-28 * Math.PI) / 180; // el giro de la cámara con que se abre la ciudad
   function cercanas(x0, y0, x1, y1, m) {
     const l = [];
     for (let by = Math.floor((y0 - m) / BALDE); by <= Math.floor((y1 + m) / BALDE); by++)
@@ -132,9 +134,12 @@ window.SOMBRAS25 = (function () {
     const nv = nivel();
     if (nv === "baja") return null;
     const S = sol(h, noche);
-    const co = Math.cos(cam.g),
-      si = Math.sin(cam.g);
-    // la dirección de la pantalla pasada al piso del mundo (deshace el giro de la cámara), en 96 rumbos
+    // el sol está quieto en el mundo (no gira con la cámara): la dirección se mide con el giro de la cámara de entrada,
+    // así con la vista de siempre la sombra cae a la izquierda y al girar se queda pegada al piso como todo lo demás (y las
+    // baldosas horneadas no se repintan al girar)
+    const co = Math.cos(G0),
+      si = Math.sin(G0);
+    // la dirección de la pantalla pasada al piso del mundo, en 96 rumbos
     const tirar = (a, l) => {
       const vx = Math.cos(a) * l,
         vy = Math.sin(a) * l;

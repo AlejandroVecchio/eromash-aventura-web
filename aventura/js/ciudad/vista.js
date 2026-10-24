@@ -568,7 +568,8 @@ window.VISTA25 = (function () {
     TOPE_FIGURAS = 1200,
     PASOS_GIRO = 128;
   // armar figuras nuevas tiene un tope de tiempo por cuadro (antes, de cantidad: 24 casas grandes daban un tirón)
-  let tiempoFiguras = 0;
+  let tiempoFiguras = 0,
+    gPrevio = 0;
   function figura(o, giro, k, esc) {
     const v = o.casa;
     const R = v.radio || (v.ancho ? v.ancho / 2 + 160 : v.W ? Math.hypot(v.W, v.D) / 2 + 80 : 400),
@@ -581,7 +582,9 @@ window.VISTA25 = (function () {
     if (!f) {
       if (tiempoFiguras > 6) {
         // sin presupuesto este cuadro: la de giro más cercano que ya esté hecha, si hay
-        for (let d = 1; d < 12 && !f; d++) f = FIGURAS.get(base + ((gq + d) % PASOS_GIRO)) || FIGURAS.get(base + ((gq - d + PASOS_GIRO) % PASOS_GIRO));
+        // (solo un paso al lado, casi igual: más lejos se notaba que la casa no giraba y después se acomodaba; si no hay,
+        // se dibuja entera con el giro exacto)
+        for (let d = 1; d < 2 && !f; d++) f = FIGURAS.get(base + ((gq + d) % PASOS_GIRO)) || FIGURAS.get(base + ((gq - d + PASOS_GIRO) % PASOS_GIRO));
         return f || null;
       }
       const tf = performance.now();
@@ -662,7 +665,10 @@ window.VISTA25 = (function () {
   function dibujar(c, cam, cw, ch, t, extra = [], sobrePiso, capa) {
     capaPiso = capa || null;
     const V = proyector(cam);
-    tiempoFiguras = 0;
+    // mientras la cámara gira no se arman figuras nuevas (quedarían viejas al cuadro siguiente): las casas se dibujan
+    // enteras con el giro exacto, y al quedarse quieta se guardan de a poco (se ven igual, así el cambio no se nota)
+    tiempoFiguras = Math.abs(cam.g - gPrevio) > 1e-5 ? Infinity : 0;
+    gPrevio = cam.g;
     const vis = visible(cam, cw, ch, V);
     aPiso(c, cam, cw, ch);
     dibujarPiso(c, cam, cw, ch, vis, V);

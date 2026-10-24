@@ -149,6 +149,10 @@ window.CASAS25 = (function () {
       R(c0, 0, -12 * S, len, 12 * S, "rgba(0,0,0,0.14)");
     };
     let c0 = null; // el lienzo del cuadro (lo usan las funciones de pared)
+    // de lejos (menos de un quinto de escala) los detalles de pocos píxeles no se llegan a ver: las cabezas de los
+    // troncos, las tablas del hastial, las hileras de tejas, el musgo y las matas se saltean. Así la casa se dibuja
+    // entera en cada cuadro también de lejos, con el giro exacto de la cámara (sin dibujos guardados que se acomodan)
+    let fino = false;
     const filaVentanas = (len, saltar, alto) => {
       const n = Math.max(1, Math.round(len / 190));
       for (let k = 0; k < n; k++) {
@@ -246,7 +250,7 @@ window.CASAS25 = (function () {
       const sube = [q[q.length - 1][0] - q[0][0], q[q.length - 1][1] - q[0][1]];
       const [nx] = pr.mira(-sube[0], -sube[1]);
       P(c0, pts, nx > 0.25 ? tC : nx < -0.25 ? tS : mira ? tC : tS);
-      if (tejas !== false && q.length === 4) {
+      if (tejas !== false && q.length === 4 && !fino) {
         for (let k = 1; k < 5; k++) {
           const u = k / 5,
             a = pr(q[0][0] + (q[3][0] - q[0][0]) * u, q[0][1] + (q[3][1] - q[0][1]) * u, q[0][2] + (q[3][2] - q[0][2]) * u),
@@ -281,7 +285,7 @@ window.CASAS25 = (function () {
       pared(pr, W2, -D2, -W2, -D2, 0, -1, H, paredAtras);
       pared(pr, -W2, -D2, -W2, D2, -1, 0, H, paredCostado);
       // las cabezas de los troncos en las esquinas que se ven
-      [[-W2, D2], [W2, D2], [W2, -D2], [-W2, -D2]].forEach(([u, w]) => {
+      if (!fino) [[-W2, D2], [W2, D2], [W2, -D2], [-W2, -D2]].forEach(([u, w]) => {
         const [mx, my] = pr.mira(Math.sign(u), Math.sign(w));
         if (my < -0.2) return;
         const p = pr(u + Math.sign(u) * 6, w + Math.sign(w) * 6, 0);
@@ -302,7 +306,7 @@ window.CASAS25 = (function () {
           if (ny <= 0.01) return;
           P(c0, pts, nx > 0.3 ? pal[1] : pal[0]);
           // tablas del hastial
-          for (let k = 1; k < 6; k++) {
+          if (!fino) for (let k = 1; k < 6; k++) {
             const z = H + (RT * k) / 6,
               ww = D2 * (1 - k / 6),
               p0 = pr(l * W2, -ww, z),
@@ -321,8 +325,8 @@ window.CASAS25 = (function () {
         ].sort((a, b) => pr.fondo(0, a[0][1]) - pr.fondo(0, b[0][1]));
         fa.forEach((q) => {
           faldon(pr, q);
-          musgo(pr, q, 3);
-          if (f.techo === 1) {
+          if (!fino) musgo(pr, q, 3);
+          if (f.techo === 1 && !fino) {
             // tepe: el pasto asoma en la cumbrera
             for (let k = 0; k <= 10; k++) {
               const p = pr(-W2 - ov + ((W + ov * 2) * k) / 10, 0, HR);
@@ -357,7 +361,7 @@ window.CASAS25 = (function () {
           .sort((a, b) => a.d - b.d);
         fa.forEach(({ q }) => {
           faldon(pr, q, q.length === 4);
-          if (q.length === 4) musgo(pr, q, 2);
+          if (q.length === 4 && !fino) musgo(pr, q, 2);
         });
         const r0 = pr(-cu, 0, HR),
           r1 = pr(cu, 0, HR);
@@ -462,6 +466,8 @@ window.CASAS25 = (function () {
     // (x, y): el centro de la planta en la pantalla · giro: el de la casa más el de la cámara · k: cuánto se achica el piso
     function dibujar(c, x, y, giro, k, t) {
       c0 = c;
+      const m = c.getTransform();
+      fino = Math.hypot(m.a, m.b) < 0.205; // los dibujos guardados de lejos (hasta 0.2) tampoco los llevan: se ven igual
       const pr = proyector(x, y, giro, k);
       // la sombra elíptica corrida a la derecha, como todo en el juego
       const rx = (Math.abs(Math.cos(giro)) * W + Math.abs(Math.sin(giro)) * D) / 2,
@@ -477,7 +483,7 @@ window.CASAS25 = (function () {
       if (f.escalera) partes.push({ d: delante ? 1e6 + 1 : -1e6 - 1, fn: () => escalera(pr) });
       partes.sort((a, b) => a.d - b.d).forEach((p) => p.fn());
       // matas al pie de las esquinas de adelante
-      [[-W2, D2], [W2, D2]].forEach(([u, w], i) => {
+      if (!fino) [[-W2, D2], [W2, D2]].forEach(([u, w], i) => {
         if (pr.mira(Math.sign(u), Math.sign(w))[1] < 0) return;
         const p = pr(u, w, 0);
         PZ.matas(c, p[0], p[1] + 2 * S, S, sem + i * 2);
