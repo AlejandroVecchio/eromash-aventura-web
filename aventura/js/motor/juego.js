@@ -209,7 +209,7 @@
     H.marcar("croquis_leido");
     dialogo("carro");
   }, 120);
-  inter(P.piedra_caida, "accion_levantar_piedra", () => en("EL-02") && tiene("errantes_despejados") && !tiene("piedra_puesta"), () => {
+  inter(P.piedra_caida, "accion_levantar_piedra", () => en("EL-02") && tiene("bror_entablillado") && !tiene("piedra_puesta"), () => {
     // Eromash levanta la piedra y la encastra en la runa del refugio
     jug.interactuando = 0.9;
     setTimeout(() => {
@@ -1112,14 +1112,15 @@
       lista = [];
     if (mis) {
       const objs = [];
+      const txt = (ob) => tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
       for (const ob of mis.objetivos) {
-        if (tiene(ob.hecho)) objs.push({ texto: tav(ob.texto), estado: "hecho" });
+        if (tiene(ob.hecho)) objs.push({ texto: txt(ob), estado: "hecho" });
         else {
-          objs.push({ texto: tav(ob.texto), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
+          objs.push({ texto: txt(ob), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
           break;
         }
       }
-      lista.push({ rotulo: t("ui.mision", [m]), nombre: tav("mision_" + m), objetivos: objs });
+      lista.push({ rotulo: t("ui.mision", [H.etapa()]), nombre: tav("mision_" + m), objetivos: objs });
     } else lista.push({ rotulo: tav("mision_fin"), nombre: tav("obj_fin"), objetivos: [] });
     SIS.forEach((s0) => s0.seguimiento && lista.push(s0.seguimiento()));
     HUD.misiones(lista);
