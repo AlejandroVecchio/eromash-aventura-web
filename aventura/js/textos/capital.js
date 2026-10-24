@@ -31,6 +31,7 @@ I18N.textos({
   "as.armero": { es: "Armero", en: "Weapon rack" },
   "as.tablaSuelta": { es: "Tabla suelta", en: "Loose board" },
   "as.cofreSotano": { es: "Cofre del sótano", en: "Cellar chest" },
+  "as.tablonCaza": { es: "El tablón de cacería del Puesto", en: "The Outpost hunting board" },
   "as.cesto": { es: "Cesto de la despensa", en: "Pantry basket" },
   "as.muroFalso": { es: "Muro falso del escondite", en: "Hideout's false wall" },
   "as.sacos": { es: "Sacos de contrabando", en: "Smuggler's sacks" },

@@ -222,10 +222,72 @@
     if (tipo === "cambio") {
       escenario();
       ubicarGente(false);
-    } else if (tipo === "mensaje") avisar(dato, dato === "mision_nueva" ? "#FFD98A" : null);
-    else if (tipo === "lugar") HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
+      seguirObjetivo();
+    } else if (tipo === "mensaje" && dato === "mision_nueva") misionNueva();
+    else if (tipo === "mensaje") avisar(dato);
+    else if (tipo === "lugar") {
+      HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
+      // descubrir un lugar paga un poco de plata (los vecinos le pagan al que trae noticias del camino)
+      if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_LUGAR);
+    }
     else if (tipo === "fin") setTimeout(mostrarFin, 1000);
   });
+  // ---------- misiones: recompensas, avisos y pistas ----------
+  const PLATA_LUGAR = 8;
+  let etapaVista = "",
+    etapaDesde = 0,
+    pistaDada = 0;
+  // cada misión de la historia cumplida paga plata (más cuanto más adentro de la historia); la nueva se anuncia grande
+  function misionNueva() {
+    const n = H.E.mision,
+      plata = 25 + n * 15;
+    if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
+    HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
+    J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
+    etapaVista = H.etapa();
+    etapaDesde = J.t;
+  }
+  // un objetivo cumplido sin cambiar de misión se anuncia en verde
+  function seguirObjetivo() {
+    const e = H.etapa();
+    if (e === etapaVista) return;
+    if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
+    etapaVista = e;
+    etapaDesde = J.t;
+  }
+  function textoObjetivo(ob) {
+    return tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
+  }
+  // si pasan cuatro minutos sin avanzar, un recordatorio de qué hacer y por dónde
+  function pistaSiHaceFalta() {
+    if (J.modo !== "juego" || J.dentro || jug.pelea || J.t - etapaDesde < 240 || J.t - pistaDada < 240) return;
+    const o = H.objetivo();
+    if (!o) return;
+    pistaDada = J.t;
+    HUD.aviso(t(dondeObjetivo() ? "mj.pista_haz" : "mj.pista", [textoObjetivo(o)]), "#73D5DB");
+  }
+  // lo que la gente tiene para decir: «!» dorado sobre a quien manda el objetivo, «…» sobre quien tiene algo nuevo
+  const oidos = () => (H.E.extra.oidos = H.E.extra.oidos || {});
+  function senalDe(n) {
+    const o = H.objetivo();
+    if (o && o.donde === n.id) return "!";
+    const k = H.dialogoDe(n.id);
+    return k && !oidos()[k] ? "…" : null;
+  }
+  function dibujarSenal(n) {
+    const sg = senalDe(n);
+    if (!sg) return;
+    const x = n.x,
+      y = n.y - 150 + Math.sin(J.t * 3 + n.x) * 4;
+    if (sg === "!") {
+      DIB.halo(c, x, y - 12, 34, "#FFD98A", 0.8);
+      DIB.P(c, [x - 6, y - 36, x + 6, y - 36, x + 3.5, y - 8, x - 3.5, y - 8], "#FFD98A");
+      DIB.R(c, x - 4, y - 3, 8, 7, "#FFD98A");
+    } else {
+      DIB.P(c, [x - 18, y - 22, x + 18, y - 22, x + 18, y - 4, x + 4, y - 4, x - 2, y + 4, x - 4, y - 4, x - 18, y - 4], "#F2ECEC");
+      for (let k = -1; k <= 1; k++) DIB.E(c, x + k * 8, y - 13, 2.6, 2.6, "#111111");
+    }
+  }
   H.alGuardar(() => (J.modo === "titulo" ? null : { pos: [Math.round(jug.x), Math.round(jug.y)], salud: Math.max(1, Math.round(jug.hp)) }));
 
   // ---------- interacciones de las misiones ----------
@@ -838,7 +900,9 @@
     const n = npcs[id];
     n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
     jug.mira = VIKINGO.vista(n.x - jug.x, n.y - jug.y, jug.mira);
-    dialogo(H.dialogoDe(id));
+    const k = H.dialogoDe(id);
+    oidos()[k] = true;
+    dialogo(k);
   }
   function interactuar() {
     const c0 = cercano();
@@ -1005,6 +1069,7 @@
   }
   function dibujarNpc(n) {
     GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, hablando: n.hablando, camina: n.camina });
+    if (J.modo === "juego" && !n.hablando) dibujarSenal(n);
   }
   function dibujarMarca(m) {
     const a = Math.min(1, m.t * 2) * (m.t > 30 ? Math.max(0, 1 - (m.t - 30) / 3) : 1);
@@ -1553,6 +1618,10 @@
     HUD.ocultarJuego(false);
     J.modo = "juego";
     CONTROLES.soltar();
+    etapaVista = H.etapa();
+    etapaDesde = J.t;
+    // al seguir una partida guardada, un recordatorio de en qué andaba
+    if (!nueva && H.mision()) J.retrasar(1.5, () => HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.tu_mision")));
   }
   function pausa() {
     J.modo = "menu";
@@ -1575,6 +1644,8 @@
     let extra = "";
     const pr = H.E.extra.prologo;
     if (pr && pr.nombre) extra += `<div class="diario-resumen"><p>${t("pl.diario", [pr.nombre, t("pl.signo_corto_" + pr.signo)])}</p></div>`;
+    const ob = H.objetivo();
+    if (H.mision() && ob) extra = `<div class="diario-resumen"><p><b>${tav("mision_" + H.idMision())}</b> ${t("mj.diario_ahora", [textoObjetivo(ob)])}</p></div>` + extra;
     SIS.forEach((s0) => s0.diario && (extra += s0.diario()));
     return `<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`;
   }
@@ -1669,6 +1740,7 @@
       J.textos.forEach((n) => (n.t += dt));
       J.textos = J.textos.filter((n) => n.t < 0.9);
       zonas();
+      pistaSiHaceFalta();
       actualizarCamara(dt);
       autoguardado += dt;
       if (autoguardado > 30) {

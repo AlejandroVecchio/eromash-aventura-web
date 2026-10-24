@@ -270,6 +270,7 @@ window.ELDERVALD = (function () {
     poner("casaNordica", q(-80, -430), { v: 4, s: 1.15, pared: 1, techo: 1, postigo: 0, sem: 2, estandarte: true }, "casa_puesto");
     poner("tableroTablillas", q(10, -429), { oscuras: 5, s: 1.1 }, "tablillas");
     poner("mesaRutas", q(-170, -372), {}, "mesa_rutas");
+    poner("tablonCaza", q(300, 330), {}, "tablon_caza");
     punto("eydis_puesto", q(-90, -350));
     // la atalaya de Tove
     poner("torreVigia", q(-420, -500), { sem: 8 });
