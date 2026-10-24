@@ -71,6 +71,7 @@ window.EXPLORA = (function () {
     });
     if (!mejor) return;
     notados.add(mejor[0]);
+    if (window.ANIMA) ANIMA.gesto("duda");
     nota = { t: J.t, x: mejor[1].x, y: mejor[1].y };
     if (window.SONIDO) {
       SONIDO.tono("triangle", 1046, 1318, 0.35, 0.05, { x: nota.x, y: nota.y, filtro: 3200 });

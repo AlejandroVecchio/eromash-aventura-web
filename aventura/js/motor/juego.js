@@ -131,6 +131,7 @@
     }
     jug.hp -= dano;
     jug.herido = 0.5;
+    ANIMA.golpe(jug, ox);
     HUD.herido();
     // de qué lado vino: una cuña roja en ese borde de la pantalla
     golpesDir.push({ a: Math.atan2(oy - jug.y, ox - jug.x), t0: J.t });
@@ -253,6 +254,7 @@
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
+    ANIMA.gesto("feliz");
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
     etapaVista = H.etapa();
     etapaDesde = J.t;
@@ -405,7 +407,7 @@
         setTimeout(r.al, 450);
       }
     SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
-    if (!algo) setTimeout(() => avisar("lente_nada"), 500);
+    if (!algo) setTimeout(() => (avisar("lente_nada"), ANIMA.gesto("duda")), 500);
   }
 
   // ---------- diálogos ----------
@@ -1066,7 +1068,8 @@
 
   // ---------- dibujo ----------
   const VK = {};
-  ["calm", "fierce", "hurt", "happy"].forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
+  VIKINGO.OJOS.forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
+  let animaT = 0;
   function dibujarEspada(x, y, ang, s, brillo) {
     c.save();
     c.translate(x, y);
@@ -1088,20 +1091,28 @@
   // Eromash dibujado igual que en la arena: el sprite a 125 × 150 escalado por CUERPO, la espada, el tajo
   function dibujarJugador() {
     const p = jug;
-    if (p.muerto && Math.floor(J.t * 8) % 2) return;
-    if (p.vuelve > 0 && Math.floor(J.t * 10) % 3 === 0) return; // parpadea mientras dura la gracia de volver
+    // la pose de este cuadro (ANIMA): estirarse, aplastarse, inclinarse, la cara y el destello
+    const dtA = Math.max(0, Math.min(0.05, J.t - animaT));
+    animaT = J.t;
+    const malherido = !p.muerto && p.hp < p.hpMax * 0.3;
+    ANIMA.actualizar(p, dtA, (p.paso || 0) > 0);
+    const po = ANIMA.pose(p, { paso: p.paso || 0, malherido, cansado: p.cansado && !malherido, canal: p.interactuando > 0 && p.canalTotal >= 0.6 });
+    if (po.alfa <= 0) return;
+    if (p.vuelve > 0 && p.vuelve < 2.1 && Math.floor(J.t * 10) % 3 === 0) return; // parpadea mientras dura la gracia de volver
     c.save();
     if (p.z) c.translate(0, -p.z); // arriba de la muralla o en la escalera
     c.translate(p.x, p.y);
     c.scale(CUERPO, CUERPO);
     c.translate(-p.x, -p.y);
     const jp = p.salto > 0 ? Math.sin((1 - p.salto / 0.42) * Math.PI) : 0;
-    const paso = p.paso != null ? p.paso : p.anda ? p.anda + 1 : 0,
-      bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * [2.5, 7, 11, 16][paso])) * [2, 4, 8, 10][paso];
-    if (!enSilueta) DIB.E(c, p.x, p.y, 58 * (1 - jp * 0.35), 16 * (1 - jp * 0.35), "rgba(0,0,0,0.45)");
+    const paso = p.paso != null ? p.paso : p.anda ? p.anda + 1 : 0;
+    // malherido renguea: un paso más alto que el otro
+    let bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * [2.5, 7, 11, 16][paso])) * [2, 4, 8, 10][paso];
+    if (malherido && paso > 0) bob *= Math.sin(J.t * [2.5, 7, 11, 16][paso] * 0.5) > 0 ? 1.5 : 0.45;
+    if (!enSilueta) DIB.E(c, p.x + po.dx * 0.5, p.y, 58 * (1 - jp * 0.35) * po.sx, 16 * (1 - jp * 0.35), `rgba(0,0,0,${(0.45 * po.alfa).toFixed(3)})`);
     const h = 150,
       w = 125,
-      yy = p.y - h + 8 - bob - jp * 70,
+      yy = p.y - h + 8 - bob - jp * 70 + po.dy,
       face = p.mira.vista === "E" ? (p.mira.espejo ? -1 : 1) : p.dir[0] < 0 ? -1 : 1;
     // espada: en guardia al costado, o en el arco del golpe
     let sp;
@@ -1116,6 +1127,9 @@
       sp = { x: p.x + lado * 78, y: p.y - 70 - bob - jp * 70 + Math.sin(J.t * 2.4) * 6, ang: -Math.PI / 2 + lado * 0.25, s: 0.3 };
     }
     // de espaldas la espada en guardia queda detrás del cuerpo
+    sp.x += po.dx;
+    sp.y += po.dy + (1 - po.sy) * 40;
+    if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
     const detras = sp.y < p.y - 95 || (!p.atk && p.mira.vista === "N");
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
@@ -1135,15 +1149,40 @@
       c.stroke();
       c.restore();
     }
-    const ojos = p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm";
-    const img = VK[p.mira.vista + ojos];
+    const ojos = po.ojos || (p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm");
+    const vista = po.vista || p.mira.vista,
+      espejo = po.vista ? po.espejo : p.mira.espejo;
+    const img = VK[vista + ojos] || VK[vista + "calm"];
+    // la estela de la esquiva: copias claras que quedan atrás
+    if (!enSilueta && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
+      const bl = ANIMA.blanco(img);
+      if (bl)
+        ANIMA.estela().forEach((e) => {
+          c.save();
+          c.globalAlpha = 0.28 * (1 - e.t / 0.24);
+          c.translate(e.x, e.y - 2 + (yy - p.y));
+          if (vista === "E" && espejo) c.scale(-1, 1);
+          c.drawImage(bl, -w / 2, 0, w, h);
+          c.restore();
+        });
+    }
     c.save();
-    if (p.inv > 0 && p.esq <= 0 && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
-    if (p.esq > 0) c.globalAlpha = 0.75;
-    c.translate(p.x, yy + h / 2);
-    if (p.mira.vista === "E" && p.mira.espejo) c.scale(-1, 1);
-    c.rotate(p.salto > 0 ? -0.25 * jp : paso === 3 && p.mira.vista === "E" ? 0.1 : 0);
-    if (img.complete) c.drawImage(img, -w / 2, -h / 2, w, h);
+    c.globalAlpha = po.alfa;
+    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
+    if (p.esq > 0) c.globalAlpha = 0.8;
+    // desde los pies: así aplastarse y estirarse no lo despegan del piso
+    c.translate(p.x + po.dx, yy + h - 6);
+    if (vista === "E" && espejo) c.scale(-1, 1);
+    c.rotate((p.salto > 0 ? -0.25 * jp * (vista === "E" ? 1 : 0.4) : 0) + po.rot);
+    c.scale(po.sx, po.sy);
+    if (img.complete) c.drawImage(img, -w / 2, -h + 6, w, h);
+    if (po.flash > 0) {
+      const bl = ANIMA.blanco(img);
+      if (bl) {
+        c.globalAlpha = po.flash;
+        c.drawImage(bl, -w / 2, -h + 6, w, h);
+      }
+    }
     c.restore();
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     c.restore();

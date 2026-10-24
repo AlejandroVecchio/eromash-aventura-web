@@ -139,6 +139,7 @@ window.PODERES = (function () {
     if (b.plata) partes.push(t("sx.botin_plata", [b.plata]));
     if (b.vida) partes.push(t("sx.botin_vida"));
     HUD.aviso(partes.join(" · "), "#FFD98A");
+    if (window.ANIMA) ANIMA.gesto("feliz");
   }
   // la plata que entra seguida se suma en un solo número (no una lluvia de «+9»)
   function darPlata(n) {
@@ -159,6 +160,7 @@ window.PODERES = (function () {
     if (pj.frag % 3 === 0) {
       pj.nivel++;
       aplicar();
+      if (window.ANIMA) ANIMA.gesto("feliz");
       HUD.aviso(t("pj.nivel_runico", [pj.nivel]), "#73D5DB");
     } else HUD.aviso(t("pj.fragmento", [pj.frag % 3]), "#73D5DB");
   }

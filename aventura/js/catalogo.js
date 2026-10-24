@@ -109,6 +109,18 @@
       }),
     ),
   );
+  // sus caras (las de la arena y las de la aventura), de frente y de costado
+  const gk = grupo("as.grupo.caras");
+  VIKINGO.OJOS.forEach((o) =>
+    ["S", "E"].forEach((v) =>
+      ficha(gk, I18N.t("cat.cara." + o) + " · " + v, 150, 180, (c, t) => {
+        piso(c, 150, 180);
+        const img = VIKINGO.imagen("R", v, o);
+        if (!img.complete) return;
+        c.drawImage(img, 20, 34 + Math.sin(t * 2.5) * 2, 110, 132);
+      }),
+    ),
+  );
   // gente y criaturas
   if (window.GENTE) {
     const gg = grupo("as.grupo.gente");

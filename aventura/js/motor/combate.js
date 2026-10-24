@@ -274,6 +274,8 @@ window.COMBATE = (function () {
           e.vio = 1.1;
           alertar(e);
           if (window.SONIDO && (e.lider || e.patron)) SONIDO.tocar("rugido", { vol: 0.55, tono: 0.85, x: e.x, y: e.y });
+          // el rugido de un líder sobresalta a Eromash
+          if ((e.lider || e.patron) && window.ANIMA) ANIMA.gesto("susto");
         }
         break;
       case "persigue": {

@@ -17,6 +17,17 @@ window.VIKINGO = (function () {
     happy:
       '<polyline points="150,316 180,292 210,316" fill="none" stroke="#F2ECEC" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><polyline points="298,316 328,292 358,316" fill="none" stroke="#F2ECEC" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>',
     hurt: '<polyline points="150,292 190,310 150,326" fill="none" stroke="#F2ECEC" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><polyline points="358,292 318,310 358,326" fill="none" stroke="#F2ECEC" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>',
+    // las caras de la aventura, con el mismo trazo que las de la arena (placas claras sobre la cara negra):
+    // duda: un ojo entrecerrado y el otro alzado, más chico
+    duda: '<polygon points="146,306 214,308 214,318 148,316" fill="#F2ECEC"/><polygon points="302,290 354,276 352,296 302,304" fill="#F2ECEC"/>',
+    // malherido: los dos caídos hacia afuera y a medio cerrar
+    flojo: '<polygon points="150,312 214,304 214,316 150,326" fill="#F2ECEC"/><polygon points="298,304 356,312 356,326 298,316" fill="#F2ECEC"/>',
+    // parpadeo: dos rayas
+    cerrado: '<polygon points="148,312 214,316 214,322 148,318" fill="#F2ECEC"/><polygon points="298,316 356,312 356,318 298,322" fill="#F2ECEC"/>',
+    // susto: las placas bien abiertas
+    susto: '<polygon points="150,282 210,286 210,328 152,324" fill="#F2ECEC"/><polygon points="300,286 352,282 350,324 300,328" fill="#F2ECEC"/>',
+    // concentrado (juntando luz, despertando una piedra): rendijas finas hacia adentro
+    concentrado: '<polygon points="146,296 216,312 216,322 148,308" fill="#F2ECEC"/><polygon points="296,312 362,296 360,308 296,322" fill="#F2ECEC"/>',
   };
   // de costado se ve un solo ojo, el del lado que mira (adelante = derecha)
   const OJOS_COSTADO = {
@@ -25,6 +36,11 @@ window.VIKINGO = (function () {
     happy:
       '<polyline points="352,316 374,296 396,316" fill="none" stroke="#F2ECEC" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>',
     hurt: '<polyline points="398,294 362,310 398,326" fill="none" stroke="#F2ECEC" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>',
+    duda: '<polygon points="352,296 398,282 396,300 352,308" fill="#F2ECEC"/>',
+    flojo: '<polygon points="350,304 398,312 398,326 350,316" fill="#F2ECEC"/>',
+    cerrado: '<polygon points="350,312 398,308 398,314 350,318" fill="#F2ECEC"/>',
+    susto: '<polygon points="354,286 396,282 396,322 354,326" fill="#F2ECEC"/>',
+    concentrado: '<polygon points="348,312 402,296 400,308 348,322" fill="#F2ECEC"/>',
   };
 
   // tonos de cada vikingo: R, W, B, V salen de VIKINGOS; G es el dorado del set legendario

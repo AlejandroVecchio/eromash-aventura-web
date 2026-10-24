@@ -222,6 +222,7 @@ window.SECRETOS = (function () {
   // un cofre sellado se sacude y la luz violeta corre hasta lo que lo suelta (su piedra o los braseros apagados)
   function sellado(c) {
     sacudir(c.cosa);
+    if (window.ANIMA) ANIMA.gesto("duda");
     if (window.SONIDO) SONIDO.tocar("clic", { vol: 0.6, tono: 0.7 });
     const desde = [c.cosa.x, c.cosa.y];
     if (c.sello === "fuego")

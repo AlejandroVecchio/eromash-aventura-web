@@ -163,6 +163,7 @@ window.RITOS = (function () {
     if (r.cofre.o.sellado) {
       // se sacude y la luz corre hasta sus piedras
       SECRETOS.sacudir(r.cofre);
+      if (window.ANIMA) ANIMA.gesto("duda");
       r.piedras.forEach((q) => A.ondaPor([[r.cofre.x, r.cofre.y], [q.x, q.y]], 0.9));
       return A.avisar("pr.cofre_sellado_" + r.tipo, ASSETS.RITO[r.tipo].col);
     }
