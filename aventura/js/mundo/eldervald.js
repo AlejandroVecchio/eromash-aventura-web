@@ -29,7 +29,7 @@ window.ELDERVALD = (function () {
     paso_sur: { p: m(532, 222), r: 12 },
     paso: { p: m(515, 172), r: 6 },
     paso_norte: { p: m(500, 120), r: 8 },
-    tala: { p: m(410, 238), r: 11 },
+    tala: { p: m(410, 238), r: 16 },
     quebrada_rastreo: { p: m(318, 210), r: 8 },
     claro_entrada: { p: m(262, 205), r: 7 },
     claro: { p: m(175, 175), r: 30 },
@@ -502,7 +502,10 @@ window.ELDERVALD = (function () {
     punto("svanhild_casa", mas(mesa, 2.2, -1));
     punto("svanhild_patio", mas(patio, -2, -1.6));
   })();
-  // El Paso del Guardián
+  // El Paso del Guardián (versión de Alejandro, 23/10/2026): la subida con el último farol apagado, el campamento de
+  // la cuadrilla (dos lonas, fogón, tablones y sogas, el torno, la tabla con el puente dibujado), la cabecera sur con
+  // el andamio, el pedestal y el tablón marcado, los dos pares de pilares antiguos, el poste de los que cruzaron y,
+  // del otro lado, la caseta del puentero entre la niebla. La niebla y lo que cambia después de EL-06 lo lleva norte.js.
   (function () {
     const P = PUENTES[0];
     poner("puentePaso", P.a, { x2: P.b[0], y2: P.b[1], roto: true, sinChoque: true, piso: true }, "puente_paso");
@@ -520,22 +523,78 @@ window.ELDERVALD = (function () {
     poner("tablonMarcado", mas(P.a, 3, 7), { sinChoque: true, piso: true }, "tablon");
     punto("tablon", mas(P.a, 3, 7));
     poner("piedraLinde", mas(sur, -6, 4), { sem: 11 });
+    // los pilares antiguos, a cada lado de las dos cabeceras
+    const pilares = [];
+    [[P.a, 1], [P.b, -1]].forEach(([e, k], j) =>
+      [-1, 1].forEach((l) => pilares.push(poner("pilarAntiguo", mas(e, l * 2.3, k * 0.6), { sem: j * 2 + l, luz: 0.15, runas: j ? ["dagaz", "algiz"] : ["raidho", "algiz"] }))),
+    );
+    NOMBRADAS.pilares = pilares;
+    // la cabecera sur: el andamio junto al tablero
+    poner("andamio", mas(P.a, 3.2, 1.2), {}, "andamio");
+    // el campamento de la cuadrilla
+    poner("lonaCuadrilla", mas(sur, 7, -3), { sem: 1 });
+    poner("lonaCuadrilla", mas(sur, 10.5, 0.5), { sem: 2, v: 1 });
+    poner("fogonOlla", mas(sur, 7.5, 3.2), { apagado: false }, "fogon_paso");
+    poner("pilaTablones", mas(sur, 12.5, 4.5), {}, "tablones");
+    poner("tornoVigas", mas(P.a, 7.4, 2.6), {}, "torno");
+    poner("tablaPuente", mas(sur, 5, -1.2), {}, "tabla_puente");
+    // el poste de los que cruzaron, al pie de la cabecera
+    poner("posteCruzaron", mas(P.a, -5.5, 8.5), {}, "poste_cruzaron");
+    // el último farol de la subida, apagado hasta que el Paso vuelve a abrirse
+    poner("posteFarol", mas(sur, -3, 13), { encendido: false }, "farol_paso");
+    poner("posteFarol", mas(P.a, 2.4, 2.6), { encendido: false, sinChoque: true }, "farol_puente_s");
+    poner("posteFarol", mas(P.b, -2.4, -0.4), { encendido: false, sinChoque: true }, "farol_puente_n");
+    // del otro lado: la caseta del puentero y el camino que se pierde cuesta arriba
+    poner("casetaPuentero", mas(P.b, 4.5, -3), {}, "caseta");
+    punto("caseta", mas(P.b, 3.5, -2));
+    punto("guardia_paso_a", mas(P.a, -3.4, 1.6));
+    punto("guardia_paso_b", mas(P.a, -1.8, 5.6));
   })();
-  // La tala y la quebrada del rastreo
+  // La Antigua tala y la quebrada de rastreo (versión de Alejandro, 23/10/2026): los tocones con la marca de los
+  // leñadores y sus fechas, la raíz atada, el muro de raíces vivas que cierra la quebrada (se abre con el favor del
+  // custodio), el canal de arrastre hacia la hondonada del gran tocón de linde (la piedra, la cuña, el custodio), la
+  // cabaña de los leñadores con la caja bajo el banco, el tronco de la quilla, y en la quebrada los raspones de
+  // cornamenta, el escondite de los guardasendas y el menhir.
   (function () {
     const c = LUGARES.tala.p;
-    for (let i = 0; i < 7; i++) {
-      const r = (4 + (i % 3) * 2.5) * M,
-        a = i * 1.7;
-      poner("tocon", [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r], { sem: i });
+    const tocones = [];
+    for (let i = 0; i < 9; i++) {
+      const r = (4 + (i % 3) * 2.6) * M,
+        a = i * 1.9 + 0.3;
+      tocones.push(poner("toconMarcado", [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r * 0.8], { sem: i, k: i }, "tocon" + i));
     }
-    poner("troncoCaido", mas(c, -3, 6));
+    NOMBRADAS.tocones = tocones;
+    poner("troncoCaido", mas(c, -3, 6), { s: 1.4 }, "tronco_quilla");
     poner("raizMarcada", mas(c, 2.5, -4), {}, "raiz");
     punto("raiz", mas(c, 2.5, -3));
+    poner("cabanaLenadores", mas(c, 9, -5), {}, "cabana");
+    punto("caja", mas(c, 9.6, -4.2));
+    // el muro de raíces: entre la tala y la quebrada
     const q = LUGARES.quebrada_rastreo.p;
+    const muro = [(c[0] + q[0]) / 2 + 1.5 * M, (c[1] + q[1]) / 2 + 0.5 * M];
+    poner("muroRaices", muro, { abierto: false }, "muro_raices");
+    punto("muro_raices", [muro[0] + 2 * M, muro[1] + 2 * M]);
+    // las raíces siguen a los dos lados: hasta el borde de la quebrada al norte y una buena distancia al sur
+    const norte = 2600,
+      surM = muro[1] + 22 * M;
+    pintarLinea([[muro[0], norte], [muro[0], muro[1] - 6.6 * M]], 2.2 * M, 3);
+    pintarLinea([[muro[0], muro[1] + 0.3 * M], [muro[0], surM]], 2.2 * M, 3);
+    for (let y = norte + 2 * M; y < surM; y += 3.4 * M) if (Math.abs(y - muro[1]) > 4.5 * M) poner("muroRaices", [muro[0] + ((y / M) % 2) * 20, y], { abierto: false, s: 0.55, sinChoque: true, sem: Math.round(y) });
+    // la hondonada del gran tocón, fuera de la senda, al sur de la tala, con el canal de arrastre que baja hasta ella
+    const hon = mas(c, -4, 13);
+    poner("granTocon", hon, { cuna: true }, "gran_tocon");
+    RECINTOS.push([hon[0] - 7 * M, hon[1] - 5 * M, hon[0] + 7 * M, hon[1] + 7 * M]);
+    RECINTOS.push([Math.min(c[0], hon[0]) - 2 * M, c[1], Math.max(c[0], hon[0]) + 1 * M, hon[1]]);
+    punto("hondonada", mas(hon, 2.5, 2.2));
+    punto("custodio", mas(hon, -1, 4.5));
+    poner("rastro", mas(c, -1, 4), { x2: hon[0] + 1 * M, y2: hon[1] - 3 * M, tipo: "buey", piso: true, sinChoque: true });
+    for (let k = 0; k < 6; k++) poner("helechos", mas(c, -1.6 - k * 0.5 + (k % 2) * 1.2, 5 + k * 1.3), { sem: k + 40, sinChoque: true });
+    // la quebrada: raspones (los muestra la Lente), el escondite de los guardasendas y el menhir
     poner("menhirRastro", mas(q, 1, -4), {}, "menhir");
     punto("menhir", mas(q, 1, -3));
-    punto("custodio", m(365, 222));
+    punto("raspones", mas(q, 4, -1));
+    punto("escondite", mas(q, 3, 3));
+    poner("roca", mas(q, 3.6, 3.6), { s: 1.3, sem: 5 }, "escondite_roca");
     punto("claro_entrada", LUGARES.claro_entrada.p);
     punto("eydis_claro", mas(LUGARES.claro_entrada.p, 3, 3));
   })();

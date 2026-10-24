@@ -270,7 +270,7 @@
     H.marcar("pista_raiz");
     HUD.aviso(tav("pista_raiz_txt"), AZUL);
   }, [{ tipo: "runa", x: P.raiz[0], y: P.raiz[1] - 10, s: 1.2, col: VIO }, ...huellas(P.raiz, W.LUGARES.quebrada_rastreo.p, 8, AZUL)]);
-  revela(P.menhir, 540, () => en("EL-04") && tiene("pista_raiz") && !tiene("pista_menhir"), () => {
+  revela(P.menhir, 540, () => en("EL-04") && tiene("cuna_sacada") && !tiene("pista_menhir"), () => {
     H.anotar("diario_pista_menhir");
     H.marcar("pista_menhir");
     HUD.aviso(tav("pista_menhir_txt"), AZUL);
