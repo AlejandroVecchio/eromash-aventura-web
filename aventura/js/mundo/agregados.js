@@ -17,6 +17,8 @@ window.AGREGADOS = {
   // regiones con nombre (el juego muestra el nombre al entrar) y piezas guardadas del editor
   regiones: [],
   piezas: {},
+  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)
+  texturas: {},
   // notas para Claude: qué hacer en ese lugar (el juego no las usa)
   notas: [],
 };

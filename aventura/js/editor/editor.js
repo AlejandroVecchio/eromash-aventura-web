@@ -35,8 +35,20 @@
     if (!e.cuartos || typeof e.cuartos !== "object") e.cuartos = {};
     if (!Array.isArray(e.regiones)) e.regiones = [];
     if (!e.piezas || typeof e.piezas !== "object") e.piezas = {};
+    if (!e.texturas || typeof e.texturas !== "object") e.texturas = {};
   };
   completar(est);
+  // las texturas hechas acá son assets: se suman a la lista antes de armarla
+  let firmaTex = "";
+  const cargarTexturas = () => {
+    if (!window.TEXTURAS) return false;
+    TEXTURAS.cargar(est.texturas);
+    const f = Object.keys(est.texturas).map((k) => k + ":" + (est.texturas[k].uso || "") + ":" + ((est.texturas[k].nombre || {}).es || "")).join();
+    if (f === firmaTex) return false;
+    firmaTex = f;
+    return true;
+  };
+  cargarTexturas();
   const historial = [],
     rehechos = []; // lo deshecho, para rehacerlo (Ctrl+Shift+Z o Ctrl+Y)
   const recordar = () => {
@@ -64,6 +76,8 @@
     $("guardadoV").textContent = t("ed.guardado_a", [String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0"), historial.length]);
     armarIr();
     pintarPendiente();
+    if (cargarTexturas()) armarLista();
+    if (window.EDITOR_TEXTURAS) EDITOR_TEXTURAS.pintarLista();
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
   };
   // «Descargar» se resalta mientras haya cambios que todavía no se bajaron
@@ -2690,6 +2704,7 @@
     if (tk && !ctrl) usar(tk);
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
+    if (window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.tecla(e)) return e.preventDefault();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida()) : null);
     // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
     if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
@@ -2900,7 +2915,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -2985,7 +3000,7 @@
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
     // las piezas son la biblioteca de este navegador: limpiar el mapa no las borra
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {} };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {}, texturas: est.texturas || {} };
     guardar();
   };
 
@@ -3051,6 +3066,7 @@
       borrador: () => $("bBorrador").click(),
       pieza: () => $("bPieza").click(),
       exportar: () => $("bExportar").click(),
+      texturas: () => window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.abrir(),
     },
     // los lugares de «Ir a…»: [{ nom, x, y }]
     lugares: () => [{ nom: t("av.lugar_eikholt"), x: W.CIUDAD.c[0], y: W.CIUDAD.c[1] }].concat(Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => ({ nom: t("av.lugar_" + k), x: W.LUGARES[k].p[0], y: W.LUGARES[k].p[1] }))).concat([...nombradas.keys()].map((o) => ({ nom: t("as." + o.id) + " · " + nombradas.get(o), x: o.x, y: o.y }))),

@@ -117,6 +117,31 @@
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
   .herr .ancho3 { grid-column: 1 / -1; }
   .herr .ancho2 { grid-column: span 2; }
+  /* el generador de texturas: arriba a la izquierda, debajo del minimapa */
+  #txPanel { position: absolute; left: 12px; top: 152px; width: min(380px, calc(100vw - 32px)); max-height: calc(100% - 210px); overflow: auto; background: #1C1714; border: 1px solid #F5A524; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+  #txPanel .cab b { color: #F5A524; }
+  #txPanel .txArriba { display: flex; gap: 10px; }
+  #txVista { width: 176px; height: 176px; flex: none; border: 1px solid #4A3630; }
+  #txPanel .txDatos { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+  #txPanel input[type=text], #txPanel textarea, #txPanel select { font: inherit; font-size: 13px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 6px 8px; box-sizing: border-box; width: 100%; }
+  #txPanel textarea { resize: vertical; }
+  #txPanel .fila { padding: 2px 0; }
+  #txPanel .fila2 { display: flex; gap: 6px; align-items: center; }
+  #txPanel .fila2 > select { flex: 1; }
+  #txPanel .txColores input { flex: 1; height: 30px; padding: 0; border: 1px solid #4A3630; background: #111111; }
+  #txPanel .txOpc { font-size: 12px; flex-wrap: wrap; }
+  #txPanel .txOpc label { display: flex; gap: 4px; align-items: center; }
+  #txPanel .txSub { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #FFD98A; }
+  #txPanel .listo { background: #9C2315; border-color: #C8402D; }
+  #txManual.apagado { opacity: 0.45; }
+  #txEstado { font-size: 12px; color: #B5A5A0; min-height: 1em; }
+  #txEstado.error { color: #FF8D71; }
+  #txLista { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 6px; }
+  .txFicha { display: flex; align-items: center; gap: 6px; padding: 4px; text-align: left; position: relative; }
+  .txFicha canvas { width: 36px; height: 36px; flex: none; }
+  .txFicha span { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .txFicha i { font-style: normal; color: #B5A5A0; padding: 0 4px; }
+  .txFicha.elegido { border-color: #F5A524; }
   #pincelPanel { margin: 4px 12px; padding: 6px 0; border: 1px solid #7BC86C; }
   #pincelPanel .fila select { width: 100%; }
   .pincelAyuda { display: block; padding: 2px 16px; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
@@ -140,6 +165,7 @@
   @media (max-width: 760px) {
     #mini { display: none; }
     #revision, #iaPanel { right: 12px; }
+    #txPanel { top: 12px; max-height: calc(55% - 24px); }
     .ed { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
     aside { border-left: 0; border-top: 1px solid #3A2A26; }
     #ayuda { right: 12px; bottom: calc(45% + 8px); }
@@ -167,6 +193,7 @@
       <button id="hRegion" data-tecla="0" data-i18n="ed.region"></button>
       <button id="hPincel" data-tecla="B" data-i18n="ed.pincel"></button>
       <button id="hInteriores" data-tecla="9" data-i18n="ed.interiores"></button>
+      <button id="hTexturas" data-tecla="Y" class="ancho3" data-i18n="ed.texturas"></button>
     </div>
     <div id="camPanel" class="oculto">
       <b id="camTitulo"></b>
@@ -320,6 +347,32 @@
   <div id="iaOtra" class="oculto"><textarea id="iaRespuesta" rows="3" data-i18n-ph="ed.ia_pegar"></textarea><div class="botones"><button id="iaLeer" class="listo" data-i18n="ed.ia_leer"></button></div></div>
   <div id="iaPropuesta" class="oculto"><b id="iaResumen"></b><div class="botones"><button id="iaDescartar" data-i18n="ed.ia_descartar"></button><button id="iaAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
 </div>
+<div id="txPanel" class="oculto">
+  <div class="cab"><b data-i18n="ed.tx_titulo"></b><button id="txCerrar" data-i18n="ed.cerrar"></button></div>
+  <div class="txArriba">
+    <canvas id="txVista" width="176" height="176"></canvas>
+    <div class="txDatos">
+      <input id="txNomEs" type="text" spellcheck="false" data-i18n-ph="ed.tx_nombre_es" />
+      <input id="txNomEn" type="text" spellcheck="false" data-i18n-ph="ed.tx_nombre_en" />
+      <select id="txUso"><option value="parche" data-i18n="ed.tx_uso_parche"></option><option value="bloque" data-i18n="ed.tx_uso_bloque"></option><option value="ambos" data-i18n="ed.tx_uso_ambos"></option></select>
+      <button id="txGuardar" class="listo" data-i18n="ed.tx_guardar"></button>
+      <button id="txNueva" data-i18n="ed.tx_nueva"></button>
+    </div>
+  </div>
+  <div id="txManual">
+    <div class="fila2"><select id="txTipo"></select><button id="txSemilla" data-i18n="ed.tx_semilla"></button></div>
+    <div class="fila2 txColores"><input id="txC0" type="color" /><input id="txC1" type="color" /><input id="txC2" type="color" /><input id="txC3" type="color" /></div>
+    <div class="fila"><span data-i18n="ed.tx_tam"></span><input id="txTam" type="range" min="6" max="80" step="1" value="24" /><b id="txTamV"></b></div>
+    <div class="fila"><span data-i18n="ed.tx_dens"></span><input id="txDens" type="range" min="1" max="12" step="1" value="5" /><b id="txDensV"></b></div>
+  </div>
+  <b class="txSub" data-i18n="ed.tx_con_ia"></b>
+  <textarea id="txPedido" rows="2" data-i18n-ph="ed.tx_ph"></textarea>
+  <div class="fila2"><select id="txFuente"><option value="receta" data-i18n="ed.tx_f_receta"></option><option value="chatgpt" data-i18n="ed.tx_f_chatgpt"></option><option value="gemini" data-i18n="ed.tx_f_gemini"></option></select><button id="txGenerar" class="listo" data-i18n="ed.tx_generar"></button></div>
+  <div class="fila2 txOpc"><label><input id="txPaleta" type="checkbox" checked /><span data-i18n="ed.tx_paleta"></span></label><label><input id="txEspejo" type="checkbox" checked /><span data-i18n="ed.tx_espejo"></span></label><button id="txSubir" data-i18n="ed.tx_subir"></button></div>
+  <input id="txArchivo" type="file" accept="image/*" hidden />
+  <small id="txEstado"></small>
+  <div id="txTuyas" class="oculto"><b class="txSub" data-i18n="ed.tx_tuyas"></b><div id="txLista"></div></div>
+</div>
 <div id="aviso"></div>
 <div id="notaCaja">
   <b id="notaNum"></b>
@@ -365,6 +418,7 @@
 <script src="js/personajes/gente.js"></script>
 <script src="js/mundo/eldervald.js"></script>
 <script src="js/mundo/agregados.js"></script>
+<script src="js/mundo/texturas.js"></script>
 <script src="js/editor/editor.js"></script>
 <script src="js/editor/comandos.js"></script>
 <script src="js/editor/ia.js"></script>
@@ -374,5 +428,6 @@
 <script src="js/editor/mundo.js"></script>
 <script src="js/editor/pincel.js"></script>
 <script src="js/editor/historia.js"></script>
+<script src="js/editor/texturas.js"></script>
 </body>
 </html>

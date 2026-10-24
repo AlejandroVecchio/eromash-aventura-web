@@ -42,6 +42,8 @@ I18N.textos({
   "as.santuario": { es: "Puerta del Santuario de las Raíces", en: "Sanctuary of the Roots gate" },
   "as.zarzas": { es: "Zarzas espectrales", en: "Spectral brambles" },
   "as.grupo.naturaleza": { es: "Naturaleza de Eldervald", en: "Eldervald nature" },
+  "as.grupo.texturas": { es: "Tus texturas", en: "Your textures" },
+  "as.tex_bloque": { es: "{0} (bloque)", en: "{0} (block)" },
   "as.grupo.caminos": { es: "Caminos y señales", en: "Roads and markers" },
   "as.grupo.puesto": { es: "El puesto de Eydis", en: "Eydis's outpost" },
   "as.grupo.refugio": { es: "La senda del Refugio", en: "The Shelter path" },

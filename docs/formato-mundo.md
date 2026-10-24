@@ -29,3 +29,7 @@ este archivo y arma la escena con sus propios assets. Ningún dato depende del c
 El juego no lee este JSON: arma el bosque con semillas fijas (`mundo/eldervald.js`) y le suma lo editado a mano en
 `mundo/agregados.js` (`poner`, `quitar`, `mover`, caminos, agua, `cuartos`, `regiones`, `piezas`, `notas`). El JSON es la
 foto completa del resultado, para otros motores y herramientas.
+
+## texturas
+
+Las texturas hechas en el editor: `{ id: { nombre: { es, en }, uso: "parche" | "bloque" | "ambos", receta | img } }`. Una `receta` es `{ tipo, colores: [fondo, tono1, tono2, luz], tam, dens, sem }` (se dibuja con `js/mundo/texturas.js`); una `img` es un PNG de 256 × 256 en dataURL que se repite sin costura. Los objetos `tx_<id>` son parches pintados en el piso (`o.rx`, `o.ry`, `o.k` escala de la textura) y `txb_<id>` bloques bajos (`o.w`, `o.d`, `o.h`).

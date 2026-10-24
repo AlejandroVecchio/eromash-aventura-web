@@ -128,10 +128,11 @@ window.EDITOR_IA = (function () {
   }
 
   // ---------- llamar a cada IA ----------
-  async function llamar(quien, modelo, clave, mensajes) {
+  // sistema: las instrucciones (las del mapa si no se dice otra cosa; las texturas mandan las suyas)
+  async function llamar(quien, modelo, clave, mensajes, sistema = SISTEMA) {
     if (quien === "claude") {
       const conRespaldo = /^claude-(opus-5-5|opus-5|fable-5-1|sonnet-5-5)$/.test(modelo),
-        cuerpo = { model: modelo, max_tokens: 16000, system: SISTEMA, messages: mensajes, output_config: { effort: "medium" } };
+        cuerpo = { model: modelo, max_tokens: 16000, system: sistema, messages: mensajes, output_config: { effort: "medium" } };
       if (conRespaldo) cuerpo.fallbacks = "default";
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -150,7 +151,7 @@ window.EDITOR_IA = (function () {
       const r = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: "Bearer " + clave },
-        body: JSON.stringify({ model: modelo, messages: [{ role: "system", content: SISTEMA }].concat(mensajes) }),
+        body: JSON.stringify({ model: modelo, messages: [{ role: "system", content: sistema }].concat(mensajes) }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
@@ -160,7 +161,7 @@ window.EDITOR_IA = (function () {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": clave },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: SISTEMA }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })) }),
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })) }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
@@ -311,5 +312,7 @@ window.EDITOR_IA = (function () {
     abierta() ? cerrar() : abrir();
   }
   pintarConf();
-  return { abrir, cerrar, alternar, abierta, dibujar };
+  // para otros módulos (texturas): la misma IA, modelo y clave que eligió acá
+  const elegida = () => ({ quien: conf.quien, modelo: conf.modelos[conf.quien] || MODELOS[conf.quien], clave: conf.claves[conf.quien] || "", claves: conf.claves });
+  return { abrir, cerrar, alternar, abierta, dibujar, llamar, elegida };
 })();

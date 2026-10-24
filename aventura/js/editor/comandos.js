@@ -46,6 +46,7 @@ window.EDITOR_COMANDOS = (function () {
       ["descargar", "ed.descargar", "Ctrl+S"],
       ["pieza", "ed.pieza_guardar", ""],
       ["exportar", "ed.exportar", ""],
+      ["texturas", "ed.tx_titulo", "Y"],
       ["atajos", "ed.atajos_titulo", "?"],
     ].map(([a, k, tecla]) => ({ nom: t(k), tipo: t("ed.com_accion"), tecla, hacer: E.acciones[a] }));
     acc.push({ nom: t("ed.ia_titulo"), tipo: t("ed.com_accion"), tecla: "8", hacer: () => window.EDITOR_IA && EDITOR_IA.abrir() });

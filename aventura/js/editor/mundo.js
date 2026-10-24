@@ -222,6 +222,7 @@ window.EDITOR_MUNDO = (function () {
       lugares: L(W.LUGARES || {}),
       puntos: L(W.PUNTOS || {}),
       regiones: L(est.regiones || []),
+      texturas: L(est.texturas || {}),
       interiores,
       cuarto: { ancho: window.INTERIORES ? INTERIORES.RW : 1600, alto: window.INTERIORES ? INTERIORES.RH : 900, fondo: window.INTERIORES ? INTERIORES.FONDO : 600 },
     };
