@@ -210,9 +210,26 @@ window.SENDAS = (function () {
       if (b - a < 2) return;
       const pts = recortar(p, a, b);
       trazo(c, pts, ancho, col, "butt");
-      // la punta libre sigue redonda
+      // la punta libre sigue redonda; la que entra en otro camino se deshace en un borde mordido, más largo en el medio
+      // que en las esquinas (las esquinas no salen del otro camino)
+      const mordida = (q, r, k) => {
+        const l = Math.hypot(q[0] - r[0], q[1] - r[1]) || 1,
+          dx = (q[0] - r[0]) / l,
+          dy = (q[1] - r[1]) / l,
+          h = ancho / 2,
+          out = [];
+        for (let j = 0; j <= 12; j++) {
+          const t = (j / 12) * 2 - 1,
+            e = j === 0 || j === 12 ? -2 : w * 0.16 * Math.sqrt(1 - t * t) * (0.2 + hash(sem + 307, k, j) * 1.4);
+          out.push(q[0] - dy * t * h + dx * e, q[1] + dx * t * h + dy * e);
+        }
+        out.push(q[0] - dy * h - dx * 2, q[1] + dx * h - dy * 2);
+        P(c, out, col);
+      };
       if (!ea) E(c, pts[0][0], pts[0][1], ancho / 2, ancho / 2, col);
+      else mordida(pts[0], pts[1], 0);
       if (!eb) E(c, pts[pts.length - 1][0], pts[pts.length - 1][1], ancho / 2, ancho / 2, col);
+      else mordida(pts[pts.length - 1], pts[pts.length - 2], 1);
     };
 
     if (tipo === "tierra") {
