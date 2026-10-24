@@ -55,7 +55,10 @@ window.ELDERVALD = (function () {
     { p: lista([[668, 565], [610, 560], [520, 530], [420, 500], [320, 470], [230, 448]]), w: 2.6 * 34 },
   ];
   // los caminos que se trazaron en el editor (agregados.js), ya en unidades del mundo
-  ((window.AGREGADOS && window.AGREGADOS.caminos) || []).forEach((cm) => cm.p && cm.p.length > 1 && CAMINOS.push({ p: cm.p, w: cm.w || 110, agregado: true }));
+  // (y los de base que se cambiaron de tipo; los que se sacaron se sacan con el bosque ya armado, más abajo)
+  CAMINOS.forEach((cm, i) => (cm.sem = i));
+  ((window.AGREGADOS && window.AGREGADOS.estiloCaminos) || []).forEach((e) => CAMINOS[e.i] && Object.assign(CAMINOS[e.i], { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || CAMINOS[e.i].w }));
+  ((window.AGREGADOS && window.AGREGADOS.caminos) || []).forEach((cm, i) => cm.p && cm.p.length > 1 && CAMINOS.push({ p: cm.p, w: cm.w || 110, tipo: cm.tipo, borde: cm.borde, fundir: cm.fundir, sem: 1000 + i, agregado: true }));
   // la empalizada doble de Eikholt: una elipse con cuatro puertas (sur, oeste, este, norte)
   const CIUDAD = { c: m(810, 565), rx: 150 * U, ry: 110 * U, puertas: [Math.PI / 2, Math.PI, 0, -Math.PI / 2], hueco: 150 };
   // lagunas del mapa
@@ -1022,6 +1025,16 @@ window.ELDERVALD = (function () {
   // agregado aparta los árboles que le quedan encima.
   {
     const AG = window.AGREGADOS || {};
+    // los caminos de base que se sacaron (con sus charcos)
+    const sacados = AG.quitarCaminos || [];
+    for (let i = CAMINOS.length - 1; i >= 0; i--) {
+      const cm = CAMINOS[i];
+      if (cm.agregado || !sacados.includes(cm.sem)) continue;
+      CAMINOS.splice(i, 1);
+      const enCamino = (d) => d.id === "barro" && distLinea(d.x, d.y, cm.p) < cm.w;
+      for (let k = DECO.length - 1; k >= 0; k--) if (enCamino(DECO[k])) DECO.splice(k, 1);
+      for (let k = BARROS.length - 1; k >= 0; k--) if (enCamino({ id: "barro", x: BARROS[k].x, y: BARROS[k].y })) BARROS.splice(k, 1);
+    }
     // lo pintado en el piso que se sacó (charcos de barro, musgo, helechos, hongos)
     (AG.quitarDeco || []).forEach((q) => {
       const es = (d) => d.id === q.id && Math.abs(d.x - q.x) < 6 && Math.abs(d.y - q.y) < 6;
@@ -1240,12 +1253,8 @@ window.ELDERVALD = (function () {
       }
       for (let k = 0; k < 30; k++) E(c, cx + (rl() - 0.5) * 1700, cy + 260 + (rl() - 0.5) * 1000, 30 + rl() * 40, 10 + rl() * 12, "#465030");
     }
-    // caminos: tierra pisada con el borde más oscuro y el centro gastado
-    CAMINOS.forEach((cm) => {
-      trazo(c, cm.p, cm.w + 26, "#3A3022");
-      trazo(c, cm.p, cm.w, "#5C4A32");
-      trazo(c, cm.p, cm.w * 0.5, "#6A563A");
-    });
+    // caminos: tierra pisada, adoquín o ladrillo, con sus bordes y puntas (mundo/caminos.js)
+    CAMINOS.forEach((cm) => SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1));
     // las montañas del borde
     c.fillStyle = "#1A1C16";
     if (x0 < BORDE + mg || y0 < BORDE + mg || x1 > ANCHO - BORDE - mg || y1 > ALTO - BORDE - mg) {

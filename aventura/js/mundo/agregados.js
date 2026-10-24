@@ -6,6 +6,8 @@ window.AGREGADOS = {
   mover: [],
   quitarDeco: [],
   caminos: [],
+  quitarCaminos: [],
+  estiloCaminos: [],
   // notas para Claude: qué hacer en ese lugar (el juego no las usa)
   notas: [],
 };

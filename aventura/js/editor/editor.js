@@ -16,7 +16,7 @@
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], notas: [] };
+  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -26,6 +26,8 @@
   }
   if (!est.notas) est.notas = [];
   if (!est.caminos) est.caminos = [];
+  if (!est.quitarCaminos) est.quitarCaminos = [];
+  if (!est.estiloCaminos) est.estiloCaminos = [];
   if (!est.mover) est.mover = [];
   if (!est.quitarDeco) est.quitarDeco = [];
   const historial = [];
@@ -39,10 +41,13 @@
     } catch (e) {}
     if (!est.notas) est.notas = [];
     if (!est.caminos) est.caminos = [];
+    if (!est.quitarCaminos) est.quitarCaminos = [];
+    if (!est.estiloCaminos) est.estiloCaminos = [];
     if (!est.mover) est.mover = [];
     if (!est.quitarDeco) est.quitarDeco = [];
     armarMovidos();
     aplicarDeco();
+    aplicarCaminos();
     $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]);
     armarIr();
   };
@@ -174,7 +179,7 @@
   ];
   function firma(x0, y0, x1, y1) {
     const den = (x, y) => x > x0 - 500 && x < x1 + 500 && y > y0 - 300 && y < y1 + 1200;
-    return est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
+    return firmaCaminos(x0, y0, x1, y1) + "|" + est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
   }
   function hornear(nv, tx, ty) {
     const x0 = tx * nv.T,
@@ -262,22 +267,19 @@
       // el piso cacheado a dos resoluciones fijas, para no repintarlo en cada zoom
       W.dibujarPiso(c, x0, y0, x1, y1, cam.z < 0.5 ? 0.2 : 0.5);
     }
-    // los caminos nuevos, pintados como los del juego (tierra pisada, borde oscuro, centro gastado)
-    const trazoC = (pts, w, col) => {
-      c.strokeStyle = col;
-      c.lineWidth = w;
-      c.lineCap = c.lineJoin = "round";
+    // los caminos ya van en el piso (W.CAMINOS, ver aplicarCaminos); acá solo el que se está trazando
+    if (camino && cursor) SENDAS.pintar(c, Object.assign({}, camino, { p: camino.p.concat([[cursor.x, cursor.y]]) }), 999, x0, y0, x1, y1);
+    if (caminoElegido()) {
+      const cm = caminoElegido();
+      c.save();
+      c.strokeStyle = "#FFD98A";
+      c.lineWidth = 3 / cam.z;
+      c.setLineDash([12 / cam.z, 8 / cam.z]);
       c.beginPath();
-      pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      cm.p.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
       c.stroke();
-    };
-    const caminoAhora = camino && cursor ? { p: camino.p.concat([[cursor.x, cursor.y]]), w: camino.w } : null;
-    est.caminos.concat(caminoAhora ? [caminoAhora] : []).forEach((cm) => {
-      const w = lejos ? Math.max(cm.w, 6 / cam.z) : cm.w;
-      trazoC(cm.p, w + 26, "#3A3022");
-      trazoC(cm.p, w, "#5C4A32");
-      trazoC(cm.p, w * 0.5, "#6A563A");
-    });
+      c.restore();
+    }
     if (camino) {
       c.fillStyle = "#FFD98A";
       camino.p.forEach(([x, y]) => {
@@ -593,14 +595,112 @@
   }
 
   // ---------- los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño ----------
+  // Los de base (los del mundo, CAM0) se pueden sacar (est.quitarCaminos: su número) o cambiar de tipo
+  // (est.estiloCaminos: [{ i, tipo, borde, fundir, w }]); los nuevos van en est.caminos. Todo se vuelca en W.CAMINOS,
+  // que es lo que pinta el piso (SENDAS), y se repintan los trozos de lo que cambió.
   let camino = null;
+  const CAM0 = W.CAMINOS.slice();
+  CAM0.forEach((cm, i) => (cm.sem = cm.sem == null ? i : cm.sem));
+  let firmasCam = new Map();
+  function aplicarCaminos() {
+    const lista = [];
+    CAM0.forEach((cm, i) => {
+      if (est.quitarCaminos.includes(i)) return;
+      const e = est.estiloCaminos.find((q) => q.i === i);
+      lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, base: i }) : Object.assign(cm, { base: i }));
+    });
+    est.caminos.forEach((cm, i) => lista.push(Object.assign({}, cm, { sem: 1000 + i, nuevo: i })));
+    const nuevas = new Map(lista.map((cm) => [(cm.base != null ? "b" + cm.base : "n" + cm.nuevo), JSON.stringify([cm.p, cm.w, cm.tipo, cm.borde, cm.fundir])]));
+    const repintar = [];
+    nuevas.forEach((f, k) => firmasCam.get(k) !== f && repintar.push(k));
+    firmasCam.forEach((f, k) => !nuevas.has(k) && repintar.push(k));
+    const viejos = W.CAMINOS.slice();
+    W.CAMINOS.length = 0;
+    lista.forEach((cm) => W.CAMINOS.push(cm));
+    const todos = viejos.concat(lista);
+    repintar.forEach((k) => {
+      todos.filter((cm) => (cm.base != null ? "b" + cm.base : "n" + cm.nuevo) === k).forEach((cm) => {
+        for (let i = 1; i < cm.p.length; i++) {
+          const [ax, ay] = cm.p[i - 1],
+            [bx, by] = cm.p[i],
+            n = Math.ceil(Math.hypot(bx - ax, by - ay) / 400);
+          for (let j = 0; j <= n; j++) W.invalidar(ax + ((bx - ax) * j) / n, ay + ((by - ay) * j) / n);
+        }
+      });
+    });
+    firmasCam = nuevas;
+  }
+  // la firma de los caminos que pasan por un rectángulo (para las baldosas horneadas)
+  function firmaCaminos(x0, y0, x1, y1) {
+    return W.CAMINOS.filter((cm) => cm.p.some(([x, y]) => x > x0 - 1500 && x < x1 + 1500 && y > y0 - 1500 && y < y1 + 1500))
+      .map((cm) => firmasCam.get(cm.base != null ? "b" + cm.base : "n" + cm.nuevo))
+      .join("/") + est.quitarCaminos.join(",");
+  }
+  const opcionesCamino = () => ({ tipo: $("camTipo").value, borde: $("camBorde").value, fundir: $("camFundir").checked });
   function terminarCamino() {
     if (camino && camino.p.length >= 2) {
       recordar();
-      est.caminos.push({ p: camino.p, w: camino.w });
+      est.caminos.push(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino()));
       guardar();
     }
     camino = null;
+  }
+  // el camino elegido (con Mover o con la herramienta Camino): { base } o { nuevo }
+  let camElegido = null;
+  function caminoElegido() {
+    if (!camElegido) return null;
+    return W.CAMINOS.find((cm) => (camElegido.base != null ? cm.base === camElegido.base : cm.nuevo === camElegido.nuevo)) || null;
+  }
+  function elegirCamino(cm) {
+    camElegido = cm ? (cm.base != null ? { base: cm.base } : { nuevo: cm.nuevo }) : null;
+    pintarPanelCamino();
+  }
+  function pintarPanelCamino() {
+    const cm = caminoElegido();
+    $("camPanel").classList.toggle("oculto", herr !== "camino" && !cm);
+    $("camElegido").classList.toggle("oculto", !cm);
+    if (cm) {
+      $("camTipo").value = cm.tipo || "tierra";
+      $("camBorde").value = cm.borde || "";
+      $("camFundir").checked = !!cm.fundir;
+      $("camAncho").value = cm.w;
+      $("camAnchoV").textContent = Math.round(cm.w);
+      $("camTitulo").textContent = t(cm.base != null ? "ed.cam_de_base" : "ed.cam_nuevo");
+    } else $("camTitulo").textContent = t("ed.cam_nuevo_titulo");
+  }
+  // cambiar el tipo, el borde, las puntas o el ancho del elegido
+  function cambiarCamino() {
+    const cm = caminoElegido();
+    if (!cm) return;
+    recordar();
+    const o = Object.assign(opcionesCamino(), { w: +$("camAncho").value });
+    if (cm.nuevo != null) Object.assign(est.caminos[cm.nuevo], o);
+    else {
+      const e = est.estiloCaminos.find((q) => q.i === cm.base);
+      if (e) Object.assign(e, o);
+      else est.estiloCaminos.push(Object.assign({ i: cm.base }, o));
+    }
+    guardar();
+  }
+  ["camTipo", "camBorde", "camFundir"].forEach((id) => $(id).addEventListener("change", cambiarCamino));
+  $("camAncho").addEventListener("input", () => ($("camAnchoV").textContent = $("camAncho").value));
+  $("camAncho").addEventListener("change", cambiarCamino);
+  $("camSacar").onclick = () => {
+    const cm = caminoElegido();
+    if (!cm) return;
+    sacarCamino(cm);
+  };
+  $("camSoltar").onclick = () => elegirCamino(null);
+  function sacarCamino(cm) {
+    recordar();
+    if (cm.nuevo != null) est.caminos.splice(cm.nuevo, 1);
+    else {
+      est.quitarCaminos.push(cm.base);
+      est.estiloCaminos = est.estiloCaminos.filter((q) => q.i !== cm.base);
+    }
+    camElegido = null;
+    guardar();
+    pintarPanelCamino();
   }
   const distSeg = (px, py, ax, ay, bx, by) => {
     const dx = bx - ax,
@@ -610,11 +710,11 @@
     return Math.hypot(px - ax - dx * k, py - ay - dy * k);
   };
   function caminoEn(x, y) {
-    for (let i = est.caminos.length - 1; i >= 0; i--) {
-      const cm = est.caminos[i];
-      for (let k = 1; k < cm.p.length; k++) if (distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], cm.p[k][0], cm.p[k][1]) < cm.w / 2 + 10 / cam.z) return i;
+    for (let i = W.CAMINOS.length - 1; i >= 0; i--) {
+      const cm = W.CAMINOS[i];
+      for (let k = 1; k < cm.p.length; k++) if (distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], cm.p[k][0], cm.p[k][1]) < cm.w / 2 + 10 / cam.z) return cm;
     }
-    return -1;
+    return null;
   }
   cv.addEventListener("dblclick", () => herr === "camino" && terminarCamino());
 
@@ -743,6 +843,8 @@
     if (h !== "camino" && camino) terminarCamino();
     herr = h;
     $("hCamino").classList.toggle("activo", h === "camino");
+    if (h !== "camino" && h !== "mover") camElegido = null;
+    pintarPanelCamino();
     $("hPoner").classList.toggle("activo", h === "poner");
     $("hMover").classList.toggle("activo", h === "mover");
     $("hBorrar").classList.toggle("activo", h === "borrar");
@@ -863,21 +965,23 @@
     }
     if (herr === "camino") {
       const p = [r1(x), r1(y)];
-      if (!camino) camino = { p: [p], w: r1(110 * +$("escala").value) };
+      if (!camino && camElegido) elegirCamino(null);
+      if (!camino) camino = Object.assign({ p: [p], w: r1(110 * +$("escala").value) }, opcionesCamino());
       else {
         const u = camino.p[camino.p.length - 1];
         if (Math.hypot(u[0] - p[0], u[1] - p[1]) > 8 / cam.z) camino.p.push(p);
       }
       return;
     }
-    if (herr === "borrar" && caminoEn(x, y) >= 0) {
-      const d = tocado(x, y);
-      if (!d || d.agregado == null) {
-        recordar();
-        est.caminos.splice(caminoEn(x, y), 1);
-        guardar();
-        return;
-      }
+    if (herr === "borrar" && caminoEn(x, y) && !tocadoSacar(x, y)) {
+      sacarCamino(caminoEn(x, y));
+      return;
+    }
+    // con Mover, un clic en un camino (sin nada encima) lo elige para cambiarle el tipo, el borde o sacarlo
+    if (herr === "mover" && !tocado(x, y) && caminoEn(x, y)) {
+      soltarElegida();
+      elegirCamino(caminoEn(x, y));
+      return;
     }
     if (herr === "poner") {
       if (!elegido) return avisar(t("ed.elegi"));
@@ -1036,6 +1140,7 @@
     if (!s) return;
     est = JSON.parse(s);
     soltarElegida();
+    camElegido = null;
     guardar();
   }
   $("bDeshacer").onclick = deshacer;
@@ -1078,7 +1183,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -1118,11 +1223,13 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
         if (!nuevo.caminos) nuevo.caminos = [];
+        if (!nuevo.quitarCaminos) nuevo.quitarCaminos = [];
+        if (!nuevo.estiloCaminos) nuevo.estiloCaminos = [];
         if (!nuevo.mover) nuevo.mover = [];
         if (!nuevo.quitarDeco) nuevo.quitarDeco = [];
         recordar();
@@ -1142,7 +1249,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], notas: [] };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], notas: [] };
     guardar();
   };
 

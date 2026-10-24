@@ -40,10 +40,16 @@
   #aviso { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); background: #1C1714; border: 1px solid #9C2315; padding: 8px 14px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 60%; }
   #aviso.ver { opacity: 1; }
   .oculto { display: none !important; }
+  #camPanel { margin: 4px 12px 6px; padding: 10px 4px; border: 1px solid #C9A45A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
+  #camPanel > b { padding: 0 12px; color: #FFD98A; font-size: 14px; }
+  #camPanel .fila > span { width: 56px; }
+  #camPanel select { flex: 1; }
+  #camPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
+  #camPanel button { font-size: 12px; padding: 7px 6px; }
   #selPanel { margin: 4px 12px 6px; padding: 10px 4px 10px; border: 1px solid #FFD98A; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
   #selPanel > b { padding: 0 12px; color: #FFD98A; font-size: 15px; }
   #selPanel > small { padding: 0 12px; color: #B5A5A0; font-size: 12px; }
-  #selPanel .fila span { width: 56px; }
+  #selPanel .fila > span { width: 56px; }
   #selPanel .botones3 { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
   #selPanel button { font-size: 12px; padding: 7px 6px; }
   #notaCaja { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); background: #1C1714; border: 1px solid #FFD98A; padding: 14px; display: none; flex-direction: column; gap: 8px; box-sizing: border-box; }
@@ -82,6 +88,16 @@
     <div class="fila">
       <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
       <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
+    </div>
+    <div id="camPanel" class="oculto">
+      <b id="camTitulo"></b>
+      <div class="fila"><span data-i18n="ed.cam_tipo"></span><select id="camTipo"><option value="tierra" data-i18n="ed.cam_tierra"></option><option value="adoquin" data-i18n="ed.cam_adoquin"></option><option value="ladrillo" data-i18n="ed.cam_ladrillo"></option></select></div>
+      <div class="fila"><span data-i18n="ed.cam_borde"></span><select id="camBorde"><option value="" data-i18n="ed.cam_b_ninguno"></option><option value="pasto" data-i18n="ed.cam_b_pasto"></option><option value="musgo" data-i18n="ed.cam_b_musgo"></option><option value="agua" data-i18n="ed.cam_b_agua"></option><option value="tierra" data-i18n="ed.cam_b_tierra"></option></select></div>
+      <div class="fila"><label><input id="camFundir" type="checkbox" checked /><span data-i18n="ed.cam_fundir"></span></label></div>
+      <div id="camElegido" class="oculto">
+        <div class="fila"><span data-i18n="ed.cam_ancho"></span><input id="camAncho" type="range" min="40" max="400" step="5" value="110" /><b id="camAnchoV">110</b></div>
+        <div class="botones3"><button id="camSacar" data-i18n="ed.cam_sacar"></button><button id="camSoltar" data-i18n="ed.sel_soltar"></button></div>
+      </div>
     </div>
     <div id="selPanel" class="oculto">
       <b id="selNombre"></b>
@@ -151,6 +167,7 @@
 <script src="js/mundo/assets-piedras.js"></script>
 <script src="js/mundo/assets-interiores.js"></script>
 <script src="js/mundo/assets-sotanos.js"></script>
+<script src="js/mundo/caminos.js"></script>
 <script src="js/mundo/eldervald.js"></script>
 <script src="js/mundo/agregados.js"></script>
 <script src="js/editor/editor.js"></script>
