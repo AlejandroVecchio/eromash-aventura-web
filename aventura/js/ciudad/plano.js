@@ -37,10 +37,10 @@ window.PLANO25 = (function () {
   // ---------- los lugares con nombre y lo que reservan ----------
   const LUGAR = {
     roble: [0, 0],
-    ting: [0, 30],
-    pozo: [25, 6],
-    campana: [-17, 19],
-    tablon: [-23, 23],
+    ting: [0, 27], // pegado a las raíces del Roble, donde llega la avenida del sur
+    pozo: [30, -30],
+    campana: [-31, 29],
+    tablon: [-37, 21],
     lindes: [-104, 62],
     carpinteria: [-40, 114],
     herreria: [-70, 22],
@@ -106,7 +106,12 @@ window.PLANO25 = (function () {
   };
   // adentro de la empalizada, la vuelta de la plaza, el anillo de los oficios y las cuatro avenidas van empedrados;
   // afuera de las puertas los caminos siguen de tierra
-  calle(arco(52, 0, TAU, 64), 5.5, "laja"); // la vuelta de la plaza
+  // la plaza en anillos alrededor del Roble: baldosas, tierra con tiendas, el anillo de adentro, más tiendas y la
+  // vuelta de la plaza; los caminos cortos la cruzan hacia el Roble (el del sur llega al Ting)
+  calle(arco(50, 0, TAU, 64), 5, "laja"); // la vuelta de la plaza
+  calle(arco(31.5, 0, TAU, 48), 3.6, "laja"); // el anillo de adentro, entre las dos hileras de tiendas
+  for (const a of [0, PI, -PI / 2, PI / 4, (3 * PI) / 4, -PI / 4, (-3 * PI) / 4]) calle([polar(a, a % (PI / 2) ? 31.5 : 20.5), polar(a, 50)], a % (PI / 2) ? 3 : 3.6, "laja");
+  calle([polar(PI / 2, 37), polar(PI / 2, 50)], 3.6, "laja");
   calle(curva(rOficios, 0, TAU, 120), 4.6, "laja"); // el anillo de los oficios
   calle([[0, 48], [0, R_MURO + 4]], 7, "laja"); // la avenida del sur, hasta el puente y Hrafngard
   calle([[0, R_MURO - 2], [0, 300]], 7);
@@ -168,26 +173,36 @@ window.PLANO25 = (function () {
 
     // ---------- la empalizada, las atalayas y las piedras de la cúpula ----------
     const enPuerta = (a) => Object.values(PUERTAS).some((p) => Math.abs(corto(a - p)) < HUECO / R_MURO);
+    // los huecos de la muralla: las puertas (su medio ancho) y las atalayas (que van fundidas en el muro)
+    const HUECOS = Object.values(PUERTAS).map((a) => ({ a, m: HUECO }));
+    const TORRES = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU + PI / 12;
+      if (!enPuerta(a)) TORRES.push(a);
+    }
+    TORRES.forEach((a) => HUECOS.push({ a, m: 150 / M }));
     {
       const n = 200;
       for (let i = 0; i < n; i++) {
         const a0 = (i / n) * TAU,
           a1 = ((i + 1) / n) * TAU,
           am = (a0 + a1) / 2;
-        if (enPuerta(am)) continue;
-        // el tramo que llega a una puerta termina justo en el costado de su torre
+        if (HUECOS.some((h) => Math.abs(corto(am - h.a)) < h.m / R_MURO)) continue;
+        // el tramo que llega a una puerta o a una atalaya termina justo en su costado
         let b0 = a0,
           b1 = a1;
-        for (const pa of Object.values(PUERTAS)) {
-          const lim = HUECO / R_MURO;
-          if (Math.abs(corto(a0 - pa)) < lim) b0 = pa + lim * Math.sign(corto(am - pa));
-          if (Math.abs(corto(a1 - pa)) < lim) b1 = pa + lim * Math.sign(corto(am - pa));
+        for (const h of HUECOS) {
+          const lim = h.m / R_MURO;
+          if (Math.abs(corto(a0 - h.a)) < lim) b0 = h.a + lim * Math.sign(corto(am - h.a));
+          if (Math.abs(corto(a1 - h.a)) < lim) b1 = h.a + lim * Math.sign(corto(am - h.a));
         }
         const [x0, z0] = polar(b0, R_MURO),
           [x1, z1] = polar(b1, R_MURO),
           [xm, zm] = polar((b0 + b1) / 2, R_MURO);
-        // de punta a punta (la vista las proyecta); la cara de adentro con la pasarela cuando se mira desde la ciudad
-        cosas.push({ tipo: "asset", id: "empalizadaDoble", x: xm * M, y: zm * M, o: { sem: i }, punta: [x0 * M, z0 * M, x1 * M, z1 * M], adentro: am });
+        const largo = Math.hypot(x1 - x0, z1 - z0) * M;
+        if (largo < 20) continue;
+        // un tramo de la muralla doble en volumen (u a lo largo, w hacia adentro); una escalera cada tanto
+        cosas.push({ tipo: "casa", x: xm * M, y: zm * M, ry: Math.atan2(z1 - z0, x1 - x0), casa: MURALLA25.tramo(largo, i, i % 9 === 4), nombre: "muralla" + i });
       }
       // el choque de la empalizada: un anillo de círculos (con los huecos de las puertas)
       for (let i = 0; i < 640; i++) {
@@ -196,14 +211,12 @@ window.PLANO25 = (function () {
         const [x, z] = polar(a, R_MURO);
         circulo(x, z, 1.2);
       }
-      // unas doce atalayas a lo largo de la empalizada
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * TAU + PI / 12;
-        if (enPuerta(a)) continue;
-        const [x, z] = polar(a, R_MURO - 3);
-        asset("torreVigia", x, z, { s: 1.5, sem: i });
-        circulo(x, z, 2.2);
-      }
+      // unas doce atalayas fundidas en la muralla, con el estandarte del lado de la ciudad
+      TORRES.forEach((a, i) => {
+        const [x, z] = polar(a, R_MURO);
+        cosas.push({ tipo: "casa", x: x * M, y: z * M, ry: Math.atan2(Math.cos(a), -Math.sin(a)), casa: MURALLA25.torre(i + 1), nombre: "atalaya" + i });
+        circulo(x, z, 2.8);
+      });
       for (let i = 0; i < 12; i++) {
         const a = (i / 12) * TAU + 0.13;
         const [x, z] = polar(a, R_MURO + 6);
@@ -227,10 +240,33 @@ window.PLANO25 = (function () {
     }
 
     // ---------- el Roble y la plaza ----------
-    asset("robleGigante", 0, 4, { s: 1.6 });
-    circulo(0, 2, 7);
+    asset("robleGigante", 0, 0, { s: 1.6, sinRaices: true });
+    circulo(0, -2, 7);
+    // las raíces en volumen: lomos que salen del tronco hacia la plaza, con musgo y vetas rúnicas
+    {
+      const rr = azar(808);
+      const n = 11;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU + (rr() - 0.5) * 0.3,
+          largo = 620 + rr() * 300,
+          ancho = 110 + rr() * 70,
+          alto = 150 + rr() * 80,
+          r0 = 150;
+        const cx = Math.cos(a) * (r0 + largo / 2),
+          cz = Math.sin(a) * (r0 + largo / 2);
+        cosas.push({ tipo: "casa", x: cx, y: cz, ry: a, casa: RAIZ25.crear(largo, ancho, alto, i + 1), nombre: "raiz" + i });
+        // se pueden pisar las puntas, no el lomo grueso
+        circulo((Math.cos(a) * (r0 + largo * 0.3)) / M, (Math.sin(a) * (r0 + largo * 0.3)) / M, ancho / M);
+      }
+    }
     const [tx, tz] = LUGAR.ting;
     asset("tingCirculo", tx, tz, { s: 2.6 });
+    // los braseros alrededor del Ting
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * TAU + PI / 6;
+      asset("brasero", tx + Math.cos(a) * 9.5, tz + Math.sin(a) * 6.5, { s: 1.3, sem: i });
+      circulo(tx + Math.cos(a) * 9.5, tz + Math.sin(a) * 6.5, 0.5);
+    }
     anclas.ting = U([tx, tz + 9.5]);
     asset("pozoEikholt", ...LUGAR.pozo, { s: 1.4 });
     circulo(...LUGAR.pozo, 1.6);
@@ -238,39 +274,53 @@ window.PLANO25 = (function () {
     circulo(...LUGAR.campana, 1);
     asset("tablonAvisos", ...LUGAR.tablon, { s: 1.3 });
     for (const s of [-1, 1]) asset("estandarteCiervo", tx + s * 13, tz - 3, { s: 1.4, sem: s + 3 });
-    // el Mercado de los Toldos: unos veinte puestos grandes en dos hileras que se miran, alrededor del Ting y por el sur
-    // y el este del tronco; entre las dos hileras queda el pasillo por donde camina la gente
+    // el Mercado de los Toldos, en dos hileras: la de adentro sobre la tierra que rodea las baldosas del Roble, mirando al
+    // anillo de adentro, y la de afuera del otro lado de ese anillo, mirándolo también; se cortan donde pasan los
+    // caminos cortos y donde está el Ting
     const r = azar(31);
     const toldos = [];
+    const RADIALES = [0, PI, -PI / 2, PI / 2, PI / 4, (3 * PI) / 4, -PI / 4, (-3 * PI) / 4];
     let nt = 0;
-    for (const [rr, mira] of [[22, 1], [35, -1]])
-      for (let an = -0.3 * PI; an < 0.95 * PI; an += 9.5 / rr) {
-        const a2 = an + (r() - 0.5) * 0.05,
+    for (const [rr, mira, paso] of [[25.8, 1, 9.5], [37.6, -1, 11]])
+      for (let an = 0; an < TAU; an += paso / rr) {
+        const a2 = an + (r() - 0.5) * 0.04,
           [x, z] = polar(a2, rr);
-        if (Math.hypot(x - tx, z - tz) < 17) continue;
-        if (Math.abs(x) < 7 && z > 0) continue;
-        if (Math.hypot(x - LUGAR.pozo[0], z - LUGAR.pozo[1]) < 8) continue;
-        if (r() < 0.1) continue; // un hueco para cruzar
+        if (RADIALES.some((ra) => Math.abs(corto(a2 - ra)) * rr < 5.5)) continue;
+        if (Math.hypot(x - tx, z - tz) < 13.5) continue;
+        if (Math.hypot(x - LUGAR.pozo[0], z - LUGAR.pozo[1]) < 6) continue;
         toldos.push([x, z]);
-        // el frente mira al pasillo: la hilera de adentro hacia afuera, la de afuera hacia adentro
+        // el frente mira al anillo de adentro
         const ry = Math.atan2(-Math.cos(a2) * mira, Math.sin(a2) * mira);
         const puesto = PUESTOS25.crear(nt + 3);
         cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa: puesto, nombre: "puesto" + nt });
         choques.push({ poli: puesto.huella(x * M, z * M, ry) });
         nt++;
       }
-    // barriles, cajones y carretas entre los toldos
-    for (let i = 0; i < 50; i++) {
-      const an = PI * (-0.3 + r() * 1.25),
-        rr = 18 + r() * 28,
-        [x, z] = polar(an, rr);
-      if (Math.hypot(x - tx, z - tz) < 13 || toldos.some((l) => Math.hypot(l[0] - x, l[1] - z) < 6) || (Math.abs(x) < 5 && z > 0)) continue;
-      if (i % 5 === 0) asset("carreta", x, z, { s: 1.5, sem: i });
+    // la franja de afuera (entre la hilera de afuera y la vuelta de la plaza): carretas, faroles y bancos
+    for (let i = 0; i < 16; i++) {
+      const an = (i / 16) * TAU + 0.2,
+        [x, z] = polar(an, 44);
+      if (RADIALES.some((ra) => Math.abs(corto(an - ra)) * 44 < 5)) continue;
+      if (Math.hypot(x - LUGAR.pozo[0], z - LUGAR.pozo[1]) < 6 || Math.hypot(x - LUGAR.campana[0], z - LUGAR.campana[1]) < 5 || Math.hypot(x - LUGAR.tablon[0], z - LUGAR.tablon[1]) < 5) continue;
+      if (i % 3 === 0) asset("carreta", x, z, { s: 1.5, sem: i, v: i });
+      else if (i % 3 === 1) asset("lenera", x, z, { s: 1.1, sem: i });
+      else asset("sacosAbiertos", x, z, { s: 1.4, sem: i });
+      circulo(x, z, 1.2);
+    }
+    // faroles a los dos lados del anillo de adentro
+    for (let i = 0; i < 16; i++) {
+      const an = (i / 16) * TAU + PI / 16;
+      for (const rr of [29.2, 33.8]) {
+        const [x, z] = polar(an + (rr > 30 ? 0.1 : 0), rr);
+        if (Math.hypot(x - tx, z - tz) < 11) continue;
+        asset("farol", x, z, { s: 1.2, sem: i });
+        circulo(x, z, 0.25);
+      }
     }
     // faroles alrededor de la plaza
     for (let i = 0; i < 20; i++) {
       const an = (i / 20) * TAU + 0.08,
-        [x, z] = polar(an, 48);
+        [x, z] = polar(an, 46.5);
       if (Math.abs(x) < 4 && z > 0) continue;
       asset("farol", x, z, { s: 1.3, sem: i });
       circulo(x, z, 0.3);
@@ -511,7 +561,7 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, lugares, puertas: PUERTAS, plaza: 50.5 * M, aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

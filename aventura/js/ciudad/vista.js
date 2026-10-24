@@ -37,9 +37,9 @@ window.VISTA25 = (function () {
     // las losas de la plaza (como las del Eikholt del bosque, alrededor del tronco)
     const r = azar(91);
     losas = [];
-    for (let k = 0; k < 900; k++) {
+    for (let k = 0; k < 500; k++) {
       const a = r() * TAU,
-        d = 600 + Math.sqrt(r()) * (p.plaza - 700);
+        d = 1300 + Math.sqrt(r()) * (p.plaza - 1400);
       losas.push([Math.cos(a) * d, Math.sin(a) * d, 26 + r() * 16, 13 + r() * 7, r(), r() < 0.5 ? "#6E6458" : "#5E564C"]);
     }
     cache.clear();
@@ -103,8 +103,81 @@ window.VISTA25 = (function () {
     ["base", "cuerpo", "borde"].forEach((capa) => cmCalles.forEach((cm) => SENDAS.pintar(c, cm, cm.sem, x0 - 200, y0 - 200, x1 + 200, y1 + 200, capa, cmCalles)));
     if (Math.abs((x0 + x1) / 2) < PL + TROZO && Math.abs((y0 + y1) / 2) < PL + TROZO) {
       for (const [x, y, rx, ry, g, col] of losas) if (x > x0 - 60 && x < x1 + 60 && y > y0 - 60 && y < y1 + 60) P(c, poli(x, y, rx, ry, 6, g), col);
-      // tierra más oscura al pie del tronco
-      P(c, poli(0, 120, 900, 760, 24, 0.2), "#3A3022");
+      // el pie del Roble: un montículo de musgo entre las raíces, con un cordón de piedra alrededor y vetas azules
+      const [rx0, ry0] = plano.roble;
+      const RR = 1080;
+      // el cerco de baldosas que separa al Roble de la plaza
+      const RB = 1270;
+      P(c, poli(rx0, ry0, RB + 20, RB + 20, 64, 0), "#3A3630");
+      P(c, poli(rx0, ry0, RB, RB, 64, 0), "#5E5A52");
+      c.strokeStyle = "#3A3630";
+      c.lineWidth = 4;
+      c.beginPath();
+      for (let i = 0; i < 72; i++) {
+        const a = (i / 72) * TAU;
+        c.moveTo(rx0 + Math.cos(a) * (RR + 50), ry0 + Math.sin(a) * (RR + 50));
+        c.lineTo(rx0 + Math.cos(a) * RB, ry0 + Math.sin(a) * RB);
+      }
+      c.stroke();
+      P(c, poli(rx0, ry0, RR + 60, RR + 60, 48, 0.1), "#4A4640");
+      for (let i = 0; i < 48; i++) {
+        const a = (i / 48) * TAU,
+          b = ((i + 1) / 48) * TAU;
+        P(c, [rx0 + Math.cos(a) * (RR + 50), ry0 + Math.sin(a) * (RR + 50), rx0 + Math.cos(b) * (RR + 50), ry0 + Math.sin(b) * (RR + 50), rx0 + Math.cos(b) * (RR + 6), ry0 + Math.sin(b) * (RR + 6), rx0 + Math.cos(a) * (RR + 6), ry0 + Math.sin(a) * (RR + 6)], i % 2 ? "#6E6A62" : "#625C54");
+      }
+      P(c, poli(rx0, ry0, RR, RR, 40, 0.2), "#3D4A28");
+      const rm = azar(77);
+      for (let k = 0; k < 120; k++) {
+        const a = rm() * TAU,
+          d = Math.sqrt(rm()) * (RR - 80);
+        E(c, rx0 + Math.cos(a) * d, ry0 + Math.sin(a) * d, 40 + rm() * 90, 20 + rm() * 40, ["#4A5A2E", "#56662C", "#34401F"][k % 3], rm() * 3);
+      }
+      // vetas de azul rúnico que corren por el musgo entre las raíces
+      c.lineCap = "round";
+      for (let k = 0; k < 14; k++) {
+        const a = (k / 14) * TAU + rm() * 0.3;
+        c.strokeStyle = k % 3 ? "rgba(115,213,219,0.35)" : "rgba(115,213,219,0.6)";
+        c.lineWidth = k % 3 ? 3 : 5;
+        c.beginPath();
+        let d = 260;
+        c.moveTo(rx0 + Math.cos(a) * d, ry0 + Math.sin(a) * d);
+        for (let j = 0; j < 6; j++) {
+          d += 110 + rm() * 40;
+          const b = a + (rm() - 0.5) * 0.35;
+          c.lineTo(rx0 + Math.cos(b) * Math.min(d, RR - 30), ry0 + Math.sin(b) * Math.min(d, RR - 30));
+        }
+        c.stroke();
+      }
+      // el piso del Ting: anillos de losas alrededor del menhir, distinto de todo el resto
+      const [tx0, ty0] = plano.ting;
+      const anillos = [[620, "#3A3630"], [600, "#5E5A52"], [470, "#4A4640"], [450, "#6A665E"], [300, "#4A4640"], [282, "#5E5A52"], [120, "#4E4A44"]];
+      for (const [ra, col] of anillos) P(c, poli(tx0, ty0, ra, ra, 64, 0), col);
+      // las juntas de las losas, en cada anillo
+      c.strokeStyle = "#3A3630";
+      c.lineWidth = 4;
+      for (const [r0, r1, n] of [[470, 600, 40], [300, 450, 28], [120, 282, 16]]) {
+        c.beginPath();
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * TAU + (r0 % 7) * 0.05;
+          c.moveTo(tx0 + Math.cos(a) * r0, ty0 + Math.sin(a) * r0);
+          c.lineTo(tx0 + Math.cos(a) * r1, ty0 + Math.sin(a) * r1);
+        }
+        c.stroke();
+      }
+      // el anillo de runas talladas entre el primer y el segundo cerco, que apenas brillan
+      c.strokeStyle = "rgba(115,213,219,0.4)";
+      c.lineWidth = 3;
+      c.beginPath();
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * TAU,
+          cx = tx0 + Math.cos(a) * 535,
+          cy = ty0 + Math.sin(a) * 535;
+        c.moveTo(cx, cy - 18);
+        c.lineTo(cx, cy + 18);
+        c.moveTo(cx, cy - (i % 2 ? 18 : 4));
+        c.lineTo(cx + 12, cy - (i % 2 ? 6 : 14));
+      }
+      c.stroke();
     }
     // los patios empedrados (el de la Casa de las Lindes)
     for (const pa of patios) {

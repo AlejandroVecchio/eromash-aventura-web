@@ -326,8 +326,8 @@
       v = Math.sin(t * 0.45) * 3 * s,
       r = azar(4242);
     sombra(c, x + 60 * s, y + 10 * s, 520 * s, 120 * s, 0.3);
-    // raíces contrafuerte
-    const RAICES = [
+    // raíces contrafuerte (o.sinRaices: las pone otro, como las raíces en volumen de la ciudad)
+    const RAICES = o.sinRaices ? [] : [
       [-1, 400, 70, 1],
       [-1, 250, 120, 0],
       [-1, 120, 150, 1],
@@ -353,7 +353,7 @@
       if (i % 2) halo(c, tx, ty, 40 * s, RUNICO, a * 0.6);
     });
     // puertitas redondas de las casas viejas metidas entre las raíces
-    [[-190, 12], [210, 18]].forEach(([dx, dy], i) => {
+    (o.sinRaices ? [] : [[-190, 12], [210, 18]]).forEach(([dx, dy], i) => {
       const px = x + dx * s,
         py = y + dy * s;
       E(c, px, py - 26 * s, 24 * s, 30 * s, C.maderaSombra);
@@ -370,7 +370,7 @@
     P(c, [x - 110 * s, y + 4 * s, x - 100 * s, y - 60 * s, x - 70 * s, y - 74 * s, x - 50 * s, y - 40 * s, x - 40 * s, y + 4 * s], C.musgo2);
     // el árbol de las promesas: cintas con nudos en las raíces bajas
     const CINTAS = ["#F2ECEC", C.rojoEromash, "#3E5A34", C.ambar, "#E0B2B2", "#4A78D0"];
-    for (let k = 0; k < 22; k++) {
+    for (let k = 0; k < (RAICES.length ? 22 : 0); k++) {
       const l = k % 2 ? 1 : -1,
         u = 0.15 + r() * 0.75,
         R0 = RAICES[Math.floor(r() * RAICES.length)],
