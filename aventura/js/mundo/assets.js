@@ -1210,13 +1210,14 @@ window.ASSETS = (function () {
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
-    if (ex === 1 && ey === 1 && !o.rot && !o.giro) return a.f(c, x, y, t, o);
+    if (ex === 1 && ey === 1 && !o.rot && (!o.giro || a.caras)) return a.f(c, x, y, t, o);
     c.save();
     c.translate(x, y);
     if (o.rot) c.rotate((o.rot * Math.PI) / 180);
     // o.giro: girado sobre el piso (de frente, en diagonal, de costado o de espaldas): se angosta y el lado de atrás
     // sube un poco, como visto desde arriba
-    if (o.giro) {
+    // lo que tiene todas sus caras (a.caras) se gira solo, como volumen
+    if (o.giro && !a.caras) {
       const g = (o.giro * Math.PI) / 180,
         co = Math.cos(g);
       c.transform(Math.sign(co || 1) * Math.max(0.18, Math.abs(co)), Math.sin(g) * 0.45, 0, 1, 0, 0);

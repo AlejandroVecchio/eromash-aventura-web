@@ -113,6 +113,9 @@
   // 3 con anexo de techo bajo y leña, 4 con galería de postes a lo largo del frente, 5 con torrecita atrás.
   // o.pared, o.techo, o.postigo cambian colores; o.entra marca las que tienen interior (se dibuja un farol en la puerta).
   function casaNordica(c, x, y, t, o) {
+    // girada sobre el piso (o vista desde otro lado con la cámara del editor): se arma como volumen, con todas sus caras
+    const gn = o.giro ? (((o.giro % 360) + 360) % 360) : 0;
+    if (Math.min(gn, 360 - gn) > 0.5) return casaGirada(c, x, y, t, o);
     const s = o.s || 1,
       v = (o.v || 0) % 6,
       sem = o.sem || 0,
@@ -886,9 +889,154 @@
     L(c, ...pt(0, lado, 0), ...pt(1, lado, H), C.maderaSombra, 4);
   }
 
+  // La casa de Eikholt como volumen: la misma casa (troncos, zócalo, puerta, ventanas, techo a dos aguas, hastiales,
+  // chimenea) pero armada en el piso con su ancho, su fondo y su alto, girada o.giro grados alrededor de su centro.
+  // Se ve con la misma perspectiva que la casa de frente (el fondo sube a la derecha), así cerca de 0° coincide con
+  // ella. Cada pared es un plano: lo que lleva (troncos, puerta, ventanas) se le pinta con una transformación.
+  function casaGirada(c, x, y, t, o) {
+    const s = o.s || 1,
+      v = (o.v || 0) % 6,
+      sem = o.sem || 0,
+      pal = PAREDES[(o.pared != null ? o.pared : sem) % PAREDES.length],
+      pos = POSTIGOS[(o.postigo != null ? o.postigo : sem + v) % POSTIGOS.length],
+      [tS, tC, tL] = TECHOS[(o.techo != null ? o.techo : sem) % TECHOS.length],
+      W = (v === 0 ? 160 : v === 3 ? 136 : 126) * s,
+      H = (v === 1 || v === 2 ? 150 : 98) * s,
+      D = 150 * s,
+      RT = (v === 1 ? 96 : 82) * s,
+      ov = 16 * s,
+      HR = H + RT,
+      g = (o.giro * Math.PI) / 180,
+      co = Math.cos(g),
+      si = Math.sin(g),
+      dosPisos = v === 1 || v === 2;
+    // (u a lo ancho, w hacia el fondo, z para arriba) → pantalla, girando alrededor del centro de la planta
+    const pr = (u, w, z) => {
+      const wc = w - D / 2,
+        uu = u * co - wc * si,
+        ww = u * si + wc * co + D / 2;
+      return [x + uu + ww * 0.5, y - ww * 0.32 - z];
+    };
+    const area = (pts) => {
+      let a = 0;
+      for (let i = 0; i < pts.length; i += 2) {
+        const j = (i + 2) % pts.length;
+        a += pts[i] * pts[j + 1] - pts[j] * pts[i + 1];
+      }
+      return a;
+    };
+    const centro = pr(0, D / 2, 0);
+    sombra(c, centro[0] + 20 * s, centro[1] + 10 * s, (W + D * 0.4) * 1.05, (D * 0.32 + 40 * s) * 0.6, 0.34);
+    // una pared de (u0, w0) a (u1, w1), que mira hacia (nu, nw): si mira a la cámara se pinta con lo que lleva
+    function pared(u0, w0, u1, w1, nu, nw, lleva) {
+      const a = pr(u0, w0, 0),
+        b = pr(u1, w1, 0),
+        pts = [a[0], a[1], b[0], b[1], b[0], b[1] - H, a[0], a[1] - H];
+      if (area(pts) >= 0) return;
+      const nx = nu * co - nw * si,
+        len = Math.hypot(u1 - u0, w1 - w0);
+      P(c, pts, nx > 0.3 ? pal[1] : pal[0]);
+      c.save();
+      c.transform((b[0] - a[0]) / len, (b[1] - a[1]) / len, 0, 1, a[0], a[1]);
+      lleva(len);
+      c.restore();
+      if (nx < -0.3) alfa(c, 0.18 * -nx, () => P(c, pts, "#000000"));
+    }
+    // lo de cada pared, como si se la viera de frente: de 0 a len, el piso en 0 y el alto para arriba
+    const zocalo = (len) => {
+      for (let k = 0; k < Math.round(len / (22 * s)); k++) E(c, 11 * s + k * 22 * s, -5 * s, 12 * s, 7 * s, k % 2 ? "#4E524A" : "#5E6258");
+      R(c, 0, -12 * s, len, 12 * s, "rgba(0,0,0,0.14)");
+    };
+    const filaVentanas = (len, saltar) => {
+      const vy = dosPisos ? -26 * s : -30 * s;
+      for (let k = -2; k <= 2; k++) {
+        const wx = len / 2 + k * len * 0.21;
+        if ((saltar != null && Math.abs(wx - saltar) < 50 * s) || Math.abs(wx - len / 2) > len / 2 - 34 * s) continue;
+        ventana(c, wx, vy, 22 * s, 28 * s, pos, s);
+      }
+      if (dosPisos) for (let k = -1; k <= 1; k++) ventana(c, len / 2 + k * len * 0.25, -H * 0.62, 22 * s, 30 * s, pos, s);
+    };
+    const pdx = [0, -W * 0.4, -W * 0.5, W * 0.15, 0, -W * 0.3][v],
+      colP = ["#4A3020", "#3A2A1E", "#5A3A24", "#2E3A24"][(sem + 1) % 4];
+    const frente = (len) => {
+      troncos(c, 0, -H, len, H, s, [-2 * s, len + 2 * s]);
+      zocalo(len);
+      if (dosPisos) R(c, -4 * s, -H * 0.52 - 8 * s, len + 8 * s, 8 * s, pal[2]);
+      filaVentanas(len, len / 2 + pdx);
+      puerta(c, len / 2 + pdx, 0, s, colP);
+    };
+    const atras = (len) => {
+      troncos(c, 0, -H, len, H, s, [-2 * s, len + 2 * s]);
+      zocalo(len);
+      filaVentanas(len, null);
+    };
+    const costado = (len) => {
+      troncos(c, 0, -H, len, H, s, null);
+      zocalo(len);
+      ventana(c, len / 2, -H * 0.35, 18 * s, 26 * s, pos, s);
+      R(c, 0, -H, 6 * s, H, pal[2]);
+      R(c, len - 6 * s, -H, 6 * s, H, pal[2]);
+    };
+    // las paredes (las que no miran a la cámara no se pintan) y los hastiales encima de los costados
+    pared(-W, 0, W, 0, 0, -1, frente);
+    pared(W, 0, W, D, 1, 0, costado);
+    pared(W, D, -W, D, 0, 1, atras);
+    pared(-W, D, -W, 0, -1, 0, costado);
+    [-1, 1].forEach((l) => {
+      const a = pr(l * W, l > 0 ? 0 : D, H),
+        b = pr(l * W, l > 0 ? D : 0, H),
+        q = pr(l * W, D / 2, HR),
+        pts = [a[0], a[1], b[0], b[1], q[0], q[1]];
+      if (area(pts) >= 0) return;
+      P(c, pts, l * co > 0.3 ? pal[1] : pal[0]);
+      // el ojo de buey y las tablas cruzadas del hastial
+      const m = pr(l * W, D / 2, H + RT * 0.38);
+      E(c, m[0], m[1], 9 * s, 9 * s, "#1A140E");
+      alfa(c, 0.5, () => E(c, m[0], m[1], 6 * s, 6 * s, C.ambar));
+      const a2 = pr(l * (W + ov * 0.4), l > 0 ? -ov : D + ov, H - 6 * s),
+        b2 = pr(l * (W + ov * 0.4), l > 0 ? D + ov : -ov, H - 6 * s);
+      tablasCruzadas(c, a2[0], a2[1], q[0], q[1], b2[0], b2[1], s);
+    });
+    // los dos faldones: primero el que queda atrás
+    const faldones = [
+      [[-W - ov, -ov, H - 6 * s], [W + ov, -ov, H - 6 * s], [W + ov, D / 2, HR], [-W - ov, D / 2, HR]],
+      [[W + ov, D + ov, H - 6 * s], [-W - ov, D + ov, H - 6 * s], [-W - ov, D / 2, HR], [W + ov, D / 2, HR]],
+    ].map((f) => {
+      const pts = [];
+      f.forEach(([u, w, z]) => pts.push(...pr(u, w, z)));
+      return { f, pts, prof: pr(0, f[0][1], 0)[1] };
+    });
+    faldones.sort((a, b) => a.prof - b.prof);
+    faldones.forEach(({ f, pts }, i) => {
+      const mira = area(pts) < 0;
+      P(c, pts, mira ? tC : tS);
+      // las hileras de pizarra, paralelas a la cumbrera
+      for (let k = 1; k < 5; k++) {
+        const u = k / 5,
+          a = pr(f[0][0], f[0][1] + (f[3][1] - f[0][1]) * u, f[0][2] + (f[3][2] - f[0][2]) * u),
+          b = pr(f[1][0], f[1][1] + (f[2][1] - f[1][1]) * u, f[1][2] + (f[2][2] - f[1][2]) * u);
+        L(c, a[0], a[1], b[0], b[1], mira ? tL : tC, 1.5 * s);
+      }
+      L(c, pts[0], pts[1], pts[2], pts[3], tS, 5 * s);
+      if (i === 1) {
+        const r0 = pr(-W - ov, D / 2, HR),
+          r1 = pr(W + ov, D / 2, HR);
+        L(c, r0[0], r0[1], r1[0], r1[1], tL, 6 * s);
+      }
+    });
+    // la chimenea, sobre el faldón
+    if (v !== 4) {
+      const [cx, cy] = pr(W * 0.35, D * 0.42, HR - 14 * s);
+      P(c, [cx - 10 * s, cy + 12 * s, cx - 10 * s, cy - 34 * s, cx + 12 * s, cy - 34 * s, cx + 12 * s, cy + 8 * s], "#5A5650");
+      P(c, [cx + 4 * s, cy + 10 * s, cx + 4 * s, cy - 34 * s, cx + 12 * s, cy - 34 * s, cx + 12 * s, cy + 8 * s], "#6E6A62");
+      R(c, cx - 13 * s, cy - 38 * s, 28 * s, 6 * s, "#46423C");
+      humo(c, cx + 1 * s, cy - 44 * s, t, s, sem);
+    }
+  }
+
   const L2 = ASSETS.LISTA;
   Object.assign(L2, {
-    casaNordica: { f: casaNordica, alto: 260, choque: { w: 300, h: 50 }, grupo: "capital" },
+    casaNordica: { f: casaNordica, alto: 260, choque: { w: 300, h: 50 }, grupo: "capital", caras: true },
     robleGigante: { f: robleGigante, alto: 1150, choque: { r: 120 }, grupo: "capital", luz: true },
     empalizadaDoble: { f: empalizadaDoble, alto: 280, choque: null, grupo: "capital" },
     murallaDoble: { f: murallaDoble, alto: 270, choque: null, grupo: "capital" },
