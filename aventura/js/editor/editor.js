@@ -102,7 +102,11 @@
       o = Object.assign({}, d.o);
     if (o.x2 !== undefined) [o.x2, o.y2] = V(o.x2, o.y2);
     const def = ASSETS.LISTA[d.id];
-    if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
+    // lo que tiene caras se arma como volumen; lo de planta cuadrada (casas, puertas, carros, puestos) se gira de
+    // mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
+    // postes) se ve igual de cualquier lado y queda como está
+    const md = d.choque || (def && def.choque);
+    if (def && (def.caras || (o.x2 === undefined && md && md.w))) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
     return Object.assign({}, d, { x, y, o, mundo: d });
   }
   const croquis = new Image();
