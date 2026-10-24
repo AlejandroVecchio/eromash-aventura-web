@@ -341,6 +341,7 @@ window.INTERIORES = (function () {
     jug.atk = null;
     jug.anda = 0;
     jug.mira = { vista: "N", espejo: false };
+    if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.45 });
     HUD.aviso(t("in.nombre_" + p.tipo), "#FFD98A");
   }
   function salir() {

@@ -270,6 +270,7 @@ window.PODERES = (function () {
         }
         if (b.t > 0.5 && d < 26) {
           if (b.tipo === "plata") darPlata(b.cant);
+          if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
           botin.splice(i, 1);
         } else if (b.t > 90) botin.splice(i, 1);

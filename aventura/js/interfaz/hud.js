@@ -274,7 +274,7 @@ window.HUD = (function () {
     $("capaCaja").innerHTML = html;
     const cont = document.createElement("div");
     $("capaCaja").appendChild(cont);
-    menu = { botones: [], foco: 0 };
+    menu = { botones: [], foco: undefined };
     (botones || []).forEach((b, i) => {
       const el = document.createElement("button");
       el.className = "boton";
@@ -290,11 +290,13 @@ window.HUD = (function () {
   }
   function enfocar(i) {
     if (!menu || !menu.botones.length) return;
+    if (menu.foco !== undefined && menu.foco !== (i + menu.botones.length) % menu.botones.length && window.SONIDO) SONIDO.tocar("clic", { vol: 0.18, tono: 1.3 });
     menu.foco = (i + menu.botones.length) % menu.botones.length;
     menu.botones.forEach((b, k) => b.el.classList.toggle("foco", k === menu.foco));
   }
   function elegir(i) {
     const b = menu && menu.botones[i];
+    if (b && window.SONIDO) SONIDO.tocar("clic", { vol: 0.3 });
     if (b) b.fn();
   }
   function cerrar() {
@@ -315,5 +317,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, fundido, ocultarJuego, hayMenu: () => !!menu };
+  return { armar, jugador, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, hayMenu: () => !!menu };
 })();

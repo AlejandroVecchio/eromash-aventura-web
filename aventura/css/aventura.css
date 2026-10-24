@@ -203,3 +203,12 @@ canvas.mapa { cursor: crosshair; }
   .inv footer { flex-direction: column; align-items: stretch; }
   .inv-ayuda { text-align: left; }
 }
+
+/* Opciones: dos columnas de filas que pasan al valor siguiente al tocarlas */
+.capa .caja.opciones { width: min(780px, calc(100vw - 32px)); }
+.caja.opciones > div:last-child { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.caja.opciones .boton small { color: var(--oro); }
+@media (max-width: 640px) { .caja.opciones > div:last-child { grid-template-columns: 1fr; } }
+/* interfaz grande (Opciones) */
+body.ui-grande .ui, body.ui-grande .capa .caja { zoom: 1.2; }
+body.ui-grande #hudMisiones { top: 240px; transform: none; }

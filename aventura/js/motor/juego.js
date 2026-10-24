@@ -111,7 +111,7 @@
     const i = J.avisos.indexOf(a);
     if (i >= 0) J.avisos.splice(i, 1);
   };
-  J.sacudir = (f) => (J.cam.sac = Math.max(J.cam.sac, f));
+  J.sacudir = (f) => window.OPCIONES && !OPCIONES.v("temblor") ? 0 : (J.cam.sac = Math.max(J.cam.sac, f));
   J.herir = (dano, ox, oy, tipo) => {
     // esquivar o saltar justo cuando el golpe llega: el mundo va lento un instante, vuelve estamina y el próximo golpe pega doble
     if (!jug.muerto && (jug.salto > 0 || jug.esq > 0) && J.t - (jug.justaT || -9) > 0.8) {
@@ -133,6 +133,7 @@
     jug.herido = 0.5;
     jug.inv = 0.6;
     jug.sinGolpe = 0;
+    if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.75 });
     const l = Math.hypot(jug.x - ox, jug.y - oy) || 1;
     jug.vx = ((jug.x - ox) / l) * 380;
     jug.vy = ((jug.y - oy) / l) * 380;
@@ -243,6 +244,7 @@
       plata = 25 + n * 15;
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
+    if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
     etapaVista = H.etapa();
     etapaDesde = J.t;
@@ -251,7 +253,10 @@
   function seguirObjetivo() {
     const e = H.etapa();
     if (e === etapaVista) return;
-    if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
+    if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) {
+      HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
+      if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
+    }
     etapaVista = e;
     etapaDesde = J.t;
   }
@@ -412,7 +417,10 @@
   }
   function mostrarLinea() {
     const [quien, clave, vars] = dlg.d.lineas[dlg.i];
-    HUD.dialogo(quien, dlg.d.libre ? t(clave, vars) : tav(clave), CONTROLES.glifo("seguir"));
+    const texto = dlg.d.libre ? t(clave, vars) : tav(clave);
+    HUD.dialogo(quien, texto, CONTROLES.glifo("seguir"));
+    // en Opciones, «diálogos: solos» pasa a la línea siguiente después del tiempo de leerla
+    dlg.solo = window.OPCIONES && OPCIONES.v("dialogos") === "solos" ? 1.6 + texto.length * 0.045 : 0;
     for (const id in npcs) npcs[id].hablando = id === quien ? 1 : 0;
   }
   function seguirDialogo() {
@@ -550,6 +558,7 @@
     CARGA_GIRO = 0.6;
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
+    if (window.SONIDO) SONIDO.tocar(d.caida ? "caida" : "tajo", { vol: d.giro || d.remate ? 0.55 : 0.4, tono: d.giro ? 0.8 : d.remate ? 0.88 : 1.05 });
     if (!d.giro) jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
     if (d.caida) {
       polvareda(jug.x, jug.y, 14);
@@ -558,6 +567,7 @@
   }
   // con mando (o sin mouse) el golpe se corre solo hacia la criatura más cercana delante, si la hay
   function apuntar(dir) {
+    if (window.OPCIONES && !OPCIONES.v("apuntar")) return dir;
     const o = objetivoCerca(dir);
     return o ? Math.atan2((o.y - jug.y) * 1.25, o.x - jug.x) : dir;
   }
@@ -584,10 +594,58 @@
     return enemigos.some((e) => e.activo && !e.muerto && e.estado !== "quieto" && e.estado !== "vuelve" && Math.abs(e.x - jug.x) < 1100 && Math.abs(e.y - jug.y) < 800);
   }
   function columnaRunica(x, y) {
+    if (window.SONIDO) SONIDO.runa(x, y);
     J.ondas.push({ tipo: "pulso", x, y, t: 0 });
     J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0 });
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < 26; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 50, y: y - Math.random() * 30, vx: (Math.random() - 0.5) * 30, vy: -260 - Math.random() * 320, t: 0.5 + Math.random() * 0.4, c: Math.random() < 0.5 ? "#73D5DB" : "#C8F2F4", s: 4 + Math.random() * 5, g: -0.1 });
+  }
+  // ---------- lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca ----------
+  let pasoAcum = 0,
+    cuervosT = 20,
+    grilloT = 0,
+    latidoT = 0;
+  let fogatas = null;
+  function sonidoDelMundo(dt) {
+    if (!window.SONIDO || !SONIDO.listo()) return;
+    SONIDO.oyente(jug.x, jug.y);
+    // pasos: uno cada tanto según lo rápido que va; en los puentes suenan a madera y en el adoquín a piedra
+    if (jug.paso && jug.salto <= 0 && jug.esq <= 0 && !jug.muerto) {
+      pasoAcum += VEL_PASO[jug.paso] * dt;
+      const largo = [0, 62, 74, 88][jug.paso];
+      if (pasoAcum > largo) {
+        pasoAcum = 0;
+        const puente = W.PUENTES.some((p) => W.distLinea(jug.x, jug.y, [p.a, p.b]) < 50);
+        const cam = !puente && W.CAMINOS.find((c0) => W.distLinea(jug.x, jug.y, c0.p) < c0.w / 2);
+        const tipo = puente ? "pasoMadera" : cam && (cam.tipo === "adoquin" || cam.tipo === "ladrillo") ? "pasoPiedra" : "paso";
+        SONIDO.tocar(tipo, { vol: [0, 0.18, 0.25, 0.34][jug.paso], var: 0.1, filtro: tipo === "paso" && !cam ? 2200 : null });
+      }
+    } else pasoAcum = 40;
+    // el viento: más fuerte de noche y en lo alto
+    SONIDO.bucle("viento", "viento", 0.16 + amb.n * 0.08 + (jug.z ? 0.12 : 0), { filtro: 380 + Math.sin(J.t * 0.13) * 160 });
+    // de noche, grillos; de día, de vez en cuando los cuervos
+    if (amb.n > 0.5 && (grilloT -= dt) <= 0) {
+      grilloT = 0.25 + Math.random() * 0.9;
+      for (let k = 0; k < 3; k++) SONIDO.tono("sine", 4200 + Math.random() * 600, 4100, 0.05, 0.012, { ambiente: true, retraso: k * 0.07 });
+    }
+    if (amb.n < 0.4 && (cuervosT -= dt) <= 0) {
+      cuervosT = 30 + Math.random() * 50;
+      SONIDO.tocar("cuervos", { ambiente: true, vol: 0.35, desde: Math.random() * 8, dur: 4, var: 0.04 });
+    }
+    // las fogatas que arden cerca
+    if (!fogatas) fogatas = W.COSAS.filter((o) => o.id === "fogonOlla" || o.id === "brasero");
+    let f = 0;
+    for (const o of fogatas) {
+      if (o.o.apagado || (o.id === "brasero" && !o.o.encendido)) continue;
+      const d = Math.hypot(o.x - jug.x, (o.y - jug.y) * 1.3);
+      if (d < 700) f = Math.max(f, 1 - d / 700);
+    }
+    SONIDO.bucle("fogata", "fogata", f * 0.7);
+    // con poca vida se oye el corazón
+    if (jug.hp < jug.hpMax * 0.25 && !jug.muerto && (latidoT -= dt) <= 0) {
+      latidoT = 0.9;
+      SONIDO.latido();
+    }
   }
   function polvareda(x, y, n) {
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
@@ -630,11 +688,14 @@
     if (CONTROLES.mando() && libre && CONTROLES.recien("correr")) jug.sprintFijo = !jug.sprintFijo;
     // con teclado, dos toques de Shift lo dejan corriendo solo hasta que frenás
     if (!CONTROLES.mando() && libre && CONTROLES.recien("correr")) {
-      if (J.t - (jug.shiftT || -9) < 0.3) jug.sprintFijo = true;
+      // en Opciones, «correr: alternar» hace que un toque de Shift deje corriendo y otro lo pare
+      if (window.OPCIONES && OPCIONES.v("correr") === "alternar") jug.sprintFijo = !jug.sprintFijo;
+      else if (J.t - (jug.shiftT || -9) < 0.3) jug.sprintFijo = true;
       jug.shiftT = J.t;
     }
-    if (!mov || jug.cansado) jug.sprintFijo = false;
-    jug.correr = libre && mov && (CONTROLES.pulsado("correr") || jug.sprintFijo) && !jug.cansado && !jug.atk;
+    const alterna = !CONTROLES.mando() && window.OPCIONES && OPCIONES.v("correr") === "alternar";
+    if ((!mov && !alterna) || jug.cansado) jug.sprintFijo = false;
+    jug.correr = libre && mov && ((CONTROLES.pulsado("correr") && !alterna) || jug.sprintFijo) && !jug.cansado && !jug.atk;
     if (jug.correr && jug.pelea) {
       jug.sta -= 20 * dt;
       jug.staEspera = 0.6;
@@ -674,6 +735,7 @@
       jug.atk = null;
       jug.carga = 0;
       polvareda(jug.x, jug.y, 5);
+      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.25 });
       return;
     }
     if (pide("saltar") && jug.salto <= 0 && !jug.atk) {
@@ -681,10 +743,12 @@
       jug.salto = 0.42;
       jug.saltoLargo = jug.correr;
       jug.golpeAire = false;
+      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.35, tono: 0.9 });
     }
     // al caer del salto: polvo, y si se atacó en el aire, el golpe contra el piso
     if (jug.saltoAntes > 0 && jug.salto <= 0) {
       polvareda(jug.x, jug.y, 6);
+      if (window.SONIDO && !jug.golpeAire) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
       if (jug.golpeAire) atacarCon(GOLPE_CAIDA, Math.atan2(jug.dir[1], jug.dir[0]));
       jug.golpeAire = false;
     }
@@ -819,12 +883,18 @@
       chispa(e.x, e.y - 30);
       numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
       if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
-      CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      if (window.SONIDO) {
+        SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });
+        if (murio) SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
+        else if (!e.d.muerto && Math.random() < 0.35) SONIDO.tocar("herida", { vol: 0.35, tono: e.d.pesado ? 0.7 : 1.15, x: e.x, y: e.y });
+      }
       pego++;
     }
     if (ciervo.activo && enArco(ciervo.x, ciervo.y, 60)) {
       const antes = ciervo.vida;
       CB.golpearCiervo(J, ciervo, d.dano * J.mulDano * (contra ? 2 : 1));
+      if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.7, x: ciervo.x, y: ciervo.y });
       chispa(ciervo.x, ciervo.y - 80);
       numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)), contra ? "#FFD98A" : null, contra);
       pego++;
@@ -852,7 +922,7 @@
     for (let i = 0; i < 7; i++) J.fx.push({ x, y, vx: (Math.random() - 0.5) * 300, vy: -Math.random() * 260, t: 0.35, c: i % 2 ? "#F2ECEC" : "#FF8D71", s: 3 + Math.random() * 3 });
   }
   function numero(x, y, n, col, grande) {
-    if (!(n > 0)) return;
+    if (!(n > 0) || (window.OPCIONES && !OPCIONES.v("numeros"))) return;
     // los números que caen juntos se abren un poco para no taparse
     const cerca = J.textos.filter((o) => o.t < 0.3 && Math.abs(o.x - x) < 40 && Math.abs(o.y - y) < 30).length;
     J.textos.push({ x: x + (cerca % 2 ? 1 : -1) * Math.ceil(cerca / 2) * 26, y: y - cerca * 8, n, t: 0, col, grande });
@@ -1264,7 +1334,7 @@
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
     J.avisos.forEach((a) => CB.dibujarAviso(c, a));
     // con mando, el anillo bajo la criatura a la que va el próximo golpe
-    if (J.modo === "juego" && (CONTROLES.mando() || !mouse.usado)) {
+    if (J.modo === "juego" && (CONTROLES.mando() || !mouse.usado) && (!window.OPCIONES || OPCIONES.v("apuntar"))) {
       const o = objetivoCerca(Math.atan2(jug.dir[1], jug.dir[0]));
       if (o) DIB.alfa(c, 0.55 + Math.sin(J.t * 6) * 0.15, () => {
         c.beginPath();
@@ -1358,7 +1428,7 @@
   }
   // una flecha roja en el borde por cada criatura que viene a pegarle desde fuera de la pantalla
   function flechasAmenaza(x0, y0, x1, y1) {
-    if (J.modo !== "juego" || jug.muerto) return;
+    if (J.modo !== "juego" || jug.muerto || (window.OPCIONES && !OPCIONES.v("flechas"))) return;
     const m = 46;
     for (const e of enemigos) {
       if (!e.activo || e.muerto || (e.estado !== "persigue" && e.estado !== "aviso" && e.estado !== "golpe")) continue;
@@ -1558,6 +1628,7 @@
       CALIDAD.nivel = n[(n.indexOf(CALIDAD.nivel) + 1) % n.length];
       titulo();
     } });
+    botones.push({ texto: t("op.titulo"), fn: () => OPCIONES.abrir(titulo) });
     HUD.abrir(`<h1>Eromash</h1><div class="sub">${tav("juego_subtitulo")}</div>`, botones, { clase: "titulo" });
     // de fondo, el mago escribe en su escritorio
     if (window.PROLOGO) PROLOGO.mostrar();
@@ -1632,6 +1703,7 @@
         cerrarMenu();
       } },
       { texto: tav("diario_titulo"), fn: diario },
+      { texto: t("op.titulo"), fn: () => OPCIONES.abrir(pausa) },
       { texto: tav("pausa_titulo_menu"), fn: () => {
         H.guardar();
         titulo();
@@ -1676,6 +1748,7 @@
       }
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
+      else if (dlg && dlg.solo && (dlg.solo -= dt) <= 0) seguirDialogo();
     } else if (J.modo === "juego") {
       if (CONTROLES.recien("misiones")) HUD.plegarTodo();
       if (!J.dentro && CONTROLES.pulsado("acercar")) cambiarZoom(-dt * 0.6);
@@ -1741,6 +1814,7 @@
       J.textos = J.textos.filter((n) => n.t < 0.9);
       zonas();
       pistaSiHaceFalta();
+      sonidoDelMundo(dt);
       actualizarCamara(dt);
       autoguardado += dt;
       if (autoguardado > 30) {
