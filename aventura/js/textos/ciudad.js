@@ -1,6 +1,12 @@
 // Textos de la capital en 2.5D (prefijo ci.): el mapa aparte de Eikholt con la cámara que gira y su página de muestra.
 I18N.textos({
   "as.chimeneaHerreria": { es: "La chimenea de la herrería de Ása", en: "The chimney of Ása's smithy" },
+  "as.munecoPractica": { es: "El muñeco de práctica de la Guardia", en: "The Guard's practice dummy" },
+  "as.dianaTiro": { es: "La diana de los arqueros de la Guardia", en: "The Guard archers' target" },
+  "as.estanteArmas": { es: "El estante de armas del campo de entrenamiento", en: "The training ground's weapon rack" },
+  "as.secaderoHierbas": { es: "El secadero de hierbas de la Casa de Sanación", en: "The House of Healing's herb rack" },
+  "as.posteHongo": { es: "El poste del cartel del Hongo Dorado", en: "The Golden Mushroom's sign post" },
+  "as.fardoHeno": { es: "Un fardo de heno del corral de caravanas", en: "A hay bale from the caravan corral" },
   "ci.muestra_titulo": { es: "Eikholt en 2.5D", en: "Eikholt in 2.5D" },
   "ci.muestra_texto": { es: "La capital con el mismo dibujo del bosque. Cada casa tiene sus medidas de verdad y se ve del lado que mira la cámara. Z / X giran, la rueda acerca, las flechas o WASD mueven.", en: "The capital drawn like the forest. Every house has real measurements and shows the side the camera faces. Z / X rotate, the wheel zooms, arrows or WASD move." },
   "ci.muestra_giro": { es: "Giro", en: "Rotation" },
@@ -13,5 +19,8 @@ I18N.textos({
   "ci.lugar_oficios": { es: "Barrio de los Oficios", en: "Craft Quarter" },
   "ci.lugar_lindes": { es: "Casa de las Lindes", en: "House of the Borders" },
   "ci.lugar_hongo": { es: "Hongo Dorado", en: "Golden Mushroom" },
+  "ci.lugar_guardia": { es: "Campo de la Guardia", en: "Guard training ground" },
+  "ci.lugar_caravanas": { es: "Forasteros y caravanas", en: "Strangers and caravans" },
+  "ci.lugar_sanacion": { es: "Casa de Sanación", en: "House of Healing" },
   "ci.lugar_lejos": { es: "Toda la ciudad", en: "Whole city" },
 });

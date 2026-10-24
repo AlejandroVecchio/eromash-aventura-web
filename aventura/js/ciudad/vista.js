@@ -181,6 +181,22 @@ window.VISTA25 = (function () {
     }
     // los patios empedrados (el de la Casa de las Lindes)
     for (const pa of patios) {
+      if (pa.arena) {
+        // la tierra apisonada y la arena del campo de entrenamiento, con las marcas de los pies
+        const [mx, mz] = pa.rect;
+        if (pa.x + mx < x0 - 100 || pa.x - mx > x1 + 100 || pa.y + mz < y0 - 100 || pa.y - mz > y1 + 100) continue;
+        P(c, [pa.x - mx - 50, pa.y - mz - 50, pa.x + mx + 50, pa.y - mz - 50, pa.x + mx + 50, pa.y + mz + 50, pa.x - mx - 50, pa.y + mz + 50], "#4A3C28");
+        P(c, [pa.x - mx, pa.y - mz, pa.x + mx, pa.y - mz, pa.x + mx, pa.y + mz, pa.x - mx, pa.y + mz], "#7A6448");
+        const ra = azar(Math.round(pa.x + pa.y));
+        for (let k = 0; k < 140; k++) E(c, pa.x + (ra() - 0.5) * 2 * mx * 0.95, pa.y + (ra() - 0.5) * 2 * mz * 0.95, 20 + ra() * 50, 8 + ra() * 18, ra() < 0.5 ? "#8A7454" : "#6E5A40", ra() * 3);
+        // el ruedo marcado en la arena
+        c.strokeStyle = "rgba(242,236,236,0.12)";
+        c.lineWidth = 8;
+        c.beginPath();
+        c.ellipse(pa.x + 240, pa.y + 120, 260, 200, 0, 0, TAU);
+        c.stroke();
+        continue;
+      }
       if (pa.x + pa.r < x0 || pa.x - pa.r > x1 || pa.y + pa.r < y0 || pa.y - pa.r > y1) continue;
       P(c, poli(pa.x, pa.y, pa.r + 40, pa.r + 40, 20, 0.1), "#3A3022");
       P(c, poli(pa.x, pa.y, pa.r, pa.r, 20, 0.1), "#5E564C");
@@ -203,18 +219,23 @@ window.VISTA25 = (function () {
       ty0 = Math.floor((cam.y - rad) / TROZO),
       ty1 = Math.floor((cam.y + rad) / TROZO);
     let pintados = 0;
+    // el caché guarda al menos todo lo que se ve (si no, de lejos se borraban trozos a la vista y quedaban huecos)
+    const tope = Math.max(160, (tx1 - tx0 + 1) * (ty1 - ty0 + 1) + 40);
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
         const k = tx + "," + ty;
         let cv = cache.get(k);
-        if (!cv) {
-          if (pintados > 3 && cache.size) continue;
+        if (cv) {
+          cache.delete(k);
+          cache.set(k, cv);
+        } else {
+          if (pintados > (escPiso < 0.15 ? 30 : 3) && cache.size) continue;
           cv = pintarTrozo(tx, ty, escCache);
           pintados++;
           cache.set(k, cv);
-          if (cache.size > 160) cache.delete(cache.keys().next().value);
+          if (cache.size > tope) cache.delete(cache.keys().next().value);
         }
-        c.drawImage(cv, tx * TROZO, ty * TROZO, TROZO + 1, TROZO + 1);
+        if (cv.width && cv.height) c.drawImage(cv, tx * TROZO, ty * TROZO, TROZO + 1, TROZO + 1);
       }
   }
 
@@ -279,6 +300,8 @@ window.VISTA25 = (function () {
       const [ex, ey] = V(o.o.x2, o.o.y2);
       return ASSETS.dibujar(c, o.id, sx, sy, t, Object.assign({}, o.o, { x2: ex, y2: ey }));
     }
+    // lo que gira con la cámara (el Roble): se le pasa hacia dónde mira
+    if (o.o.gira) return ASSETS.dibujar(c, o.id, sx, sy, t, Object.assign({}, o.o, { giro: cam.g, k: cam.k, ojo: [cam.x, cam.y] }));
     ASSETS.dibujar(c, o.id, sx, sy, t, o.o);
   }
 
@@ -300,7 +323,8 @@ window.VISTA25 = (function () {
       const [sx, sy] = V(e.x, e.y);
       lista.push({ y: sy, x: sx, f: (c) => e.f(c, sx, sy) });
     }
-    lista.sort((a, b) => a.y - b.y);
+    // lo pintado en el piso (losas, charcos) va primero, debajo de todo lo parado
+    lista.sort((a, b) => (b.cosa && b.cosa.o && b.cosa.o.piso ? 1 : 0) - (a.cosa && a.cosa.o && a.cosa.o.piso ? 1 : 0) || a.y - b.y);
     for (const d of lista) d.f(c);
     return { V, lista };
   }

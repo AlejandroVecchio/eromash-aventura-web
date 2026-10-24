@@ -44,13 +44,18 @@ window.PLANO25 = (function () {
     lindes: [-104, 62],
     carpinteria: [-40, 114],
     herreria: [-70, 22],
-    cordeleria: [-116, -16],
+    cordeleria: [-118, -32], // el taller; el paseo de las sogas corre junto a la avenida del oeste
+    paseo_sogas: [-119, -12],
     curtiembre: [-76, 116],
-    sanacion: [-72, -76],
-    guardia: [-30, -122],
-    patio_guardia: [-16, -108],
-    corral: [48, -114],
-    forasteros: [74, -66],
+    // el noroeste: la Casa de Sanación con su huerta de hierbas y la hospedería junto a la Puerta del Norte
+    sanacion: [-78, -86],
+    hierbas: [-56, -112],
+    hospederia: [-26, -122],
+    // el noreste: el cuartel de la Guardia y su campo de entrenamiento, el campamento de forasteros y el corral
+    guardia: [50, -108],
+    entrenamiento: [24, -114],
+    forasteros: [88, -84],
+    corral: [116, -30],
     huertas: [116, 50],
     hongo: [54, 62],
     tablero: [14, 136],
@@ -60,20 +65,23 @@ window.PLANO25 = (function () {
   const RESERVA = [];
   const reservar = (cx, cz, mx, mz) => RESERVA.push([cx, cz, mx, mz]);
   const reservado = (x, z, m = 0) => RESERVA.some(([cx, cz, mx, mz]) => Math.abs(x - cx) < mx + m && Math.abs(z - cz) < mz + m);
-  reservar(-104, 62, 17, 18);
-  reservar(-40, 114, 14, 11);
-  reservar(-70, 22, 12, 11);
-  reservar(-116, -16, 7, 12);
-  reservar(-76, 116, 9, 9);
-  reservar(-72, -76, 15, 12);
-  reservar(-30, -122, 10, 8);
-  reservar(-16, -108, 8, 9);
-  reservar(48, -114, 20, 14);
-  reservar(74, -66, 18, 16);
-  reservar(116, 50, 16, 34);
-  reservar(54, 62, 16, 12);
-  reservar(14, 136, 8, 6);
-  reservar(-15, 135, 7, 6);
+  reservar(-104, 62, 17, 18); // la Casa de las Lindes y su patio
+  reservar(-40, 114, 14, 11); // la carpintería
+  reservar(-70, 22, 12, 11); // la herrería
+  reservar(-118, -32, 9, 8); // la cordelería
+  reservar(-119, -12, 21, 4); // el paseo de las sogas
+  reservar(-76, 116, 9, 9); // la curtiembre
+  reservar(-78, -86, 15, 13); // la Casa de Sanación
+  reservar(-56, -112, 12, 9); // la huerta de hierbas
+  reservar(-26, -122, 9, 13); // la hospedería
+  reservar(50, -108, 8, 14); // el cuartel de la Guardia
+  reservar(24, -114, 16, 11); // el campo de entrenamiento
+  reservar(88, -84, 15, 15); // el campamento de forasteros
+  reservar(114, -26, 20, 15); // el corral de caravanas
+  reservar(116, 50, 16, 34); // las huertas del este
+  reservar(54, 62, 16, 12); // el Hongo Dorado
+  reservar(14, 136, 8, 6); // el Tablero de las Sendas
+  reservar(-15, 135, 7, 6); // la casa de la guardia de la Puerta del Sur
 
   // ---------- las calles ----------
   const CALLES = [];
@@ -128,18 +136,28 @@ window.PLANO25 = (function () {
     if (Object.values(PUERTAS).some((p) => Math.abs(corto(a - p)) < 0.12)) continue;
     radial(a, rOficios, R_MURO - 9, 2.8, "senda", i + 30);
   }
-  {
+  // las calles de los barrios: un anillo del medio entre la plaza y el de los oficios, y uno de afuera entre el de los
+  // oficios y la muralla; se cortan donde hay un lugar con nombre y los pedazos muy cortos no se trazan
+  const rMedio = (a) => 72 + 2 * Math.sin(4 * a + 1),
+    rFuera = (a) => 121 + 3 * Math.sin(5 * a + 2);
+  for (const [fr, w, sem] of [[rMedio, 3.4, 1], [rFuera, 3.2, 2]]) {
     let tramo = [];
-    const n = 160;
+    const n = 200,
+      cerrar = () => {
+        if (tramo.length > 6) {
+          calle(tramo, w, "tierra");
+          CALLES[CALLES.length - 1].barrio = true;
+        }
+        tramo = [];
+      };
     for (let i = 0; i <= n; i++) {
       const a = (i / n) * TAU,
-        p = polar(a, rBorde(a));
-      if (reservado(p[0], p[1], 3)) {
-        if (tramo.length > 2) calle(tramo, 3.2, "tierra");
-        tramo = [];
-      } else tramo.push(p);
+        p = polar(a, fr(a));
+      if (reservado(p[0], p[1], 2.5)) cerrar();
+      else tramo.push(p);
     }
-    if (tramo.length > 2) calle(tramo, 3.2, "tierra");
+    cerrar();
+    void sem;
   }
   function aCalle(x, z) {
     let mejor = { d: 1e9, c: null };
@@ -240,7 +258,7 @@ window.PLANO25 = (function () {
     }
 
     // ---------- el Roble y la plaza ----------
-    asset("robleGigante", 0, 0, { s: 1.6, sinRaices: true });
+    asset("robleGigante", 0, 0, { s: 1.6, sinRaices: true, tablillas: 26, gira: true });
     circulo(0, -2, 7);
     // las raíces en volumen: lomos que salen del tronco hacia la plaza, con musgo y vetas rúnicas
     {
@@ -260,12 +278,21 @@ window.PLANO25 = (function () {
       }
     }
     const [tx, tz] = LUGAR.ting;
-    asset("tingCirculo", tx, tz, { s: 2.6 });
+    // el menhir y los doce asientos en volumen, en ronda de verdad (giran con la cámara)
+    cosas.push({ tipo: "casa", x: tx * M, y: tz * M, ry: 0, casa: TING25.menhir(1), nombre: "menhir" });
+    circulo(tx, tz, 1.1);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU,
+        ax = tx + Math.cos(a) * 5.6,
+        az = tz + Math.sin(a) * 5.6;
+      cosas.push({ tipo: "casa", x: ax * M, y: az * M, ry: Math.atan2(-(tx - ax), tz - az), casa: TING25.asiento(i + 1), nombre: "asiento" + i });
+      circulo(ax, az, 0.7);
+    }
     // los braseros alrededor del Ting
     for (let i = 0; i < 6; i++) {
       const a = (i / 6) * TAU + PI / 6;
-      asset("brasero", tx + Math.cos(a) * 9.5, tz + Math.sin(a) * 6.5, { s: 1.3, sem: i });
-      circulo(tx + Math.cos(a) * 9.5, tz + Math.sin(a) * 6.5, 0.5);
+      asset("brasero", tx + Math.cos(a) * 9.2, tz + Math.sin(a) * 9.2, { s: 1.3, sem: i });
+      circulo(tx + Math.cos(a) * 9.2, tz + Math.sin(a) * 9.2, 0.5);
     }
     anclas.ting = U([tx, tz + 9.5]);
     asset("pozoEikholt", ...LUGAR.pozo, { s: 1.4 });
@@ -338,6 +365,37 @@ window.PLANO25 = (function () {
       return casa;
     };
     const AZUL_GRIS = ["#2C3440", "#3A4654", "#52606E"];
+    const aMundoE = (x, z, ry, u, w) => [x + u * Math.cos(ry) - w * Math.sin(ry), z + u * Math.sin(ry) + w * Math.cos(ry)];
+    // un cerco de troncos rectangular (medio ancho mx, medio fondo mz) con huecos de entrada en el lado de abajo (fracciones)
+    const cercoRect = (cx, cz, mx, mz, ry, huecos) => {
+      const tramo = (u0, w0, u1, w1) => {
+        const [ax, az] = aMundoE(cx, cz, ry, u0, w0),
+          [bx, bz] = aMundoE(cx, cz, ry, u1, w1);
+        asset("cerca", ax, az, { x2: bx * M, y2: bz * M, sem: Math.round(cx + cz) });
+      };
+      tramo(-mx, -mz, mx, -mz);
+      tramo(-mx, -mz, -mx, mz);
+      tramo(mx, -mz, mx, mz);
+      let u = -mx;
+      for (const h of huecos.concat([1])) {
+        const fin = -mx + 2 * mx * h - (h < 1 ? 1.6 : 0);
+        if (fin > u) tramo(u, mz, fin, mz);
+        u = -mx + 2 * mx * h + 1.6;
+      }
+    };
+    // un cerco ovalado de n tramos, sin los tramos de las puertas
+    const cercoOval = (cx, cz, rx, rz, n, puertas) => {
+      for (let i = 0; i < n; i++) {
+        if (puertas.includes(i)) continue;
+        const a0 = (i / n) * TAU,
+          a1 = ((i + 1) / n) * TAU;
+        asset("cerca", cx + Math.cos(a0) * rx, cz + Math.sin(a0) * rz, { x2: (cx + Math.cos(a1) * rx) * M, y2: (cz + Math.sin(a1) * rz) * M, sem: i });
+      }
+      for (let i = 0; i < 40; i++) {
+        const a = (i / 40) * TAU;
+        circulo(cx + Math.cos(a) * rx, cz + Math.sin(a) * rz, 0.4);
+      }
+    };
     // la Casa de las Lindes: piedra antigua abajo, la ampliación de madera arriba, techo azul gris, mirando al patio
     {
       const [lx, lz] = LUGAR.lindes;
@@ -358,6 +416,20 @@ window.PLANO25 = (function () {
       const ry = mirando(hx, hz, 0, 0);
       especial("hongo", hx, hz, ry, { W: 27 * M, D: 13 * M, pisos: 2, H: 300, RT: 250, tipo: "dosAguas", buhardilla: 4, galeria: true, porche: null, anexo: { lado: 1, W: 7 * M, D: 8 * M }, escalera: false, dragones: true, chimenea: { u: 0.3, w: -0.15 }, entra: true, cartel: "hongo", puerta: -0.1, pared: 3, techo: 0, lena: true }, 7101);
       anclas.hongo_puerta = U([hx - 6, hz - 9]);
+      // la esquina que da a la calle: el poste del cartel, y del costado las mesas de afuera con sus barriles
+      const du = [Math.cos(ry), Math.sin(ry)],
+        dw = [-Math.sin(ry), Math.cos(ry)],
+        en = (u, w) => [hx + du[0] * u + dw[0] * w, hz + du[1] * u + dw[1] * w];
+      for (const l of [-1, 1]) {
+        const p = en(l * 15.5, 8.5);
+        asset("posteHongo", p[0], p[1], { s: 1.2 });
+      }
+      for (const w of [-3, 1.5]) {
+        const p = en(-17.5, w);
+        asset("mesaBanco", p[0], p[1], { s: 0.45 });
+      }
+      { const p = en(-16.5, 5.5); asset("barriles", p[0], p[1], { s: 0.6 }); }
+      { const p = en(-16.5, -6.5); asset("lenera", p[0], p[1], { s: 1 }); }
     }
     // los oficios y los demás lugares con nombre: por ahora sus dibujos del bosque, de frente
     // la herrería de Ása: el taller de troncos, el galpón abierto de la fragua y la chimenea cónica de piedra
@@ -370,18 +442,126 @@ window.PLANO25 = (function () {
       asset("herreriaAsa", hx + 1, hz + 7, { s: 1.8 });
       anclas.herreria = U([hx + 1, hz + 9]);
     }
-    asset("carpinteria", ...LUGAR.carpinteria, { s: 2.4 });
-    circulo(LUGAR.carpinteria[0], LUGAR.carpinteria[1] - 1, 7);
-    asset("cordeleriaFolke", ...LUGAR.cordeleria, { s: 2.2 });
-    asset("curtiembre", ...LUGAR.curtiembre, { s: 2.2 });
-    asset("casaSanacion", ...LUGAR.sanacion, { s: 2.4 });
-    circulo(LUGAR.sanacion[0], LUGAR.sanacion[1] - 1, 7);
-    asset("casaGuardia", ...LUGAR.guardia, { s: 2.2 });
-    for (let i = 0; i < 4; i++) asset("munecoPaja", LUGAR.patio_guardia[0] - 4 + i * 2.6, LUGAR.patio_guardia[1] + (i % 2) * 2, { s: 1.4 });
-    for (let i = 0; i < 6; i++) asset("carreta", LUGAR.corral[0] - 12 + (i % 3) * 9, LUGAR.corral[1] - 4 + Math.floor(i / 3) * 8, { s: 1.6, sem: i });
-    for (let i = 0; i < 5; i++) asset("buey", LUGAR.corral[0] - 8 + i * 4, LUGAR.corral[1] + 10, { s: 1.5, sem: i });
-    for (let i = 0; i < 6; i++) asset("huerta", LUGAR.huertas[0] - 6 + (i % 2) * 12, LUGAR.huertas[1] - 24 + Math.floor(i / 2) * 16, { s: 2, sem: i });
-    for (let i = 0; i < 8; i++) asset("toldo", LUGAR.forasteros[0] - 12 + (i % 4) * 8, LUGAR.forasteros[1] - 6 + Math.floor(i / 4) * 10, { s: 2, v: 2 + (i % 4), sem: 90 + i });
+    // la carpintería: el taller, el galpón abierto de aserrar y las pilas de troncos que llegan del aserradero
+    {
+      const [cx, cz] = LUGAR.carpinteria;
+      const ry = mirando(cx, cz, 0, 0);
+      especial("carpinteria", cx, cz, ry, { W: 14 * M, D: 9 * M, pisos: 1, H: 200, RT: 200, tipo: "dosAguas", techo: 1, piedra: 0, galeria: true, porche: null, anexo: { lado: 1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 1 }, 7701);
+      for (let i = 0; i < 3; i++) asset("pilaTroncos", ...aMundoE(cx, cz, ry, -9 + i * 6, 9), { s: 1.2, sem: i });
+      asset("carroCuadrilla", ...aMundoE(cx, cz, ry, 10, 10), { s: 1.2 });
+      asset("lenera", ...aMundoE(cx, cz, ry, -12, 2), { s: 1.2 });
+      anclas.carpinteria = U(aMundoE(cx, cz, ry, 0, 7));
+    }
+    // la curtiembre, lejos de la plaza por el olor: el galpón, las pieles tendidas y los sacos de corteza
+    {
+      const [cx, cz] = LUGAR.curtiembre;
+      const ry = mirando(cx, cz, 0, 0);
+      especial("curtiembre", cx, cz, ry, { W: 11 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 2, piedra: 0, galeria: true, porche: null, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 5 }, 7801);
+      for (let i = 0; i < 3; i++) asset("tendedero", ...aMundoE(cx, cz, ry, -7 + i * 5, 8), { s: 1.4, sem: 10 + i });
+      asset("sacosAbiertos", ...aMundoE(cx, cz, ry, 8, 6), { s: 1.4 });
+      asset("ahumadero", ...aMundoE(cx, cz, ry, 0, -8), { s: 1.1 });
+      anclas.curtiembre = U(aMundoE(cx, cz, ry, 0, 7));
+    }
+
+    // ---------- el noroeste: Sanación, sus hierbas, la hospedería y la cordelería ----------
+    {
+      // la Casa de Sanación de Thora: dos pisos, paredes claras, galería para los que esperan, mirando a la plaza
+      const [sx, sz] = LUGAR.sanacion;
+      especial("sanacion", sx, sz, mirando(sx, sz, 0, 0), { W: 22 * M, D: 11 * M, pisos: 2, H: 300, RT: 220, tipo: "dosAguas", techo: 2, piedra: 90, galeria: true, porche: null, anexo: { lado: 1, W: 7 * M, D: 7 * M }, escalera: false, buhardilla: 2, dragones: true, chimenea: { u: -0.25, w: -0.1 }, entra: true, lena: true, pared: 0 }, 7301);
+      anclas.sanacion = U(aMundoE(sx, sz, mirando(sx, sz, 0, 0), 0, 8));
+      // la huerta de hierbas: canteros cercados, secaderos y el banco de los que se curan
+      const [hx, hz] = LUGAR.hierbas;
+      for (let i = 0; i < 6; i++) asset("huerta", hx - 7 + (i % 3) * 7, hz - 4 + Math.floor(i / 3) * 8, { s: 1.5, sem: 40 + i });
+      for (let i = 0; i < 3; i++) asset("secaderoHierbas", hx + 11, hz - 6 + i * 6, { s: 1.3, sem: i });
+      asset("estanteHierbas", hx - 13, hz + 6, { s: 0.45 });
+      cercoRect(hx, hz, 15, 10, 0, [0.5]);
+      asset("pozoEikholt", hx - 13, hz - 6, { s: 1.1 });
+      circulo(hx - 13, hz - 6, 1.2);
+      // la hospedería de los caminantes: larga, dos pisos, de frente a la avenida del norte, con su galpón y carros
+      const [px, pz] = LUGAR.hospederia;
+      especial("hospederia", px, pz, mirando(px, pz, 0, pz), { W: 24 * M, D: 11 * M, pisos: 2, H: 300, RT: 230, tipo: "dosAguas", techo: 0, piedra: 0, galeria: true, porche: { fondo: 2.4 * M }, anexo: null, escalera: true, buhardilla: 3, dragones: true, chimenea: { u: 0.3, w: 0 }, entra: true, lena: true, pared: 4 }, 7401);
+      asset("carroCaravana", px - 2, pz + 17, { s: 1.4, sem: 3 });
+      asset("buey", px + 4, pz + 18, { s: 1.3, sem: 7 });
+      asset("fardoHeno", px - 8, pz + 15, { s: 1.4 });
+      asset("posteFarol", px + 7, pz - 9, { s: 1.4 });
+      anclas.hospederia = U([px + 8, pz]);
+      // la cordelería de Folke: el taller y, junto a la avenida del oeste, el paseo de las sogas
+      const [cx, cz] = LUGAR.cordeleria;
+      especial("cordeleria", cx, cz, mirando(cx, cz, cx, 0), { W: 12 * M, D: 8 * M, pisos: 1, H: 180, RT: 180, tipo: "dosAguas", techo: 1, piedra: 0, galeria: false, porche: { fondo: 2 * M }, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: { u: -0.3, w: 0 }, entra: true, lena: true, pared: 3 }, 7501);
+      const [sx2, sz2] = LUGAR.paseo_sogas;
+      cosas.push({ tipo: "casa", x: sx2 * M, y: sz2 * M, ry: 0, casa: OFICIOS25.paseoSogas(38 * M, 3), nombre: "paseo_sogas" });
+      anclas.cordeleria = U([cx, cz + 6]);
+    }
+
+    // ---------- el noreste: la Guardia, su campo de entrenamiento, los forasteros y el corral de caravanas ----------
+    {
+      // el cuartel de la Guardia: largo y bajo, de piedra abajo, mirando al campo
+      const [gx, gz] = LUGAR.guardia;
+      especial("cuartel", gx, gz, mirando(gx, gz, 0, gz), { W: 26 * M, D: 10 * M, pisos: 1, H: 210, RT: 210, tipo: "dosAguas", techo: 0, piedra: 120, galeria: true, porche: null, anexo: { lado: -1, W: 6 * M, D: 6 * M }, escalera: false, buhardilla: 0, dragones: true, chimenea: { u: 0.35, w: -0.1 }, entra: true, lena: true, pared: 2, colTecho: AZUL_GRIS }, 7601);
+      anclas.guardia = U([gx - 8, gz]);
+      // el campo de entrenamiento: tierra apisonada y arena, cercado, con muñecos, dianas, estantes y braseros
+      const [ex, ez] = LUGAR.entrenamiento;
+      cosas.push({ tipo: "patio", x: ex * M, y: ez * M, r: 0, rect: [15 * M, 10 * M], arena: true });
+      cercoRect(ex, ez, 15, 10, 0, [0.25, 0.75]);
+      for (let i = 0; i < 6; i++) {
+        asset("munecoPractica", ex - 11 + i * 4, ez - 6, { s: 1.4, sem: i });
+        circulo(ex - 11 + i * 4, ez - 6, 0.5);
+      }
+      for (let i = 0; i < 3; i++) {
+        asset("dianaTiro", ex + 12, ez - 1 + i * 4, { s: 1.4, sem: i });
+        circulo(ex + 12, ez - 1 + i * 4, 0.6);
+      }
+      asset("estanteArmas", ex - 10, ez + 7, { s: 1.4 });
+      asset("estanteArmas", ex - 3, ez + 7, { s: 1.4 });
+      for (const [bx, bz] of [[-14, -9], [14, -9], [-14, 9], [14, 9]]) asset("brasero", ex + bx, ez + bz, { s: 1.3 });
+      asset("estandarteCiervo", ex - 15, ez - 10.5, { s: 1.5, sem: 1 });
+      asset("estandarteCiervo", ex + 15, ez - 10.5, { s: 1.5, sem: 2 });
+      // el ruedo de los que pelean de a dos: un círculo de piedras
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * TAU;
+        asset("roca", ex + 4 + Math.cos(a) * 4, ez + 2 + Math.sin(a) * 3, { s: 0.35, sem: i });
+      }
+      anclas.entrenamiento = U([ex, ez + 11]);
+      // el campamento de los forasteros: tiendas de lona en ronda alrededor del fuego, con sus cargas
+      const [fx, fz] = LUGAR.forasteros;
+      asset("fogonOlla", fx, fz, { s: 2.1 });
+      circulo(fx, fz, 1.4);
+      // los troncos para sentarse alrededor del fuego
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * TAU + 0.8;
+        asset("troncoCaido", fx + Math.cos(a) * 4, fz + Math.sin(a) * 3.4, { s: 0.4, sem: i });
+      }
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * TAU + 0.3,
+          tx2 = fx + Math.cos(a) * 10,
+          tz2 = fz + Math.sin(a) * 9;
+        // la entrada (w+) mira al fuego
+        const ry = mirando(tx2, tz2, fx, fz);
+        const tienda = PUESTOS25.crearTienda(i + 1);
+        cosas.push({ tipo: "casa", x: tx2 * M, y: tz2 * M, ry, casa: tienda, nombre: "tienda" + i });
+        choques.push({ poli: tienda.huella(tx2 * M, tz2 * M, ry) });
+        const [bx, bz] = aMundoE(tx2, tz2, ry, 4, 3);
+        asset(i % 2 ? "sacosAbiertos" : "lenera", bx, bz, { s: 1, sem: i });
+      }
+      asset("carroCaravana", fx - 4, fz - 15, { s: 1.4, sem: 5 });
+      asset("tendedero", fx + 6, fz + 4, { s: 1.4, sem: 2 });
+      anclas.forasteros = U([fx, fz + 4]);
+      // el corral de caravanas: el potrero cercado con los bueyes y, alrededor, las carretas, el heno y la lona
+      const [kx, kz] = LUGAR.corral;
+      cercoOval(kx, kz, 14, 8, 22, [5]);
+      for (let i = 0; i < 6; i++) asset("buey", kx - 8 + (i % 3) * 7, kz - 3 + Math.floor(i / 3) * 5, { s: 1.4, sem: i, espejo: i % 2 === 1 });
+      for (let i = 0; i < 5; i++) {
+        const a = PI * (0.55 + i * 0.22),
+          cx2 = kx + Math.cos(a) * 18,
+          cz2 = kz + Math.sin(a) * 12;
+        asset("carroCaravana", cx2, cz2, { s: 1.4, sem: i });
+        circulo(cx2, cz2, 1.4);
+      }
+      for (let i = 0; i < 5; i++) asset("fardoHeno", kx + 16 + (i % 2) * 2.5, kz - 6 + i * 2.5, { s: 1.3 });
+      asset("lonaCuadrilla", kx - 2, kz + 12, { s: 1.4 });
+      asset("fogonOlla", kx - 12, kz + 10, { s: 1.1 });
+      anclas.corral = U([kx - 16, kz]);
+    }
     // ---------- las casas de la gente ----------
     const ocupado = [];
     const solapa = (x, z, mx, mz, ang, margen) => {
@@ -409,7 +589,8 @@ window.PLANO25 = (function () {
     };
     for (const [cx, cz, mx, mz] of RESERVA) ocupado.push({ x: cx, z: cz, mx, mz, ang: 0 });
     ocupado.push(...especiales);
-    ocupado.push({ x: 0, z: 0, mx: 46, mz: 46, ang: PI / 4 });
+    // la plaza (hasta la vuelta de adoquín): un octógono de dos cuadrados
+    ocupado.push({ x: 0, z: 0, mx: 38, mz: 38, ang: 0 }, { x: 0, z: 0, mx: 38, mz: 38, ang: PI / 4 });
     // en el plano de la casa, u va a lo ancho y w hacia el frente; ry gira (u, w) al mundo
     const aMundo = (x, z, ry, u, w) => [x + u * Math.cos(ry) - w * Math.sin(ry), z + u * Math.sin(ry) + w * Math.cos(ry)];
     const libreCalle = (x, z, mx, mz, ang) => {
@@ -434,7 +615,9 @@ window.PLANO25 = (function () {
     const casas = [];
     let sem = 1000;
     const rC = azar(4242);
-    for (const c of CALLES) {
+    // primero las calles de los barrios (los dos anillos de tierra), así las casas les dan el frente a ellas
+    const ORDEN = CALLES.filter((c) => c.barrio).concat(CALLES.filter((c) => !c.barrio));
+    for (const c of ORDEN) {
       let largo = 0;
       for (let i = 0; i < c.pts.length - 1; i++) largo += Math.hypot(c.pts[i + 1][0] - c.pts[i][0], c.pts[i + 1][1] - c.pts[i][1]);
       for (const lado of [1, -1]) {
@@ -453,13 +636,13 @@ window.PLANO25 = (function () {
             // el frente (w+) mira a la calle: w+ en el mundo es (-sin ry, cos ry) = (-nx, -nz)
             const ry = Math.atan2(nx, -nz);
             // el lote entero: la casa, el anexo o la leña de un costado, el árbol del otro y el terreno cercado de atrás
-            const mx = ancho / 2 + 6,
-              mz = fondo / 2 + 7.5;
-            const [lx, lz] = aMundo(x, z, ry, 1.5, -6);
-            if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 4) && !solapa(lx, lz, mx, mz, ry, 2.5)) {
+            const mx = ancho / 2 + 2.2,
+              mz = fondo / 2 + 3.2;
+            const [lx, lz] = aMundo(x, z, ry, 0, -2.2);
+            if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 4) && !solapa(lx, lz, mx, mz, ry, 0.6)) {
               ocupado.push({ x: lx, z: lz, mx, mz, ang: ry });
               casas.push({ x, z, ry, ancho, fondo, sem: sem++ });
-              u += ancho + 9 + rC() * 12; // cada casa con su terreno
+              u += ancho + 2 + rC() * 5; // casa al lado de casa: el lote ya guarda su aire
               puesta = true;
               break;
             }
@@ -468,11 +651,19 @@ window.PLANO25 = (function () {
         }
       }
     }
-    // unas 60 casas de vecinos (el resto son los edificios con nombre): se eligen parejas por toda la ciudad
+    // unas 60 casas de vecinos (el resto son los edificios con nombre), juntas en barrios: en cada cuadrante se eligen
+    // las más cercanas a su centro, así quedan apretadas a lo largo de sus calles y no desparramadas por todo el recinto
+    const BARRIOS = [
+      { x: 62, z: -58, n: 12 }, // el noreste, entre la Guardia y la plaza
+      { x: -58, z: -52, n: 13 }, // el noroeste, frente a Sanación
+      { x: -58, z: 70, n: 15 }, // el sudoeste, alrededor de los oficios
+      { x: 58, z: 58, n: 17 }, // el sudeste, alrededor del Hongo Dorado
+    ];
     const elegidas = [];
-    {
-      const paso = casas.length / 60;
-      for (let i = 0; i < 60 && Math.floor(i * paso) < casas.length; i++) elegidas.push(casas[Math.floor(i * paso)]);
+    for (const b of BARRIOS) {
+      const del = casas.filter((cc) => Math.sign(cc.x) === Math.sign(b.x) && Math.sign(cc.z) === Math.sign(b.z));
+      del.sort((p, q) => Math.hypot(p.x - b.x, p.z - b.z) - Math.hypot(q.x - b.x, q.z - b.z));
+      elegidas.push(...del.slice(0, b.n));
     }
     elegidas.forEach((cc, i) => {
       const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: i % 4 === 1 }, cc.sem);
@@ -493,27 +684,70 @@ window.PLANO25 = (function () {
           [bx, bz] = aMundo(cc.x, cc.z, cc.ry, u1, w1);
         asset("cerca", ax, az, { x2: bx * M, y2: bz * M, sem: cc.sem });
       };
-      const fondoT = 7 + rT() * 5;
-      cerco(-W2 - 2, -D2 - fondoT, W2 + 2, -D2 - fondoT);
-      cerco(-W2 - 2, -D2 - fondoT, -W2 - 2, -D2 + 1);
-      cerco(W2 + 2, -D2 - fondoT, W2 + 2, -D2 + 1);
+      const fondoT = 3.5 + rT() * 1.5;
+      cerco(-W2 - 1.8, -D2 - fondoT, W2 + 1.8, -D2 - fondoT);
+      cerco(-W2 - 1.8, -D2 - fondoT, -W2 - 1.8, -D2 + 1);
+      cerco(W2 + 1.8, -D2 - fondoT, W2 + 1.8, -D2 + 1);
       const [bx, bz] = aMundo(cc.x, cc.z, cc.ry, (rT() - 0.5) * W2, -D2 - fondoT / 2);
       const k = cc.sem % 5;
       if (k === 0 || k === 3) asset("huerta", bx, bz, { s: 1.6, sem: cc.sem });
       else if (k === 1) asset("carreta", bx, bz, { s: 1.4, sem: cc.sem });
       else if (k === 2) asset("buey", bx, bz, { s: 1.3, sem: cc.sem });
-      const [ax2, az2] = aMundo(cc.x, cc.z, cc.ry, W2 + 4 + rT() * 3, rT() * D2);
+      const [ax2, az2] = aMundo(cc.x, cc.z, cc.ry, W2 + 1.2, -D2 - 1 - rT() * 2);
       if (rT() < 0.7) {
         asset(rT() < 0.5 ? "abedul" : "pino", ax2, az2, { s: 1.3 + rT() * 0.4, sem: cc.sem, pisos: 4 });
         circulo(ax2, az2, 0.5);
       }
     });
 
-    // ---------- árboles entre las casas ----------
+    // ---------- lo que llena la tierra entre los barrios: huertas cercadas, galpones con heno y montecitos ----------
+    {
+      // las huertas del este, junto a la muralla
+      const [ux, uz] = LUGAR.huertas;
+      for (let i = 0; i < 8; i++) asset("huerta", ux - 6 + (i % 2) * 12, uz - 26 + Math.floor(i / 2) * 15, { s: 2, sem: 60 + i });
+      cercoRect(ux, uz, 14, 32, 0, [0.5]);
+      const rf = azar(9191);
+      for (let gx = -142; gx <= 142; gx += 15)
+        for (let gz = -142; gz <= 142; gz += 15) {
+          const x = gx + (rf() - 0.5) * 6,
+            z = gz + (rf() - 0.5) * 6,
+            rr = Math.hypot(x, z);
+          if (rr < 56 || rr > R_MURO - 14) continue;
+          if (aCalle(x, z).d < 9 || reservado(x, z, 6) || solapa(x, z, 7, 5.5, 0, 1)) continue;
+          const tira = rf();
+          if (tira < 0.42) {
+            // una huerta cercada de una familia, con su espantapájaros
+            const ry = Math.round(rf() * 3) * (PI / 2) + (rf() - 0.5) * 0.2;
+            asset("huerta", x - 2.6, z, { s: 1.5, sem: gx * 7 + gz });
+            asset("huerta", x + 2.6, z + 0.4, { s: 1.5, sem: gx * 7 + gz + 1 });
+            cercoRect(x, z, 6, 4, ry, [rf()]);
+            ocupado.push({ x, z, mx: 7, mz: 5.5, ang: 0 });
+          } else if (tira < 0.6) {
+            // un galpón de troncos con heno y un carro
+            const ry = mirando(x, z, 0, 0) + (rf() - 0.5) * 0.6;
+            especial("galpon" + gx + "_" + gz, x, z, ry, { W: (5 + rf() * 2) * M, D: (4 + rf()) * M, pisos: 1, H: 150, RT: 150, tipo: "dosAguas", techo: Math.floor(rf() * 3), porche: null, galeria: false, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: null, entra: false, lena: rf() < 0.5 }, 9000 + gx * 31 + gz);
+            const [hx, hz] = aMundoE(x, z, ry, 4.5, 1);
+            asset("fardoHeno", hx, hz, { s: 1.3 });
+            if (rf() < 0.5) asset("carreta", ...aMundoE(x, z, ry, -2, 5), { s: 1.3, sem: gx + gz, v: 1 });
+            ocupado.push({ x, z, mx: 7, mz: 5.5, ang: 0 });
+          } else if (tira < 0.85) {
+            // un montecito de pinos y abedules
+            const n = 4 + Math.floor(rf() * 5);
+            for (let i = 0; i < n; i++) {
+              const tx2 = x + (rf() - 0.5) * 10,
+                tz2 = z + (rf() - 0.5) * 8;
+              asset(rf() < 0.6 ? "pino" : "abedul", tx2, tz2, { s: 1.3 + rf() * 0.6, pisos: 4 + (i % 2), sem: i + gx });
+              circulo(tx2, tz2, 0.5);
+            }
+            ocupado.push({ x, z, mx: 6, mz: 5, ang: 0 });
+          }
+        }
+    }
+    // ---------- árboles sueltos entre las casas ----------
     {
       const r2 = azar(5151);
       let n = 0;
-      for (let k = 0; k < 9000 && n < 520; k++) {
+      for (let k = 0; k < 9000 && n < 160; k++) {
         const a = r2() * TAU,
           rr = 54 + r2() * (R_MURO - 62);
         const [x, z] = polar(a, rr);

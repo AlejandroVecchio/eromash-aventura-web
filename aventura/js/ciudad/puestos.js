@@ -186,5 +186,80 @@ window.PUESTOS25 = (function () {
     }
     return { dibujar, huella, W, D, alto: H + 60, vende };
   }
-  return { crear, VENDE, LONAS };
+  // la tienda de lona de los forasteros: dos aguas de lona cruda sobre una cumbrera, con la entrada abierta en el
+  // frente (w+), los vientos estaqueados y un farol en el poste de la entrada
+  function crearTienda(sem) {
+    const r = azar(sem * 17 + 5);
+    const W = 260 + r() * 80,
+      D = 300 + r() * 120,
+      H = 190 + r() * 40,
+      W2 = W / 2,
+      D2 = D / 2;
+    const lona = [["#E8DCC4", "#C8B48C", "#A89878"], ["#D8CCB0", "#B8A47A", "#8A7650"], ["#C8C0B0", "#A8A090", "#7A7468"]][sem % 3];
+    function dibujar(c, x, y, giro, k, t) {
+      const pr = CASAS25.proyector(x, y, giro, k);
+      const lx = (nu, nw) => pr.mira(nu, nw)[0];
+      const ve = (nu, nw) => pr.mira(nu, nw)[1] > 0.01;
+      sombra(c, x + 20, y + 6, (Math.abs(Math.cos(giro)) * W + Math.abs(Math.sin(giro)) * D) / 2 + 30, ((Math.abs(Math.sin(giro)) * W + Math.abs(Math.cos(giro)) * D) / 2) * k + 20, 0.32);
+      // los vientos y las estacas
+      for (const [u, w] of [[-W2 - 50, -D2 + 20], [-W2 - 50, D2 - 20], [W2 + 50, -D2 + 20], [W2 + 50, D2 - 20]]) {
+        const a = pr(u, w, 0),
+          b = pr(u * 0.55, w, H * 0.55);
+        L(c, a[0], a[1], b[0], b[1], "rgba(58,42,30,0.7)", 1.5);
+        R(c, a[0] - 2, a[1] - 6, 4, 8, C.maderaSombra);
+      }
+      const cumbre = (w) => pr(0, w, H);
+      const pared = (u, w) => pr(u, w, 0);
+      const faldon = (lado) => {
+        // un faldón de la tienda: del borde del piso (u = lado·W2) a la cumbrera
+        const q = [pared(lado * W2, -D2), pared(lado * W2, D2), cumbre(D2), cumbre(-D2)];
+        const l = lx(lado, 0);
+        P(c, [].concat(...q), l > 0.2 ? lona[0] : l < -0.2 ? lona[2] : lona[1]);
+        // las costuras
+        for (let i = 1; i < 4; i++) {
+          const w = -D2 + (D * i) / 4,
+            a = pared(lado * W2, w),
+            b = cumbre(w);
+          L(c, a[0], a[1], b[0], b[1], "rgba(0,0,0,0.12)", 2);
+        }
+      };
+      const testero = (lado) => {
+        // el triángulo de adelante (con la entrada abierta) o el de atrás
+        const w = lado * D2;
+        P(c, [...pared(-W2, w), ...pared(W2, w), ...cumbre(w)], lona[1]);
+        if (lado > 0) {
+          P(c, [...pared(-W2 * 0.45, w), ...pared(W2 * 0.45, w), ...pr(0, w, H * 0.85)], "#2A2016");
+          alfa(c, 0.35, () => P(c, [...pared(-W2 * 0.3, w), ...pared(W2 * 0.3, w), ...pr(0, w, H * 0.6)], C.ambar));
+          // la solapa recogida
+          P(c, [...pared(W2 * 0.45, w), ...pr(W2 * 0.75, w + 30, 10), ...pr(W2 * 0.2, w + 10, H * 0.7)], lona[0]);
+          // el poste con el farol
+          const a = pr(-W2 - 30, w + 30, 0),
+            b = pr(-W2 - 30, w + 30, 150);
+          L(c, a[0], a[1], b[0], b[1], C.maderaSombra, 5);
+          R(c, b[0] - 8, b[1], 16, 18, C.hierro);
+          alfa(c, 0.9, () => R(c, b[0] - 5, b[1] + 3, 10, 12, C.ambar));
+          DIB.halo(c, b[0], b[1] + 9, 80, C.ambar, 0.5 + Math.sin(t * 4 + sem) * 0.08);
+        }
+      };
+      const caras = [];
+      if (!ve(0, 1)) caras.push(() => testero(1));
+      if (!ve(0, -1)) caras.push(() => testero(-1));
+      caras.push(() => faldon(ve(-1, 0) ? 1 : -1));
+      caras.push(() => faldon(ve(-1, 0) ? -1 : 1));
+      if (ve(0, -1)) caras.push(() => testero(-1));
+      if (ve(0, 1)) caras.push(() => testero(1));
+      caras.forEach((f) => f());
+      const a = cumbre(-D2 - 16),
+        b = cumbre(D2 + 16);
+      L(c, a[0], a[1], b[0], b[1], C.maderaSombra, 4);
+    }
+    function huella(x, y, ry) {
+      const co = Math.cos(ry),
+        si = Math.sin(ry);
+      const pt = (u, w) => [x + u * co - w * si, y + u * si + w * co];
+      return [pt(-W2, -D2), pt(W2, -D2), pt(W2, D2), pt(-W2, D2)];
+    }
+    return { dibujar, huella, W, D, alto: H + 40 };
+  }
+  return { crear, crearTienda, VENDE, LONAS };
 })();

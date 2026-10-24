@@ -325,6 +325,14 @@
     const s = o.s || 1,
       v = Math.sin(t * 0.45) * 3 * s,
       r = azar(4242);
+    // o.giro / o.k (la ciudad en 2.5D): la copa, las ramas, la escalera, el mirador y lo colgado giran con la cámara;
+    // cada cosa tiene su lugar en el piso (u hacia el este, w hacia el sur) y se dibuja desde donde mire la cámara
+    const gira = o.giro !== undefined,
+      co = gira ? Math.cos(o.giro) : 1,
+      si = gira ? Math.sin(o.giro) : 0,
+      kk = gira ? o.k || 0.55 : 0;
+    const Q = (u, alto, w = 0) => [x + (u * co - w * si) * s, y + alto * s + (u * si + w * co) * kk * s];
+    const fondo = (u, w) => u * si + w * co;
     sombra(c, x + 60 * s, y + 10 * s, 520 * s, 120 * s, 0.3);
     // raíces contrafuerte (o.sinRaices: las pone otro, como las raíces en volumen de la ciudad)
     const RAICES = o.sinRaices ? [] : [
@@ -385,23 +393,23 @@
       void l;
     }
     // ramas grandes
-    P(c, [x - 60 * s, y - 291 * s, x - 330 * s, y - 397 * s, x - 320 * s, y - 378 * s, x - 40 * s, y - 260 * s], C.tronco);
-    P(c, [x + 60 * s, y - 285 * s, x + 340 * s, y - 372 * s, x + 336 * s, y - 353 * s, x + 50 * s, y - 254 * s], C.corteza);
-    P(c, [x - 300 * s, y - 384 * s, x - 620 * s, y - 372 * s, x - 610 * s, y - 362 * s, x - 300 * s, y - 372 * s], C.tronco);
-    P(c, [x + 300 * s, y - 366 * s, x + 640 * s, y - 366 * s, x + 630 * s, y - 355 * s, x + 300 * s, y - 353 * s], C.corteza);
+    const rama = (pts, col) => P(c, pts.reduce((acc, v, i) => (i % 2 ? acc : acc.concat(Q(v, pts[i + 1]))), []), col);
+    rama([-60, -291, -330, -397, -320, -378, -40, -260], C.tronco);
+    rama([60, -285, 340, -372, 336, -353, 50, -254], C.corteza);
+    rama([-300, -384, -620, -372, -610, -362, -300, -372], C.tronco);
+    rama([300, -366, 640, -366, 630, -355, 300, -353], C.corteza);
     P(c, [x - 20 * s, y - 322 * s, x - 40 * s, y - 471 * s, x + 10 * s, y - 471 * s, x + 30 * s, y - 322 * s], C.tronco);
     // la escalera enroscada y el mirador en la rama del este
     for (let k = 0; k < 14; k++) {
       const u = k / 14,
-        a = u * Math.PI * 1.1 - 0.3,
+        a = u * Math.PI * 1.1 - 0.3 - (gira ? o.giro : 0),
         sx = x + Math.sin(a) * 100 * s,
         sy = y - 20 * s - u * 420 * s;
       if (Math.cos(a) < -0.1) continue;
       R(c, sx - 16 * s, sy - 5 * s, 32 * s, 6 * s, k % 2 ? C.maderaLuz : C.madera);
       R(c, sx - 2 * s, sy, 4 * s, 10 * s, C.maderaSombra);
     }
-    const mx = x + 250 * s,
-      my = y - 340 * s;
+    const [mx, my] = Q(250, -340);
     R(c, mx - 90 * s, my, 180 * s, 10 * s, C.madera);
     R(c, mx - 90 * s, my + 10 * s, 180 * s, 4 * s, C.maderaSombra);
     for (let k = 0; k <= 6; k++) R(c, mx - 90 * s + k * 30 * s - 2 * s, my - 30 * s, 4 * s, 30 * s, C.maderaSombra);
@@ -430,29 +438,64 @@
       [620, -220, 150, 2],
       [20, -750, 180, 2],
     ];
-    MASAS.forEach(([dx, dy, mr, k], i) => {
-      const cx = x + dx * s + v * (1 + k * 0.3),
-        cy = y + dy * s,
-        rr = mr * s,
-        pts = [];
-      for (let j = 0; j < 9; j++) {
-        const a = (j / 9) * TAU + i,
-          f = 0.86 + ((i * 7 + j * 3) % 5) * 0.05;
-        pts.push(cx + Math.cos(a) * rr * f, cy + Math.sin(a) * rr * 0.72 * f);
-      }
-      P(c, pts, C.roble[k]);
-      P(c, [cx, cy - rr * 0.72, cx + rr * 0.9, cy - rr * 0.2, cx + rr * 0.3, cy], C.robleLuz);
-      P(c, [cx - rr * 0.9, cy + rr * 0.1, cx - rr * 0.2, cy + rr * 0.68, cx - rr * 0.6, cy + rr * 0.5], C.roble[0]);
-    });
+    // el fondo de cada masa en el piso: las de atrás (k 0) al norte, las de adelante (k 2) al sur
+    // o.ojo: el centro de la vista; si cae debajo de la copa, la copa se vuelve casi transparente para ver la plaza
+    const velo = o.ojo && Math.hypot((o.ojo[0] - x) / (760 * s), (o.ojo[1] - (y - 430 * s)) / (400 * s)) < 1;
+    if (velo) c.globalAlpha = 0.3;
+    MASAS.map(([dx, dy, mr, k], i) => {
+      const w = (k - 1) * 260 + (((i * 37) % 7) - 3) * 30;
+      return { dx, dy, mr, k: gira ? (fondo(dx, w) > 130 ? 2 : fondo(dx, w) > -130 ? 1 : 0) : k, i, w, f: fondo(dx, w) };
+    })
+      .sort((a, b) => (gira ? a.f - b.f : 0))
+      .forEach(({ dx, dy, mr, k, i, w }) => {
+        const [qx, qy] = Q(dx, dy, w);
+        const cx = qx + v * (1 + k * 0.3),
+          cy = qy,
+          rr = mr * s,
+          pts = [];
+        for (let j = 0; j < 9; j++) {
+          const a = (j / 9) * TAU + i,
+            f = 0.86 + ((i * 7 + j * 3) % 5) * 0.05;
+          pts.push(cx + Math.cos(a) * rr * f, cy + Math.sin(a) * rr * 0.72 * f);
+        }
+        P(c, pts, C.roble[k]);
+        P(c, [cx, cy - rr * 0.72, cx + rr * 0.9, cy - rr * 0.2, cx + rr * 0.3, cy], C.robleLuz);
+        P(c, [cx - rr * 0.9, cy + rr * 0.1, cx - rr * 0.2, cy + rr * 0.68, cx - rr * 0.6, cy + rr * 0.5], C.roble[0]);
+      });
+    c.globalAlpha = 1;
     // faroles colgados de las ramas bajas, sobre el mercado
     [[-520, -330], [-260, -380], [240, -370], [540, -330], [-60, -400], [80, -300]].forEach(([dx, dy], i) => {
-      const fx = x + dx * s + v,
-        fy = y + dy * s;
+      const q = Q(dx, dy, ((i * 53) % 5 - 2) * 120),
+        fx = q[0] + v,
+        fy = q[1];
       L(c, fx, fy - 40 * s, fx, fy, C.hierro, 2 * s);
       R(c, fx - 7 * s, fy, 14 * s, 18 * s, "#1A140E");
       alfa(c, 0.9, () => R(c, fx - 5 * s, fy + 2 * s, 10 * s, 14 * s, C.ambar));
       halo(c, fx, fy + 9 * s, 60 * s, C.ambar, 0.6 + Math.sin(t * 3 + i) * 0.1);
     });
+    // o.tablillas: las tablillas de los que no volvieron, oscuras, colgadas de las ramas bajas con su runa raspada
+    // (unas pocas claras: las de los que todavía se esperan)
+    if (o.tablillas) {
+      const rt = azar(777);
+      for (let k = 0; k < o.tablillas; k++) {
+        const lado = k % 2 ? 1 : -1,
+          dx = lado * (180 + rt() * 470),
+          dy = -250 - rt() * 120 + Math.abs(dx) * 0.12,
+          q = Q(dx, dy, (rt() - 0.5) * 500),
+          fx = q[0] + v,
+          fy = q[1],
+          largo = (34 + rt() * 50) * s,
+          bal = Math.sin(t * 1.3 + k * 2.1) * 3 * s,
+          clara = rt() < 0.15,
+          bx = fx + bal,
+          by = fy + largo;
+        L(c, fx, fy, bx, by, "#2A2118", 1.5 * s);
+        P(c, [bx - 7 * s, by, bx + 7 * s, by, bx + 6 * s, by + 20 * s, bx - 6 * s, by + 20 * s], clara ? C.maderaLuz : "#2A2118");
+        P(c, [bx + 1 * s, by, bx + 7 * s, by, bx + 6 * s, by + 20 * s, bx + 1 * s, by + 20 * s], clara ? C.madera : "#3A2E22");
+        L(c, bx - 2 * s, by + 5 * s, bx + 2 * s, by + 15 * s, clara ? C.maderaSombra : "#6E6458", 1.4 * s);
+        L(c, bx + 2 * s, by + 5 * s, bx - 2 * s, by + 10 * s, clara ? C.maderaSombra : "#6E6458", 1.4 * s);
+      }
+    }
   }
 
   // La empalizada doble de Eikholt (unos 6 m): un tramo entre (x - o.dx, y - o.dy) y (x + o.dx, y + o.dy).

@@ -277,10 +277,12 @@ window.CASAS25 = (function () {
         // las tablas cruzadas con cabeza de dragón en los hastiales que se ven
         if (f.dragones)
           [-1, 1].forEach((l) => {
-            if (pr.mira(l, 0)[1] <= 0.01) return;
-            const a = pr(l * (W2 + ov * 0.4), D2 + ov, zA),
-              b = pr(l * (W2 + ov * 0.4), -D2 - ov, zA),
-              q = pr(l * (W2 + ov * 0.4), 0, HR);
+            if (pr.mira(l, 0)[1] <= 0.12 || f.dragones === -l) return;
+            // solo el tramo alto de las tablas, cruzándose en la cumbrera
+            const uu = l * (W2 + ov * 0.4),
+              a = pr(uu, (D2 + ov) * 0.4, HR - (HR - zA) * 0.4),
+              b = pr(uu, -(D2 + ov) * 0.4, HR - (HR - zA) * 0.4),
+              q = pr(uu, 0, HR);
             PZ.tablasCruzadas(c0, a[0], a[1], q[0], q[1], b[0], b[1], S);
           });
       } else {

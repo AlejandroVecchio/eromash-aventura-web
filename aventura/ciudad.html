@@ -48,6 +48,8 @@
 <script src="js/ciudad/puestos.js"></script>
 <script src="js/ciudad/muralla.js"></script>
 <script src="js/ciudad/roble.js"></script>
+<script src="js/ciudad/ting.js"></script>
+<script src="js/ciudad/oficios.js"></script>
 <script src="js/ciudad/porton.js"></script>
 <script src="js/ciudad/plano.js"></script>
 <script src="js/ciudad/vista.js"></script>
@@ -82,6 +84,9 @@
     oficios: [L.herreria[0] + 400, L.herreria[1] + 900],
     lindes: [L.lindes[0] + 300, L.lindes[1] + 500],
     hongo: [L.hongo[0], L.hongo[1] + 900],
+    guardia: [L.entrenamiento[0] + 300, L.entrenamiento[1] + 700],
+    caravanas: [L.forasteros[0] + 600, L.forasteros[1] + 1200],
+    sanacion: [L.sanacion[0] + 600, L.sanacion[1] + 700],
     lejos: [0, 600],
   };
   const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
@@ -116,6 +121,31 @@
   }
   const sur = plano.anclas.puerta_sur;
   for (let i = 0; i < 40; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 500, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1 });
+  // la gente de cada barrio: los de la Guardia en el campo, los forasteros alrededor del fuego, los que esperan en
+  // Sanación, los que toman afuera del Hongo, los de los oficios (parados, que hablan; alguno va y viene)
+  const RONDAS = [
+    ["entrenamiento", 10, 700, ["eydis", "orm"]],
+    ["forasteros", 9, 520, null],
+    ["sanacion", 6, 700, ["herido", "svanhild", "trabajador"]],
+    ["hongo", 8, 900, null],
+    ["herreria", 6, 650, null],
+    ["carpinteria", 5, 700, null],
+    ["corral", 4, 900, ["trabajador", "trabajador3"]],
+    ["lindes", 4, 600, null],
+    ["hospederia", 4, 600, null],
+    ["tablon", 4, 300, null],
+  ];
+  for (const [k, n, rad, quien] of RONDAS) {
+    const c0 = L[k];
+    if (!c0) continue;
+    for (let i = 0; i < n; i++) {
+      const a = rr() * Math.PI * 2, d = rad * (0.4 + rr() * 0.6);
+      const x = c0[0] + Math.cos(a) * d, y = c0[1] + Math.sin(a) * d;
+      if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 30)) continue;
+      const lista = quien || ids;
+      gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5 });
+    }
+  }
   const VK = { S: VIKINGO.imagen("R", "S", "calm"), E: VIKINGO.imagen("R", "E", "calm"), N: VIKINGO.imagen("R", "N", "calm") };
   const eromash = { x: LUGARES.plaza[0] - 200, y: LUGARES.plaza[1] - 100 };
   function dibujarEromash(c, x, y) {
@@ -170,11 +200,21 @@
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (Math.random() < dt * 0.15) { p.vx = -p.vx; p.vy = -p.vy; }
     }
-    const extra = gente.map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0 }) }));
+    const extra = gente.map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0, hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
     extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });
     VISTA25.dibujar(c, cam, cw, ch, tt, extra);
     // el aire de la tarde: un velo cálido y la viñeta del bosque
     c.setTransform(1, 0, 0, 1, 0, 0);
+    // la tarde ámbar de la ciudad (el primer respiro después del bosque frío); calidad baja deja solo el velo
+    if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
+      c.globalCompositeOperation = "soft-light";
+      const am = c.createLinearGradient(0, 0, cw, ch);
+      am.addColorStop(0, "rgba(255,217,138,0.55)");
+      am.addColorStop(1, "rgba(255,141,113,0.35)");
+      c.fillStyle = am;
+      c.fillRect(0, 0, cw, ch);
+      c.globalCompositeOperation = "source-over";
+    }
     c.fillStyle = "rgba(255,141,113,0.05)";
     c.fillRect(0, 0, cw, ch);
     const g = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
