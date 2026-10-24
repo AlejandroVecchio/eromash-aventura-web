@@ -431,8 +431,9 @@
   }
 
   // ---------- Eromash ----------
-  const VEL = 170,
-    VEL_CORRER = 275,
+  // tres pasos: caminar (stick apenas inclinado o sin aire), trotar (lo normal, gratis) y correr (Shift / L2, gasta
+  // estamina; vacía te deja caminando y jadeando hasta recuperar un tercio)
+  const VEL_PASO = [0, 100, 175, 295],
     VEL_ESQ = 520;
   const GOLPES = [
     { wind: 0.08, swing: 0.14, rec: 0.2, arc: 2.3, reach: 78, dano: 16 },
@@ -466,16 +467,25 @@
     const libre = puedeMover();
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15;
-    // estamina: correr y esquivar gastan; se recupera sola
-    jug.correr = libre && mov && CONTROLES.pulsado("correr") && !jug.cansado;
-    if (jug.correr) jug.sta -= 16 * dt;
-    else if (jug.esq <= 0) jug.sta += 22 * dt;
+    // estamina: correr y esquivar gastan; se recupera sola después de un respiro
+    const mag = Math.min(1, Math.hypot(e.x, e.y));
+    jug.staEspera = Math.max(0, (jug.staEspera || 0) - dt);
+    // con mando se toca L3 (o L2) una vez y sigue corriendo hasta que frenás o te cansás
+    if (CONTROLES.mando() && libre && CONTROLES.recien("correr")) jug.sprintFijo = !jug.sprintFijo;
+    if (!mov || jug.cansado || !CONTROLES.mando()) jug.sprintFijo = false;
+    jug.correr = libre && mov && (CONTROLES.pulsado("correr") || jug.sprintFijo) && !jug.cansado && !jug.atk;
+    if (jug.correr) {
+      jug.sta -= 20 * dt;
+      jug.staEspera = 0.6;
+    } else if (jug.esq <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * dt;
     if (jug.sta <= 0) {
       jug.sta = 0;
       jug.cansado = true;
+      jug.correr = false;
     }
-    if (jug.cansado && jug.sta > 30) jug.cansado = false;
+    if (jug.cansado && jug.sta > jug.staMax * 0.35) jug.cansado = false;
     jug.sta = Math.min(jug.staMax, jug.sta);
+    jug.paso = !mov ? 0 : jug.correr ? 3 : jug.cansado || mag < 0.6 ? 1 : 2;
     // esquiva
     if (jug.esq > 0) {
       jug.esq -= dt;
@@ -489,6 +499,7 @@
     }
     if (CONTROLES.recien("esquivar") && jug.sta >= 20 && jug.salto <= 0) {
       jug.sta -= 20;
+      jug.staEspera = 0.6;
       jug.esq = 0.3;
       jug.inv = Math.max(jug.inv, 0.26);
       jug.esqDir = jug.dir.slice();
@@ -515,12 +526,24 @@
       jug.atk = { t: 0, d: GOLPES[n], dir, side: n % 2 ? -1 : 1, pego: false };
       jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
     }
-    const vel = (jug.correr ? VEL_CORRER : VEL) * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1);
+    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
     }
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
+    // polvo bajo las botas al correr y vaho al jadear
+    jug.polvo = (jug.polvo || 0) - dt;
+    if (jug.polvo <= 0 && !(window.CALIDAD && CALIDAD.nivel === "baja")) {
+      if (jug.paso === 3 && !jug.salto) {
+        jug.polvo = 0.11;
+        J.fx.push({ x: jug.x - jug.dir[0] * 20 + (Math.random() - 0.5) * 16, y: jug.y - 2, vx: -jug.dir[0] * 60 + (Math.random() - 0.5) * 50, vy: -30 - Math.random() * 40, t: 0.4, c: "rgba(150,130,110,0.5)", s: 5 + Math.random() * 4, g: 0.25 });
+      } else if (jug.cansado) {
+        jug.polvo = 0.55;
+        const f = jug.mira.vista === "E" ? (jug.mira.espejo ? -1 : 1) : 0;
+        J.fx.push({ x: jug.x + f * 34, y: jug.y - 150 * CUERPO, vx: f * 30, vy: -26, t: 0.6, c: "rgba(242,236,236,0.35)", s: 6, g: -0.02 });
+      }
+    }
     // el barro salpica gotas marrones bajo las botas
     if (mov && !jug.salto && W.barroEn(jug.x, jug.y)) {
       jug.barro = (jug.barro || 0) - dt;
@@ -722,8 +745,8 @@
     c.scale(CUERPO, CUERPO);
     c.translate(-p.x, -p.y);
     const jp = p.salto > 0 ? Math.sin((1 - p.salto / 0.42) * Math.PI) : 0;
-    const anda = p.anda || 0,
-      bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * (anda === 2 ? 16 : anda ? 11 : 2.5))) * (anda ? 8 : 2);
+    const paso = p.paso != null ? p.paso : p.anda ? p.anda + 1 : 0,
+      bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * [2.5, 7, 11, 16][paso])) * [2, 4, 8, 10][paso];
     if (!enSilueta) DIB.E(c, p.x, p.y, 58 * (1 - jp * 0.35), 16 * (1 - jp * 0.35), "rgba(0,0,0,0.45)");
     const h = 150,
       w = 125,
@@ -768,7 +791,7 @@
     if (p.esq > 0) c.globalAlpha = 0.75;
     c.translate(p.x, yy + h / 2);
     if (p.mira.vista === "E" && p.mira.espejo) c.scale(-1, 1);
-    c.rotate(p.salto > 0 ? -0.25 * jp : 0);
+    c.rotate(p.salto > 0 ? -0.25 * jp : paso === 3 && p.mira.vista === "E" ? 0.1 : 0);
     if (img.complete) c.drawImage(img, -w / 2, -h / 2, w, h);
     c.restore();
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, false);
@@ -1112,7 +1135,7 @@
 
   // ---------- HUD de cada cuadro ----------
   function actualizarHud() {
-    HUD.jugador(jug.hp, jug.hpMax, jug.sta, jug.staMax);
+    HUD.jugador(jug.hp, jug.hpMax, jug.sta, jug.staMax, jug.cansado);
     const o = H.objetivo(),
       m = H.idMision();
     const p = dondeObjetivo();
@@ -1321,7 +1344,7 @@
         f.t -= dt;
         f.x += f.vx * dt;
         f.y += f.vy * dt;
-        f.vy += 600 * dt;
+        f.vy += 600 * (f.g != null ? f.g : 1) * dt;
       });
       J.fx = J.fx.filter((f) => f.t > 0);
       J.textos.forEach((n) => (n.t += dt));

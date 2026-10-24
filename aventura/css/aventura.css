@@ -22,6 +22,8 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .barra i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--rojo), var(--rojo2)); transition: width 0.15s; }
 .barra.est i { background: linear-gradient(90deg, #A8822E, var(--oro)); }
 .barra span { position: absolute; left: 10px; right: 10px; top: 0; line-height: 16px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; display: flex; justify-content: space-between; text-shadow: 0 1px 0 #0008; }
+.barra.est.cansado i { background: linear-gradient(90deg, #6A4A1E, #A8822E); animation: jadeo 0.6s ease-in-out infinite alternate; }
+@keyframes jadeo { from { opacity: 1; } to { opacity: 0.45; } }
 .barra.est span { color: #2A1C08; text-shadow: none; }
 
 /* rastreador de misiones: centro a la derecha, sin caja (como en el WoW), con una sombra suave detrás para leerse */

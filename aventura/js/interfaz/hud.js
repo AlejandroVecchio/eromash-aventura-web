@@ -28,7 +28,8 @@ window.HUD = (function () {
   const ultimo = {};
   const cambia = (k, v) => (ultimo[k] === v ? false : ((ultimo[k] = v), true));
 
-  function jugador(hp, hpMax, sta, staMax) {
+  function jugador(hp, hpMax, sta, staMax, cansado) {
+    if (cambia("cansado", !!cansado)) $("bEst").classList.toggle("cansado", !!cansado);
     if (cambia("hp", Math.ceil(hp) + "/" + hpMax)) {
       $("bVida").querySelector("i").style.width = (100 * Math.max(0, hp)) / hpMax + "%";
       $("bVida").querySelector("em").textContent = Math.ceil(Math.max(0, hp)) + " / " + hpMax;
