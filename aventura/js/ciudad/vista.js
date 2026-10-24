@@ -30,8 +30,10 @@ window.VISTA25 = (function () {
       if (o.tipo === "casa") o.alto = o.casa.alto;
       else o.alto = (ASSETS.LISTA[o.id] && ASSETS.LISTA[o.id].alto * (o.o.s || 1)) || 100;
     }
-    // las calles con los caminos del bosque: la avenida del sur empedrada, el resto tierra pisada con borde de pasto
+    // las calles con los caminos del bosque: las principales empedradas, el resto tierra pisada con borde de pasto.
+    // Las empedradas van al final, así en cada capa la piedra queda encima de la tierra que llega al cruce
     cmCalles = p.calles.map((c, i) => ({ p: c.pts, w: c.w, tipo: c.tipo === "laja" ? "adoquin" : "tierra", borde: c.tipo === "senda" ? "musgo" : "pasto", fundir: false, sem: i * 31 + 7 }));
+    cmCalles.sort((a, b) => (a.tipo === "adoquin") - (b.tipo === "adoquin"));
     // las losas de la plaza (como las del Eikholt del bosque, alrededor del tronco)
     const r = azar(91);
     losas = [];

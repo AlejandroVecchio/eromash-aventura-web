@@ -11,7 +11,7 @@ window.PLANO25 = (function () {
     TAU = PI * 2;
   const M = 60; // unidades del mundo por metro
   const R_MURO = 150,
-    HUECO = 6,
+    HUECO = 8, // medio ancho de cada puerta, hasta el costado de afuera de sus torres
     R_FUERA = 200;
   const PUERTAS = { sur: PI / 2, norte: -PI / 2, este: 0, oeste: PI };
   const polar = (a, r) => [Math.cos(a) * r, Math.sin(a) * r];
@@ -104,12 +104,18 @@ window.PLANO25 = (function () {
     }
     calle(l, w, tipo);
   };
-  calle(arco(52, 0, TAU, 64), 5.5); // la vuelta de la plaza
-  calle(curva(rOficios, 0, TAU, 120), 4.6); // el anillo de los oficios
-  calle([[0, 48], [0, R_MURO + 4], [0, 300]], 7, "laja"); // la avenida del sur, hasta el puente y Hrafngard
-  calle([[0, -48], [0, -R_MURO - 4], [0, -300]], 6); // al norte, el Paso
-  calle([[48, 0], [R_MURO + 4, 0], [200, -6], [300, -14]], 6); // al este, el aserradero y el santuario
-  calle([[-48, 0], [-R_MURO - 4, 0], [-300, 12]], 5.5); // al oeste, Brunvik
+  // adentro de la empalizada, la vuelta de la plaza, el anillo de los oficios y las cuatro avenidas van empedrados;
+  // afuera de las puertas los caminos siguen de tierra
+  calle(arco(52, 0, TAU, 64), 5.5, "laja"); // la vuelta de la plaza
+  calle(curva(rOficios, 0, TAU, 120), 4.6, "laja"); // el anillo de los oficios
+  calle([[0, 48], [0, R_MURO + 4]], 7, "laja"); // la avenida del sur, hasta el puente y Hrafngard
+  calle([[0, R_MURO - 2], [0, 300]], 7);
+  calle([[0, -48], [0, -R_MURO - 4]], 6, "laja"); // al norte, el Paso
+  calle([[0, -R_MURO + 2], [0, -300]], 6);
+  calle([[48, 0], [R_MURO + 4, 0]], 6, "laja"); // al este, el aserradero y el santuario
+  calle([[R_MURO - 2, 0], [200, -6], [300, -14]], 6);
+  calle([[-48, 0], [-R_MURO - 4, 0]], 5.5, "laja"); // al oeste, Brunvik
+  calle([[-R_MURO + 2, 0], [-300, 12]], 5.5);
   [PI / 4, (3 * PI) / 4, (5 * PI) / 4, (7 * PI) / 4].forEach((a, i) => radial(a, 52, rOficios, 3.6, "tierra", i));
   [1.18, 2.72, 4.32, 5.85].forEach((a, i) => radial(a, 52, rOficios, 2.6, "senda", i + 10));
   for (let i = 0; i < 6; i++) {
@@ -169,9 +175,17 @@ window.PLANO25 = (function () {
           a1 = ((i + 1) / n) * TAU,
           am = (a0 + a1) / 2;
         if (enPuerta(am)) continue;
-        const [x0, z0] = polar(a0, R_MURO),
-          [x1, z1] = polar(a1, R_MURO),
-          [xm, zm] = polar(am, R_MURO);
+        // el tramo que llega a una puerta termina justo en el costado de su torre
+        let b0 = a0,
+          b1 = a1;
+        for (const pa of Object.values(PUERTAS)) {
+          const lim = HUECO / R_MURO;
+          if (Math.abs(corto(a0 - pa)) < lim) b0 = pa + lim * Math.sign(corto(am - pa));
+          if (Math.abs(corto(a1 - pa)) < lim) b1 = pa + lim * Math.sign(corto(am - pa));
+        }
+        const [x0, z0] = polar(b0, R_MURO),
+          [x1, z1] = polar(b1, R_MURO),
+          [xm, zm] = polar((b0 + b1) / 2, R_MURO);
         // de punta a punta (la vista las proyecta); la cara de adentro con la pasarela cuando se mira desde la ciudad
         cosas.push({ tipo: "asset", id: "empalizadaDoble", x: xm * M, y: zm * M, o: { sem: i }, punta: [x0 * M, z0 * M, x1 * M, z1 * M], adentro: am });
       }
@@ -182,8 +196,9 @@ window.PLANO25 = (function () {
         const [x, z] = polar(a, R_MURO);
         circulo(x, z, 1.2);
       }
-      for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * TAU + PI / 16;
+      // unas doce atalayas a lo largo de la empalizada
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * TAU + PI / 12;
         if (enPuerta(a)) continue;
         const [x, z] = polar(a, R_MURO - 3);
         asset("torreVigia", x, z, { s: 1.5, sem: i });
@@ -199,9 +214,10 @@ window.PLANO25 = (function () {
       for (const k in PUERTAS) {
         const a = PUERTAS[k];
         const [x, z] = polar(a, R_MURO);
-        asset(k === "norte" ? "puertaNorte" : "puertaSur", x, z, { s: 2.6, sem: 50, frente: a });
+        // el portón en volumen (gira con la cámara como la empalizada); su frente (w+) mira afuera de la ciudad
+        cosas.push({ tipo: "casa", x: x * M, y: z * M, ry: Math.atan2(-Math.cos(a), Math.sin(a)), casa: PORTON25.crear(HUECO * M - 230, k === "norte"), nombre: "puerta_" + k });
         [-1, 1].forEach((l) => {
-          const [tx2, tz2] = polar(a + (l * (HUECO + 1.5)) / R_MURO, R_MURO);
+          const [tx2, tz2] = polar(a + (l * (HUECO - 115 / M)) / R_MURO, R_MURO);
           circulo(tx2, tz2, 2.4);
         });
         anclas["puerta_" + k] = U(polar(a, R_MURO - 12));
@@ -222,22 +238,25 @@ window.PLANO25 = (function () {
     circulo(...LUGAR.campana, 1);
     asset("tablonAvisos", ...LUGAR.tablon, { s: 1.3 });
     for (const s of [-1, 1]) asset("estandarteCiervo", tx + s * 13, tz - 3, { s: 1.4, sem: s + 3 });
-    // el Mercado de los Toldos
+    // el Mercado de los Toldos: unos veinte puestos grandes en dos hileras que se miran, alrededor del Ting y por el sur
+    // y el este del tronco; entre las dos hileras queda el pasillo por donde camina la gente
     const r = azar(31);
     const toldos = [];
-    // el Mercado de los Toldos: apretado alrededor del Ting y por el sur y el este del tronco, bajo la copa
     let nt = 0;
-    for (let rr = 17; rr < 45; rr += 4.6)
-      for (let an = -0.35 * PI; an < 0.95 * PI; an += 5.2 / rr) {
-        const a2 = an + (r() - 0.5) * 0.04,
-          [x, z] = polar(a2, rr + (r() - 0.5) * 1.2);
-        if (Math.hypot(x - tx, z - tz) < 14.5) continue;
-        if (Math.abs(x) < 5 && z > 0) continue;
-        if (Math.hypot(x - LUGAR.pozo[0], z - LUGAR.pozo[1]) < 6) continue;
-        if (r() < 0.12) continue; // pasillos
+    for (const [rr, mira] of [[22, 1], [35, -1]])
+      for (let an = -0.3 * PI; an < 0.95 * PI; an += 9.5 / rr) {
+        const a2 = an + (r() - 0.5) * 0.05,
+          [x, z] = polar(a2, rr);
+        if (Math.hypot(x - tx, z - tz) < 17) continue;
+        if (Math.abs(x) < 7 && z > 0) continue;
+        if (Math.hypot(x - LUGAR.pozo[0], z - LUGAR.pozo[1]) < 8) continue;
+        if (r() < 0.1) continue; // un hueco para cruzar
         toldos.push([x, z]);
-        asset("toldo", x, z, { s: 2, sem: nt, v: nt % 6 });
-        circulo(x, z, 1.9);
+        // el frente mira al pasillo: la hilera de adentro hacia afuera, la de afuera hacia adentro
+        const ry = Math.atan2(-Math.cos(a2) * mira, Math.sin(a2) * mira);
+        const puesto = PUESTOS25.crear(nt + 3);
+        cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa: puesto, nombre: "puesto" + nt });
+        choques.push({ poli: puesto.huella(x * M, z * M, ry) });
         nt++;
       }
     // barriles, cajones y carretas entre los toldos
@@ -245,7 +264,7 @@ window.PLANO25 = (function () {
       const an = PI * (-0.3 + r() * 1.25),
         rr = 18 + r() * 28,
         [x, z] = polar(an, rr);
-      if (Math.hypot(x - tx, z - tz) < 13 || toldos.some((l) => Math.hypot(l[0] - x, l[1] - z) < 3) || (Math.abs(x) < 5 && z > 0)) continue;
+      if (Math.hypot(x - tx, z - tz) < 13 || toldos.some((l) => Math.hypot(l[0] - x, l[1] - z) < 6) || (Math.abs(x) < 5 && z > 0)) continue;
       if (i % 5 === 0) asset("carreta", x, z, { s: 1.5, sem: i });
     }
     // faroles alrededor de la plaza
@@ -260,9 +279,11 @@ window.PLANO25 = (function () {
     // ---------- los edificios con nombre (las casas especiales, cada una con su ficha) ----------
     // el frente de un edificio mira hacia (fx, fz): ry tal que w+ apunte ahí
     const mirando = (x, z, fx, fz) => Math.atan2(-(fx - x), fz - z);
+    const especiales = [];
     const especial = (nombre, x, z, ry, ficha, sem) => {
       const casa = CASAS25.crear(ficha, sem);
       cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa, nombre });
+      especiales.push({ x, z, mx: casa.W / M / 2 + 7, mz: casa.D / M / 2 + 7, ang: ry });
       for (const h of casa.huella(x * M, z * M, ry)) choques.push({ poli: h });
       return casa;
     };
@@ -337,6 +358,7 @@ window.PLANO25 = (function () {
       return false;
     };
     for (const [cx, cz, mx, mz] of RESERVA) ocupado.push({ x: cx, z: cz, mx, mz, ang: 0 });
+    ocupado.push(...especiales);
     ocupado.push({ x: 0, z: 0, mx: 46, mz: 46, ang: PI / 4 });
     // en el plano de la casa, u va a lo ancho y w hacia el frente; ry gira (u, w) al mundo
     const aMundo = (x, z, ry, u, w) => [x + u * Math.cos(ry) - w * Math.sin(ry), z + u * Math.sin(ry) + w * Math.cos(ry)];
@@ -380,10 +402,12 @@ window.PLANO25 = (function () {
               z = m.z + nz * ret;
             // el frente (w+) mira a la calle: w+ en el mundo es (-sin ry, cos ry) = (-nx, -nz)
             const ry = Math.atan2(nx, -nz);
-            const mx = ancho / 2 + 0.45,
-              mz = fondo / 2 + 0.6;
-            if (libreCalle(x, z, mx, mz, ry) && !reservado(x, z, 1.5) && !solapa(x, z, mx, mz, ry, 1.1)) {
-              ocupado.push({ x, z, mx, mz, ang: ry });
+            // el lote entero: la casa, el anexo o la leña de un costado, el árbol del otro y el terreno cercado de atrás
+            const mx = ancho / 2 + 6,
+              mz = fondo / 2 + 7.5;
+            const [lx, lz] = aMundo(x, z, ry, 1.5, -6);
+            if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 4) && !solapa(lx, lz, mx, mz, ry, 2.5)) {
+              ocupado.push({ x: lx, z: lz, mx, mz, ang: ry });
               casas.push({ x, z, ry, ancho, fondo, sem: sem++ });
               u += ancho + 9 + rC() * 12; // cada casa con su terreno
               puesta = true;
@@ -400,7 +424,6 @@ window.PLANO25 = (function () {
       const paso = casas.length / 60;
       for (let i = 0; i < 60 && Math.floor(i * paso) < casas.length; i++) elegidas.push(casas[Math.floor(i * paso)]);
     }
-    window.__casas = [casas.length, elegidas.length];
     elegidas.forEach((cc, i) => {
       const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: i % 4 === 1 }, cc.sem);
       cosas.push({ tipo: "casa", x: cc.x * M, y: cc.z * M, ry: cc.ry, casa, nombre: "casa" + i });
