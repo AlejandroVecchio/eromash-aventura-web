@@ -96,16 +96,17 @@
     movidos.forEach((i, o) => {
       const m = est.mover[i];
       if (!m || m.nx < x0 - 400 || m.nx > x1 + 400 || m.ny < y0 - 60 || m.ny > y1 + 900) return;
-      const op = Object.assign({}, o.o);
+      const op = Object.assign({}, o.o, m.o || {});
       if (op.x2 !== undefined) (op.x2 += m.nx - o.x), (op.y2 += m.ny - o.y);
-      l.push({ id: o.id, x: m.nx, y: m.ny, o: op, alto: o.alto, choque: o.choque, cosa: o, movido: i, piso: !!o.o.piso });
+      const md = m.o ? ASSETS.medidas(o.id, op) : o;
+      l.push({ id: o.id, x: m.nx, y: m.ny, o: op, alto: md.alto, choque: md.choque, cosa: o, movido: i, piso: !!o.o.piso });
     });
     est.poner.forEach((a, i) => {
       const def = ASSETS.LISTA[a.id];
       if (!def || a.x < x0 - 400 || a.x > x1 + 400 || a.y < y0 - 60 || a.y > y1 + 900) return;
       const o = opcionesDe(a),
-        s = o.s || 1;
-      l.push({ id: a.id, x: a.x, y: a.y, o, alto: def.alto * s, choque: def.choque ? (def.choque.r ? { r: def.choque.r * s } : { w: def.choque.w * s, h: def.choque.h * s }) : null, agregado: i, piso: !!def.piso });
+        md = ASSETS.medidas(a.id, o);
+      l.push({ id: a.id, x: a.x, y: a.y, o, alto: md.alto, choque: md.choque, agregado: i, piso: !!def.piso });
     });
     return l;
   }
@@ -213,6 +214,7 @@
         c.closePath();
         c.stroke();
       });
+      marcarElegida(lista2);
       const h = cursor && !arrastre && !sel ? tocado(cursor.x, cursor.y) : null;
       if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(h);
     }
@@ -319,6 +321,143 @@
       out.push(l);
     });
     return out;
+  }
+
+  // ---------- elegir una estructura: tamaño, proporciones, espejado y cosas pegadas ----------
+  // Con Mover, un clic sin arrastrar la elige. Lo agregado guarda sus opciones en su o; lo del mundo, en su entrada de
+  // est.mover (o: { esc, ex, ey, esp }). Lo que se pone con «Agregarle algo» queda pegado (pegado: clave del padre) y
+  // se mueve con ella.
+  let elegida = null, // { a } (de est.poner) o { cosa } (del mundo)
+    pegarA = null;
+  const uid = () => "a" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+  function nuevo(a) {
+    a.u = uid();
+    if (pegarA) a.pegado = pegarA;
+    return a;
+  }
+  function claveDe(d) {
+    if (d.agregado != null) {
+      const a = est.poner[d.agregado];
+      if (!a.u) a.u = uid();
+      return a.u;
+    }
+    const cosa = d.cosa || d;
+    return "m:" + cosa.id + "@" + Math.round(cosa.x) + "," + Math.round(cosa.y);
+  }
+  const hijosDe = (k) => est.poner.filter((a) => a.pegado === k);
+  function correrHijos(l, dx, dy) {
+    if (!dx && !dy) return;
+    l.forEach((a) => {
+      a.x = r1(a.x + dx);
+      a.y = r1(a.y + dy);
+      if (a.o && a.o.x2 !== undefined) (a.o.x2 = r1(a.o.x2 + dx)), (a.o.y2 = r1(a.o.y2 + dy));
+    });
+  }
+  function elegir(d) {
+    elegida = d.agregado != null ? { a: est.poner[d.agregado] } : { cosa: d.cosa };
+    pintarElegida();
+  }
+  function soltarElegida() {
+    elegida = null;
+    pegarA = null;
+    $("selPanel").classList.add("oculto");
+  }
+  // la entrada de est.mover de lo del mundo elegido (se crea si hace falta)
+  function entrada(crear) {
+    const cosa = elegida.cosa;
+    if (movidos.has(cosa)) return est.mover[movidos.get(cosa)];
+    if (!crear) return null;
+    est.mover.push({ id: cosa.id, x: r1(cosa.x), y: r1(cosa.y), nx: r1(cosa.x), ny: r1(cosa.y) });
+    armarMovidos();
+    return est.mover[est.mover.length - 1];
+  }
+  function opcionesElegida() {
+    if (!elegida) return {};
+    if (elegida.a) return elegida.a.o || (elegida.a.o = {});
+    const m = entrada(false);
+    return Object.assign({}, elegida.cosa.o, (m && m.o) || {});
+  }
+  function cambiarElegida(k, v, quieto) {
+    if (!elegida) return;
+    let o;
+    if (elegida.a) o = elegida.a.o || (elegida.a.o = {});
+    else {
+      const m = entrada(true);
+      o = m.o || (m.o = {});
+    }
+    if (quieto) delete o[k];
+    else o[k] = v;
+  }
+  const deslizadores = [
+    ["selEsc", "esc"],
+    ["selEx", "ex"],
+    ["selEy", "ey"],
+  ];
+  function pintarElegida() {
+    const panel = $("selPanel");
+    if (!elegida) return panel.classList.add("oculto");
+    panel.classList.remove("oculto");
+    const id = elegida.a ? elegida.a.id : elegida.cosa.id,
+      nom = t("as." + id),
+      o = opcionesElegida(),
+      hist = elegida.cosa && nombradas.get(elegida.cosa);
+    $("selNombre").textContent = nom === "as." + id ? id : nom;
+    $("selTipo").textContent = hist ? t("ed.de_historia", [hist]) : elegida.a ? t("ed.sel_agregado", [hijosDe(elegida.a.u || "-").length]) : t("ed.sel_mundo", [hijosDe(claveDe(elegida.cosa)).length]);
+    const dos = o.x2 !== undefined;
+    deslizadores.forEach(([el, k]) => {
+      $(el).value = o[k] || 1;
+      $(el + "V").textContent = (+$(el).value).toFixed(2);
+      $(el).disabled = dos;
+    });
+    $("selEsp").checked = !!o.esp;
+    $("selDos").classList.toggle("oculto", !dos);
+  }
+  deslizadores.forEach(([el, k]) => {
+    $(el).addEventListener("pointerdown", () => recordar());
+    $(el).addEventListener("keydown", () => recordar());
+    $(el).addEventListener("input", () => {
+      const v = +$(el).value;
+      $(el + "V").textContent = v.toFixed(2);
+      cambiarElegida(k, v, Math.abs(v - 1) < 0.001);
+    });
+    $(el).addEventListener("change", guardar);
+  });
+  $("selEsp").addEventListener("change", () => {
+    recordar();
+    cambiarElegida("esp", true, !$("selEsp").checked);
+    guardar();
+  });
+  $("selComo").onclick = () => {
+    if (!elegida) return;
+    recordar();
+    ["esc", "ex", "ey", "esp"].forEach((k) => cambiarElegida(k, 0, true));
+    guardar();
+    pintarElegida();
+  };
+  $("selAgregar").onclick = () => {
+    if (!elegida) return;
+    pegarA = elegida.a ? elegida.a.u || (elegida.a.u = uid()) : claveDe(elegida.cosa);
+    ponerHerr("poner");
+    avisar(t("ed.sel_pegar", [$("selNombre").textContent]));
+  };
+  $("selSoltar").onclick = soltarElegida;
+  // el recuadro de lo elegido y de lo que tiene pegado
+  function marcarElegida(l) {
+    if (!elegida) return;
+    const k = elegida.a ? elegida.a.u : claveDe(elegida.cosa);
+    l.forEach((d) => {
+      const es = elegida.a ? d.agregado != null && est.poner[d.agregado] === elegida.a : d.cosa === elegida.cosa;
+      const hijo = d.agregado != null && k && est.poner[d.agregado].pegado === k;
+      if (!es && !hijo) return;
+      const w = d.choque ? (d.choque.w ? d.choque.w : d.choque.r * 2) + 30 : 70 * ((d.o && d.o.esc) || 1),
+        h = Math.min(d.alto, 900) + 20;
+      c.save();
+      c.strokeStyle = es ? "#FFD98A" : "rgba(255,217,138,0.6)";
+      c.lineWidth = (es ? 2.5 : 1.5) / cam.z;
+      c.setLineDash([10 / cam.z, 6 / cam.z]);
+      c.strokeRect(d.x - w / 2, d.y - h, w, h + 14);
+      c.restore();
+    });
   }
 
   // ---------- los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño ----------
@@ -486,8 +625,9 @@
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
   function nuevasOpciones() {
-    const o = { s: +$("escala").value, sem: +$("variante").value || 0, v: +$("variante").value || 0 };
-    if ($("espejo").checked) o.espejo = true;
+    const o = { sem: +$("variante").value || 0, v: +$("variante").value || 0 };
+    if (+$("escala").value !== 1) o.esc = +$("escala").value;
+    if ($("espejo").checked) o.esp = true;
     const ej = ASSETS.EJEMPLO[elegido] || {};
     Object.keys(ej).forEach((k) => {
       if (k !== "x2" && k !== "y2" && o[k] === undefined) o[k] = ej[k];
@@ -534,9 +674,20 @@
       n.y = r1(y - sel.dy);
     } else if (sel && sel.mueve && sel.d.movido != null) {
       const m = est.mover[sel.d.movido];
-      m.nx = r1(x - sel.dx);
-      m.ny = r1(y - sel.dy);
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
+      if (!sel.movio) return;
+      const nx = r1(x - sel.dx),
+        ny = r1(y - sel.dy);
+      correrHijos(sel.hijos, nx - m.nx, ny - m.ny);
+      m.nx = nx;
+      m.ny = ny;
     } else if (sel && sel.mueve) {
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
+      if (!sel.movio) return;
+      if (sel.d.agregado != null) {
+        const a = est.poner[sel.d.agregado];
+        correrHijos(sel.hijos, r1(x - sel.dx) - a.x, r1(y - sel.dy) - a.y);
+      }
       sel.d.x = x - sel.dx;
       sel.d.y = y - sel.dy;
       if (sel.d.agregado != null) {
@@ -607,7 +758,7 @@
       arrastre = { x, y, dos: dosPuntos(elegido) };
       if (!arrastre.dos) {
         recordar();
-        est.poner.push({ id: elegido, x: r1(x), y: r1(y), o: nuevasOpciones() });
+        est.poner.push(nuevo({ id: elegido, x: r1(x), y: r1(y), o: nuevasOpciones() }));
         guardar();
         arrastre = null;
       }
@@ -615,14 +766,16 @@
       const d = tocado(x, y);
       if (!d) return;
       recordar();
-      if (d.agregado == null && d.movido == null) {
+      elegir(d);
+      const creado = d.agregado == null && d.movido == null;
+      if (creado) {
         // mover algo del mundo (también lo de la historia): queda anotado dónde estaba y adónde va, y el juego lo
         // corre en el lugar (con la gente y los objetivos que tiene al lado)
         est.mover.push({ id: d.id, x: r1(d.cosa.x), y: r1(d.cosa.y), nx: r1(d.x), ny: r1(d.y) });
         d.movido = est.mover.length - 1;
         movidos.set(d.cosa, d.movido);
       }
-      sel = { d, dx: x - d.x, dy: y - d.y, mueve: true };
+      sel = { d, dx: x - d.x, dy: y - d.y, mueve: true, x0: x, y0: y, creado, hijos: hijosDe(claveDe(d)) };
       cv.style.cursor = "grabbing";
     } else if (herr === "borrar") {
       const d = tocado(x, y);
@@ -646,7 +799,7 @@
       const o = nuevasOpciones();
       o.x2 = r1(x);
       o.y2 = r1(y);
-      est.poner.push({ id: elegido, x: r1(arrastre.x), y: r1(arrastre.y), o });
+      est.poner.push(nuevo({ id: elegido, x: r1(arrastre.x), y: r1(arrastre.y), o }));
       guardar();
     }
     if (sel && sel.nota != null) {
@@ -654,6 +807,13 @@
       else {
         historial.pop();
         abrirNota(sel.nota);
+      }
+    } else if (sel && sel.mueve && !sel.movio) {
+      // un clic sin arrastrar solo lo elige
+      historial.pop();
+      if (sel.creado && sel.d.movido != null) {
+        est.mover.splice(sel.d.movido, 1);
+        armarMovidos();
       }
     } else if (sel) guardar();
     arrastre = null;
@@ -697,6 +857,8 @@
     if (e.key === "Escape" && camino) terminarCamino();
     else if (e.key === "Escape") {
       elegido = null;
+      pegarA = null;
+      soltarElegida();
       lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") deshacer();
@@ -720,6 +882,7 @@
     const s = historial.pop();
     if (!s) return;
     est = JSON.parse(s);
+    soltarElegida();
     guardar();
   }
   $("bDeshacer").onclick = deshacer;

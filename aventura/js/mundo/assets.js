@@ -1086,9 +1086,30 @@ window.ASSETS = (function () {
     santuario: { f: santuario, alto: 180, choque: { w: 300, h: 40 }, grupo: "este", luz: true },
     zarzas: { f: zarzas, alto: 80, choque: null, grupo: "este" },
   };
+  // o.esc (tamaño), o.ex / o.ey (ancho y alto) y o.esp (espejado) valen para cualquier asset: los pone el editor
   function dibujar(c, id, x, y, t, o = {}) {
     const a = LISTA[id];
-    if (a) a.f(c, x, y, t, o);
+    if (!a) return;
+    const k = o.esc || 1,
+      ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
+      ey = (o.ey || 1) * k;
+    if (ex === 1 && ey === 1) return a.f(c, x, y, t, o);
+    c.save();
+    c.translate(x, y);
+    c.scale(ex, ey);
+    c.translate(-x, -y);
+    a.f(c, x, y, t, o);
+    c.restore();
+  }
+  // el choque y el alto de un asset con sus opciones (o.s de cada asset y el tamaño y las proporciones del editor)
+  function medidas(id, o = {}) {
+    const a = LISTA[id];
+    if (!a) return { choque: null, alto: 40 };
+    const k = (o.s || 1) * (o.esc || 1),
+      ex = o.ex || 1,
+      ey = o.ey || 1;
+    const ch = a.choque ? (a.choque.r ? { r: a.choque.r * k * Math.max(ex, ey) } : { w: a.choque.w * k * ex, h: a.choque.h * k * ey }) : null;
+    return { choque: o.sinChoque ? null : ch, alto: a.alto * k * ey };
   }
   // para la página de revisión: cada asset con su nombre traducido y un ejemplo de opciones para mostrarlo
   const EJEMPLO = {
@@ -1105,5 +1126,5 @@ window.ASSETS = (function () {
   function catalogo() {
     return Object.keys(LISTA).map((id) => ({ id, grupo: LISTA[id].grupo, alto: LISTA[id].alto, ejemplo: EJEMPLO[id] || {} }));
   }
-  return { LISTA, C, dibujar, catalogo, EJEMPLO };
+  return { LISTA, C, dibujar, medidas, catalogo, EJEMPLO };
 })();

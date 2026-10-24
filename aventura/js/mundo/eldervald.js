@@ -187,11 +187,8 @@ window.ELDERVALD = (function () {
   const ESCALA_CASA = { casaEikholt: 1.7, casaLindes: 1.6, herreriaAsa: 1.5, casaSanacion: 1.5, hongoDorado: 1.45, cordeleriaFolke: 1.4, cobertizoRefugio: 1.4 };
   function poner(id, p, o = {}, nombre) {
     if (ESCALA_CASA[id]) o.s = (o.s || 1) * ESCALA_CASA[id];
-    const a = ASSETS.LISTA[id];
-    const k = o.s || 1,
-      ch = a && a.choque ? (a.choque.r ? { r: a.choque.r * k } : { w: a.choque.w * k, h: a.choque.h * k }) : null;
-    const cosa = { id, x: p[0], y: p[1], o, choque: ch, alto: a ? a.alto * k : 40 };
-    if (o.sinChoque) cosa.choque = null;
+    const md = ASSETS.medidas(id, o);
+    const cosa = { id, x: p[0], y: p[1], o, choque: md.choque, alto: md.alto };
     COSAS.push(cosa);
     if (nombre) NOMBRADAS[nombre] = cosa;
     return cosa;
@@ -1054,6 +1051,11 @@ window.ELDERVALD = (function () {
       c.x = m.nx;
       c.y = m.ny;
       if (c.o.x2 !== undefined) (c.o.x2 += dx), (c.o.y2 += dy);
+      if (m.o) {
+        // tamaño, proporciones y espejado elegidos en el editor
+        Object.assign(c.o, m.o);
+        Object.assign(c, ASSETS.medidas(c.id, c.o));
+      }
       c.movido = true;
       apartarBosque(c, c.x, c.y);
     });
