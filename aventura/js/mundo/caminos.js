@@ -31,6 +31,19 @@ window.SENDAS = (function () {
     c.lineCap = "round";
     c.stroke();
   }
+  function distLinea(x, y, p) {
+    let m = Infinity;
+    for (let i = 1; i < p.length; i++) {
+      const [ax, ay] = p[i - 1],
+        [bx, by] = p[i],
+        dx = bx - ax,
+        dy = by - ay,
+        l = dx * dx + dy * dy,
+        u = l ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l)) : 0;
+      m = Math.min(m, Math.hypot(x - ax - dx * u, y - ay - dy * u));
+    }
+    return m;
+  }
   const largo = (p) => p.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - p[i - 1][0], q[1] - p[i - 1][1]) : 0), 0);
   // el pedazo del camino entre las distancias a y b
   function recortar(p, a, b) {
@@ -86,8 +99,12 @@ window.SENDAS = (function () {
     LADRILLOS = ["#9C4A32", "#8A3E2A", "#A85A3C", "#7A3524", "#94452E"];
   const FUNDE = 150; // cuánto se deshace cada punta
 
-  // pinta un camino en c, solo lo que cae en [x0, y0, x1, y1]; sem distingue un camino de otro
-  function pintar(c, cm, sem, x0, y0, x1, y1) {
+  // pinta un camino en c, solo lo que cae en [x0, y0, x1, y1]; sem distingue un camino de otro.
+  // capa: "base" (contornos y cordones), "cuerpo" (la superficie) o "borde" (con qué se funde a los costados); sin capa
+  // pinta todo junto. Para que los caminos se unan (del mismo material o de otro) se pintan todos de a capas: primero
+  // las bases de todos, después los cuerpos y al final los bordes, que no se pintan sobre otro camino (otros).
+  function pintar(c, cm, sem, x0, y0, x1, y1, capa, otros) {
+    const en = (k) => !capa || capa === k;
     const p = cm.p,
       w = cm.w || 110,
       tipo = cm.tipo || "tierra",
@@ -112,70 +129,82 @@ window.SENDAS = (function () {
         recorrer(p, 24, (x, y, dx, dy, d) => {
           const q = queda(d);
           if (q < 1 && dentro(x, y)) {
-            E(c, x, y, (w / 2 + 6) * (0.35 + q * 0.65), (w / 2 + 6) * (0.3 + q * 0.6), "#4A3C28");
-            E(c, x, y, (w / 2) * (0.3 + q * 0.7) - 6, (w / 2) * (0.25 + q * 0.65) - 6, "#5C4A32");
+            if (en("base")) E(c, x, y, (w / 2 + 6) * (0.35 + q * 0.65), (w / 2 + 6) * (0.3 + q * 0.6), "#4A3C28");
+            if (en("cuerpo")) E(c, x, y, (w / 2) * (0.3 + q * 0.7) - 6, (w / 2) * (0.25 + q * 0.65) - 6, "#5C4A32");
           }
         });
       }
-      trazo(c, cuerpo, w + 26, "#3A3022");
-      trazo(c, cuerpo, w, "#5C4A32");
-      trazo(c, cuerpo, w * 0.5, "#6A563A");
+      if (en("base")) trazo(c, cuerpo, w + 26, "#3A3022");
+      if (en("cuerpo")) {
+        trazo(c, cuerpo, w, "#5C4A32");
+        trazo(c, cuerpo, w * 0.5, "#6A563A");
+      }
       // huellas de carro y piedritas
-      recorrer(p, 20, (x, y, dx, dy, d, i) => {
-        if (!dentro(x, y) || queda(d) < 0.6) return;
-        const nx = -dy,
-          ny = dx;
-        [-0.24, 0.24].forEach((k, j) => {
-          if (hash(sem, i, j) < 0.82) E(c, x + nx * w * k, y + ny * w * k, 12, 3.2, "#4E3E2A", Math.atan2(dy, dx));
+      if (en("cuerpo"))
+        recorrer(p, 20, (x, y, dx, dy, d, i) => {
+          if (!dentro(x, y) || queda(d) < 0.6) return;
+          const nx = -dy,
+            ny = dx;
+          [-0.24, 0.24].forEach((k, j) => {
+            if (hash(sem, i, j) < 0.82) E(c, x + nx * w * k, y + ny * w * k, 12, 3.2, "#4E3E2A", Math.atan2(dy, dx));
+          });
+          if (hash(sem, i, 7) < 0.35) {
+            const o = (hash(sem, i, 8) - 0.5) * w * 0.9;
+            E(c, x + nx * o, y + ny * o, 4 + hash(sem, i, 9) * 4, 2.5 + hash(sem, i, 10) * 2, "#6E6458");
+          }
         });
-        if (hash(sem, i, 7) < 0.35) {
-          const o = (hash(sem, i, 8) - 0.5) * w * 0.9;
-          E(c, x + nx * o, y + ny * o, 4 + hash(sem, i, 9) * 4, 2.5 + hash(sem, i, 10) * 2, "#6E6458");
-        }
-      });
     } else if (tipo === "adoquin") {
       // abajo un poco de tierra (lo que se ve donde faltan piedras), el cordón y la junta
-      trazo(c, p, w + 18, "#4A3C28");
-      trazo(c, cuerpo, w + 26, "#3E3A36");
-      trazo(c, cuerpo, w + 4, "#4A4640");
-      recorrer(p, 22, (x, y, dx, dy, d, i) => {
-        if (!dentro(x, y)) return;
-        const nx = -dy,
-          ny = dx,
-          q = queda(d),
-          off = i % 2 ? 11 : 0;
-        for (let o = -w / 2 + 12 + off, j = 0; o <= w / 2 - 10; o += 22, j++) {
-          if (q < 1 && hash(sem, i, j) > q) continue;
-          const cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * 4,
-            cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * 4;
-          P(c, poli(cx, cy, 10.5, 7.5, 6, hash(sem, i, j + 60) * 2), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
-          P(c, poli(cx + 2, cy - 2, 5, 3, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
-        }
-      });
+      if (en("base")) {
+        trazo(c, p, w + 18, "#4A3C28");
+        trazo(c, cuerpo, w + 26, "#3E3A36");
+      }
+      if (en("cuerpo")) trazo(c, cuerpo, w + 4, "#4A4640");
+      if (en("cuerpo"))
+        recorrer(p, 22, (x, y, dx, dy, d, i) => {
+          if (!dentro(x, y)) return;
+          const nx = -dy,
+            ny = dx,
+            q = queda(d),
+            off = i % 2 ? 11 : 0;
+          for (let o = -w / 2 + 12 + off, j = 0; o <= w / 2 - 10; o += 22, j++) {
+            if (q < 1 && hash(sem, i, j) > q) continue;
+            const cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * 4,
+              cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * 4;
+            P(c, poli(cx, cy, 10.5, 7.5, 6, hash(sem, i, j + 60) * 2), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
+            P(c, poli(cx + 2, cy - 2, 5, 3, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
+          }
+        });
     } else if (tipo === "ladrillo") {
-      trazo(c, p, w + 18, "#4A3C28");
-      trazo(c, cuerpo, w + 28, "#4E4A44");
-      trazo(c, cuerpo, w + 10, "#5E5850");
-      trazo(c, cuerpo, w, "#4A2E22");
+      if (en("base")) {
+        trazo(c, p, w + 18, "#4A3C28");
+        trazo(c, cuerpo, w + 28, "#4E4A44");
+        trazo(c, cuerpo, w + 10, "#5E5850");
+      }
+      if (en("cuerpo")) trazo(c, cuerpo, w, "#4A2E22");
       // ladrillos a soga: carriles a lo ancho, cada uno corrido medio ladrillo del de al lado
-      recorrer(p, 16, (x, y, dx, dy, d, i) => {
-        if (!dentro(x, y)) return;
-        const nx = -dy,
-          ny = dx,
-          q = queda(d),
-          carriles = Math.max(2, Math.floor(w / 15));
-        for (let j = 0; j < carriles; j++) {
-          if ((i + j) % 2) continue; // cada ladrillo mide dos pasos de largo
-          if (q < 1 && hash(sem, i, j) > q) continue;
-          const o = -w / 2 + (j + 0.5) * (w / carriles);
-          ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
-        }
-      });
+      if (en("cuerpo"))
+        recorrer(p, 16, (x, y, dx, dy, d, i) => {
+          if (!dentro(x, y)) return;
+          const nx = -dy,
+            ny = dx,
+            q = queda(d),
+            carriles = Math.max(2, Math.floor(w / 15));
+          for (let j = 0; j < carriles; j++) {
+            if ((i + j) % 2) continue; // cada ladrillo mide dos pasos de largo
+            if (q < 1 && hash(sem, i, j) > q) continue;
+            const o = -w / 2 + (j + 0.5) * (w / carriles);
+            ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
+          }
+        });
     }
 
     // los costados: con qué se funde
     const borde = cm.borde || "";
-    if (borde) {
+    // los otros caminos que pasan cerca: ahí no va borde (es donde se une con ellos)
+    const cerca = (otros || []).filter((o) => o !== cm && o.p.some(([x, y]) => x > minx - 2000 && x < maxx + 2000 && y > miny - 2000 && y < maxy + 2000));
+    const sobreOtro = (x, y) => cerca.some((o) => distLinea(x, y, o.p) < (o.w || 110) / 2 + 4);
+    if (borde && en("borde")) {
       recorrer(p, 26, (x, y, dx, dy, d, i) => {
         if (!dentro(x, y) || queda(d) < 0.3) return;
         const nx = -dy,
@@ -187,6 +216,7 @@ window.SENDAS = (function () {
             adentro = (r(1) - 0.35) * 26; // + hacia adentro del camino
           const px = bx - nx * lado * adentro,
             py = by - ny * lado * adentro;
+          if (cerca.length && sobreOtro(px, py)) return;
           if (borde === "pasto") {
             if (r(2) > 0.75) return;
             const cols = ["#4A5630", "#56662C", "#3F4A28"];
@@ -221,7 +251,7 @@ window.SENDAS = (function () {
       });
     }
     // las puntas fundidas: piedras o ladrillos sueltos que siguen un poco más allá
-    if (fundir && tipo !== "tierra") {
+    if (fundir && tipo !== "tierra" && en("cuerpo")) {
       [
         [p[0], p[1], -1],
         [p[p.length - 1], p[p.length - 2], 1],
