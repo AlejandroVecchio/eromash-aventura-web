@@ -1210,9 +1210,12 @@ window.ASSETS = (function () {
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
-    if (ex === 1 && ey === 1 && !o.rot && (!o.giro || a.caras)) return a.f(c, x, y, t, o);
+    if (ex === 1 && ey === 1 && !o.rot && !o.giroCam && (!o.giro || a.caras)) return a.f(c, x, y, t, o);
     c.save();
     c.translate(x, y);
+    // o.giroCam: la cámara del editor girada (en radianes). Su frente se acuesta en el piso con el mismo giro exacto
+    // que el piso, así los pedazos de una empalizada o de una muralla siguen formando una línea recta.
+    if (o.giroCam) c.transform(Math.cos(o.giroCam), Math.sin(o.giroCam), 0, 1, 0, 0);
     if (o.rot) c.rotate((o.rot * Math.PI) / 180);
     // o.giro: girado sobre el piso (de frente, en diagonal, de costado o de espaldas): se angosta y el lado de atrás
     // sube un poco, como visto desde arriba

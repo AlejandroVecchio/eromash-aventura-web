@@ -102,11 +102,12 @@
       o = Object.assign({}, d.o);
     if (o.x2 !== undefined) [o.x2, o.y2] = V(o.x2, o.y2);
     const def = ASSETS.LISTA[d.id];
-    // lo que tiene caras se arma como volumen; lo de planta cuadrada (casas, puertas, carros, puestos) se gira de
-    // mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
-    // postes) se ve igual de cualquier lado y queda como está
+    // lo que tiene caras se arma como volumen; lo demás que tiene frente (puertas, empalizadas, carros, puestos) se
+    // gira de mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
+    // postes, torres: choque redondo) y la naturaleza se ven igual de cualquier lado y quedan como están
     const md = d.choque || (def && def.choque);
-    if (def && (def.caras || (o.x2 === undefined && md && md.w))) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
+    if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
+    else if (def && o.x2 === undefined && !(md && md.r) && def.grupo !== "naturaleza" && !def.piso) o.giroCam = cam.g;
     return Object.assign({}, d, { x, y, o, mundo: d });
   }
   const croquis = new Image();
@@ -274,7 +275,7 @@
       ty1 = Math.min(Math.ceil(W.ALTO / nv.T) - 1, Math.floor(y1 / nv.T));
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
-        const k = tx + "," + ty + (soloPiso ? "p" : "");
+        const k = tx + "," + ty + (soloPiso ? "p" + Math.round(cam.g * 100) : "");
         let b = nv.m.get(k);
         const vieja = b && b.firma !== firma(tx * nv.T, ty * nv.T, (tx + 1) * nv.T, (ty + 1) * nv.T);
         if ((!b || vieja) && !horneada) {
@@ -2111,7 +2112,7 @@
       if (Math.abs(giroMeta - cam.g) < 0.002) cam.g = giroMeta;
       if (Math.abs(cam.g) < 1e-4) cam.g = giroMeta = 0;
       pedir();
-    }
+    } else if (W.girarVista) W.girarVista(cam.g); // ya quieta: el barro, el musgo y los helechos se repintan enderezados
   }, 16);
   // girar la cámara: de a 15°, siempre entre -180° y 180°
   function girarCamara(grados, absoluto) {

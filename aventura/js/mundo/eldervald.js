@@ -1296,7 +1296,24 @@ window.ELDERVALD = (function () {
   // ---------- el piso, por trozos ----------
   const TROZO = 512;
   const cache = new Map();
-  let escalaCache = 0;
+  let escalaCache = 0,
+    giroVista = 0; // la cámara girada del editor: lo pintado en el piso que se ve de costado (barro, musgo, helechos) se endereza
+  // dibuja una cosa del piso enderezada contra el giro de la cámara (el piso gira, ella sigue mirando a la cámara)
+  function derecho(c, x, y, fn) {
+    if (!giroVista) return fn();
+    c.save();
+    c.translate(x, y);
+    c.rotate(-giroVista);
+    c.translate(-x, -y);
+    fn();
+    c.restore();
+  }
+  function girarVista(g) {
+    g = Math.round(g * 100) / 100;
+    if (g === giroVista) return;
+    giroVista = g;
+    cache.clear();
+  }
   function pintarTrozo(tx, ty, esc) {
     const lado = Math.ceil(TROZO * esc);
     const cv = document.createElement("canvas");
@@ -1401,11 +1418,11 @@ window.ELDERVALD = (function () {
     // primero musgo y barro (planos), después los helechos encima
     DECO.forEach((d) => {
       if ((d.id !== "alfombraMusgo" && d.id !== "barro") || d.x < x0 - 140 || d.x > x1 + 140 || d.y < y0 - 70 || d.y > y1 + 70) return;
-      ASSETS.dibujar(c, d.id, d.x, d.y, 0, { s: d.s, sem: d.sem, huellas: d.huellas });
+      derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, { s: d.s, sem: d.sem, huellas: d.huellas }));
     });
     DECO.forEach((d) => {
       if (d.id !== "helechos" || d.x < x0 - 40 || d.x > x1 + 40 || d.y < y0 - 40 || d.y > y1 + 40) return;
-      ASSETS.dibujar(c, d.id, d.x, d.y, 0, { sem: d.sem });
+      derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, { sem: d.sem }));
     });
     return cv;
   }
@@ -1461,6 +1478,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, girarVista, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();
