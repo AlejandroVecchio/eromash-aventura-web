@@ -37,6 +37,17 @@ window.CAPITAL = (function () {
     kolbrun: { nombre: "kolbrun", alto: 0.96, ancho: 1.02, piel: "#C8987A", pielSombra: "#A87A5E", pelo: "#1E1814", ropa: "#5E2C20", ropaSombra: "#4A2018", falda: true, pantalon: "#3A2A1E", botas: "#241C16", cinto: "#FF8D71", gorro: "#9C2315", trenza: true },
     // Ivar, emisario del rey de Hrafngard: bien vestido, capa roja de corte
     ivar: { nombre: "ivar", alto: 1.04, ancho: 0.98, piel: "#E0C0A8", pielSombra: "#C0A088", pelo: "#2A1E18", barba: "#2A1E18", ropa: "#2A2A30", ropaSombra: "#1E1E22", capa: "#9C2315", capaSombra: "#5E130D", pantalon: "#2A2A30", botas: "#1A1410", cinto: "#FFD98A" },
+    // la gente del Puesto de Eydis
+    // Halvard, guardasendas retirado de setenta años: cuida el farol, la huerta y el fuego
+    halvard: { nombre: "halvard", alto: 0.96, ancho: 1.04, piel: "#D8B49A", pielSombra: "#B8947A", pelo: "#E8E4DC", barba: "#E8E4DC", ropa: "#5E4A36", ropaSombra: "#46362A", capa: "#3E5A34", capaSombra: "#2C4226", pantalon: "#3A3026", botas: "#2A2018", cinto: "#7A5634", calvo: true },
+    // Tove, aprendiz de guardasendas de dieciséis años: capa corta verde, trenza, lanza
+    tove: { nombre: "tove", alto: 0.92, ancho: 0.88, piel: "#E0B898", pielSombra: "#C0987A", pelo: "#8A4A2A", ropa: "#5E4A36", ropaSombra: "#46362A", capa: "#4E6A3E", capaSombra: "#3A5230", pantalon: "#3A3026", botas: "#2A2018", cinto: "#7A5634", trenza: true, lanza: true },
+    // Ingrid, comerciante de Hrafngard: pañuelo, delantal de cuentas
+    ingrid: { nombre: "ingrid", alto: 1, ancho: 1.06, piel: "#E0C0A8", pielSombra: "#C0A088", pelo: "#C8A050", ropa: "#7A2A1E", ropaSombra: "#5E1E14", delantal: "#C8B48C", delantalSombra: "#A8946C", falda: true, pantalon: "#3A2A1E", botas: "#2A2018", cinto: "#5E4430", gorro: "#E6DCC8" },
+    // Arvid, su hijo de siete años
+    arvid: { nombre: "arvid", alto: 0.66, ancho: 0.8, piel: "#E0C0A8", pielSombra: "#C0A088", pelo: "#D8B060", ropa: "#3E5A34", ropaSombra: "#2C4226", pantalon: "#5E4430", botas: "#3A2A1A", cinto: "#7A5634" },
+    // Ketil, soldado de Hrafngard: casco, capa roja del rey, lanza
+    ketil: { nombre: "ketil", alto: 1.06, ancho: 1.12, piel: "#C8987A", pielSombra: "#A87A5E", pelo: "#3A2A1E", barba: "#3A2A1E", ropa: "#6E6A64", ropaSombra: "#56524E", capa: "#9C2315", capaSombra: "#5E130D", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#4A4448", lanza: true },
     // Maren, viajera de Skeldra: tatuajes de estrellas (mecha azul en la trenza), ropa de isleña
     maren: { nombre: "maren", alto: 0.98, ancho: 0.92, piel: "#C09070", pielSombra: "#A07456", pelo: "#1E2A3A", mecha: "#4A78D0", ropa: "#4A6A7A", ropaSombra: "#3A5462", pantalon: "#3A4A56", botas: "#2A2A30", cinto: "#C8C0B0", trenza: true },
   });
@@ -58,6 +69,19 @@ window.CAPITAL = (function () {
     kolbrun: [["plaza", 300, -60], ["hongo_dorado", 120, 140]],
     ivar: [["ting", 230, 40], ["hongo_dorado", 220, 70]],
     maren: [["roble", -260, 150], ["roble", -220, 170]],
+    halvard: [["halvard", 0, 0], ["fogon", 90, 30]],
+    tove: [["tove", 0, 0], ["fogon", -100, 40]],
+    ingrid: [["ingrid", 0, 0], ["mostrador", 40, 60]],
+    arvid: [["arvid", 0, 0], ["fogon", 140, 50]],
+    ketil: [["ketil", 0, 0], ["porton_sur", -60, -40]],
+  };
+  // los que cambian de lugar con la historia: Sigrun espera en el Puesto hasta que la cuadrilla llega a salvo;
+  // Ingrid, Arvid y Ketil se van cuando se reabre el Paso
+  const MOMENTO = {
+    sigrun: (H) => (H.completa("EL-02") ? null : { lugar: [["sigrun_puesto", 0, 0], ["sigrun_puesto", 0, 0]], pre: "sigrun_p" }),
+    ingrid: (H) => (H.completa("EL-06") ? { fuera: true } : null),
+    arvid: (H) => (H.completa("EL-06") ? { fuera: true } : null),
+    ketil: (H) => (H.completa("EL-06") ? { fuera: true } : null),
   };
   const gente = [];
   const habladas = {};
@@ -65,23 +89,29 @@ window.CAPITAL = (function () {
   function ubicar() {
     const noche = A.noche() > 0.5;
     for (const n of gente) {
-      const [k, dx, dy] = LUGAR[n.id][noche ? 1 : 0],
+      const mo = MOMENTO[n.id] && MOMENTO[n.id](A.H);
+      n.fuera = !!(mo && mo.fuera);
+      n.pre = (mo && mo.pre) || n.id + "_";
+      const [k, dx, dy] = ((mo && mo.lugar) || LUGAR[n.id])[noche ? 1 : 0],
         p = donde(k);
       if (!p) continue;
       n.x = p[0] + dx;
       n.y = p[1] + dy;
     }
+    const N = W.NOMBRADAS;
+    if (N.tablillas) N.tablillas.o.oscuras = A.H.completa("EL-02") ? 0 : 5;
   }
   function hablar(n) {
     n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
     const k = (habladas[n.id] = (habladas[n.id] || 0) + 1) - 1;
-    A.dialogoLibre([[n.id, "pj." + n.id + "_" + (k % 4)]]);
+    A.dialogoLibre([[n.id, "pj." + n.pre + (k % 4)]]);
   }
   function mirador() {
     if (window.MAPA) MAPA.descubrir(W.CIUDAD.c[0], W.CIUDAD.c[1] - 2000, 14000);
     A.dialogoLibre([["eromash", "cap.mirador"]]);
   }
-  let nocheAntes = null;
+  let nocheAntes = null,
+    misionAntes = null;
   const sistema = {
     iniciar(api) {
       A = api;
@@ -92,16 +122,23 @@ window.CAPITAL = (function () {
     },
     alEmpezar() {
       nocheAntes = null;
+      misionAntes = null;
     },
     actualizar() {
-      const noche = A.noche() > 0.5;
-      if (noche !== nocheAntes) {
+      const noche = A.noche() > 0.5,
+        mis = A.H.idMision();
+      if (noche !== nocheAntes || mis !== misionAntes) {
         nocheAntes = noche;
+        misionAntes = mis;
         ubicar();
       }
+      // Grima se incorpora cuando alguien se acerca
+      const g = W.NOMBRADAS.grima;
+      if (g) g.o.despierta = Math.hypot(g.x - jug.x, g.y - jug.y) < 260;
     },
     cercanos(dar) {
       for (const n of gente) {
+        if (n.fuera) continue;
         const d = Math.hypot(n.x - jug.x, n.y - jug.y);
         if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablar(n));
       }
@@ -111,11 +148,14 @@ window.CAPITAL = (function () {
       if (mir && Math.hypot(mir[0] - jug.x, mir[1] - jug.y) < 120) dar(60, t("cap.accion_mirador"), mirador);
       if (cerca(N.campana, 120, 40)) dar(80, t("cap.accion_campana"), () => A.dialogoLibre([["eromash", "cap.campana"]]));
       if (cerca(N.tablon_avisos, 130, 40)) dar(80, t("cap.accion_tablon"), () => A.dialogoLibre([["eromash", "cap.tablon"]]));
+      if (cerca(N.grima, 110)) dar(70, t("cap.accion_grima"), () => A.dialogoLibre([["eromash", "cap.grima"]]));
+      if (cerca(N.piedra_violeta, 140, 30)) dar(90, t("cap.accion_violeta"), () => A.dialogoLibre([["eromash", "cap.violeta"]]));
+      if (cerca(N.tablillas, 130, 40)) dar(85, t("cap.accion_tablillas"), () => A.dialogoLibre([["eromash", A.H.completa("EL-02") ? "cap.tablillas_claras" : "cap.tablillas"]]));
       for (const p of N.anclas || []) if (cerca(p, 120, 40)) dar(90, t("cap.accion_piedra"), () => A.dialogoLibre([["eromash", p.o.fuerza > 0 ? "cap.piedra" : "cap.piedra_rota"]]));
     },
     objetos(lista, visible, c) {
       for (const n of gente) {
-        if (!visible(n.x, n.y)) continue;
+        if (n.fuera || !visible(n.x, n.y)) continue;
         if (Math.hypot(jug.x - n.x, jug.y - n.y) < 260) n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
         lista.push({ y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo }) });
       }

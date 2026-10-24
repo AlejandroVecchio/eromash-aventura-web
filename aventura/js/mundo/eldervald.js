@@ -46,7 +46,7 @@ window.ELDERVALD = (function () {
   // los caminos llegan a las cuatro puertas de Eikholt: sur (Hrafngard), norte (el Paso), oeste (Skarnholt) y
   // este (aserradero, Brunvik); adentro siguen como calles hasta la plaza del Roble (ver pintarTrozo)
   const CAMINOS = [
-    { p: lista([[95, 960], [200, 880], [350, 795], [470, 745], [560, 700], [680, 692], [810, 692], [810, 662]]), w: 4 * 34 },
+    { p: lista([[95, 960], [200, 880], [290, 852], [357.5, 834], [357.5, 805], [385, 780], [385, 762], [400, 758], [470, 745], [560, 700], [680, 692], [810, 692], [810, 662]]), w: 4 * 34 },
     { p: lista([[810, 462], [810, 440], [780, 422], [700, 414], [640, 404], [612, 396], [575, 300], [540, 230], [515, 172], [500, 110], [490, 30]]), w: 3.6 * 34 },
     { p: lista([[590, 345], [530, 330], [470, 318]]), w: 2.8 * 34 },
     { p: lista([[540, 232], [470, 240], [410, 238], [360, 222], [318, 210], [262, 205], [205, 190]]), w: 2.4 * 34 },
@@ -166,6 +166,7 @@ window.ELDERVALD = (function () {
   const COSAS = [];
   const NOMBRADAS = {}; // las que el juego necesita encontrar (carro, piedra, mesa…)
   const PUNTOS = {}; // dónde se paran los NPC, dónde está cada objetivo
+  const RECINTOS = []; // rectángulos cerrados donde no crece el bosque: [x0, y0, x1, y1]
   // las casas, más grandes que el resto (se entran: ver interiores.js)
   const ESCALA_CASA = { casaEikholt: 1.7, casaLindes: 1.6, herreriaAsa: 1.5, casaSanacion: 1.5, hongoDorado: 1.45, cordeleriaFolke: 1.4, cobertizoRefugio: 1.4 };
   function poner(id, p, o = {}, nombre) {
@@ -181,47 +182,141 @@ window.ELDERVALD = (function () {
   }
   const punto = (k, p) => (PUNTOS[k] = p);
 
-  // Puesto de Eydis
+  // El Puesto de Eydis imaginado (Alejandro, 22/10/2026): la casa de los guardasendas del sur. Un recinto de
+  // palisada con el portón de Hrafngard al sur (poste tallado, farol que no se apaga, campana) y la salida a
+  // Eikholt al noreste; la casa al norte con su galería, la mesa de rutas y el tablero de las tablillas; la
+  // atalaya detrás, a la izquierda; la carreta de Ingrid al oeste; el fuego de Halvard en el patio; la huerta al
+  // este; la leñera y el ahumadero contra la palisada; el cobertizo de viajeros cerca de la salida; y afuera, al
+  // oeste, la piedra que cambió de color.
   (function () {
-    const c = LUGARES.puesto.p;
-    punto("puesto", mas(c, 4, 3));
-    poner("puestoEydis", mas(c, -6, -6));
-    poner("empalizada", mas(c, -22, -15), { n: 9, sem: 2 });
-    poner("empalizada", mas(c, -26, 10), { n: 6, sem: 5 });
-    poner("tableroRutas", mas(c, 2, -9));
-    poner("cobertizoRefugio", mas(c, -12, 6));
-    poner("farol", mas(c, 6, -2));
-    poner("farol", mas(c, -2, 9));
-    poner("piedraLinde", mas(c, 12, 6), { sem: 3 });
-    punto("eydis_puesto", mas(c, 2, -4));
+    const c = LUGARES.puesto.p,
+      q = (dx, dy) => [c[0] + dx, c[1] + dy],
+      HW = 900,
+      HH = 640;
+    punto("puesto", q(150, 560));
+    RECINTOS.push([c[0] - HW - 60, c[1] - HH - 160, c[0] + HW + 60, c[1] + HH + 60]);
+    // la palisada, en tramos, con el hueco de los dos portones; también frena el paso (como la empalizada)
+    const tramo = (x0, y0, x1, y1, sem) => {
+      pintarLinea([q(x0, y0), q(x1, y1)], 36, 3);
+      if (x0 === x1) poner("palisada", q(x0, Math.max(y0, y1)), { ay: -Math.abs(y1 - y0), sem, sinChoque: true, ancho: 40 });
+      else poner("palisada", q((x0 + x1) / 2, y0), { ax: -(x1 - x0) / 2, bx: (x1 - x0) / 2, sem, sinChoque: true, ancho: (x1 - x0) / 2 + 30 });
+    };
+    const lado = (x0, y0, x1, y1, huecos, sem) => {
+      const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 180);
+      for (let k = 0; k < n; k++) {
+        const u0 = k / n,
+          u1 = (k + 1) / n,
+          ax = x0 + (x1 - x0) * u0,
+          ay = y0 + (y1 - y0) * u0,
+          bx = x0 + (x1 - x0) * u1,
+          by = y0 + (y1 - y0) * u1;
+        if (huecos.some(([hx, hy]) => Math.hypot((ax + bx) / 2 - hx, (ay + by) / 2 - hy) < 150)) continue;
+        tramo(ax, ay, bx, by, sem + k);
+      }
+    };
+    const SUR = [150, HH],
+      NE = [700, -HH];
+    lado(-HW, -HH, HW, -HH, [NE], 1);
+    lado(-HW, HH, HW, HH, [SUR], 20);
+    lado(-HW, -HH, -HW, HH, [], 40);
+    lado(HW, -HH, HW, HH, [], 60);
+    poner("portonPuesto", q(SUR[0], SUR[1] + 4), {}, "porton_sur");
+    poner("portonPuesto", q(NE[0], NE[1] + 4), { faroles: 2 }, "porton_ne");
+    // la casa de los guardasendas, la galería con la mesa de rutas y el tablero de las tablillas
+    poner("casaNordica", q(-80, -430), { v: 4, s: 1.15, pared: 1, techo: 1, postigo: 0, sem: 2, estandarte: true }, "casa_puesto");
+    poner("tableroTablillas", q(10, -429), { oscuras: 5, s: 1.1 }, "tablillas");
+    poner("mesaRutas", q(-170, -372), {}, "mesa_rutas");
+    punto("eydis_puesto", q(-90, -350));
+    // la atalaya de Tove
+    poner("torreVigia", q(-420, -500), { sem: 8 });
+    // el patio: el fuego de Halvard, la carreta y el mostrador de Ingrid
+    poner("fogonOlla", q(-40, 40), {}, "fogon");
+    poner("carreta", q(-560, 110), { v: 0 }, "carreta_ingrid");
+    poner("mostradorManta", q(-400, 200), {}, "mostrador");
+    // la huerta del este, cercada con estacas
+    poner("huerta", q(560, 20), { sem: 5, s: 0.95 });
+    poner("cerca", q(380, 100), { x2: c[0] + 760, y2: c[1] + 100 });
+    poner("cerca", q(380, -90), { x2: c[0] + 380, y2: c[1] + 99 });
+    // la leñera y el ahumadero contra la palisada, lejos del paso
+    poner("ahumadero", q(520, 590));
+    // el cobertizo de viajeros cerca de la salida, con la ropa tendida
+    poner("cobertizoRefugio", q(420, -470));
+    poner("tendedero", q(240, -400));
+    // Grima duerme junto al farol del portón; el farol de la salida
+    poner("perraGrima", q(40, 590), {}, "grima");
+    poner("farol", q(560, -540));
+    // la piedra de afuera, al oeste, a pocos metros de la palisada
+    poner("piedraVioleta", q(-1120, 160), { vista: false }, "piedra_violeta");
+    // dónde está cada uno (los usa capital.js)
+    punto("halvard", q(-120, 70));
+    punto("tove", q(-360, -440));
+    punto("ingrid", q(-330, 240));
+    punto("arvid", q(-660, 80));
+    punto("ketil", q(-780, 320));
+    punto("sigrun_puesto", q(80, 540));
   })();
-  // El carro volcado
+  // El carro volcado (Alejandro, 22/10/2026): la huida de la cuadrilla se lee sin texto. El costado golpeado mira
+  // al camino, con los tajos de cornamenta y el asta clavada; del otro lado salen los surcos de la camilla hacia el
+  // Refugio, las pezuñas del buey se separan hacia el bosque y las huellas del Ciervo van al sur y giran al norte.
   (function () {
     const c = LUGARES.carro.p;
-    poner("carroVolcado", mas(c, 4, 0), {}, "carro");
+    const carro = poner("carroCuadrilla", mas(c, 4, 0), { cepillo: true, talla: true, jornal: true }, "carro");
     punto("carro", mas(c, 2, 1.2));
+    poner("sacosAbiertos", m(624, 392));
+    poner("posteFarol", mas(c, -2.5, -2.6), { encendido: false }, "farol_carrero");
+    const ref = LUGARES.refugio.p,
+      dx = ref[0] - c[0],
+      dy = ref[1] - c[1],
+      l = Math.hypot(dx, dy);
+    const a = mas(c, 0, -1.6);
+    poner("rastro", a, { x2: a[0] + (dx / l) * 14 * M, y2: a[1] + (dy / l) * 14 * M, tipo: "camilla", piso: true, sinChoque: true });
+    const b2 = mas(c, 8, -1);
+    poner("rastro", b2, { x2: b2[0] + 9 * M, y2: b2[1] - 6 * M, tipo: "buey", piso: true, sinChoque: true });
+    const e1 = mas(c, 7, 3),
+      e2 = mas(c, 6, 9),
+      e3 = mas(c, 11, 4);
+    poner("rastro", e1, { x2: e2[0], y2: e2[1], tipo: "ciervo", piso: true, sinChoque: true });
+    poner("rastro", e2, { x2: e3[0], y2: e3[1], tipo: "ciervo", piso: true, sinChoque: true });
+    // dónde se agarra cada cosa de los restos
+    punto("cepillo", [carro.x + 150, carro.y + 60]);
+    punto("talla", [carro.x - 38, carro.y + 66]);
+    punto("jornal", [carro.x + 25, carro.y + 40]);
   })();
-  // Refugio de las Lindes
+  // Refugio de las Lindes (Alejandro, 22/10/2026): siete mojones con su runa alrededor de la piedra; adentro el
+  // cobertizo de turba, el fogón apagado y la camilla; el poste de tablillas junto a la entrada; la cuadrilla, cada
+  // uno en su lugar. La salida a Eikholt (la que tapan los errantes) queda al sudeste.
   (function () {
     const c = LUGARES.refugio.p;
     punto("refugio", mas(c, 6, 6));
-    for (let i = 0; i < 10; i++) {
-      if (i === 1 || i === 2) continue; // la abertura hacia el camino
-      const a = (i / 10) * TAU;
-      poner("menhirRefugio", [c[0] + Math.cos(a) * 10 * M, c[1] + Math.sin(a) * 10 * M * 0.9], { sem: i, luz: 0 }, "menhir" + i);
+    const RUNAS = ["othala", "algiz", "berkano", "laguz", "raidho", "eihwaz", "ingwaz"];
+    const mojones = [];
+    for (let i = 0; i < 7; i++) {
+      const a = 1.4 + (i * (TAU - 1.0)) / 6;
+      mojones.push(poner("mojon", [c[0] + Math.cos(a) * 10 * M, c[1] + Math.sin(a) * 10 * M * 0.9], { sem: i, luz: 0, runa: RUNAS[i], nicho: i === 0, ofrenda: null }, "menhir" + i));
     }
+    NOMBRADAS.mojones = mojones;
     poner("cobertizoRefugio", mas(c, -3, -5));
-    poner("carroVolcado", mas(c, 6, -6), { s: 0.85 });
+    poner("fogonOlla", mas(c, -7.5, -1), { apagado: true }, "fogon_refugio");
+    poner("camilla", mas(c, 3, -3.4), { sinChoque: true });
     poner("runaRefugio", mas(c, 2, 1), { puesta: false, luz: 0 }, "runa_refugio");
+    poner("cunaPiedra", mas(c, 3.4, 1.6), { reparada: false }, "cuna");
     poner("piedraCaida", mas(c, 4.2, 3), {}, "piedra_caida");
+    poner("posteTablillas", [c[0] + Math.cos(0.9) * 12.5 * M, c[1] + Math.sin(0.9) * 12.5 * M * 0.9 - 80], { nuevas: 5 }, "poste_tablillas");
     poner("farol", mas(c, 9, 9));
     punto("runa_refugio", mas(c, 2, 1.6));
     punto("piedra_caida", mas(c, 4.2, 3.4));
     punto("errantes", mas(c, 18, 10));
     punto("eydis_refugio", mas(c, -2, 6));
     punto("eydis_refugio_salida", mas(c, 12, 8));
-    punto("orm_refugio", mas(c, -1, -1));
+    punto("orm_refugio", [c[0] + Math.cos(0.9) * 9 * M, c[1] + Math.sin(0.9) * 8 * M]);
     punto("trab_refugio", mas(c, -5, 0));
+    // la cuadrilla en sus lugares: Bror bajo el cobertizo, Lif mirando el mojón débil, Gunnar con la camilla,
+    // Eskil junto a la base que cedió
+    punto("trab_refugio_herido", mas(c, -3, -3.6));
+    const debil = mojones[2];
+    punto("trab_refugio_trabajador", [debil.x + 50, debil.y + 50]);
+    punto("trab_refugio_trabajador2", mas(c, 3, -2.4));
+    punto("trab_refugio_trabajador3", mas(c, 3.8, 2.2));
   })();
   // Eikholt, la capital (compendio del 22/10/2026): anillos alrededor del Roble. En el centro lo común (el Roble
   // gigante con el árbol de las promesas y el mirador, el Círculo del Ting entre las raíces, el pozo de Gudrun, la
@@ -519,6 +614,7 @@ window.ELDERVALD = (function () {
     return a + (b - a) * sx + (c2 - a) * sy + (a - b - c2 + d) * sx * sy;
   }
   function libreDeTodo(x, y, margen) {
+    for (const r of RECINTOS) if (x > r[0] - margen && x < r[2] + margen && y > r[1] - margen && y < r[3] + margen) return false;
     for (const c of CAMINOS) if (distLinea(x, y, c.p) < c.w / 2 + margen) return false;
     for (const k in LUGARES) {
       const L = LUGARES[k];

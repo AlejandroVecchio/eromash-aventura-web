@@ -62,6 +62,16 @@
   ["eydis", "orm", "svanhild"].forEach((id) => (npcs[id] = { id, x: 0, y: 0, destino: null, lugar: "", mira: { vista: "S", espejo: false }, hablando: 0, camina: 0 }));
   const trabajadores = ["trabajador", "trabajador2", "trabajador3", "herido"].map((id, i) => ({ id, i, x: 0, y: 0, destino: null, mira: { vista: "S", espejo: false }, camina: 0, hablando: 0 }));
   let lugarTrab = "";
+  // la cuadrilla de Orm, cada uno con su nombre: Lif, Gunnar, Eskil y Bror (el herido, marido de Sigrun)
+  const CUADRILLA = { trabajador: "lif", trabajador2: "gunnar", trabajador3: "eskil", herido: "bror" };
+  const charlas = {};
+  function hablarCuadrilla(tr) {
+    const id = CUADRILLA[tr.id],
+      etapa = H.tiene("piedra_puesta") ? (H.completa("EL-02") ? "c" : "b") : "a",
+      k = (charlas[id + etapa] = (charlas[id + etapa] || 0) + 1) - 1;
+    tr.mira = VIKINGO.vista(jug.x - tr.x, jug.y - tr.y, tr.mira);
+    dialogoLibre([[id, "pj." + id + "_" + etapa + (k % 2)]]);
+  }
 
   // ---------- criaturas ----------
   const lobos = [0, 1].map((i) => CB.crear("lobo", W.m(625 + i * 18, 385 - i * 10)[0], W.m(625 + i * 18, 385 - i * 10)[1]));
@@ -140,7 +150,8 @@
     if (lt !== lugarTrab) {
       const base = P[lt];
       trabajadores.forEach((tr) => {
-        const p = [base[0] + Math.cos(tr.i * 1.9) * 70, base[1] + Math.sin(tr.i * 1.9) * 50];
+        const propio = P[lt + "_" + tr.id];
+        const p = propio || [base[0] + Math.cos(tr.i * 1.9) * 70, base[1] + Math.sin(tr.i * 1.9) * 50];
         if (alArrancar || !lugarTrab || Math.hypot(tr.x - jug.x, tr.y - jug.y) > 1400) {
           tr.x = p[0];
           tr.y = p[1];
@@ -577,7 +588,7 @@
       const d = Math.hypot(tr.x - jug.x, tr.y - jug.y);
       if (d < 100 && d < dm) {
         dm = d;
-        mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_trabajador"), fn: () => dialogo(tr.id === "herido" ? "herido" : "trabajador") };
+        mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr) };
       }
     }
     SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn) => {
@@ -894,6 +905,11 @@
     hongoDorado: [380, "#FFD98A", 0, -60],
     piedraMuralla: [200, "#73D5DB", 0, -60],
     piedraAncla: [300, "#73D5DB", 0, -110],
+    portonPuesto: [300, "#FFD98A", -134, -128],
+    posteFarol: [280, "#FFD98A", 26, -94],
+    mojon: [160, "#73D5DB", 0, -50],
+    fogonOlla: [380, "#FF8D71", 0, -20],
+    piedraVioleta: [260, "#9A6BD8", 0, -70],
     puertaNorte: [360, "#FFD98A", 0, -190],
     pedestalPaso: [260, "#73D5DB", 0, -50],
     soporteAtadura: [220, "#9A6BD8", 0, -40],
@@ -913,7 +929,8 @@
       let f = 1;
       if (o.id === "runaRefugio" || o.id === "pedestalPaso" || o.id === "losaPatio") f = o.o.luz || 0;
       if (o.id === "soporteAtadura" && (o.o.roto || !o.o.visto)) f = 0.3;
-      if (o.id === "piedraAncla") f = o.o.fuerza;
+      if (o.id === "piedraAncla" || o.id === "mojon") f = o.o.fuerza != null ? o.o.fuerza : o.o.luz;
+      if ((o.id === "fogonOlla" && o.o.apagado) || (o.id === "posteFarol" && !o.o.encendido)) f = 0;
       if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * (0.9 + Math.sin(J.t * 7 + o.x) * 0.06) });
     });
     if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
