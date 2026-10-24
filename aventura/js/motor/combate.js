@@ -17,6 +17,7 @@ window.COMBATE = (function () {
     jabali: { vida: 80, dano: 20, vel: 2.6 * M, alcance: 7 * M, aviso: 0.9, forma: "carga", largo: 8 * M, ancho: 1.7 * M, radio: 22, espera: 2.2, barra: 76, plata: 4 },
     cuervo: { vida: 28, dano: 8, vel: 5.6 * M, alcance: 1.7 * M, aviso: 0.6, forma: "abanico", radioGolpe: 2 * M, angulo: 0.6, radio: 12, espera: 1.4, barra: 82, plata: 2, vuela: true },
     fatuo: { vida: 45, dano: 16, vel: 2.4 * M, alcance: 9 * M, aviso: 1.15, forma: "lejos", radioGolpe: 1.6 * M, radio: 12, espera: 2.4, barra: 100, plata: 5, vuela: true, muerto: true, luz: true },
+    oso: { vida: 300, dano: 26, vel: 2.1 * M, alcance: 2.8 * M, aviso: 1.1, forma: "abanico", radioGolpe: 3.1 * M, angulo: 1.0, largo: 4.4 * M, ancho: 2 * M, radio: 34, espera: 2.2, barra: 150, plata: 30, pesado: true },
     trol: { vida: 420, dano: 30, vel: 1.4 * M, alcance: 3.4 * M, aviso: 1.4, forma: "circulo", radioGolpe: 3.8 * M, largo: 7 * M, ancho: 2.2 * M, radio: 40, espera: 2.6, barra: 196, plata: 40, pesado: true },
   };
   // los modificadores de los líderes (como los campeones de Diablo 2): cada uno con su color de aura

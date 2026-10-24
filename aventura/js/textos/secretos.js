@@ -20,6 +20,7 @@ I18N.textos({
   "cr.jabali": { es: "Jabalí de musgo", en: "Mossback boar" },
   "cr.cuervo": { es: "Cuervo de Hel", en: "Hel raven" },
   "cr.fatuo": { es: "Fuego fatuo", en: "Will-o'-wisp" },
+  "cr.oso": { es: "Oso de zarzal", en: "Bramble bear" },
   "cr.trol": { es: "Trol de musgo", en: "Moss troll" },
   "cat.color": { es: "color {0}", en: "colour {0}" },
   "ui.tecla.panel": { es: "Panel", en: "Touchpad" },

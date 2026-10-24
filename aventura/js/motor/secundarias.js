@@ -32,6 +32,7 @@ window.SECUNDARIAS = (function () {
     lobo_viejo: { tipo: "lobo", pal: 2, s: 1.7, vida: 380, af: ["piedra"], patron: ["abanico", "abanico", "circulo", "abanico", "franja", "circulo"], esbirro: "lobo", llama: [0.5], cuando: () => tieneLente() },
     primero: { tipo: "errante", pal: 1, s: 1.45, vida: 420, af: ["piedra"], patron: ["abanico", "franja", "abanico", "circulo"], esbirro: "errante", llama: [0.6, 0.3], cuando: () => H.completa("EL-02") && A.noche() > 0.5 },
     loba: { tipo: "lobo", pal: 1, s: 1.55, vida: 340, af: ["veloz"], patron: ["abanico", "franja", "abanico", "circulo", "franja"], esbirro: "lobo", chico: true, llama: [0.7, 0.4], cuando: () => H.completa("EL-06") },
+    oso: { tipo: "oso", pal: 0, s: 1.15, vida: 560, af: ["piedra"], patron: ["abanico", "franja", "abanico", "circulo", "franja"], esbirro: "lobo", llama: [0.6, 0.3], cuando: () => true },
     vigia: { tipo: "errante", pal: 2, s: 1.5, vida: 400, af: ["runico"], patron: ["franja", "abanico", "circulo", "abanico"], esbirro: "errante", llama: [0.75, 0.45], cuando: () => true },
   };
   const jefes = {}; // id → { e, esbirros[], llamo }
@@ -137,7 +138,7 @@ window.SECUNDARIAS = (function () {
     () => !!st.semi.primero,
     () => !!st.semi.loba,
     () => !!st.semi.vigia,
-    () => false, // el oso de zarzal (caravana de Skeld)
+    () => !!st.semi.oso, // el oso de zarzal (caravana de Skeld)
     () => false, // el último vecino (Skarnholt)
     () => false, // el ahogado de la cisterna (Brunvik)
     () => false, // el haugbúi (túmulo)
@@ -176,6 +177,7 @@ window.SECUNDARIAS = (function () {
       crearSemi("primero", libre(mas(L.refugio.p, 4, 7)));
       crearSemi("loba", libre(W.PUNTOS.semi_loba));
       crearSemi("vigia", libre(mas(L.torre.p, -3, 8)));
+      crearSemi("oso", libre(mas(L.caravana.p, 7, 5)));
       // la huldra al borde del bosque, al oeste del Puesto; los tres lobos con la campana, más adentro
       const ph = libre(W.PUNTOS.huldra);
       huldra.x = ph[0];

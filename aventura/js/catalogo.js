@@ -124,12 +124,12 @@
   if (window.CRIATURAS) {
     const gc = grupo("as.grupo.enemigos");
     // las del bosque profundo tienen tres colores: se muestran de frente en cada uno
-    const PALETAS = ["draugr", "jabali", "cuervo", "fatuo", "trol"];
+    const PALETAS = ["draugr", "jabali", "cuervo", "fatuo", "trol", "oso"];
     CRIATURAS.LISTA.forEach((id) =>
       ["S", "E", "N", "S1", "S2"].forEach((v) => {
         const pal = v.length > 1 ? Number(v[1]) : 0;
         if (pal && !PALETAS.includes(id)) return;
-        const big = id === "ciervo" || id === "trol";
+        const big = id === "ciervo" || id === "trol" || id === "oso";
         const w = big ? 360 : 200,
           h = big ? 360 : 200;
         ficha(gc, I18N.t("cr." + id) + " · " + (pal ? I18N.t("cat.color", [pal + 1]) : v), w, h, (c, t) => {
