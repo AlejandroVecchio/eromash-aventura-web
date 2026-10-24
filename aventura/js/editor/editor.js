@@ -11,11 +11,12 @@
   if (params.get("lang")) I18N.setLang(params.get("lang"));
   const $ = (id) => document.getElementById(id);
   document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = t(el.dataset.i18nPh)));
   $("buscar").placeholder = t("ed.buscar");
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [] };
+  let est = { poner: [], quitar: [], caminos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -23,6 +24,8 @@
   } catch (e) {
     if (window.AGREGADOS) est = JSON.parse(JSON.stringify(window.AGREGADOS));
   }
+  if (!est.notas) est.notas = [];
+  if (!est.caminos) est.caminos = [];
   const historial = [];
   const recordar = () => {
     historial.push(JSON.stringify(est));
@@ -32,7 +35,10 @@
     try {
       localStorage.setItem(CLAVE, JSON.stringify(est));
     } catch (e) {}
-    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]);
+    if (!est.notas) est.notas = [];
+    if (!est.caminos) est.caminos = [];
+    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.caminos.length, est.notas.length]);
+    armarIr();
   };
   const r1 = (v) => Math.round(v);
 
@@ -103,6 +109,30 @@
       // el piso cacheado a dos resoluciones fijas, para no repintarlo en cada zoom
       W.dibujarPiso(c, x0, y0, x1, y1, cam.z < 0.25 ? 0.2 : 0.5);
     }
+    // los caminos nuevos, pintados como los del juego (tierra pisada, borde oscuro, centro gastado)
+    const trazoC = (pts, w, col) => {
+      c.strokeStyle = col;
+      c.lineWidth = w;
+      c.lineCap = c.lineJoin = "round";
+      c.beginPath();
+      pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      c.stroke();
+    };
+    const caminoAhora = camino && cursor ? { p: camino.p.concat([[cursor.x, cursor.y]]), w: camino.w } : null;
+    est.caminos.concat(caminoAhora ? [caminoAhora] : []).forEach((cm) => {
+      const w = lejos ? Math.max(cm.w, 6 / cam.z) : cm.w;
+      trazoC(cm.p, w + 26, "#3A3022");
+      trazoC(cm.p, w, "#5C4A32");
+      trazoC(cm.p, w * 0.5, "#6A563A");
+    });
+    if (camino) {
+      c.fillStyle = "#FFD98A";
+      camino.p.forEach(([x, y]) => {
+        c.beginPath();
+        c.arc(x, y, 6 / cam.z, 0, Math.PI * 2);
+        c.fill();
+      });
+    }
     if (!lejos) {
       const lista = visibles(x0, y0, x1, y1);
       lista.filter((d) => d.piso).forEach((d) => ASSETS.dibujar(c, d.id, d.x, d.y, tt, d.o));
@@ -156,6 +186,41 @@
       c.lineTo(q.x - r, q.y + r);
       c.stroke();
     });
+    // las notas: un alfiler dorado con su número y, de cerca, el texto
+    est.notas.forEach((n, i) => {
+      const k = 1 / cam.z;
+      c.save();
+      c.translate(n.x, n.y);
+      c.scale(k, k);
+      c.fillStyle = "rgba(0,0,0,0.4)";
+      c.beginPath();
+      c.ellipse(0, 0, 7, 3, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = notaSel === i ? "#FFFFFF" : "#FFD98A";
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.lineTo(-9, -18);
+      c.arc(0, -22, 10, Math.PI * 0.8, Math.PI * 2.2);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "#111111";
+      c.font = "bold 11px system-ui, sans-serif";
+      c.textAlign = "center";
+      c.fillText(String(i + 1), 0, -18);
+      if (cam.z > 0.08 && n.texto) {
+        c.font = "13px system-ui, sans-serif";
+        c.textAlign = "left";
+        const lineasN = partir(n.texto, 34).slice(0, 5),
+          ancho = Math.max(...lineasN.map((l) => c.measureText(l).width)) + 16;
+        c.fillStyle = "rgba(17,17,17,0.9)";
+        c.fillRect(14, -40, ancho, lineasN.length * 17 + 10);
+        c.fillStyle = "#FFD98A";
+        c.fillRect(14, -40, 3, lineasN.length * 17 + 10);
+        c.fillStyle = "#F2ECEC";
+        lineasN.forEach((l, j) => c.fillText(l, 24, -24 + j * 17));
+      }
+      c.restore();
+    });
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -170,6 +235,100 @@
     $("donde").textContent = cursor ? t("ed.donde", [Math.round(cursor.x / W.U), Math.round(cursor.y / W.U), cam.z.toFixed(2)]) : "";
     requestAnimationFrame(dibujar);
   }
+
+  function partir(txt, n) {
+    const out = [];
+    txt.split("\n").forEach((par) => {
+      let l = "";
+      par.split(" ").forEach((w) => {
+        if ((l + " " + w).trim().length > n && l) {
+          out.push(l);
+          l = w;
+        } else l = (l + " " + w).trim();
+      });
+      out.push(l);
+    });
+    return out;
+  }
+
+  // ---------- los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño ----------
+  let camino = null;
+  function terminarCamino() {
+    if (camino && camino.p.length >= 2) {
+      recordar();
+      est.caminos.push({ p: camino.p, w: camino.w });
+      guardar();
+    }
+    camino = null;
+  }
+  const distSeg = (px, py, ax, ay, bx, by) => {
+    const dx = bx - ax,
+      dy = by - ay,
+      l = dx * dx + dy * dy,
+      k = l ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l)) : 0;
+    return Math.hypot(px - ax - dx * k, py - ay - dy * k);
+  };
+  function caminoEn(x, y) {
+    for (let i = est.caminos.length - 1; i >= 0; i--) {
+      const cm = est.caminos[i];
+      for (let k = 1; k < cm.p.length; k++) if (distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], cm.p[k][0], cm.p[k][1]) < cm.w / 2 + 10 / cam.z) return i;
+    }
+    return -1;
+  }
+  cv.addEventListener("dblclick", () => herr === "camino" && terminarCamino());
+
+  // ---------- las notas (para Claude: qué hacer en ese lugar) ----------
+  let notaSel = -1;
+  const caja = $("notaCaja"),
+    area = $("notaTexto");
+  function notaEn(x, y) {
+    let mejor = -1,
+      dm = 26 / cam.z;
+    est.notas.forEach((n, i) => {
+      const d = Math.hypot(x - n.x, y - (n.y - 20 / cam.z));
+      if (d < dm) {
+        dm = d;
+        mejor = i;
+      }
+    });
+    return mejor;
+  }
+  function abrirNota(i) {
+    notaSel = i;
+    area.value = est.notas[i].texto || "";
+    $("notaNum").textContent = t("ed.nota_n", [i + 1]);
+    caja.classList.add("ver");
+    setTimeout(() => area.focus(), 0);
+  }
+  function cerrarNota() {
+    if (notaSel >= 0 && est.notas[notaSel]) {
+      const v = area.value.trim();
+      if (v !== (est.notas[notaSel].texto || "")) recordar();
+      if (v) est.notas[notaSel].texto = v;
+      else est.notas.splice(notaSel, 1);
+      guardar();
+    }
+    notaSel = -1;
+    caja.classList.remove("ver");
+    cv.focus();
+  }
+  $("notaListo").onclick = cerrarNota;
+  $("notaBorrar").onclick = () => {
+    if (notaSel >= 0) {
+      recordar();
+      est.notas.splice(notaSel, 1);
+      notaSel = -1;
+      guardar();
+    }
+    caja.classList.remove("ver");
+  };
+  area.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" || (e.key === "Enter" && (e.ctrlKey || e.metaKey))) {
+      e.preventDefault();
+      cerrarNota();
+    }
+    e.stopPropagation();
+  });
 
   // ---------- la lista de objetos ----------
   let elegido = null;
@@ -240,15 +399,20 @@
   // ---------- herramientas ----------
   let herr = "poner";
   function ponerHerr(h) {
+    if (h !== "camino" && camino) terminarCamino();
     herr = h;
+    $("hCamino").classList.toggle("activo", h === "camino");
     $("hPoner").classList.toggle("activo", h === "poner");
     $("hMover").classList.toggle("activo", h === "mover");
     $("hBorrar").classList.toggle("activo", h === "borrar");
-    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : "not-allowed";
+    $("hNota").classList.toggle("activo", h === "nota");
+    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" ? "cell" : "not-allowed";
   }
   $("hPoner").onclick = () => ponerHerr("poner");
   $("hMover").onclick = () => ponerHerr("mover");
   $("hBorrar").onclick = () => ponerHerr("borrar");
+  $("hNota").onclick = () => ponerHerr("nota");
+  $("hCamino").onclick = () => ponerHerr("camino");
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
   function nuevasOpciones() {
@@ -293,6 +457,11 @@
     if (arrastre && arrastre.pan) {
       cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
       cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
+    } else if (sel && sel.nota != null) {
+      const n = est.notas[sel.nota];
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
+      n.x = r1(x - sel.dx);
+      n.y = r1(y - sel.dy);
     } else if (sel && sel.mueve) {
       sel.d.x = x - sel.dx;
       sel.d.y = y - sel.dy;
@@ -313,6 +482,45 @@
       arrastre = { pan: true, sx: e.offsetX, sy: e.offsetY, cx: cam.x, cy: cam.y };
       cv.style.cursor = "grabbing";
       return;
+    }
+    if (caja.classList.contains("ver")) cerrarNota();
+    // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
+    const ni = herr !== "borrar" ? notaEn(x, y) : -1;
+    if (ni >= 0) {
+      recordar();
+      sel = { nota: ni, dx: x - est.notas[ni].x, dy: y - est.notas[ni].y, x0: x, y0: y };
+      return;
+    }
+    if (herr === "nota") {
+      recordar();
+      est.notas.push({ x: r1(x), y: r1(y), texto: "" });
+      guardar();
+      abrirNota(est.notas.length - 1);
+      return;
+    }
+    if (herr === "borrar" && notaEn(x, y) >= 0) {
+      recordar();
+      est.notas.splice(notaEn(x, y), 1);
+      guardar();
+      return;
+    }
+    if (herr === "camino") {
+      const p = [r1(x), r1(y)];
+      if (!camino) camino = { p: [p], w: r1(110 * +$("escala").value) };
+      else {
+        const u = camino.p[camino.p.length - 1];
+        if (Math.hypot(u[0] - p[0], u[1] - p[1]) > 8 / cam.z) camino.p.push(p);
+      }
+      return;
+    }
+    if (herr === "borrar" && caminoEn(x, y) >= 0) {
+      const d = tocado(x, y);
+      if (!d || d.agregado == null) {
+        recordar();
+        est.caminos.splice(caminoEn(x, y), 1);
+        guardar();
+        return;
+      }
     }
     if (herr === "poner") {
       if (!elegido) return avisar(t("ed.elegi"));
@@ -370,7 +578,13 @@
       est.poner.push({ id: elegido, x: r1(arrastre.x), y: r1(arrastre.y), o });
       guardar();
     }
-    if (sel) guardar();
+    if (sel && sel.nota != null) {
+      if (sel.movio) guardar();
+      else {
+        historial.pop();
+        abrirNota(sel.nota);
+      }
+    } else if (sel) guardar();
     arrastre = null;
     sel = null;
     ponerHerr(herr);
@@ -406,12 +620,19 @@
     if (e.key === "1") ponerHerr("poner");
     if (e.key === "2") ponerHerr("mover");
     if (e.key === "3") ponerHerr("borrar");
-    if (e.key === "Escape") {
+    if (e.key === "4") ponerHerr("camino");
+    if (e.key === "5") ponerHerr("nota");
+    if (e.key === "Enter" && camino) terminarCamino();
+    if (e.key === "Escape" && camino) terminarCamino();
+    else if (e.key === "Escape") {
       elegido = null;
       lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") deshacer();
-    if (e.key === "Delete" || e.key === "Backspace") ponerHerr("borrar");
+    if ((e.key === "Delete" || e.key === "Backspace") && camino) {
+      camino.p.pop();
+      if (!camino.p.length) camino = null;
+    } else if (e.key === "Delete" || e.key === "Backspace") ponerHerr("borrar");
   });
   addEventListener("keyup", (e) => {
     if (e.code === "Space") espacio = false;
@@ -434,14 +655,19 @@
 
   // ---------- ir a un lugar ----------
   const ir = $("ir");
-  ir.innerHTML = `<option value="">${t("ed.ir")}</option>` + `<option value="ciudad">${t("av.lugar_eikholt")}</option>` + Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => `<option value="${k}">${t("av.lugar_" + k)}</option>`).join("");
+  const corto = (s) => (s.length > 40 ? s.slice(0, 39) + "…" : s);
+  function armarIr() {
+    const notas = est.notas.length ? `<optgroup label="${t("ed.notas")}">` + est.notas.map((n, i) => `<option value="nota${i}">${i + 1}. ${corto(n.texto || "…").replace(/</g, "&lt;")}</option>`).join("") + "</optgroup>" : "";
+    ir.innerHTML = `<option value="">${t("ed.ir")}</option>` + notas + `<option value="ciudad">${t("av.lugar_eikholt")}</option>` + Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => `<option value="${k}">${t("av.lugar_" + k)}</option>`).join("");
+  }
   ir.addEventListener("change", () => {
     const k = ir.value;
     if (!k) return;
-    const p = k === "ciudad" ? W.CIUDAD.c : W.LUGARES[k].p;
+    const n = k.startsWith("nota") ? est.notas[+k.slice(4)] : null;
+    const p = n ? [n.x, n.y] : k === "ciudad" ? W.CIUDAD.c : W.LUGARES[k].p;
     cam.x = p[0];
     cam.y = p[1];
-    cam.z = k === "ciudad" ? 0.12 : 0.3;
+    cam.z = n ? Math.max(cam.z, 0.25) : k === "ciudad" ? 0.12 : 0.3;
     ir.value = "";
     cv.focus();
   });
@@ -452,7 +678,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -492,9 +718,11 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" ? '"' + k + '":' : m)).replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
+        if (!nuevo.notas) nuevo.notas = [];
+        if (!nuevo.caminos) nuevo.caminos = [];
         recordar();
         est = nuevo;
         guardar();
@@ -512,7 +740,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [] };
+    est = { poner: [], quitar: [], caminos: [], notas: [] };
     guardar();
   };
 

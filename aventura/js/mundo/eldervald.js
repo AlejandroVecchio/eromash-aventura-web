@@ -54,6 +54,8 @@ window.ELDERVALD = (function () {
     { p: lista([[955, 568], [985, 585], [1080, 600], [1240, 590]]), w: 3 * 34 },
     { p: lista([[668, 565], [610, 560], [520, 530], [420, 500], [320, 470], [230, 448]]), w: 2.6 * 34 },
   ];
+  // los caminos que se trazaron en el editor (agregados.js), ya en unidades del mundo
+  ((window.AGREGADOS && window.AGREGADOS.caminos) || []).forEach((cm) => cm.p && cm.p.length > 1 && CAMINOS.push({ p: cm.p, w: cm.w || 110, agregado: true }));
   // la empalizada doble de Eikholt: una elipse con cuatro puertas (sur, oeste, este, norte)
   const CIUDAD = { c: m(810, 565), rx: 150 * U, ry: 110 * U, puertas: [Math.PI / 2, Math.PI, 0, -Math.PI / 2], hueco: 150 };
   // lagunas del mapa

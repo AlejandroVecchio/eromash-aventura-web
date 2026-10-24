@@ -3,6 +3,9 @@
 window.AGREGADOS = {
   poner: [],
   quitar: [],
+  caminos: [],
+  // notas para Claude: qué hacer en ese lugar (el juego no las usa)
+  notas: [],
 };
 // ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada
 try {
