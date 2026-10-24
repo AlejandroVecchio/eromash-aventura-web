@@ -372,6 +372,33 @@ window.ELDERVALD = (function () {
   // faroles y piedras de linde de los caminos (las de orientación)
   [[560, 690], [668, 560], [655, 480], [575, 300], [900, 540], [1010, 420], [1265, 300], [200, 880]].forEach((p) => poner("farol", mas(m(p[0], p[1]), 3.2, 0)));
   [[470, 745], [612, 360], [540, 250], [470, 240], [955, 470], [1150, 350], [1330, 250], [830, 600], [300, 860]].forEach((p, i) => poner("piedraLinde", mas(m(p[0], p[1]), -3.5, 2.5), { sem: i * 5 }));
+  // los caminos quedan limpios: un farol o una piedra de linde que cayó sobre un camino se corre al borde
+  function alBorde(o, margen) {
+    for (const cm of CAMINOS) {
+      let mejor = null;
+      for (let i = 1; i < cm.p.length; i++) {
+        const [ax, ay] = cm.p[i - 1],
+          [bx, by] = cm.p[i],
+          dx = bx - ax,
+          dy = by - ay,
+          l2 = dx * dx + dy * dy;
+        const u = Math.max(0, Math.min(1, l2 ? ((o.x - ax) * dx + (o.y - ay) * dy) / l2 : 0));
+        const qx = ax + dx * u,
+          qy = ay + dy * u,
+          d = Math.hypot(o.x - qx, o.y - qy);
+        if (!mejor || d < mejor.d) mejor = { d, qx, qy, nx: -dy, ny: dx };
+      }
+      const lim = cm.w / 2 + margen;
+      if (!mejor || mejor.d >= lim) continue;
+      let vx = o.x - mejor.qx,
+        vy = o.y - mejor.qy;
+      if (Math.hypot(vx, vy) < 1) (vx = mejor.nx), (vy = mejor.ny);
+      const l = Math.hypot(vx, vy);
+      o.x = mejor.qx + (vx / l) * lim;
+      o.y = mejor.qy + (vy / l) * lim;
+    }
+  }
+  COSAS.forEach((o) => (o.id === "farol" || o.id === "piedraLinde") && alBorde(o, o.id === "farol" ? 34 : 40));
 
   // ---------- el bosque: generado, siempre igual (misma semilla) ----------
   const rnd = azar(20261024);
@@ -689,22 +716,6 @@ window.ELDERVALD = (function () {
       trazo(c, cm.p, cm.w + 26, "#3A3022");
       trazo(c, cm.p, cm.w, "#5C4A32");
       trazo(c, cm.p, cm.w * 0.5, "#6A563A");
-    });
-    // piedritas sobre los caminos
-    CAMINOS.forEach((cm) => {
-      const rr = azar(Math.round(cm.p[0][0]));
-      for (let i = 1; i < cm.p.length; i++) {
-        const [ax, ay] = cm.p[i - 1],
-          [bx, by] = cm.p[i],
-          n = Math.floor(Math.hypot(bx - ax, by - ay) / 60);
-        for (let k = 0; k < n; k++) {
-          const u = rr(),
-            x = ax + (bx - ax) * u + (rr() - 0.5) * cm.w * 0.7,
-            y = ay + (by - ay) * u + (rr() - 0.5) * cm.w * 0.5;
-          if (x < x0 - 20 || x > x1 + 20 || y < y0 - 20 || y > y1 + 20) continue;
-          P(c, poli(x, y, 5 + rr() * 5, 3 + rr() * 3, 5, rr()), rr() < 0.5 ? "#7A6A50" : "#4E4232");
-        }
-      }
     });
     // las montañas del borde
     c.fillStyle = "#1A1C16";
