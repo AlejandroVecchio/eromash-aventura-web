@@ -594,8 +594,8 @@ window.ASSETS = (function () {
     P(c, [x - w, y, x - w, y - 14 * s, x + w, y - 14 * s, x + w, y], "#5A5650");
     for (let k = 0; k < 7; k++) R(c, x - w + k * (w / 3.5), y - 14 * s, 2 * s, 14 * s, "#46423C");
     // pared con entramado
-    P(c, [x - w, y - 14 * s, x - w, y - h, x + w, y - h, x + w, y - 14 * s], "#D8C8A8");
-    P(c, [x - w, y - 14 * s, x - w, y - h, x - w + 10 * s, y - h, x - w + 10 * s, y - 14 * s], "#B8A888");
+    P(c, [x - w, y - 14 * s, x - w, y - h, x + w, y - h, x + w, y - 14 * s], "#5E4A34");
+    P(c, [x - w, y - 14 * s, x - w, y - h, x - w + 10 * s, y - h, x - w + 10 * s, y - 14 * s], "#3E2E20");
     R(c, x - w, y - h, w * 2, 5 * s, C.maderaSombra);
     R(c, x - w, y - 18 * s, w * 2, 5 * s, C.maderaSombra);
     for (let k = 0; k <= 4; k++) R(c, x - w + k * (w / 2) - 2.5 * s, y - h, 5 * s, h - 14 * s, C.maderaSombra);

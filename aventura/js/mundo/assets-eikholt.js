@@ -306,8 +306,8 @@
       w = 120 * s,
       h = 62 * s;
     sombra(c, x + 16 * s, y + 6 * s, w * 1.3, 22 * s, 0.34);
-    P(c, [x - w, y - 50 * s, x - w, y - 50 * s - h, x + w, y - 50 * s - h, x + w, y - 50 * s], "#C8B898");
-    P(c, [x - w, y - 50 * s, x - w, y - 50 * s - h, x - w + 12 * s, y - 50 * s - h, x - w + 12 * s, y - 50 * s], "#A89878");
+    P(c, [x - w, y - 50 * s, x - w, y - 50 * s - h, x + w, y - 50 * s - h, x + w, y - 50 * s], "#5A4030");
+    P(c, [x - w, y - 50 * s, x - w, y - 50 * s - h, x - w + 12 * s, y - 50 * s - h, x - w + 12 * s, y - 50 * s], "#3A281A");
     R(c, x - w, y - 54 * s, w * 2, 5 * s, C.maderaSombra);
     for (let k = 0; k <= 6; k++) R(c, x - w + k * (w / 3) - 2.5 * s, y - 50 * s - h, 5 * s, h, C.maderaSombra);
     // puerta verde y ventanas cálidas
@@ -353,8 +353,8 @@
     P(c, [x + 30 * s, y, x + 30 * s, y - 56 * s, x + w, y - 56 * s, x + w, y], "#6E6A62");
     for (let k = 1; k < 4; k++) R(c, x - w, y - k * 14 * s, w * 2, 2 * s, "#46423C");
     // piso alto de madera, un poco más ancho
-    P(c, [x - w - 8 * s, y - 56 * s, x - w - 8 * s, y - 118 * s, x + w + 8 * s, y - 118 * s, x + w + 8 * s, y - 56 * s], "#D8C8A8");
-    P(c, [x - w - 8 * s, y - 56 * s, x - w - 8 * s, y - 118 * s, x - w + 4 * s, y - 118 * s, x - w + 4 * s, y - 56 * s], "#B8A888");
+    P(c, [x - w - 8 * s, y - 56 * s, x - w - 8 * s, y - 118 * s, x + w + 8 * s, y - 118 * s, x + w + 8 * s, y - 56 * s], "#6A4A30");
+    P(c, [x - w - 8 * s, y - 56 * s, x - w - 8 * s, y - 118 * s, x - w + 4 * s, y - 118 * s, x - w + 4 * s, y - 56 * s], "#42301E");
     R(c, x - w - 8 * s, y - 60 * s, w * 2 + 16 * s, 6 * s, C.maderaSombra);
     for (let k = 0; k <= 5; k++) R(c, x - w - 8 * s + k * ((w * 2 + 16 * s) / 5) - 2.5 * s, y - 118 * s, 5 * s, 62 * s, C.maderaSombra);
     // ventanas encendidas

@@ -354,9 +354,9 @@ window.ELDERVALD = (function () {
     [-1, 1].forEach((l) => poner("estandarteCiervo", [sur[0] + l * 250, sur[1] + 40], { sem: l + 2 }));
     // Puerta del Norte: reja de hierro (el camino al Paso)
     poner("puertaNorte", [c[0], c[1] - CIUDAD.ry], {}, "puerta_norte");
-    // las doce piedras de la cúpula: por delante de la empalizada (afuera al sur, adentro al norte), dos en la
-    // Puerta del Norte y dos en la del Sur. Las que faltan están partidas; la cúpula se debilita.
-    const dg = (CIUDAD.hueco + 150) / CIUDAD.rx;
+    // las doce piedras de la cúpula: metidas en la empalizada, dos junto a la Puerta del Norte y dos junto a la
+    // del Sur. Las que faltan están partidas; la cúpula se debilita.
+    const dg = (CIUDAD.hueco + 420) / CIUDAD.rx;
     const ANCLAS = [
       [Math.PI / 2 - dg, "algiz", 1],
       [Math.PI / 2 + dg, "othala", 0.9],
@@ -371,12 +371,11 @@ window.ELDERVALD = (function () {
       [-2.14, "jera", 0.85],
       [-2.74, "raidho", 0.35],
     ];
+    // (24/10/2026, como en la lámina: metidas en la línea de la empalizada, un poco más altas que los troncos)
     const anclas = [];
     ANCLAS.forEach(([a, runa, fuerza], i) => {
-      const afuera = Math.sin(a) >= -0.05,
-        k = afuera ? 1 : -1,
-        p = [c[0] + Math.cos(a) * (CIUDAD.rx + k * 150), c[1] + Math.sin(a) * (CIUDAD.ry + k * 120) + (afuera ? 40 : 40)];
-      anclas.push(poner("piedraAncla", p, { runa, fuerza, sem: i }, "ancla" + i));
+      const p = [c[0] + Math.cos(a) * CIUDAD.rx, c[1] + Math.sin(a) * CIUDAD.ry + 26];
+      anclas.push(poner("piedraAncla", p, { runa, fuerza, sem: i, s: 1.45 }, "ancla" + i));
     });
     NOMBRADAS.anclas = anclas;
     // las runas enormes de la cúpula, sobre la curva invisible (las dibuja capital.js en el cielo)
@@ -390,7 +389,7 @@ window.ELDERVALD = (function () {
       if (f > 0) NOMBRADAS.runasCupula.push({ x: c[0] + Math.cos(a) * CIUDAD.rx * d, y: c[1] + Math.sin(a) * CIUDAD.ry * d, alto: 700 + Math.sqrt(1 - d * d) * 900, runa: nom, fuerza: f, sem: i });
     }
     // el Roble gigante y la plaza
-    poner("robleGigante", px(0, 0), { s: 1.35, copa: [480, 1560, 860] }, "roble");
+    poner("robleGigante", px(0, 0), { s: 2, copa: [1000, 2300, 1500] }, "roble");
     poner("tingCirculo", px(-34, 30), {}, "ting");
     [-1, 1].forEach((l) => poner("estandarteCiervo", px(-34 + l * 9, 25), { sem: l + 11 }));
     poner("pozoEikholt", px(30, 32), {}, "pozo");
@@ -449,19 +448,36 @@ window.ELDERVALD = (function () {
             qy = (y + ey * 160 - c[1]) / CIUDAD.ry;
           if (qx * qx + qy * qy > 0.84) return false; // lejos de la empalizada
         }
-        for (const o of ocupado) if (Math.abs(o.x - x) < o.w + 220 && Math.abs(o.y - y) < 330) return false;
+        for (const o of ocupado) if (Math.abs(o.x - x) < o.w + 130 && Math.abs(o.y - y) < 270) return false;
         return true;
       };
       let n = 0;
-      for (let k = 0; k < 2400 && n < 64; k++) {
+      for (let k = 0; k < 3600 && n < 92; k++) {
         const a = r() * TAU,
           d = 0.3 + r() * 0.62,
           x = c[0] + Math.cos(a) * CIUDAD.rx * d,
           y = c[1] + Math.sin(a) * CIUDAD.ry * d;
         if (!libreCasa(x, y)) continue;
-        const casa = poner("casaNordica", [x, y], { v: Math.floor(r() * 6), sem: k, s: 0.95 + r() * 0.15, entra: n % 4 === 1 });
-        ocupado.push({ x, y, w: 200 * casa.o.s });
+        const casa = poner("casaNordica", [x, y], { v: Math.floor(r() * 6), sem: k, s: 0.82 + r() * 0.16, entra: n % 4 === 1 });
+        ocupado.push({ x, y, w: 190 * casa.o.s });
         n++;
+      }
+      // el bosque se mete en la ciudad: pinos, abedules y helechos entre las casas
+      let a0 = 0;
+      for (let k = 0; k < 2000 && a0 < 70; k++) {
+        const a = r() * TAU,
+          d = 0.25 + r() * 0.68,
+          x = c[0] + Math.cos(a) * CIUDAD.rx * d,
+          y = c[1] + Math.sin(a) * CIUDAD.ry * d,
+          dx = (x - c[0]) / U,
+          dy = (y - c[1]) / U;
+        if (Math.abs(dx) < 14 || Math.abs(dy) < 9 || (dx / 62) ** 2 + ((dy - 8) / 48) ** 2 < 1) continue;
+        if (COSAS.some((o) => o.choque && Math.abs(o.x - x) < 170 && Math.abs(o.y - y) < 90)) continue;
+        if (COSAS.some((o) => o.id === "casaNordica" && Math.abs(o.x - x) < 260 && y - o.y < 60 && y - o.y > -200)) continue;
+        const tipo = a0 % 5 === 4 ? "helechos" : a0 % 3 === 2 ? "abedul" : "pino";
+        if (tipo === "helechos") poner(tipo, [x, y], { sem: k, sinChoque: true });
+        else poner(tipo, [x, y], { s: 0.8 + r() * 0.35, sem: k });
+        a0++;
       }
     }
     // faroles de las calles
@@ -893,8 +909,8 @@ window.ELDERVALD = (function () {
       });
       // la plaza del Roble: tierra con losas alrededor del tronco
       const jp = [1, 0.9, 1.06, 0.94, 1.02, 0.88, 1.05, 0.96];
-      P(c, poli(cx, cy + 160, 1360, 1040, 16, 0.1, jp), "#3A3022");
-      P(c, poli(cx, cy + 160, 1310, 1000, 16, 0.1, jp), "#5C4A32");
+      P(c, poli(cx, cy + 160, 1360, 1040, 32, 0.1, jp), "#3A3022");
+      P(c, poli(cx, cy + 160, 1310, 1000, 32, 0.1, jp), "#5C4A32");
       const rl = azar(91);
       for (let k = 0; k < 130; k++) {
         const a = rl() * TAU,

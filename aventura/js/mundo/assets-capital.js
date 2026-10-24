@@ -12,21 +12,52 @@
   const C = ASSETS.C;
   const nivel = () => (window.CALIDAD ? CALIDAD.nivel : "alta");
 
-  // paredes [frente, costado al sol, esquineros], postigos y techos
+  // Casas de bosque (pedido de Alejandro, 24/10/2026: «más de bosque, más troncos, más naturaleza; las de ahora
+  // parecen de una ciudad real»): paredes de troncos [frente, costado al sol, esquineros], techos de pizarra
+  // oscura, de tepe con pasto, de tejuelas de corteza o con musgo, postigos de madera y musgo por todos lados.
   const PAREDES = [
-    ["#C9B48E", "#DCC9A4", "#6E5038"],
-    ["#A87C56", "#BE9268", "#553A22"],
-    ["#8E9488", "#A8AE9E", "#4E544A"],
-    ["#B89A7A", "#CEB292", "#5E4430"],
-    ["#D4C8B4", "#E6DCC8", "#6A5A48"],
+    ["#5A4030", "#6E5038", "#3A281A"],
+    ["#4E3A2A", "#62492F", "#30221A"],
+    ["#5E5444", "#73685A", "#3A3428"],
+    ["#6A4A30", "#80603F", "#42301E"],
+    ["#4A3E30", "#5C4E3C", "#2C241A"],
   ];
-  const POSTIGOS = ["#3E5A34", "#7A2A1E", "#3E4E66", "#8A6A2A"];
+  const POSTIGOS = ["#2E3A24", "#3E2A1C", "#4A3A26", "#2A3428"];
   const TECHOS = [
-    [C.pizarraSombra, C.pizarra, C.pizarraLuz],
-    [C.maderaSombra, C.maderaVieja, C.madera],
-    ["#3A4424", C.musgo2, C.musgoClaro],
-    ["#4A2A22", "#6A3A2C", "#84503C"],
+    ["#262A30", "#343A42", "#4A525C"],
+    ["#2E3A1E", "#40502A", "#5A6E36"],
+    ["#2A2018", "#3A2C20", "#4E3C2A"],
+    ["#2E3628", "#3E4A34", "#56644A"],
   ];
+  const MUSGO = ["#3E5A30", "#4E6B3A", "#5E7E44"];
+  // las juntas de los troncos sobre una pared recta y las cabezas que asoman en las esquinas
+  function troncos(c, x0, y0, w, h, s, cabezas) {
+    const paso = 13 * s;
+    for (let yy = y0 + paso; yy < y0 + h - 2 * s; yy += paso) {
+      R(c, x0, yy - 1.5 * s, w, 2.5 * s, "rgba(0,0,0,0.3)");
+      R(c, x0, yy + 1 * s, w, 1.5 * s, "rgba(255,240,210,0.06)");
+    }
+    if (cabezas)
+      for (let yy = y0 + paso / 2; yy < y0 + h; yy += paso)
+        cabezas.forEach((cx) => {
+          E(c, cx, yy, 7 * s, 6.5 * s, "#7A5A3A");
+          E(c, cx, yy, 3.5 * s, 3 * s, "#9A7A52");
+        });
+  }
+  // lo mismo sobre el costado en perspectiva (un paralelogramo que sube ey a lo largo de ex)
+  function troncosCostado(c, x0, y0, ex, ey, h, s) {
+    const paso = 13 * s;
+    for (let k = paso; k < h - 2 * s; k += paso) L(c, x0, y0 - k, x0 + ex, y0 - k - ey, "rgba(0,0,0,0.26)", 2.5 * s);
+  }
+  // matas de helecho y pasto al pie de una pared
+  function matas(c, x, y, s, sem) {
+    for (let k = 0; k < 3; k++) {
+      const mx = x + (k - 1) * 12 * s,
+        h = (18 + ((sem + k * 5) % 4) * 6) * s,
+        col = MUSGO[(sem + k) % 3];
+      P(c, [mx - 10 * s, y, mx - 2 * s, y - h, mx + 1 * s, y - h * 0.4, mx + 6 * s, y - h * 0.9, mx + 10 * s, y], col);
+    }
+  }
 
   // ventana con postigos abiertos; de noche (o siempre, apenas) se ve el ámbar de adentro
   function ventana(c, x, y, w, h, postigo, s) {
@@ -39,7 +70,7 @@
   }
   // puerta con marco tallado: dintel en arco y dos volutas arriba
   function puerta(c, x, y, s, col) {
-    P(c, [x - 24 * s, y, x - 24 * s, y - 62 * s, x - 14 * s, y - 76 * s, x + 14 * s, y - 76 * s, x + 24 * s, y - 62 * s, x + 24 * s, y], C.maderaSombra);
+    P(c, [x - 24 * s, y, x - 24 * s, y - 62 * s, x - 14 * s, y - 76 * s, x + 14 * s, y - 76 * s, x + 24 * s, y - 62 * s, x + 24 * s, y], "#2A1E14");
     P(c, [x - 17 * s, y, x - 17 * s, y - 58 * s, x - 9 * s, y - 68 * s, x + 9 * s, y - 68 * s, x + 17 * s, y - 58 * s, x + 17 * s, y], col);
     R(c, x - 1 * s, y - 64 * s, 2 * s, 64 * s, "rgba(0,0,0,0.25)");
     E(c, x + 9 * s, y - 32 * s, 2.5 * s, 2.5 * s, C.hierroLuz);
@@ -49,7 +80,7 @@
       E(c, x + l * 28 * s, y - 84 * s, 4 * s, 4 * s, C.maderaSombra);
     });
     // escalón
-    P(c, [x - 30 * s, y + 2 * s, x + 30 * s, y + 2 * s, x + 26 * s, y + 10 * s, x - 26 * s, y + 10 * s], "#6E6A62");
+    P(c, [x - 30 * s, y + 2 * s, x + 30 * s, y + 2 * s, x + 26 * s, y + 10 * s, x - 26 * s, y + 10 * s], "#55584E");
   }
   // tablas cruzadas del hastial, con cabezas de dragón en las puntas
   function tablasCruzadas(c, ax, ay, gx, gy, bx, by, s) {
@@ -104,6 +135,7 @@
         ty = y - ey * 0.7,
         th = H + RT + 40 * s;
       P(c, [tx - 30 * s, ty, tx - 30 * s, ty - th, tx + 10 * s, ty - th, tx + 10 * s, ty], pal[0]);
+      troncos(c, tx - 30 * s, ty - th, 40 * s, th, s, [tx - 31 * s]);
       P(c, [tx + 10 * s, ty, tx + 10 * s, ty - th, tx + 34 * s, ty - th - 10 * s, tx + 34 * s, ty - 10 * s], pal[1]);
       ventana(c, tx - 10 * s, ty - th + 50 * s, 16 * s, 24 * s, pos, s);
       P(c, [tx - 40 * s, ty - th + 4 * s, tx + 2 * s, ty - th - 76 * s, tx + 10 * s, ty - th + 4 * s], tS);
@@ -116,6 +148,7 @@
       const ax = x - W - 76 * s,
         ah = H * 0.62;
       P(c, [ax, y, ax, y - ah, x - W, y - ah - 14 * s, x - W, y], pal[0]);
+      troncos(c, ax, y - ah, x - W - ax, ah, s, [ax - 1 * s]);
       R(c, ax, y - ah, 6 * s, ah, pal[2]);
       P(c, [ax - 10 * s, y - ah + 6 * s, x - W, y - ah - 30 * s, x - W, y - ah - 10 * s, ax - 10 * s, y - ah + 20 * s], tC);
       // leña apilada
@@ -133,6 +166,7 @@
       gy = ry;
     P(c, [sx, y, sx + ex, y - ey, sx + ex, y - ey - H, sx, y - H], pal[1]);
     P(c, [sx, y - H, sx + ex, y - ey - H, gx, gy], pal[1]);
+    troncosCostado(c, sx, y, ex, ey, H, s);
     R(c, sx + ex - 6 * s, y - ey - H, 6 * s, H, pal[2]);
     R(c, sx, y - H, 6 * s, H, pal[2]);
     if (v % 2 === 0) {
@@ -141,9 +175,10 @@
     } else ventana(c, sx + ex / 2, y - ey / 2 - H * 0.35, 18 * s, 26 * s, pos, s);
     // frente
     P(c, [x - W, y, x - W, y - H, sx, y - H, sx, y], pal[0]);
-    R(c, x - W, y - H, 8 * s, H, pal[2]);
-    R(c, sx - 8 * s, y - H, 8 * s, H, pal[2]);
-    R(c, x - W, y - 12 * s, W * 2, 12 * s, "rgba(0,0,0,0.18)");
+    troncos(c, x - W, y - H, W * 2, H, s, [x - W - 2 * s, sx + 2 * s]);
+    // zócalo de piedras de río
+    for (let k = 0; k < Math.round((W * 2) / (22 * s)); k++) E(c, x - W + 11 * s + k * 22 * s, y - 5 * s, 12 * s, 7 * s, k % 2 ? "#4E524A" : "#5E6258");
+    R(c, x - W, y - 12 * s, W * 2, 12 * s, "rgba(0,0,0,0.14)");
     const dosPisos = v === 1 || v === 2;
     if (dosPisos) {
       // el piso alto sobresale un poco: una franja con su sombra
@@ -152,7 +187,7 @@
     }
     // puerta y ventanas
     const pdx = [0, -W * 0.4, -W * 0.5, W * 0.15, 0, -W * 0.3][v],
-      colP = ["#5E3A22", "#3E4E66", "#7A2A1E", "#3E5A34"][(sem + 1) % 4];
+      colP = ["#4A3020", "#3A2A1E", "#5A3A24", "#2E3A24"][(sem + 1) % 4];
     puerta(c, x + pdx, y, s, colP);
     const vy = dosPisos ? y - 26 * s : y - 30 * s;
     for (let k = -2; k <= 2; k++) {
@@ -227,6 +262,23 @@
       R(c, x + W * 0.3 + 6 * s, y - 16 * s, 5 * s, 16 * s, C.maderaSombra);
       R(c, x + W * 0.3 + 58 * s, y - 16 * s, 5 * s, 16 * s, C.maderaSombra);
     }
+    // musgo sobre el faldón y matas al pie de las esquinas
+    const tec = o.techo != null ? o.techo : sem % TECHOS.length;
+    for (let k = 0; k < 4; k++) {
+      const u = ((sem * 7 + k * 29) % 100) / 100,
+        mx = x - W + (W * 2) * u,
+        my = ye - 4 * s - ((k * 13) % 3) * 6 * s;
+      E(c, mx, my, (16 + (k % 3) * 6) * s, 6 * s, MUSGO[(k + sem) % 3]);
+    }
+    if (tec === 1)
+      // tepe: el pasto asoma por la cumbrera
+      for (let k = 0; k < 9; k++) {
+        const u = k / 8,
+          px2 = rl + (gx - rl) * u;
+        P(c, [px2 - 5 * s, gy + 2 * s, px2, gy - (8 + (k % 3) * 4) * s, px2 + 5 * s, gy + 2 * s], MUSGO[k % 3]);
+      }
+    matas(c, x - W + 6 * s, y + 2 * s, s, sem);
+    matas(c, sx + ex - 4 * s, y - ey + 4 * s, s, sem + 2);
     // las que se entran: un farol colgado junto a la puerta
     if (o.entra) {
       const fx = x + pdx + 34 * s;
@@ -289,6 +341,14 @@
       P(c, [bx, y - 150 * s, tx, ty, tx - l * 14 * s, ty - 8 * s, bx + l * 10 * s, y - 130 * s], k ? C.tronco : C.corteza);
       P(c, [tx - l * 30 * s, ty + 6 * s, tx - l * 60 * s, ty - 18 * s, tx - l * 20 * s, ty - 4 * s], C.musgo2);
     });
+    // vetas de runa azul entre las raíces (la piedra dormida del Ting le responde al Roble)
+    RAICES.forEach(([l, dx, dy], i) => {
+      const tx = x + l * dx * s * 0.8,
+        ty = y + dy * 0.2 * s - 10 * s,
+        a = 0.45 + Math.sin(t * 1.1 + i * 1.7) * 0.25;
+      alfa(c, a, () => L(c, x + l * 80 * s, y - 60 * s, tx, ty, RUNICO, 3 * s));
+      if (i % 2) halo(c, tx, ty, 40 * s, RUNICO, a * 0.6);
+    });
     // puertitas redondas de las casas viejas metidas entre las raíces
     [[-190, 12], [210, 18]].forEach(([dx, dy], i) => {
       const px = x + dx * s,
@@ -301,10 +361,10 @@
       alfa(c, 0.6, () => R(c, px + (i ? -44 : 32) * s, py - 42 * s, 10 * s, 10 * s, C.ambar));
     });
     // tronco
-    P(c, [x - 110 * s, y + 4 * s, x - 92 * s, y - 260 * s, x - 70 * s, y - 520 * s, x + 74 * s, y - 520 * s, x + 96 * s, y - 260 * s, x + 112 * s, y + 4 * s], C.corteza);
-    P(c, [x - 110 * s, y + 4 * s, x - 92 * s, y - 260 * s, x - 70 * s, y - 520 * s, x - 6 * s, y - 520 * s, x - 10 * s, y - 260 * s, x - 14 * s, y + 4 * s], C.tronco);
+    P(c, [x - 150 * s, y + 4 * s, x - 112 * s, y - 161 * s, x - 86 * s, y - 322 * s, x + 90 * s, y - 322 * s, x + 116 * s, y - 161 * s, x + 152 * s, y + 4 * s], C.corteza);
+    P(c, [x - 150 * s, y + 4 * s, x - 112 * s, y - 161 * s, x - 86 * s, y - 322 * s, x - 6 * s, y - 322 * s, x - 10 * s, y - 161 * s, x - 14 * s, y + 4 * s], C.tronco);
     [[-60, 0.8], [-30, 0.9], [30, 0.85], [64, 0.7]].forEach(([dx, f]) => L(c, x + dx * s, y - 10 * s, x + dx * 0.8 * s, y - 500 * f * s, "rgba(0,0,0,0.22)", 5 * s));
-    P(c, [x - 110 * s, y + 4 * s, x - 100 * s, y - 60 * s, x - 70 * s, y - 120 * s, x - 50 * s, y - 40 * s, x - 40 * s, y + 4 * s], C.musgo2);
+    P(c, [x - 110 * s, y + 4 * s, x - 100 * s, y - 60 * s, x - 70 * s, y - 74 * s, x - 50 * s, y - 40 * s, x - 40 * s, y + 4 * s], C.musgo2);
     // el árbol de las promesas: cintas con nudos en las raíces bajas
     const CINTAS = ["#F2ECEC", C.rojoEromash, "#3E5A34", C.ambar, "#E0B2B2", "#4A78D0"];
     for (let k = 0; k < 22; k++) {
@@ -315,16 +375,18 @@
         tx = x + R0[0] * R0[1] * s,
         ty = y + R0[2] * 0.25 * s,
         cx = bx + (tx - bx) * u,
-        cy = y - 150 * s + (ty - (y - 150 * s)) * u - 6 * s,
+        cy = y - 93 * s + (ty - (y - 93 * s)) * u - 6 * s,
         bal = Math.sin(t * 2 + k) * 3 * s;
       L(c, cx, cy, cx + bal, cy + (16 + r() * 14) * s, CINTAS[k % CINTAS.length], 3.2 * s);
       E(c, cx, cy, 2.5 * s, 2.5 * s, CINTAS[(k + 2) % CINTAS.length]);
       void l;
     }
     // ramas grandes
-    P(c, [x - 60 * s, y - 470 * s, x - 330 * s, y - 640 * s, x - 320 * s, y - 610 * s, x - 40 * s, y - 420 * s], C.tronco);
-    P(c, [x + 60 * s, y - 460 * s, x + 340 * s, y - 600 * s, x + 336 * s, y - 570 * s, x + 50 * s, y - 410 * s], C.corteza);
-    P(c, [x - 20 * s, y - 520 * s, x - 40 * s, y - 760 * s, x + 10 * s, y - 760 * s, x + 30 * s, y - 520 * s], C.tronco);
+    P(c, [x - 60 * s, y - 291 * s, x - 330 * s, y - 397 * s, x - 320 * s, y - 378 * s, x - 40 * s, y - 260 * s], C.tronco);
+    P(c, [x + 60 * s, y - 285 * s, x + 340 * s, y - 372 * s, x + 336 * s, y - 353 * s, x + 50 * s, y - 254 * s], C.corteza);
+    P(c, [x - 300 * s, y - 384 * s, x - 620 * s, y - 372 * s, x - 610 * s, y - 362 * s, x - 300 * s, y - 372 * s], C.tronco);
+    P(c, [x + 300 * s, y - 366 * s, x + 640 * s, y - 366 * s, x + 630 * s, y - 355 * s, x + 300 * s, y - 353 * s], C.corteza);
+    P(c, [x - 20 * s, y - 322 * s, x - 40 * s, y - 471 * s, x + 10 * s, y - 471 * s, x + 30 * s, y - 322 * s], C.tronco);
     // la escalera enroscada y el mirador en la rama del este
     for (let k = 0; k < 14; k++) {
       const u = k / 14,
@@ -336,7 +398,7 @@
       R(c, sx - 2 * s, sy, 4 * s, 10 * s, C.maderaSombra);
     }
     const mx = x + 250 * s,
-      my = y - 548 * s;
+      my = y - 340 * s;
     R(c, mx - 90 * s, my, 180 * s, 10 * s, C.madera);
     R(c, mx - 90 * s, my + 10 * s, 180 * s, 4 * s, C.maderaSombra);
     for (let k = 0; k <= 6; k++) R(c, mx - 90 * s + k * 30 * s - 2 * s, my - 30 * s, 4 * s, 30 * s, C.maderaSombra);
@@ -344,19 +406,26 @@
     L(c, mx - 70 * s, my + 14 * s, mx - 150 * s, my + 90 * s, C.maderaSombra, 5 * s);
     estandarteCiervo(c, mx + 80 * s, my, t, { s: s * 0.8, corto: true, sem: 3 });
     // copa: masas facetadas, las de atrás más oscuras
+    // (24/10/2026: más ancha que alta, como en la lámina: cubre la plaza y el mercado)
     const MASAS = [
-      [-360, -760, 210, 0],
-      [340, -740, 220, 0],
-      [0, -980, 260, 0],
-      [-200, -900, 230, 1],
-      [220, -900, 230, 1],
-      [-480, -640, 150, 1],
-      [470, -640, 150, 1],
-      [-80, -760, 250, 2],
-      [150, -800, 220, 2],
-      [-280, -700, 170, 2],
-      [300, -680, 160, 2],
-      [40, -1080, 170, 2],
+      [-560, -360, 230, 0],
+      [560, -350, 230, 0],
+      [-300, -540, 260, 0],
+      [300, -540, 260, 0],
+      [0, -660, 280, 0],
+      [-720, -240, 170, 1],
+      [720, -240, 170, 1],
+      [-460, -480, 240, 1],
+      [460, -480, 240, 1],
+      [-150, -590, 250, 1],
+      [180, -610, 240, 1],
+      [-380, -310, 220, 2],
+      [400, -300, 210, 2],
+      [-100, -420, 260, 2],
+      [160, -440, 240, 2],
+      [-620, -220, 150, 2],
+      [620, -220, 150, 2],
+      [20, -750, 180, 2],
     ];
     MASAS.forEach(([dx, dy, mr, k], i) => {
       const cx = x + dx * s + v * (1 + k * 0.3),
@@ -373,7 +442,7 @@
       P(c, [cx - rr * 0.9, cy + rr * 0.1, cx - rr * 0.2, cy + rr * 0.68, cx - rr * 0.6, cy + rr * 0.5], C.roble[0]);
     });
     // faroles colgados de las ramas bajas, sobre el mercado
-    [[-380, -560], [-200, -600], [180, -590], [400, -560], [-60, -620], [60, -470]].forEach(([dx, dy], i) => {
+    [[-520, -330], [-260, -380], [240, -370], [540, -330], [-60, -400], [80, -300]].forEach(([dx, dy], i) => {
       const fx = x + dx * s + v,
         fy = y + dy * s;
       L(c, fx, fy - 40 * s, fx, fy, C.hierro, 2 * s);
