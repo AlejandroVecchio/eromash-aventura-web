@@ -64,6 +64,8 @@
 <script src="js/ciudad/plano.js"></script>
 <script src="js/ciudad/vista.js"></script>
 <script src="js/ciudad/recorrer.js"></script>
+<script src="js/ciudad/sombras.js"></script>
+<script src="js/ciudad/luces.js"></script>
 <script src="js/mundo/luz.js"></script>
 <script>
 (function () {
@@ -234,31 +236,9 @@
     return true;
   }
   for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
-  // lo que alumbra de noche: faroles, braseros y fuegos (y las runas), y las ventanas de cada casa
-  const luces = [];
-  for (const o of plano.cosas) {
-    // lo que alumbra por sí (faroles, braseros, fuegos), sea dibujo o volumen
-    const id = o.id || "";
-    // los faroles no se encienden todos juntos: cada uno tiene su hora entre las cinco y las siete de la tarde (el
-    // farolero da la vuelta), y se apagan al alba de a uno
-    const enc = 17 + (Math.abs(Math.round(o.x * 7 + o.y * 13)) % 100) / 60;
-    if (/farol|Farol|posteHongo/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: 420, col: "#FFD98A", f: 0.85, enc });
-    else if (/brasero|fogon|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : 520, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: true });
-    if (o.tipo === "casa") {
-      // las casas tapiadas quedan a oscuras; las demás prenden la ventana a su hora
-      if (/^(casa|hongo|lindes|herreria|sanacion|hospederia|cuartel|carpinteria|curtiembre|cordeleria)/.test(o.nombre || "") && !(o.casa.ficha && o.casa.ficha.tapiada)) luces.push({ x: o.x, y: o.y, z: 0, r: 520, col: "#FFD98A", f: 0.45, enc: enc + 0.4 });
-      if (/^(puerta_|atalaya)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 700, col: "#FFD98A", f: 0.8 });
-      if (/^piedraCupula/.test(o.nombre || "") && o.estado !== "apagada") luces.push({ x: o.x, y: o.y, z: 0, r: 600, col: "#73D5DB", f: 0.6, parpadea: o.estado === "parpadea" });
-      if (o.id === "camaHongos") luces.push({ x: o.x, y: o.y, z: 0, r: 260, col: "#FFD98A", f: 0.35 });
-      if (o.id === "ofrendaRoble") luces.push({ x: o.x, y: o.y, z: 0, r: 200, col: "#FFD98A", f: 0.6, fuego: true });
-      continue;
-    }
-  }
-  // los faroles colgados de la copa del Roble
-  for (let i = 0; i < 6; i++) luces.push({ x: Math.cos(i * 1.05) * 700, y: Math.sin(i * 1.05) * 500, z: 0, r: 600, col: "#FFD98A", f: 0.7 });
-  // la piedra del Ting y las piedras rúnicas de las puertas, en azul rúnico
-  luces.push({ x: plano.ting[0], y: plano.ting[1], z: 0, r: 900, col: "#73D5DB", f: 0.6 });
-  for (const k of ["sur", "norte", "este", "oeste"]) { const a = plano.anclas["puerta_" + k]; if (a) luces.push({ x: a[0], y: a[1], z: 0, r: 800, col: "#73D5DB", f: 0.7 }); }
+  // lo que alumbra de noche (LUCES25) y las sombras de lo que está parado (SOMBRAS25)
+  LUCES25.armar(plano);
+  SOMBRAS25.iniciar(plano);
   // Eromash camina por la ciudad (RECORRER25): curiosidades, cofres, barrios, la gente y los animales que reaccionan
   RECORRER25.iniciar({ plano, libre, gente, inicio: [LUGARES[q.get("en") || "plaza"][0] - 200, LUGARES[q.get("en") || "plaza"][1] - 100] });
   vista.addEventListener("wheel", (e) => { cerca.value = Math.max(4, Math.min(120, +cerca.value - Math.sign(e.deltaY) * 4)); e.preventDefault(); }, { passive: false });
@@ -272,6 +252,7 @@
     arr = [e.clientX, e.clientY, objetivo.x, objetivo.y];
   });
   vista.addEventListener("pointerup", () => (arr = null));
+  const velo = document.createElement("canvas");
   let t0 = performance.now(), tt = 0;
   function cuadro(ahora) {
     const dt = Math.min(0.05, (ahora - t0) / 1000);
@@ -317,52 +298,38 @@
       return GENTE.vistaDe(dx * coG - dy * siG, (dx * siG + dy * coG) * cam.k);
     };
     for (const p of gente) p.visible = !p.horas || aHora(h, p.horas);
-    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => p.visible).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
+    // solo la gente que cae en la pantalla arma su dibujo de este cuadro
+    const Vg = VISTA25.proyector(cam), mgx = cw / cam.esc / 2 + 300, mgy = ch / cam.esc / 2 + 400;
+    const enPantalla = (p) => { const [vx, vy] = Vg(p.x, p.y); return Math.abs(vx - cam.x) < mgx && Math.abs(vy - cam.y) < mgy; };
+    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => p.visible && enPantalla(p)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
     extra.push(...RECORRER25.extra(cam, tt));
     ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
-    VISTA25.dibujar(c, cam, cw, ch, tt, extra, (cx) => RECORRER25.piso(cx, cam, tt, h));
-    RECORRER25.encima(c, cam, cw, ch, tt, h, "mundo");
-    // el aire de la tarde: un velo cálido y la viñeta del bosque
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    // la luz según la hora: la tarde ámbar (el primer respiro después del bosque frío), la noche azul con los faroles,
-    // las ventanas y los fuegos encendidos; calidad baja deja solo el velo
+    // la luz según la hora (LUCES25): sombras que caen según el sol, el color de cada hora, la bruma de lo lejano y de
+    // noche la capa de oscuridad del bosque (LUZ) con agujeros donde alumbra algo
     const noche = h >= 17 && h < 21 ? (h - 17) / 4 : h >= 21 || h < 5 ? 1 : h < 7 ? (7 - h) / 2 : 0;
-    const ambar = Math.max(0.25, 1 - Math.min(Math.abs(h - 18), 24 - Math.abs(h - 18)) / 7);
-    if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
-      c.globalCompositeOperation = "soft-light";
-      const am = c.createLinearGradient(0, 0, cw, ch);
-      am.addColorStop(0, "rgba(255,217,138," + (0.55 * ambar * (1 - noche * 0.7)) + ")");
-      am.addColorStop(1, "rgba(255,141,113," + (0.35 * ambar * (1 - noche * 0.7)) + ")");
-      c.fillStyle = am;
-      c.fillRect(0, 0, cw, ch);
-      c.globalCompositeOperation = "source-over";
-    }
-    // la noche con la misma capa de oscuridad del bosque (LUZ): agujeros de luz en el piso donde alumbra algo
+    VISTA25.dibujar(c, cam, cw, ch, tt, extra, (cx) => RECORRER25.piso(cx, cam, tt, h), SOMBRAS25.preparar(cam, h, noche));
+    RECORRER25.encima(c, cam, cw, ch, tt, h, "mundo");
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    LUCES25.antes(c, cam, cw, ch, h, tt, noche);
     if (noche > 0.01) {
-      const V = VISTA25.proyector(cam);
-      const enVista = [];
-      for (const l of luces) {
-        const [vx, vy] = V(l.x, l.y);
-        const sx = (vx - cam.x) * cam.esc + cw / 2, sy = (vy - cam.y) * cam.esc + ch / 2 - l.z * cam.esc;
-        const r = l.r * cam.esc;
-        if (!(r > 1)) continue;
-        if (sx < -r || sy < -r || sx > cw + r || sy > ch + r) continue;
-        // el farol a su hora (y apagado de nuevo al alba), la piedra que parpadea, los fuegos que tiemblan
-        let f = l.fuego ? l.f * (0.9 + Math.sin(tt * 7 + l.x) * 0.08) : l.f;
-        if (l.enc) f *= h >= 12 ? Math.max(0, Math.min(1, (h - l.enc) * 3)) : Math.max(0, Math.min(1, (l.enc - 11.5 - h) * 3));
-        if (l.parpadea) f *= Math.sin(tt * 2.3) + Math.sin(tt * 7.1 + 1) * 0.6 > 0.7 ? 0.05 : 1;
-        if (f <= 0.01) continue;
-        enVista.push({ x: sx, y: sy, r, col: l.col, f });
-      }
+      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero);
       LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n: noche, osc: Math.min(0.82, 0.06 + noche * 0.74) }, tt);
+      LUCES25.despues(c, cam, cw, ch, h, tt, noche, enVista);
     }
-    c.fillStyle = "rgba(255,141,113,0.05)";
-    c.fillRect(0, 0, cw, ch);
-    const g = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
-    g.addColorStop(0, "rgba(10,14,12,0)");
-    g.addColorStop(1, "rgba(10,14,12,0.55)");
-    c.fillStyle = g;
-    c.fillRect(0, 0, cw, ch);
+    // el velo cálido y la viñeta, horneados juntos en un lienzo del tamaño de la pantalla: una sola copia por cuadro
+    if (velo.width !== cw || velo.height !== ch) {
+      velo.width = cw;
+      velo.height = ch;
+      const v = velo.getContext("2d");
+      v.fillStyle = "rgba(255,141,113,0.05)";
+      v.fillRect(0, 0, cw, ch);
+      const g = v.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
+      g.addColorStop(0, "rgba(10,14,12,0)");
+      g.addColorStop(1, "rgba(10,14,12,0.55)");
+      v.fillStyle = g;
+      v.fillRect(0, 0, cw, ch);
+    }
+    c.drawImage(velo, 0, 0);
     RECORRER25.encima(c, cam, cw, ch, tt, h, "hud");
     requestAnimationFrame(cuadro);
   }

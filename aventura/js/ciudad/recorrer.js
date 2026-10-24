@@ -539,6 +539,8 @@ window.RECORRER25 = (function () {
   // en el piso (girado y achicado): huellas, sombras de nubes, el destello de lo que se puede mirar, el brillo del río
   // y la niebla del alba
   function piso(c, cam, t, h) {
+    // cuánto del mundo entra en la pantalla (radio), para no pintar nubes que no se ven
+    const vistaR = Math.hypot(c.canvas.width, c.canvas.height / cam.k) / cam.esc / 2;
     // las huellas de Eromash en la tierra
     for (const p of ero.huellas) {
       const vida = 1 - (t - p.t) / 14;
@@ -574,25 +576,33 @@ window.RECORRER25 = (function () {
     }
     if (!caro()) return;
     // el río que brilla: rayas de luz que corren con la corriente
+    // (las rayas con la misma transparencia van todas en un solo trazo: ocho trazos en vez de uno por raya)
     const rio = plano.rio.pts;
     c.lineCap = "round";
-    for (let i = 0; i < rio.length - 1; i++) {
-      const [ax, ay] = rio[i],
-        [bx, by] = rio[i + 1];
-      const lx = bx - ax,
-        ly = by - ay,
-        l = Math.hypot(lx, ly),
-        ux = lx / l,
-        uy = ly / l;
-      if (Math.hypot((ax + bx) / 2 - cam.x, (ay + by) / 2 - cam.y) > 9000) continue;
-      for (let j = 0; j < 8; j++) {
+    c.strokeStyle = "#9AD0DA";
+    c.lineWidth = 5;
+    for (let j = 0; j < 8; j++) {
+      c.beginPath();
+      for (let i = 0; i < rio.length - 1; i++) {
+        const [ax, ay] = rio[i],
+          [bx, by] = rio[i + 1];
+        if (Math.abs((ax + bx) / 2 - cam.x) > 9000 || Math.abs((ay + by) / 2 - cam.y) > 9000) continue;
+        const lx = bx - ax,
+          ly = by - ay,
+          l = Math.hypot(lx, ly),
+          ux = lx / l,
+          uy = ly / l;
         const s = ((t * 90 + j * (l / 8) + i * 133) % l) / l;
         const off = Math.sin(j * 2.3 + i) * plano.rio.ancho * 0.3;
         const px = ax + lx * s - uy * off,
           py = ay + ly * s + ux * off;
-        alfa(c, 0.18 + Math.sin(t * 2 + j) * 0.06, () => L(c, px, py, px + ux * 120, py + uy * 120, "#9AD0DA", 5));
+        c.moveTo(px, py);
+        c.lineTo(px + ux * 120, py + uy * 120);
       }
+      c.globalAlpha = 0.18 + Math.sin(t * 2 + j) * 0.06;
+      c.stroke();
     }
+    c.globalAlpha = 1;
     // un pez que salta cada tanto: el anillo que se abre en el agua
     for (let i = 0; i < rio.length - 1; i++) {
       const ciclo = (((t * 0.23 + i * 0.37) % 1) + 1) % 1;
@@ -610,7 +620,7 @@ window.RECORRER25 = (function () {
     }
     // sombras de nubes que pasan, de día
     if (h >= 7 && h < 18.5 && alta())
-      for (const n of nubes) alfa(c, 0.12, () => E(c, n.x, n.y, n.rx, n.ry, "#0A0E0C"));
+      for (const n of nubes) if (Math.abs(n.x - cam.x) < n.rx + vistaR && Math.abs(n.y - cam.y) < n.ry + vistaR) alfa(c, 0.12, () => E(c, n.x, n.y, n.rx, n.ry, "#0A0E0C"));
     // la niebla baja del río al alba
     const alba = h >= 4.5 && h < 8.5 ? 1 - Math.abs(h - 6.2) / 2.3 : 0;
     if (alba > 0) {
@@ -638,8 +648,11 @@ window.RECORRER25 = (function () {
     if (capa === "mundo") {
       // Eromash se ve a través de lo que lo tapa (un techo, la copa del Roble): su figura otra vez, apenas transparente
       const [ex, ey] = V(ero.x, ero.y);
-      VISTA25.aVista(c, cam, cw, ch);
-      alfa(c, 0.32, () => dibujarEromash(c, ex, ey, t));
+      // (solo si de verdad algo lo tapa: si está a la vista no se lo dibuja dos veces)
+      if (VISTA25.tapado(ex, ey)) {
+        VISTA25.aVista(c, cam, cw, ch);
+        alfa(c, 0.32, () => dibujarEromash(c, ex, ey, t));
+      }
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (capa === "mundo") {
@@ -649,11 +662,14 @@ window.RECORRER25 = (function () {
     encimaHud(c, aPant, cw, ch, t, e);
   }
   function dibujarAire(c, aPant, enPant, e, t, h, noche) {
+    // (la transparencia se pone directo, sin guardar y restaurar el estado del lienzo por cada bocanada)
     for (const s of humo) {
       const p = aPant(s.x, s.y, s.z);
       if (!enPant(p, 80)) continue;
-      alfa(c, s.a, () => E(c, p[0], p[1], s.r * e * 1.6, s.r * e * 1.3, s.negro ? "#3A3634" : "#7E7C78"));
+      c.globalAlpha = s.a;
+      E(c, p[0], p[1], s.r * e * 1.6, s.r * e * 1.3, s.negro ? "#3A3634" : "#7E7C78");
     }
+    c.globalAlpha = 1;
     for (const s of chispas) {
       const p = aPant(s.x, s.y, s.z);
       if (!enPant(p)) continue;

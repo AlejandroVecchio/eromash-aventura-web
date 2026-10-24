@@ -29,6 +29,13 @@ window.VISTA25 = (function () {
       baldes.get(k).push(o);
       if (o.tipo === "casa") o.alto = o.casa.alto;
       else o.alto = (ASSETS.LISTA[o.id] && ASSETS.LISTA[o.id].alto * (o.o.s || 1)) || 100;
+      // cuánto ocupa de ancho en la vista (para saber si cae en la pantalla), con margen
+      const v = o.casa;
+      if (o.tipo === "casa") o.radio = (v.radio || (v.ancho ? v.ancho / 2 + 160 : v.W ? Math.hypot(v.W, v.D) / 2 + 80 : v.pie ? Math.hypot(v.pie[0], v.pie[1]) + 80 : 400)) + 120;
+      else o.radio = Math.max(300, o.alto * 0.75);
+      if (o.punta) o.radio = Math.max(o.radio, Math.hypot(o.punta[2] - o.punta[0], o.punta[3] - o.punta[1]) / 2 + 200);
+      if (o.o && o.o.x2 !== undefined) o.radio = Math.max(o.radio, Math.hypot(o.o.x2 - o.x, o.o.y2 - o.y) + 200);
+      o.enPiso = o.piso || (o.o && o.o.piso) ? 1 : 0;
     }
     // las calles con los caminos del bosque: las principales empedradas, el resto tierra pisada con borde de pasto.
     // Las empedradas van al final, así en cada capa la piedra queda encima de la tierra que llega al cruce
@@ -300,34 +307,189 @@ window.VISTA25 = (function () {
       }
     }
   }
-  function dibujarPiso(c, cam, rad, escPiso) {
-    if (Math.abs(escPiso - escCache) > 0.02) {
-      cache.clear();
-      escCache = escPiso;
+  // la capa que se hornea encima de cada baldosa del piso (las sombras de SOMBRAS25): { clave, pintar(c, x0, y0, x1, y1) }.
+  // Cada baldosa guarda su copia con la capa puesta; si cambia la clave (giró la cámara, pasó la hora) se repintan de a
+  // pocas por cuadro y mientras tanto se ve la copia anterior
+  const conCapa = new Map();
+  let capaPiso = null,
+    horneadas = 0;
+  // faltó = en este cuadro alguna baldosa se dio sin terminar (sin pintar todavía, o con la capa vieja)
+  let faltó = false;
+  function horneada(k, cv, tx, ty) {
+    const clave = capaPiso.clave;
+    let h = conCapa.get(k);
+    if (!cv.width || !cv.height) return cv;
+    if (h && h.clave === clave) return h.cv;
+    if (horneadas >= (h ? 2 : 6)) {
+      faltó = true;
+      return h ? h.cv : cv;
     }
-    const tx0 = Math.floor((cam.x - rad) / TROZO),
-      tx1 = Math.floor((cam.x + rad) / TROZO),
-      ty0 = Math.floor((cam.y - rad) / TROZO),
-      ty1 = Math.floor((cam.y + rad) / TROZO);
-    let pintados = 0;
-    // el caché guarda al menos todo lo que se ve (si no, de lejos se borraban trozos a la vista y quedaban huecos)
-    const tope = Math.max(160, (tx1 - tx0 + 1) * (ty1 - ty0 + 1) + 40);
-    for (let ty = ty0; ty <= ty1; ty++)
-      for (let tx = tx0; tx <= tx1; tx++) {
-        const k = tx + "," + ty;
-        let cv = cache.get(k);
-        if (cv) {
-          cache.delete(k);
-          cache.set(k, cv);
-        } else {
-          if (pintados > (escPiso < 0.15 ? 30 : 3) && cache.size) continue;
-          cv = pintarTrozo(tx, ty, escCache);
-          pintados++;
-          cache.set(k, cv);
-          if (cache.size > tope) cache.delete(cache.keys().next().value);
-        }
-        if (cv.width && cv.height) c.drawImage(cv, tx * TROZO, ty * TROZO, TROZO + 1, TROZO + 1);
+    horneadas++;
+    const hc = (h && h.cv.width === cv.width && h.cv) || document.createElement("canvas");
+    hc.width = cv.width;
+    hc.height = cv.height;
+    const x = hc.getContext("2d");
+    x.drawImage(cv, 0, 0);
+    x.setTransform(escCache, 0, 0, escCache, -tx * TROZO * escCache, -ty * TROZO * escCache);
+    capaPiso.pintar(x, tx * TROZO, ty * TROZO, (tx + 1) * TROZO, (ty + 1) * TROZO);
+    conCapa.set(k, { cv: hc, clave });
+    return hc;
+  }
+  // la resolución de las baldosas va en escalones (cuatro por cada vez que se duplica) y siempre por encima de lo
+  // pedido: al acercar o alejar con la rueda las baldosas se reusan en vez de repintarse en cada cuadro del zoom
+  const escalon = (e) => Math.min(1, Math.pow(2, Math.ceil(Math.log2(e) * 4 - 1e-9) / 4));
+  // pintar baldosas nuevas tiene un tope de tiempo por cuadro (no de cantidad): sin tirones al llegar a un lugar
+  let t0Piso = 0,
+    tiempoPiso = 7,
+    pintados = 0,
+    topePiso = 160;
+  // una baldosa lista para copiar (con su capa), o null si este cuadro ya no alcanza el tiempo para pintarla
+  function trozo(tx, ty) {
+    const k = tx + "," + ty;
+    let cv = cache.get(k);
+    if (cv) {
+      cache.delete(k);
+      cache.set(k, cv);
+    } else {
+      if (pintados && cache.size && performance.now() - t0Piso > tiempoPiso) {
+        faltó = true;
+        return null;
       }
+      cv = pintarTrozo(tx, ty, escCache);
+      pintados++;
+      cache.set(k, cv);
+      if (cache.size > topePiso) {
+        const viejo = cache.keys().next().value;
+        cache.delete(viejo);
+        conCapa.delete(viejo);
+      }
+    }
+    if (capaPiso) cv = horneada(k, cv, tx, ty);
+    return cv.width && cv.height ? cv : null;
+  }
+  function baldosasDe(vis) {
+    const l = [];
+    const tx0 = Math.floor((vis.x0 - 60) / TROZO),
+      tx1 = Math.floor((vis.x1 + 60) / TROZO),
+      ty0 = Math.floor((vis.y0 - 60) / TROZO),
+      ty1 = Math.floor((vis.y1 + 60) / TROZO);
+    for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) if (vis.toca(tx * TROZO, ty * TROZO, TROZO)) l.push([tx, ty]);
+    return l;
+  }
+  // copia las baldosas (con c ya puesto en el piso); la que falta queda del color del humus
+  function copiar(c, l, solape) {
+    for (const [tx, ty] of l) {
+      const cv = trozo(tx, ty);
+      if (cv) c.drawImage(cv, tx * TROZO, ty * TROZO, TROZO + solape, TROZO + solape);
+      else {
+        c.fillStyle = "#33301F";
+        c.fillRect(tx * TROZO, ty * TROZO, TROZO + solape, TROZO + solape);
+      }
+    }
+  }
+
+  // ---------- el piso entero en un lienzo que se corre ----------
+  // Con la cámara quieta o caminando (sin girar ni acercar), el piso de la pantalla es el mismo de antes corrido unos
+  // píxeles: se arma una vez en un lienzo más grande que la pantalla (con margen) y cada cuadro se copia corrido, en
+  // píxeles enteros y sin girar, que es lo más barato que hay. Cuando Eromash se acerca al borde del margen se arma el
+  // siguiente de a poco, unos milisegundos por cuadro, y se cambia cuando está completo (sin tirones). Si la cámara
+  // gira o se acerca, el piso se dibuja directo como siempre hasta que se queda quieta.
+  const frente = { cv: document.createElement("canvas"), ok: false },
+    atras = { cv: document.createElement("canvas"), ok: false };
+  let armando = null,
+    previa = { g: 0, k: 0, esc: 0 };
+  // la misma cámara salvo por lo que se mueve (con una tolerancia de centésimas de píxel: el zoom suave tarda en quedarse
+  // exactamente quieto)
+  const misma = (a, cam) => Math.abs(a.g - cam.g) < 1e-5 && Math.abs(a.k - cam.k) < 1e-5 && Math.abs(a.esc - cam.esc) < cam.esc * 1e-5;
+  const lineal = (cam, dx, dy) => [(dx * Math.cos(cam.g) - dy * Math.sin(cam.g)) * cam.esc, (dx * Math.sin(cam.g) + dy * Math.cos(cam.g)) * cam.k * cam.esc];
+  function empezarArmado(cam, cw, ch, V, M) {
+    const W = cw + 2 * M,
+      H = ch + 2 * M;
+    // el rectángulo del lienzo grande, como una pantalla más grande centrada en la cámara
+    const vis = visible(cam, W, H, V);
+    armando = { x: cam.x, y: cam.y, g: cam.g, k: cam.k, esc: cam.esc, cw, ch, M, W, H, l: baldosasDe(vis), i: 0, clave: capaPiso ? capaPiso.clave : "", entero: true };
+    const cv = atras.cv;
+    if (cv.width !== W || cv.height !== H) {
+      cv.width = W;
+      cv.height = H;
+    }
+  }
+  function seguirArmado(cam, solape) {
+    const a = armando;
+    if (!misma(a, cam)) return (armando = null);
+    const x = atras.cv.getContext("2d");
+    x.setTransform(a.esc, 0, 0, a.esc, a.W / 2 - a.x * a.esc, a.H / 2 - a.y * a.esc);
+    x.translate(a.x, a.y);
+    x.scale(1, a.k);
+    x.rotate(a.g);
+    x.translate(-a.x, -a.y);
+    // el armado tiene su propio rato por cuadro, también para pintar las baldosas que le falten
+    const t = performance.now();
+    pintados = 0;
+    t0Piso = t;
+    tiempoPiso = 4;
+    while (a.i < a.l.length && performance.now() - t < 4) {
+      faltó = false;
+      copiar(x, [a.l[a.i]], solape);
+      if (faltó) a.entero = false;
+      if (faltó && !cache.has(a.l[a.i][0] + "," + a.l[a.i][1])) break; // se acabó el tiempo de pintar: sigue el próximo cuadro
+      a.i++;
+    }
+    if (a.i < a.l.length) return;
+    // listo: pasa al frente
+    const cv = frente.cv;
+    frente.cv = atras.cv;
+    atras.cv = cv;
+    Object.assign(frente, { ok: true, x: a.x, y: a.y, g: a.g, k: a.k, esc: a.esc, cw: a.cw, ch: a.ch, M: a.M, clave: a.clave, entero: a.entero, esc0: escCache });
+    armando = null;
+  }
+
+  function dibujarPiso(c, cam, cw, ch, vis, V) {
+    const escPiso = escalon(Math.min(1, cam.esc * 1.25));
+    if (escPiso !== escCache) {
+      cache.clear();
+      conCapa.clear();
+      escCache = escPiso;
+      frente.ok = false;
+      armando = null;
+    }
+    horneadas = 0;
+    pintados = 0;
+    t0Piso = performance.now();
+    tiempoPiso = escPiso < 0.15 ? 14 : 7;
+    // cada baldosa pisa a la siguiente un par de píxeles: sin fondo debajo, el borde suavizado no deja ver una costura
+    const solape = Math.max(1, 2.5 / cam.esc);
+    // el margen: de cerca un 30 % de la pantalla; de lejos se camina menos píxeles por segundo y alcanza con menos
+    const M = Math.round(Math.max(cw, ch) * 0.3 * Math.max(0.3, Math.min(1, cam.esc / 0.4)));
+    const lv = baldosasDe(vis);
+    // el caché guarda al menos todo lo que se ve más el margen (si no, de lejos se borraban trozos a la vista)
+    topePiso = Math.max(160, lv.length + (armando ? armando.l.length : lv.length * 2) + 40);
+    // ¿sirve el lienzo del frente? misma cámara (giro, inclinación, zoom, pantalla) y la pantalla todavía adentro
+    const f = frente;
+    let corrido = null;
+    if (f.ok && misma(f, cam) && f.cw === cw && f.ch === ch && f.esc0 === escCache) {
+      const [ox, oy] = lineal(cam, cam.x - f.x, cam.y - f.y);
+      if (Math.abs(ox) < f.M && Math.abs(oy) < f.M) corrido = [ox, oy];
+    }
+    const quieta = misma(previa, cam);
+    previa = { g: cam.g, k: cam.k, esc: cam.esc };
+    const clave = capaPiso ? capaPiso.clave : "";
+    if (corrido) {
+      c.save();
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.drawImage(f.cv, Math.round(-f.M - corrido[0]), Math.round(-f.M - corrido[1]));
+      c.restore();
+    } else {
+      faltó = false;
+      copiar(c, lv, solape);
+    }
+    // armar el próximo: si no hay frente que sirva, si está por salirse del margen, si quedó incompleto o si cambió la
+    // capa (las sombras de otra hora); solo con la cámara quieta (sin girar ni acercar)
+    if (armando) seguirArmado(cam, solape);
+    else if (quieta && (!corrido || Math.abs(corrido[0]) > M * 0.5 || Math.abs(corrido[1]) > M * 0.5 || !f.entero || f.clave !== clave)) {
+      empezarArmado(cam, cw, ch, V, M);
+      seguirArmado(cam, solape);
+    }
   }
 
   // ---------- la cámara ----------
@@ -380,30 +542,33 @@ window.VISTA25 = (function () {
   }
 
   // lo que se ve: [{ y (orden), f }] con las cosas del plano cerca de la cámara
-  function cosasVisibles(cam, rad, V, t, lista) {
-    const b0x = Math.floor((cam.x - rad) / BALDE),
-      b1x = Math.floor((cam.x + rad) / BALDE),
-      b0y = Math.floor((cam.y - rad) / BALDE),
-      b1y = Math.floor((cam.y + rad) / BALDE);
+  // lo que cae en la pantalla: cada cosa tiene su caja en la vista (de ancho su radio, de alto lo que sube más el piso
+  // que ocupa achicado por la cámara); lo que queda afuera ni se mira (antes se dibujaba todo un círculo alrededor)
+  function cosasVisibles(cam, vis, V, lista) {
+    const m = 1500;
+    const b0x = Math.floor((vis.x0 - m) / BALDE),
+      b1x = Math.floor((vis.x1 + m) / BALDE),
+      b0y = Math.floor((vis.y0 - m) / BALDE),
+      b1y = Math.floor((vis.y1 + m) / BALDE);
+    const k = cam.k;
     for (let by = b0y; by <= b1y; by++)
       for (let bx = b0x; bx <= b1x; bx++) {
         const l = baldes.get(bx + "," + by);
         if (!l) continue;
         for (const o of l) {
-          if (Math.hypot(o.x - cam.x, o.y - cam.y) > rad) continue;
-          if (!seVe(o, cam.esc)) continue;
           const [sx, sy] = V(o.x, o.y);
-          lista.push({ y: sy, x: sx, cosa: o, f: (c) => dibujarCosa(c, o, sx, sy, cam, V, t) });
+          const r = o.radio;
+          if (sx + r < vis.vx0 || sx - r > vis.vx1 || sy - o.alto - r * k > vis.vy1 || sy + r * k < vis.vy0) continue;
+          if (!seVe(o, cam.esc)) continue;
+          lista.push({ y: sy, x: sx, cosa: o, piso: o.enPiso });
         }
       }
   }
-  // De lejos cada volumen se dibuja una vez en un lienzo chico (con su giro redondeado a 1/128 de vuelta) y después se
-  // pega: así alejar la cámara no redibuja cientos de casas y tramos de muralla cuadro a cuadro. De cerca (y lo que
-  // se mueve) se dibuja siempre en vivo.
   const FIGURAS = new Map(),
     TOPE_FIGURAS = 1200,
     PASOS_GIRO = 128;
-  let nuevasEsteCuadro = 0;
+  // armar figuras nuevas tiene un tope de tiempo por cuadro (antes, de cantidad: 24 casas grandes daban un tirón)
+  let tiempoFiguras = 0;
   function figura(o, giro, k, esc) {
     const v = o.casa;
     const R = v.radio || (v.ancho ? v.ancho / 2 + 160 : v.W ? Math.hypot(v.W, v.D) / 2 + 80 : 400),
@@ -414,12 +579,12 @@ window.VISTA25 = (function () {
     const base = (o.nombre || o.id || "") + "|" + o.x + "|" + o.y + "|" + kq + "|" + eB + "|";
     let f = FIGURAS.get(base + gq);
     if (!f) {
-      if (nuevasEsteCuadro > 24) {
+      if (tiempoFiguras > 6) {
         // sin presupuesto este cuadro: la de giro más cercano que ya esté hecha, si hay
         for (let d = 1; d < 12 && !f; d++) f = FIGURAS.get(base + ((gq + d) % PASOS_GIRO)) || FIGURAS.get(base + ((gq - d + PASOS_GIRO) % PASOS_GIRO));
         return f || null;
       }
-      nuevasEsteCuadro++;
+      const tf = performance.now();
       const kk = kq / 20;
       const w = Math.ceil(2 * R * eB) + 4,
         h = Math.ceil((A + 2 * R * kk + 60) * eB) + 4;
@@ -431,6 +596,7 @@ window.VISTA25 = (function () {
       v.dibujar(cx, 0, 0, (gq / PASOS_GIRO) * Math.PI * 2, kk, 0);
       f = { cv, R, A, kk, eB };
       FIGURAS.set(base + gq, f);
+      tiempoFiguras += performance.now() - tf;
       if (FIGURAS.size > TOPE_FIGURAS) FIGURAS.delete(FIGURAS.keys().next().value);
     }
     return f;
@@ -464,31 +630,73 @@ window.VISTA25 = (function () {
 
   // dibuja todo: el piso, las cosas del plano y lo que traiga extra ([{ x, y (mundo), f(c, sx, sy) }])
   // sobrePiso(c): lo que va pintado sobre el piso (en coordenadas del mundo, girado y achicado), antes de lo parado
-  function dibujar(c, cam, cw, ch, t, extra = [], sobrePiso) {
+  // el rectángulo de la pantalla en la vista (vx, vy) y pasado al piso del mundo (x0..y1), con la prueba de si una
+  // baldosa del piso lo toca
+  function visible(cam, cw, ch, V) {
+    const vw = cw / cam.esc / 2,
+      vh = ch / cam.esc / 2;
+    const vis = { vx0: cam.x - vw, vx1: cam.x + vw, vy0: cam.y - vh, vy1: cam.y + vh, x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+    for (const [ex, ey] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const [wx, wy] = V.inversa(cam.x + ex * vw, cam.y + ey * vh);
+      vis.x0 = Math.min(vis.x0, wx);
+      vis.y0 = Math.min(vis.y0, wy);
+      vis.x1 = Math.max(vis.x1, wx);
+      vis.y1 = Math.max(vis.y1, wy);
+    }
+    vis.toca = (x, y, lado) => {
+      let ax = Infinity,
+        ay = Infinity,
+        bx = -Infinity,
+        by = -Infinity;
+      for (const [px, py] of [V(x, y), V(x + lado, y), V(x + lado, y + lado), V(x, y + lado)]) {
+        if (px < ax) ax = px;
+        if (px > bx) bx = px;
+        if (py < ay) ay = py;
+        if (py > by) by = py;
+      }
+      return bx > vis.vx0 - 2 && ax < vis.vx1 + 2 && by > vis.vy0 - 2 && ay < vis.vy1 + 2;
+    };
+    return vis;
+  }
+
+  function dibujar(c, cam, cw, ch, t, extra = [], sobrePiso, capa) {
+    capaPiso = capa || null;
     const V = proyector(cam);
-    nuevasEsteCuadro = 0;
-    const vw = cw / cam.esc,
-      vh = ch / cam.esc;
-    const rad = Math.hypot(vw, vh / cam.k) / 2 + 300;
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    c.fillStyle = "#33301F";
-    c.fillRect(0, 0, cw, ch);
+    tiempoFiguras = 0;
+    const vis = visible(cam, cw, ch, V);
     aPiso(c, cam, cw, ch);
-    dibujarPiso(c, cam, rad, Math.min(1, cam.esc * 1.25));
+    dibujarPiso(c, cam, cw, ch, vis, V);
+    aPiso(c, cam, cw, ch);
     if (sobrePiso) sobrePiso(c);
     aVista(c, cam, cw, ch);
     const lista = [];
-    cosasVisibles(cam, rad + 1400, V, t, lista);
+    cosasVisibles(cam, vis, V, lista);
+    // lo que se mueve (gente, animales, Eromash): también solo lo que cae en la pantalla
     for (const e of extra) {
       const [sx, sy] = V(e.x, e.y);
-      lista.push({ y: sy, x: sx, f: (c) => e.f(c, sx, sy) });
+      if (sx < vis.vx0 - 300 || sx > vis.vx1 + 300 || sy < vis.vy0 - 100 || sy > vis.vy1 + 1300) continue;
+      lista.push({ y: sy, x: sx, e, piso: 0 });
     }
     // lo pintado en el piso (losas, charcos) va primero, debajo de todo lo parado
-    const enPiso = (d) => (d.cosa && (d.cosa.piso || (d.cosa.o && d.cosa.o.piso)) ? 1 : 0);
-    lista.sort((a, b) => enPiso(b) - enPiso(a) || a.y - b.y);
-    for (const d of lista) d.f(c);
+    lista.sort((a, b) => b.piso - a.piso || a.y - b.y);
+    for (const d of lista) {
+      if (d.e) d.e.f(c, d.x, d.y);
+      else dibujarCosa(c, d.cosa, d.x, d.y, cam, V, t);
+    }
+    ultima = lista;
     return { V, lista };
   }
+  // ¿algo parado tapa este punto de la vista? (una casa o un árbol que se dibuja después y sube por encima)
+  let ultima = [];
+  function tapado(sx, sy, alto = 150) {
+    for (const d of ultima) {
+      if (!d.cosa || d.piso || d.y <= sy) continue;
+      const o = d.cosa;
+      if (Math.abs(d.x - sx) < o.radio * 0.8 && d.y - o.alto < sy - alto * 0.4) return true;
+    }
+    return false;
+  }
 
-  return { iniciar, dibujar, proyector, aVista, aPiso, TROZO, LEJOS };
+  const estadoPiso = () => ({ ok: frente.ok, armando: armando && [armando.i, armando.l.length], entero: frente.entero, esc: escCache });
+  return { iniciar, dibujar, tapado, estadoPiso, proyector, aVista, aPiso, TROZO, LEJOS };
 })();
