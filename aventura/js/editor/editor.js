@@ -254,8 +254,9 @@
     if (!cam.g) return d;
     const [x, y] = V(d.x, d.y),
       o = Object.assign({}, d.o);
-    if (o.x2 !== undefined) [o.x2, o.y2] = V(o.x2, o.y2);
     const def = ASSETS.LISTA[d.id];
+    // lo armado con caras gira solo su otra punta (VOL.prSeg): le llega relativa al pie, sin girar
+    if (o.x2 !== undefined) [o.x2, o.y2] = def && def.vol ? [x + o.x2 - d.x, y + o.y2 - d.y] : V(o.x2, o.y2);
     // lo que tiene caras se arma como volumen; lo demás que tiene frente (puertas, empalizadas, carros, puestos) se
     // gira de mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
     // postes, torres: choque redondo) y la naturaleza se ven igual de cualquier lado y quedan como están

@@ -48,6 +48,17 @@ window.ASSETS = (function () {
     rojoEromash: "#9C2315",
     hueso: "#E8DCC4",
   };
+  // los tres tonos de cada material para lo armado con caras (VOL): [sombra, frente, al sol]
+  C.T = {
+    madera: [C.maderaSombra, C.madera, C.maderaLuz],
+    vieja: ["#3E3022", C.maderaVieja, "#76604A"],
+    oscura: ["#3A2614", C.maderaSombra, C.madera],
+    piedra: ["#46423C", "#5A5650", "#6E6A62"],
+    roca: [C.rocaSombra, C.roca, C.rocaLuz],
+    pizarra: [C.pizarraSombra, C.pizarra, C.pizarraLuz],
+    hierro: ["#343034", C.hierro, C.hierroLuz],
+    tronco: [C.troncoSombra, C.tronco, C.corteza],
+  };
 
   // ======================================================================
   //  NATURALEZA DE ELDERVALD
@@ -1289,10 +1300,17 @@ window.ASSETS = (function () {
   // o.esc (tamaño), o.ex / o.ey (ancho y alto), o.esp (espejado), o.rot (inclinado, en grados, sobre el pie) y o.giro (girado sobre el piso, en grados) valen para cualquier asset: los pone el editor
   // Lo que tiene `vol: true` está armado con caras (comun/volumen.js) y se gira de verdad: recibe o.fi (su giro más
   // el de la cámara, VOL.cam.g) y el tamaño y el espejado le llegan como medidas del mundo, no de la pantalla.
+  // Si además tiene `fv`, `f` es su dibujo de siempre (de frente, en tres cuartos) y `fv` su volumen: de frente y sin
+  // girar se ve el de siempre y apenas se gira (él o la cámara), el volumen.
+  const derecho = (fi) => Math.abs(Math.atan2(Math.sin(fi), Math.cos(fi))) < 0.01;
   function dibujar(c, id, x, y, t, o = {}) {
     const a = LISTA[id];
     if (!a) return;
-    if (a.vol && window.VOL) return dibujarVol(c, a, x, y, t, o);
+    if (a.vol && window.VOL) {
+      const fi = VOL.fiDe(o);
+      if (!a.fv) return dibujarVol(c, a.f, x, y, t, o, fi);
+      if (!derecho(fi)) return dibujarVol(c, a.fv, x, y, t, o, fi);
+    }
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
@@ -1316,17 +1334,16 @@ window.ASSETS = (function () {
     a.f(c, x, y, t, o);
     c.restore();
   }
-  function dibujarVol(c, a, x, y, t, o) {
+  function dibujarVol(c, f, x, y, t, o, fi) {
     const k = o.esc || 1,
-      fi = VOL.fiDe(o),
       // o.s es el tamaño propio del asset; el del editor se suma acá. eu: a lo ancho, ez: el alto
       v = Object.assign({}, o, { fi, s: (o.s || 1) * k, eu: (o.ex || 1) * (o.eu || 1), ez: (o.ey || 1) * (o.ez || 1), esc: 1, ex: 1, ey: 1 });
-    if (!o.rot) return a.f(c, x, y, t, v);
+    if (!o.rot) return f(c, x, y, t, v);
     c.save();
     c.translate(x, y);
     c.rotate((o.rot * Math.PI) / 180);
     c.translate(-x, -y);
-    a.f(c, x, y, t, v);
+    f(c, x, y, t, v);
     c.restore();
   }
   // el choque y el alto de un asset con sus opciones (o.s de cada asset y el tamaño y las proporciones del editor)

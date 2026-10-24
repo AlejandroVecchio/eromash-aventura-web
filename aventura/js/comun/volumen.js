@@ -32,6 +32,11 @@ window.VOL = (function () {
     return [dx * co - py * si, (dx * si + py * co) * K];
   }
   const desgirar = (dx, dy, g = cam.g) => girar(dx, dy, -g);
+  // un punto del mundo relativo a (x, y) (las puntas de una muralla, las esquinas de un tramo): dónde cae en la vista
+  const rel = (x, y, dx, dy, g = cam.g) => {
+    const [a, b] = girar(dx, dy, g);
+    return [x + a, y + b];
+  };
   // la matriz del piso girado (para c.transform): [a, b, c, d]
   function matriz(g = cam.g) {
     const co = Math.cos(g),
@@ -89,7 +94,7 @@ window.VOL = (function () {
   // el tono de una cara según hacia dónde mira en pantalla: nx (de -1 izquierda a 1 derecha) y nz (1 = para arriba)
   function tono(col, nx, nz) {
     const t = tonos(col);
-    if (nz > 0.6) return t[3] || t[2];
+    if (nz > 0.92) return t[3] || t[2];
     if (nx > 0.38) return t[2];
     if (nx < -0.38) return t[0];
     return t[1];
@@ -120,19 +125,30 @@ window.VOL = (function () {
   // el de un asset con sus opciones (o.fi, o.s, o.esp, o.eu, o.ez)
   const pr = (x, y, o = {}, s) => proyector(x, y, fiDe(o), { esp: o.esp, s: s != null ? s : o.s || 1, su: o.eu, sz: o.ez });
 
-  // lo que va de punta a punta (empalizadas, murallas, puentes, cercas): las dos puntas ya llegan en la vista (el
-  // anfitrión las gira con el piso), así que el giro sale de ellas y no se le suma la cámara. u va de (x, y) a
-  // (x2, y2) y pr.largo es el largo en el piso; w queda hacia el lado que mira a la cámara cuando va de izquierda a
-  // derecha
+  // lo que va de punta a punta (empalizadas, murallas, puentes, cercas): (x, y) es el pie ya en la vista y (x2, y2)
+  // la otra punta en el mundo (el anfitrión solo corre el pie), así que lo que va de una a otra se gira con la cámara.
+  // u va de (x, y) a (x2, y2) y pr.largo es el largo en el piso; w queda hacia el lado que mira a la cámara cuando va
+  // de izquierda a derecha
   function prSeg(x, y, x2, y2, o = {}) {
-    const dx = x2 - x,
-      dy = (y2 - y) / K,
+    // la otra punta, relativa y en el mundo: se gira con la cámara
+    const [gx, gy] = girar(x2 - x, y2 - y),
+      dx = gx,
+      dy = gy / K,
       k = o.s || 1,
       p = proyector(x, y, Math.atan2(dy, dx), { sz: k * (o.ez || 1) });
     // lo largo va en unidades del mundo; lo ancho y lo alto, con el tamaño del asset (pr.k)
     p.largo = Math.hypot(dx, dy);
     p.k = k;
     p.s = k;
+    return p;
+  }
+
+  // lo mismo con las dos puntas ya en la vista (por ejemplo, las que salen de VOL.rel)
+  function prVista(ax, ay, bx, by, op = {}) {
+    const dx = bx - ax,
+      dy = (by - ay) / K,
+      p = proyector(ax, ay, Math.atan2(dy, dx), op);
+    p.largo = Math.hypot(dx, dy);
     return p;
   }
 
@@ -212,17 +228,20 @@ window.VOL = (function () {
   // colores o fn(c, largo, alto, nx) para pintar lo de cada cara (como si se la viera de frente)
   function caja(c, pr, u0, w0, z0, u1, w1, z1, col, op) {
     op = op || {};
-    const lado = (k, l, h) => (op[k] ? medida(l, h, op[k]) : null),
-      cc = (k) => op["col_" + k] || col;
+    // op.sin: las caras que no se pintan (["izq", "der"] en un tramo de muralla que sigue en el de al lado)
+    const sin = op.sin || [],
+      lado = (k, l, h) => (op[k] ? medida(l, h, op[k]) : null),
+      cc = (k) => op["col_" + k] || col,
+      pinta = (c, pr, p, col, fn, k) => (sin.includes(k) ? false : cara(c, pr, p, col, fn));
     const wu = u1 - u0,
       ww = w1 - w0,
       hz = z1 - z0;
     // primero las de atrás (solo se ven si la cámara da la vuelta), después los costados y el frente
-    cara(c, pr, [[u1, w0, z0], [u0, w0, z0], [u0, w0, z1], [u1, w0, z1]], cc("atras"), lado("atras", wu, hz));
-    cara(c, pr, [[u0, w0, z0], [u0, w1, z0], [u0, w1, z1], [u0, w0, z1]], cc("izq"), lado("izq", ww, hz));
-    cara(c, pr, [[u1, w1, z0], [u1, w0, z0], [u1, w0, z1], [u1, w1, z1]], cc("der"), lado("der", ww, hz));
-    cara(c, pr, [[u0, w1, z0], [u1, w1, z0], [u1, w1, z1], [u0, w1, z1]], cc("frente"), lado("frente", wu, hz));
-    if (!op.sinTapa) cara(c, pr, [[u0, w1, z1], [u1, w1, z1], [u1, w0, z1], [u0, w0, z1]], op.tapa || col, lado("arriba", wu, ww));
+    pinta(c, pr, [[u1, w0, z0], [u0, w0, z0], [u0, w0, z1], [u1, w0, z1]], cc("atras"), lado("atras", wu, hz), "atras");
+    pinta(c, pr, [[u0, w0, z0], [u0, w1, z0], [u0, w1, z1], [u0, w0, z1]], cc("izq"), lado("izq", ww, hz), "izq");
+    pinta(c, pr, [[u1, w1, z0], [u1, w0, z0], [u1, w0, z1], [u1, w1, z1]], cc("der"), lado("der", ww, hz), "der");
+    pinta(c, pr, [[u0, w1, z0], [u1, w1, z0], [u1, w1, z1], [u0, w1, z1]], cc("frente"), lado("frente", wu, hz), "frente");
+    if (!op.sinTapa) pinta(c, pr, [[u0, w1, z1], [u1, w1, z1], [u1, w0, z1], [u0, w0, z1]], op.tapa || col, lado("arriba", wu, ww), "arriba");
   }
   // una caja centrada: ancho a, fondo f, alto h, apoyada en z0, con el centro de la planta en (u, w)
   const cubo = (c, pr, u, w, a, f, h, col, op, z0 = 0) => caja(c, pr, u - a / 2, w - f / 2, z0, u + a / 2, w + f / 2, z0 + h, col, op);
@@ -267,6 +286,22 @@ window.VOL = (function () {
     }
     prisma(c, pr, p, z0, z1, col, op);
   }
+  // un cono truncado facetado (troncos que se afinan, campanas, torres redondas): radio r0 abajo y r1 arriba
+  function cono(c, pr, u, w, r0, r1, z0, z1, col, op) {
+    op = op || {};
+    const n = op.n || 8,
+      f = op.fase || 0,
+      caras = [];
+    for (let i = 0; i < n; i++) {
+      const a0 = f + (i / n) * TAU,
+        a1 = f + ((i + 1) / n) * TAU,
+        q = [[u + Math.cos(a0) * r0, w + Math.sin(a0) * r0, z0], [u + Math.cos(a1) * r0, w + Math.sin(a1) * r0, z0], [u + Math.cos(a1) * r1, w + Math.sin(a1) * r1, z1], [u + Math.cos(a0) * r1, w + Math.sin(a0) * r1, z1]];
+      caras.push(afuera(q, [Math.cos((a0 + a1) / 2), Math.sin((a0 + a1) / 2), 0]));
+    }
+    caras.sort((p, q) => pr.hondo(p[0][0] + p[1][0], p[0][1] + p[1][1]) - pr.hondo(q[0][0] + q[1][0], q[0][1] + q[1][1]));
+    caras.forEach((q) => cara(c, pr, q, op.lados || col));
+    if (!op.sinTapa && r1 > 0.5) cara(c, pr, afuera(redonda(u, w, r1, n, f).map((p) => [p[0], p[1], z1]), [0, 0, 1]), op.tapa || col);
+  }
   // un tronco acostado a lo largo de u (vigas, troncos caídos): n caras alrededor de su eje
   function rollo(c, pr, u0, u1, w, z, r, col, op = {}) {
     const n = op.n || 7,
@@ -298,6 +333,18 @@ window.VOL = (function () {
   // largo de u (op.eje = "w" la pone a lo largo de w). op: { hastial: color de los triángulos, faldon: fn }
   function techo(c, pr, u0, w0, u1, w1, z, h, col, op = {}) {
     const hz = z + h;
+    // lo pintado de los faldones y de los hastiales, con sus medidas (largo × lo que sube la pendiente)
+    op = Object.assign({}, op);
+    if (op.faldon) {
+      const f = op.faldon,
+        l = op.eje === "w" ? w1 - w0 : u1 - u0,
+        d = Math.hypot(op.eje === "w" ? (u1 - u0) / 2 : (w1 - w0) / 2, h);
+      op.faldon = medida(l, d, f);
+    }
+    if (op.frontis) {
+      const f = op.frontis;
+      op.frontis = medida(op.eje === "w" ? u1 - u0 : w1 - w0, h, f);
+    }
     if (op.eje === "w") {
       const um = (u0 + u1) / 2;
       cara(c, pr, [[u0, w0, z], [u0, w1, z], [um, w1, hz], [um, w0, hz]], col, op.faldon);
@@ -353,6 +400,31 @@ window.VOL = (function () {
     const atras = fnAtras === undefined ? (fn ? (cc, ll, hh, nx) => (cc.translate(ll, 0), cc.scale(-1, 1), fn(cc, ll, hh, -nx)) : null) : fnAtras;
     cara(c, pr, [[u1, w, z0], [u0, w, z0], [u0, w, z1], [u1, w, z1]], colAtras || col, atras ? medida(l, h, atras) : null);
     return "atras";
+  }
+
+  // una lámina de dos caras (un techo de un agua, una tapa, una tela tendida): p como se la ve desde su frente; si se
+  // la ve de atrás se pinta con colAtras (lo de abajo de un techo, más oscuro)
+  function lamina(c, pr, p, col, colAtras, fn, fnAtras) {
+    if (cara(c, pr, p, col, fn)) return true;
+    cara(c, pr, p.slice().reverse(), colAtras || col, fnAtras);
+    return false;
+  }
+  // un techo de un agua: de (u0..u1) con el borde de adelante en w1 a la altura z1 y el de atrás en w0 a z0, con su
+  // espesor y los costados
+  function aguaUna(c, pr, u0, w0, z0, u1, w1, z1, col, op = {}) {
+    const g = op.grueso || 5,
+      ab = op.abajo || mezcla(Array.isArray(col) ? col[0] : col, "#000000", 0.35);
+    // el canto de adelante
+    cara(c, pr, [[u0, w1, z1 - g], [u1, w1, z1 - g], [u1, w1, z1], [u0, w1, z1]], ab);
+    cara(c, pr, [[u1, w0, z0 - g], [u0, w0, z0 - g], [u0, w0, z0], [u1, w0, z0]], ab);
+    cara(c, pr, [[u0, w0, z0 - g], [u0, w1, z1 - g], [u0, w1, z1], [u0, w0, z0]], ab);
+    cara(c, pr, [[u1, w1, z1 - g], [u1, w0, z0 - g], [u1, w0, z0], [u1, w1, z1]], ab);
+    lamina(c, pr, [[u0, w1, z1], [u1, w1, z1], [u1, w0, z0], [u0, w0, z0]], col, ab, op.fn ? medida(u1 - u0, Math.hypot(w1 - w0, z1 - z0), op.fn) : null);
+  }
+  // un halo o una luz en un punto del objeto
+  function halo(c, pr, u, w, z, r, col, f) {
+    const p = pr(u, w, z);
+    DIB.halo(c, p[0], p[1], r * pr.s, col, f);
   }
 
   // ---------- en el piso del objeto ----------
@@ -447,11 +519,11 @@ window.VOL = (function () {
   }
   return {
     K, cam, TAU, rad,
-    girar, desgirar, matriz, piso, vista, mundo, fondo, fiDe,
+    girar, desgirar, rel, matriz, piso, vista, mundo, fondo, fiDe,
     mezcla, tonos, tono,
-    proyector, pr, prSeg,
+    proyector, pr, prSeg, prVista,
     area, cara, enCara, medida, normal, afuera,
-    caja, cubo, prisma, cilindro, rollo, techo, piramide, redonda, palo, plano,
+    caja, cubo, prisma, cilindro, cono, rollo, techo, piramide, redonda, palo, plano, lamina, aguaUna, halo,
     enPiso, sombra, elipse, punto, escena,
     relativa, angulo, ejeMundo, sinSombra,
   };
