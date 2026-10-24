@@ -100,7 +100,7 @@ window.ELDERVALD = (function () {
     GW = Math.ceil(ANCHO / CELDA),
     GH = Math.ceil(ALTO / CELDA),
     suelo = new Uint8Array(GW * GH);
-  function pintarLinea(pts, w, val) {
+  function pintarLinea(pts, w, val, arr = suelo) {
     const r = w / 2;
     for (let i = 1; i < pts.length; i++) {
       const [ax, ay] = pts[i - 1],
@@ -111,19 +111,20 @@ window.ELDERVALD = (function () {
         y1 = Math.min(GH - 1, Math.ceil((Math.max(ay, by) + r) / CELDA));
       for (let gy = y0; gy <= y1; gy++)
         for (let gx = x0; gx <= x1; gx++)
-          if (distSeg((gx + 0.5) * CELDA, (gy + 0.5) * CELDA, ax, ay, bx, by) <= r) suelo[gy * GW + gx] = Math.max(suelo[gy * GW + gx], val);
+          if (distSeg((gx + 0.5) * CELDA, (gy + 0.5) * CELDA, ax, ay, bx, by) <= r) arr[gy * GW + gx] = Math.max(arr[gy * GW + gx], val);
     }
   }
-  RIOS.forEach((r) => pintarLinea(r.p, r.w, 1));
-  pintarLinea(QUEBRADA.p, QUEBRADA.w, 2);
-  LAGOS.forEach((l) => {
+  function pintarLago(l, arr = suelo) {
     for (let gy = Math.floor((l.p[1] - l.ry) / CELDA); gy <= (l.p[1] + l.ry) / CELDA; gy++)
       for (let gx = Math.floor((l.p[0] - l.rx) / CELDA); gx <= (l.p[0] + l.rx) / CELDA; gx++) {
         const dx = ((gx + 0.5) * CELDA - l.p[0]) / l.rx,
           dy = ((gy + 0.5) * CELDA - l.p[1]) / l.ry;
-        if (dx * dx + dy * dy < 1 && gx >= 0 && gy >= 0 && gx < GW && gy < GH) suelo[gy * GW + gx] = 1;
+        if (dx * dx + dy * dy < 1 && gx >= 0 && gy >= 0 && gx < GW && gy < GH) arr[gy * GW + gx] = Math.max(arr[gy * GW + gx], 1);
       }
-  });
+  }
+  RIOS.forEach((r) => pintarLinea(r.p, r.w, 1));
+  pintarLinea(QUEBRADA.p, QUEBRADA.w, 2);
+  LAGOS.forEach((l) => pintarLago(l));
   // la empalizada: un anillo cerrado salvo en las puertas (y donde pasa agua)
   const enPuerta = (a) => CIUDAD.puertas.some((pa) => Math.abs(Math.atan2(Math.sin(a - pa), Math.cos(a - pa))) < CIUDAD.hueco / CIUDAD.rx);
   const MURO = [];
@@ -178,6 +179,19 @@ window.ELDERVALD = (function () {
       if (u < 0.3 || u > 0.72) return true;
     }
     return false;
+  }
+
+  // vuelve a marcar el agua en la grilla: la de base que no se secó y la agregada (menos donde la cruza un camino)
+  function pintarAgua() {
+    for (let k = 0; k < suelo.length; k++) if (suelo[k] === 1) suelo[k] = 0;
+    RIOS.forEach((r) => !r.seco && !r.agregado && pintarLinea(r.p, r.w, 1));
+    LAGOS.forEach((l) => !l.seco && !l.agregado && pintarLago(l));
+    const nueva = new Uint8Array(GW * GH),
+      vado = new Uint8Array(GW * GH);
+    RIOS.forEach((r) => r.agregado && pintarLinea(r.p, r.w, 1, nueva));
+    LAGOS.forEach((l) => l.agregado && pintarLago(l, nueva));
+    CAMINOS.forEach((cm) => pintarLinea(cm.p, cm.w, 1, vado));
+    for (let k = 0; k < suelo.length; k++) if (nueva[k] && !vado[k] && suelo[k] === 0) suelo[k] = 1;
   }
 
   // ---------- los objetos del mundo ----------
@@ -895,7 +909,7 @@ window.ELDERVALD = (function () {
     for (const p of PUENTES) if (distSeg(x, y, p.a[0], p.a[1], p.b[0], p.b[1]) < 160) return false;
     const g = suelo[Math.floor(y / CELDA) * GW + Math.floor(x / CELDA)];
     if (g === 1 || g === 2) return false;
-    for (const r of RIOS) if (distLinea(x, y, r.p) < r.w / 2 + 40) return false;
+    for (const r of RIOS) if (!r.seco && distLinea(x, y, r.p) < r.w / 2 + 40) return false;
     if (distLinea(x, y, QUEBRADA.p) < QUEBRADA.w / 2 + 40) return false;
     return true;
   }
@@ -1025,6 +1039,28 @@ window.ELDERVALD = (function () {
   // agregado aparta los árboles que le quedan encima.
   {
     const AG = window.AGREGADOS || {};
+    // el agua: lo de base que se secó queda en su lista marcado (hordas.js y secretos.js buscan LAGOS[1] y [2]) y los
+    // ríos y lagunas agregados se suman al final; lo que les queda adentro se saca (menos lo de la historia), y donde
+    // un camino cruza agua agregada queda un vado. Los puentes agregados también se cruzan.
+    (AG.quitarRios || []).forEach((i) => RIOS[i] && (RIOS[i].seco = true));
+    (AG.quitarLagos || []).forEach((i) => LAGOS[i] && (LAGOS[i].seco = true));
+    (AG.rios || []).forEach((r) => r.p && r.p.length > 1 && RIOS.push({ p: r.p, w: r.w || 300, agregado: true }));
+    (AG.lagos || []).forEach((l) => LAGOS.push({ p: [l.x, l.y], rx: l.rx || 600, ry: l.ry || 400, agregado: true }));
+    (AG.poner || []).forEach((a, i) => {
+      if ((a.id === "puenteTablas" || a.id === "puentePaso") && a.o && a.o.x2 !== undefined) {
+        PUENTES.push({ id: "agregado" + i, a: [a.x, a.y], b: [a.o.x2, a.o.y2], ancho: 3.2 * M * ((a.o.esc || 1) * (a.o.ey || 1)) });
+        puenteSano["agregado" + i] = true;
+      }
+    });
+    if ((AG.quitarRios || []).length || (AG.quitarLagos || []).length || (AG.rios || []).length || (AG.lagos || []).length) {
+      pintarAgua();
+      const historia = new Set();
+      Object.values(NOMBRADAS).forEach((v) => (Array.isArray(v) ? v : [v]).forEach((x) => x && historia.add(x)));
+      const mojado = (x, y) => sueloEnInicial(x, y) === 1 && !enPuente(x, y);
+      for (let i = COSAS.length - 1; i >= 0; i--) if (!COSAS[i].o.piso && !historia.has(COSAS[i]) && mojado(COSAS[i].x, COSAS[i].y)) COSAS.splice(i, 1);
+      for (let i = DECO.length - 1; i >= 0; i--) if (mojado(DECO[i].x, DECO[i].y)) DECO.splice(i, 1);
+      for (let i = BARROS.length - 1; i >= 0; i--) if (mojado(BARROS[i].x, BARROS[i].y)) BARROS.splice(i, 1);
+    }
     // los caminos de base que se sacaron (con sus charcos)
     const sacados = AG.quitarCaminos || [];
     for (let i = CAMINOS.length - 1; i >= 0; i--) {
@@ -1217,6 +1253,7 @@ window.ELDERVALD = (function () {
     trazo(c, QUEBRADA.p.map(([x, y]) => [x, y + 40]), 30, "#24424A");
     // ríos: orilla, agua y el brillo del medio
     RIOS.forEach((rio) => {
+      if (rio.seco) return;
       trazo(c, rio.p, rio.w + 70, "#2E3324");
       trazo(c, rio.p, rio.w + 30, "#4A4A3A");
       trazo(c, rio.p, rio.w, "#2A4C56");
@@ -1225,7 +1262,7 @@ window.ELDERVALD = (function () {
     });
     // lagunas
     LAGOS.forEach((l) => {
-      if (l.p[0] + l.rx + 200 < x0 || l.p[0] - l.rx - 200 > x1 || l.p[1] + l.ry + 200 < y0 || l.p[1] - l.ry - 200 > y1) return;
+      if (l.seco || l.p[0] + l.rx + 200 < x0 || l.p[0] - l.rx - 200 > x1 || l.p[1] + l.ry + 200 < y0 || l.p[1] - l.ry - 200 > y1) return;
       const jit = [1, 0.92, 1.05, 0.95, 1.02, 0.9, 1.04, 0.97, 1, 0.93, 1.06, 0.96];
       P(c, poli(l.p[0], l.p[1], l.rx + 60, l.ry + 50, 12, 0.1, jit), "#2E3324");
       P(c, poli(l.p[0], l.p[1], l.rx + 24, l.ry + 20, 12, 0.1, jit), "#4A4A3A");

@@ -16,7 +16,7 @@
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], notas: [] };
+  let est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -30,6 +30,8 @@
   if (!est.estiloCaminos) est.estiloCaminos = [];
   if (!est.mover) est.mover = [];
   if (!est.quitarDeco) est.quitarDeco = [];
+  const completar = (e) => ["rios", "lagos", "quitarRios", "quitarLagos"].forEach((k) => !e[k] && (e[k] = []));
+  completar(est);
   const historial = [];
   const recordar = () => {
     historial.push(JSON.stringify(est));
@@ -45,10 +47,12 @@
     if (!est.estiloCaminos) est.estiloCaminos = [];
     if (!est.mover) est.mover = [];
     if (!est.quitarDeco) est.quitarDeco = [];
+    completar(est);
     armarMovidos();
     aplicarDeco();
     aplicarCaminos();
-    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]);
+    aplicarAgua();
+    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]) + " · " + t("ed.cuenta_agua", [est.rios.length + est.lagos.length]);
     armarIr();
   };
   const r1 = (v) => Math.round(v);
@@ -87,6 +91,8 @@
   const claveDeco = (d) => d.id + "@" + Math.round(d.x) + "," + Math.round(d.y);
   function aplicarDeco() {
     const nueva = new Set(est.quitarDeco.map(claveDeco));
+    // lo que quedó bajo el agua nueva tampoco se pinta (en el juego se saca)
+    if (est.rios.length || est.lagos.length) DECO0.forEach((d) => enAguaNueva(d.x, d.y) && nueva.add(claveDeco(d)));
     const cambian = DECO0.filter((d) => nueva.has(claveDeco(d)) !== decoSacada.has(claveDeco(d)));
     decoSacada = nueva;
     if (!cambian.length) return;
@@ -139,7 +145,7 @@
   function visibles(x0, y0, x1, y1) {
     const l = [];
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 600, (o) => {
-      if (movidos.has(o) || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o)) return;
+      if (movidos.has(o) || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o) || ahogado(o)) return;
       l.push({ id: o.id, x: o.x, y: o.y, o: o.o, alto: o.alto, choque: o.choque, cosa: o, piso: !!o.o.piso });
     });
     movidos.forEach((i, o) => {
@@ -179,7 +185,7 @@
   ];
   function firma(x0, y0, x1, y1) {
     const den = (x, y) => x > x0 - 500 && x < x1 + 500 && y > y0 - 300 && y < y1 + 1200;
-    return firmaCaminos(x0, y0, x1, y1) + "|" + est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
+    return firmaCaminos(x0, y0, x1, y1) + "|" + firmaAgua(x0, y0, x1, y1) + "|" + est.quitar.concat(est.quitarDeco).filter((q) => den(q.x, q.y)).map((q) => q.id + q.x + "," + q.y).join(";") + "|" + est.mover.filter((m) => den(m.x, m.y)).map((m) => m.id + m.x + "," + m.y).join(";");
   }
   function hornear(nv, tx, ty) {
     const x0 = tx * nv.T,
@@ -194,7 +200,7 @@
     W.dibujarPiso(g, x0, y0, x1, y1, 0.2, true);
     const l = [];
     W.cercanas(x0 - 400, y0 - 200, x1 + 400, y1 + 1200, (o) => {
-      if (movidos.has(o) || sacado(o) || o.y < y0 - 60 || o.y - o.alto * 1.2 > y1 || o.x < x0 - 500 || o.x > x1 + 500) return;
+      if (movidos.has(o) || sacado(o) || ahogado(o) || o.y < y0 - 60 || o.y - o.alto * 1.2 > y1 || o.x < x0 - 500 || o.x > x1 + 500) return;
       if (nv.res < 0.08 && !o.choque && o.alto < 90) return; // muy lejos lo chico ni se ve
       l.push(o);
     });
@@ -280,6 +286,7 @@
       c.stroke();
       c.restore();
     }
+    dibujarAgua();
     if (camino) {
       c.fillStyle = "#FFD98A";
       camino.p.forEach(([x, y]) => {
@@ -718,6 +725,197 @@
   }
   cv.addEventListener("dblclick", () => herr === "camino" && terminarCamino());
 
+  // ---------- el agua: ríos y lagunas ----------
+  // Con Agua (6) se traza un río (clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale de su barra)
+  // o se arrastra una laguna desde el centro. Con Mover un clic en el agua la elige (una laguna tuya también se
+  // arrastra) y con Sacar se saca. Lo de base que se saca queda en est.quitarRios / est.quitarLagos (su número: el
+  // mundo lo deja marcado seco, sin correr la lista); lo nuevo va en est.rios ({ p, w }) y est.lagos ({ x, y, rx, ry }).
+  // Todo se vuelca en W.RIOS y W.LAGOS, que es lo que pinta el piso. En el juego lo que queda adentro del agua nueva
+  // se saca y donde la cruza un camino queda un vado.
+  const RIOS0 = W.RIOS.filter((r) => !r.agregado),
+    LAGOS0 = W.LAGOS.filter((l) => !l.agregado);
+  let rio = null, // el río que se está trazando: { p, w }
+    aguaSel = null; // { rio | lago: índice en W.RIOS / W.LAGOS }
+  const cajaRio = (r) => {
+    const xs = r.p.map((q) => q[0]),
+      ys = r.p.map((q) => q[1]),
+      m = r.w / 2 + 120;
+    return [Math.min(...xs) - m, Math.min(...ys) - m, Math.max(...xs) + m, Math.max(...ys) + m];
+  };
+  const cajaLago = (l) => [l.p[0] - l.rx - 120, l.p[1] - l.ry - 120, l.p[0] + l.rx + 120, l.p[1] + l.ry + 120];
+  function invalidarCaja([a, b, cc, d]) {
+    for (let y = b; y <= d + 400; y += 400) for (let x = a; x <= cc + 400; x += 400) W.invalidar(Math.min(x, cc), Math.min(y, d));
+  }
+  let firmasAgua = new Map();
+  function aplicarAgua() {
+    RIOS0.forEach((r, i) => (r.seco = est.quitarRios.includes(i)));
+    LAGOS0.forEach((l, i) => (l.seco = est.quitarLagos.includes(i)));
+    W.RIOS.length = 0;
+    RIOS0.forEach((r, i) => W.RIOS.push(Object.assign(r, { base: i })));
+    est.rios.forEach((r, i) => W.RIOS.push({ p: r.p, w: r.w, agregado: true, nuevo: i }));
+    W.LAGOS.length = 0;
+    LAGOS0.forEach((l, i) => W.LAGOS.push(Object.assign(l, { base: i })));
+    est.lagos.forEach((l, i) => W.LAGOS.push({ p: [l.x, l.y], rx: l.rx, ry: l.ry, agregado: true, nuevo: i }));
+    // se repintan los trozos de lo que cambió
+    const nuevas = new Map();
+    W.RIOS.forEach((r) => !r.seco && nuevas.set(JSON.stringify([r.p, r.w]), cajaRio(r)));
+    W.LAGOS.forEach((l) => !l.seco && nuevas.set(JSON.stringify([l.p, l.rx, l.ry]), cajaLago(l)));
+    nuevas.forEach((cj, k) => !firmasAgua.has(k) && invalidarCaja(cj));
+    firmasAgua.forEach((cj, k) => !nuevas.has(k) && invalidarCaja(cj));
+    firmasAgua = nuevas;
+  }
+  // lo del agua que cambió y cae en un rectángulo (para las baldosas horneadas)
+  function firmaAgua(x0, y0, x1, y1) {
+    const toca = (cj) => cj[0] < x1 && cj[2] > x0 && cj[1] < y1 + 1200 && cj[3] > y0 - 300;
+    let f = "";
+    W.RIOS.forEach((r, i) => (r.agregado || r.seco) && toca(cajaRio(r)) && (f += "r" + i + (r.seco ? "s" : JSON.stringify([r.p, r.w]))));
+    W.LAGOS.forEach((l, i) => (l.agregado || l.seco) && toca(cajaLago(l)) && (f += "l" + i + (l.seco ? "s" : JSON.stringify([l.p, l.rx, l.ry]))));
+    return f;
+  }
+  // ¿(x, y) cae en el agua? (con un margen de m)
+  const enRio = (r, x, y, m = 0) => r.p.some((q, k) => k && distSeg(x, y, r.p[k - 1][0], r.p[k - 1][1], q[0], q[1]) < r.w / 2 + m);
+  const enLago = (l, x, y, m = 0) => Math.hypot((x - l.p[0]) / (l.rx + m), (y - l.p[1]) / (l.ry + m)) < 1;
+  function aguaEn(x, y) {
+    const m = 8 / cam.z;
+    for (let i = W.LAGOS.length - 1; i >= 0; i--) if (!W.LAGOS[i].seco && enLago(W.LAGOS[i], x, y, m)) return { lago: i };
+    for (let i = W.RIOS.length - 1; i >= 0; i--) if (!W.RIOS[i].seco && enRio(W.RIOS[i], x, y, m)) return { rio: i };
+    return null;
+  }
+  // lo del mundo que quedó bajo el agua nueva no se ve (en el juego se saca), salvo lo de la historia
+  const enAguaNueva = (x, y) => est.rios.some((r) => enRio(r, x, y)) || est.lagos.some((l) => enLago({ p: [l.x, l.y], rx: l.rx, ry: l.ry }, x, y));
+  const ahogado = (o) =>
+    (est.rios.length || est.lagos.length) &&
+    !o.o.piso &&
+    enAguaNueva(o.x, o.y) &&
+    !nombradas.has(o) &&
+    !W.CAMINOS.some((cm) => cm.p.some((q, k) => k && distSeg(o.x, o.y, cm.p[k - 1][0], cm.p[k - 1][1], q[0], q[1]) < cm.w / 2));
+  const aguaElegida = () => (!aguaSel ? null : aguaSel.rio != null ? W.RIOS[aguaSel.rio] : W.LAGOS[aguaSel.lago]) || null;
+  function elegirAgua(a) {
+    aguaSel = a;
+    pintarPanelAgua();
+  }
+  function pintarPanelAgua() {
+    const a = aguaElegida(),
+      esLago = a && aguaSel.lago != null;
+    $("aguaPanel").classList.toggle("oculto", herr !== "agua" && !a);
+    $("aguaNueva").classList.toggle("oculto", !!a);
+    $("aguaElegida").classList.toggle("oculto", !a);
+    $("aguaFilaAncho").classList.toggle("oculto", esLago || (!a && $("aguaForma").value !== "rio"));
+    $("aguaFilasLago").classList.toggle("oculto", !esLago);
+    if (!a) return ($("aguaTitulo").textContent = t("ed.agua_nueva"));
+    $("aguaTitulo").textContent = t((esLago ? "ed.agua_lago" : "ed.agua_rio") + (a.agregado ? "_tuyo" : "_base"));
+    if (esLago) {
+      $("aguaRx").value = a.rx;
+      $("aguaRxV").textContent = Math.round(a.rx);
+      $("aguaRy").value = a.ry;
+      $("aguaRyV").textContent = Math.round(a.ry);
+    } else {
+      $("aguaAncho").value = a.w;
+      $("aguaAnchoV").textContent = Math.round(a.w);
+    }
+    // lo de base se saca pero no se cambia de tamaño
+    ["aguaAncho", "aguaRx", "aguaRy"].forEach((id) => ($(id).disabled = !a.agregado));
+  }
+  function cambiarAgua() {
+    const a = aguaElegida();
+    if (!a || !a.agregado) return;
+    recordar();
+    if (aguaSel.lago != null) Object.assign(est.lagos[a.nuevo], { rx: +$("aguaRx").value, ry: +$("aguaRy").value });
+    else est.rios[a.nuevo].w = +$("aguaAncho").value;
+    guardar();
+  }
+  [["aguaAncho", "aguaAnchoV"], ["aguaRx", "aguaRxV"], ["aguaRy", "aguaRyV"]].forEach(([id, v]) => {
+    $(id).addEventListener("input", () => ($(v).textContent = $(id).value));
+    $(id).addEventListener("change", () => (aguaElegida() ? cambiarAgua() : 0));
+  });
+  $("aguaForma").addEventListener("change", () => {
+    if (rio) terminarRio();
+    pintarPanelAgua();
+  });
+  function sacarAgua(a) {
+    const w = a.rio != null ? W.RIOS[a.rio] : W.LAGOS[a.lago];
+    if (!w) return;
+    recordar();
+    if (a.rio != null) w.agregado ? est.rios.splice(w.nuevo, 1) : est.quitarRios.push(w.base);
+    else w.agregado ? est.lagos.splice(w.nuevo, 1) : est.quitarLagos.push(w.base);
+    aguaSel = null;
+    guardar();
+    pintarPanelAgua();
+    if (!w.agregado) avisar(t("ed.agua_seca"));
+  }
+  $("aguaSacar").onclick = () => aguaSel && sacarAgua(aguaSel);
+  $("aguaSoltar").onclick = () => elegirAgua(null);
+  function terminarRio() {
+    if (rio && rio.p.length >= 2) {
+      recordar();
+      est.rios.push({ p: rio.p, w: rio.w });
+      guardar();
+    }
+    rio = null;
+  }
+  cv.addEventListener("dblclick", () => herr === "agua" && terminarRio());
+  // el río a medio trazar, la laguna que se arrastra y el contorno de lo elegido
+  function pintaRio(p, w, alfa) {
+    c.save();
+    c.globalAlpha = alfa;
+    [[w + 70, "#2E3324"], [w + 30, "#4A4A3A"], [w, "#2A4C56"], [w * 0.55, "#30586A"]].forEach(([g, col]) => {
+      c.beginPath();
+      p.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      c.strokeStyle = col;
+      c.lineWidth = g;
+      c.lineJoin = c.lineCap = "round";
+      c.stroke();
+    });
+    c.restore();
+  }
+  function pintaLago(x, y, rx, ry, alfa) {
+    c.save();
+    c.globalAlpha = alfa;
+    [[60, 50, "#2E3324"], [24, 20, "#4A4A3A"], [0, 0, "#2A4C56"]].forEach(([mx, my, col]) => {
+      c.fillStyle = col;
+      c.beginPath();
+      c.ellipse(x, y, rx + mx, ry + my, 0, 0, Math.PI * 2);
+      c.fill();
+    });
+    c.restore();
+  }
+  function dibujarAgua() {
+    if (rio && cursor) pintaRio(rio.p.concat([[cursor.x, cursor.y]]), rio.w, 0.75);
+    if (rio) {
+      c.fillStyle = "#73D5DB";
+      rio.p.forEach(([x, y]) => {
+        c.beginPath();
+        c.arc(x, y, 6 / cam.z, 0, Math.PI * 2);
+        c.fill();
+      });
+    }
+    if (arrastre && arrastre.lago && cursor) {
+      const [rx, ry] = medidaLago(arrastre, cursor);
+      pintaLago(arrastre.x, arrastre.y, rx, ry, 0.75);
+    }
+    const a = aguaElegida();
+    if (!a) return;
+    let lx = a.p[0],
+      ly = a.p[1];
+    if (sel && sel.lago != null && sel.movio) (lx = cursor.x - sel.dx), (ly = cursor.y - sel.dy);
+    if (sel && sel.lago != null && sel.movio) pintaLago(lx, ly, a.rx, a.ry, 0.6);
+    c.save();
+    c.strokeStyle = "#73D5DB";
+    c.lineWidth = 3 / cam.z;
+    c.setLineDash([12 / cam.z, 8 / cam.z]);
+    c.beginPath();
+    if (aguaSel.lago != null) c.ellipse(lx, ly, a.rx, a.ry, 0, 0, Math.PI * 2);
+    else a.p.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+    c.stroke();
+    c.restore();
+  }
+  // una laguna se arrastra desde el centro; un clic solo la pone de un tamaño mediano
+  const medidaLago = (a, p) => {
+    const dx = Math.abs(p.x - a.x),
+      dy = Math.abs(p.y - a.y);
+    return dx < 40 / cam.z && dy < 40 / cam.z ? [600, 400] : [Math.max(150, r1(dx)), Math.max(100, r1(dy))];
+  };
+
   // ---------- las notas (para Claude: qué hacer en ese lugar) ----------
   let notaSel = -1;
   const caja = $("notaCaja"),
@@ -841,7 +1039,11 @@
   let herr = "poner";
   function ponerHerr(h) {
     if (h !== "camino" && camino) terminarCamino();
+    if (h !== "agua" && rio) terminarRio();
     herr = h;
+    $("hAgua").classList.toggle("activo", h === "agua");
+    if (h !== "agua" && h !== "mover") aguaSel = null;
+    pintarPanelAgua();
     $("hCamino").classList.toggle("activo", h === "camino");
     if (h !== "camino" && h !== "mover") camElegido = null;
     pintarPanelCamino();
@@ -849,13 +1051,14 @@
     $("hMover").classList.toggle("activo", h === "mover");
     $("hBorrar").classList.toggle("activo", h === "borrar");
     $("hNota").classList.toggle("activo", h === "nota");
-    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" ? "cell" : "not-allowed";
+    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" ? "cell" : "not-allowed";
   }
   $("hPoner").onclick = () => ponerHerr("poner");
   $("hMover").onclick = () => ponerHerr("mover");
   $("hBorrar").onclick = () => ponerHerr("borrar");
   $("hNota").onclick = () => ponerHerr("nota");
   $("hCamino").onclick = () => ponerHerr("camino");
+  $("hAgua").onclick = () => ponerHerr("agua");
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
   function nuevasOpciones() {
@@ -901,6 +1104,8 @@
     if (arrastre && arrastre.pan) {
       cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
       cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
+    } else if (sel && sel.lago != null) {
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
     } else if (sel && sel.nota != null) {
       const n = est.notas[sel.nota];
       if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
@@ -973,6 +1178,28 @@
       }
       return;
     }
+    if (herr === "agua") {
+      if (aguaSel) elegirAgua(null);
+      if ($("aguaForma").value === "laguna") return (arrastre = { lago: true, x, y });
+      const p = [r1(x), r1(y)];
+      if (!rio) rio = { p: [p], w: +$("aguaAncho").value };
+      else {
+        const u = rio.p[rio.p.length - 1];
+        if (Math.hypot(u[0] - p[0], u[1] - p[1]) > 8 / cam.z) rio.p.push(p);
+      }
+      return;
+    }
+    // el agua se saca o se elige solo si no hay nada encima (un objeto, un camino)
+    if ((herr === "borrar" || herr === "mover") && !tocadoSacar(x, y) && !caminoEn(x, y) && aguaEn(x, y)) {
+      const a = aguaEn(x, y);
+      if (herr === "borrar") return sacarAgua(a);
+      soltarElegida();
+      elegirCamino(null);
+      elegirAgua(a);
+      const l = a.lago != null && W.LAGOS[a.lago];
+      if (l && l.agregado) sel = { lago: l.nuevo, dx: x - l.p[0], dy: y - l.p[1], x0: x, y0: y };
+      return;
+    }
     if (herr === "borrar" && caminoEn(x, y) && !tocadoSacar(x, y)) {
       sacarCamino(caminoEn(x, y));
       return;
@@ -980,6 +1207,7 @@
     // con Mover, un clic en un camino (sin nada encima) lo elige para cambiarle el tipo, el borde o sacarlo
     if (herr === "mover" && !tocado(x, y) && caminoEn(x, y)) {
       soltarElegida();
+      elegirAgua(null);
       elegirCamino(caminoEn(x, y));
       return;
     }
@@ -1045,7 +1273,19 @@
       est.poner.push(nuevo({ id: elegido, x: r1(arrastre.x), y: r1(arrastre.y), o }));
       guardar();
     }
-    if (sel && sel.nota != null) {
+    if (arrastre && arrastre.lago) {
+      const [rx, ry] = medidaLago(arrastre, { x, y });
+      recordar();
+      est.lagos.push({ x: r1(arrastre.x), y: r1(arrastre.y), rx, ry });
+      guardar();
+    }
+    if (sel && sel.lago != null) {
+      if (sel.movio) {
+        recordar();
+        Object.assign(est.lagos[sel.lago], { x: r1(x - sel.dx), y: r1(y - sel.dy) });
+        guardar();
+      }
+    } else if (sel && sel.nota != null) {
       if (sel.movio) guardar();
       else {
         historial.pop();
@@ -1110,16 +1350,24 @@
     }
     if (e.key === "4") ponerHerr("camino");
     if (e.key === "5") ponerHerr("nota");
-    if (e.key === "Enter" && camino) terminarCamino();
-    if (e.key === "Escape" && camino) terminarCamino();
+    if (e.key === "6") ponerHerr("agua");
+    const trazando = camino || rio;
+    if ((e.key === "Enter" || e.key === "Escape") && rio) terminarRio();
+    else if (e.key === "Enter" && camino) terminarCamino();
+    if (e.key === "Escape" && trazando) camino && terminarCamino();
     else if (e.key === "Escape") {
+      elegirAgua(null);
       elegido = null;
       pegarA = null;
       soltarElegida();
       lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
     }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") deshacer();
-    if ((e.key === "Delete" || e.key === "Backspace") && camino) {
+    if ((e.key === "Delete" || e.key === "Backspace") && rio) {
+      rio.p.pop();
+      if (!rio.p.length) rio = null;
+    } else if ((e.key === "Delete" || e.key === "Backspace") && aguaSel) sacarAgua(aguaSel);
+    else if ((e.key === "Delete" || e.key === "Backspace") && camino) {
       camino.p.pop();
       if (!camino.p.length) camino = null;
     } else if (e.key === "Delete" || e.key === "Backspace") ponerHerr("borrar");
@@ -1141,6 +1389,7 @@
     est = JSON.parse(s);
     soltarElegida();
     camElegido = null;
+    aguaSel = null;
     guardar();
   }
   $("bDeshacer").onclick = deshacer;
@@ -1183,7 +1432,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -1223,7 +1472,7 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "rios" || k === "lagos" || k === "quitarRios" || k === "quitarLagos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
@@ -1232,6 +1481,7 @@
         if (!nuevo.estiloCaminos) nuevo.estiloCaminos = [];
         if (!nuevo.mover) nuevo.mover = [];
         if (!nuevo.quitarDeco) nuevo.quitarDeco = [];
+        completar(nuevo);
         recordar();
         est = nuevo;
         guardar();
@@ -1249,7 +1499,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], notas: [] };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], notas: [] };
     guardar();
   };
 

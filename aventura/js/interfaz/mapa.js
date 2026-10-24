@@ -77,12 +77,13 @@ window.MAPA = (function () {
       c.stroke();
     };
     W.LAGOS.forEach((l) => {
+      if (l.seco) return;
       c.fillStyle = "#2E5A66";
       c.beginPath();
       c.ellipse(l.p[0], l.p[1], l.rx, l.ry, 0, 0, Math.PI * 2);
       c.fill();
     });
-    W.RIOS.forEach((r) => trazo(r.p, r.w, "#2E5A66"));
+    W.RIOS.forEach((r) => !r.seco && trazo(r.p, r.w, "#2E5A66"));
     trazo(W.QUEBRADA.p, W.QUEBRADA.w, "#141410");
     // caminos: tierra clara con borde oscuro, bien marcados
     W.CAMINOS.forEach((r) => trazo(r.p, Math.max(200, r.w * 1.3), "#2A2016"));
