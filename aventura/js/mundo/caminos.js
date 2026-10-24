@@ -197,7 +197,7 @@ window.SENDAS = (function () {
       ea = za.d,
       eb = zb.d;
     // cuánto queda del empedrado en ese punto por estar metido en otro camino (1 entero, 0 nada)
-    const suelto = (d) => Math.min(1, ea ? 1 - (ea - d) / (w * 1.2) : 1, eb ? 1 - (d - (L - eb)) / (w * 1.2) : 1);
+    const suelto = (d) => Math.min(1, ea ? 1 - (ea - d) / Math.min(w * 1.2, ea + 12) : 1, eb ? 1 - (d - (L - eb)) / Math.min(w * 1.2, eb + 12) : 1);
     // el empedrado entero: con punta redonda en las puntas libres y cortado derecho donde entra en otro
     const losa = (pts, ancho, col) => {
       if (!(ea || eb)) return trazo(c, pts, ancho, col);
@@ -208,23 +208,26 @@ window.SENDAS = (function () {
     };
     const losaEntre = (a, b, ancho, col) => {
       if (b - a < 2) return;
-      const pts = recortar(p, a, b);
+      const pts = recortar(p, ea ? a - w * 0.1 : a, eb ? b + w * 0.1 : b);
       trazo(c, pts, ancho, col, "butt");
       // la punta libre sigue redonda; la que entra en otro camino se deshace en un borde mordido, más largo en el medio
       // que en las esquinas (las esquinas no salen del otro camino)
+      // la punta que entra en otro camino no tiene forma: se deshace en manchones sueltos de distinto tamaño, más
+      // chicos y más separados cuanto más adentro (cada capa usa los mismos, agrandados por lo que es más ancha)
       const mordida = (q, r, k) => {
         const l = Math.hypot(q[0] - r[0], q[1] - r[1]) || 1,
           dx = (q[0] - r[0]) / l,
           dy = (q[1] - r[1]) / l,
-          h = ancho / 2,
-          out = [];
-        for (let j = 0; j <= 12; j++) {
-          const t = (j / 12) * 2 - 1,
-            e = j === 0 || j === 12 ? -2 : w * 0.16 * Math.sqrt(1 - t * t) * (0.2 + hash(sem + 307, k, j) * 1.4);
-          out.push(q[0] - dy * t * h + dx * e, q[1] + dx * t * h + dy * e);
+          h = w / 2,
+          extra = (ancho - w) / 2;
+        for (let j = 0; j < 15; j++) {
+          const z = (n) => hash(sem + 307, k * 50 + j, n),
+            t = z(1) * 2 - 1,
+            hondo = z(2),
+            e = -w * 0.12 + hondo * w * 0.5 * Math.sqrt(1 - t * t),
+            rr = (w * (0.09 + z(3) * 0.1) * (1 - hondo * 0.5)) + extra * 0.6;
+          P(c, poli(q[0] - dy * t * h * 0.9 + dx * e, q[1] + dx * t * h * 0.9 + dy * e, rr, rr * (0.6 + z(4) * 0.3), 7, z(5) * 6), col);
         }
-        out.push(q[0] - dy * h - dx * 2, q[1] + dx * h - dy * 2);
-        P(c, out, col);
       };
       if (!ea) E(c, pts[0][0], pts[0][1], ancho / 2, ancho / 2, col);
       else mordida(pts[0], pts[1], 0);
@@ -298,10 +301,13 @@ window.SENDAS = (function () {
             off = i % 2 ? 11 : 0;
           for (let o = -w / 2 + 12 + off, j = 0; o <= w / 2 - 10; o += 22, j++) {
             if (q < 1 && hash(sem, i, j) > q) continue;
-            const cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * 4,
-              cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * 4;
-            P(c, poli(cx, cy, 10.5, 7.5, 6, hash(sem, i, j + 60) * 2), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
-            P(c, poli(cx + 2, cy - 2, 5, 3, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
+            // las sueltas (en una punta) se corren, se achican y se giran
+            const fl = 1 - q,
+              cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * (4 + fl * 30) + nx * (hash(sem, i, j + 80) - 0.5) * fl * 24,
+              cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * (4 + fl * 30) + ny * (hash(sem, i, j + 80) - 0.5) * fl * 24,
+              t = 1 - fl * hash(sem, i, j + 90) * 0.45;
+            P(c, poli(cx, cy, 10.5 * t, 7.5 * t, 6, hash(sem, i, j + 60) * (2 + fl * 4)), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
+            P(c, poli(cx + 2, cy - 2, 5 * t, 3 * t, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
           }
         });
     } else if (tipo === "ladrillo") {
@@ -323,7 +329,16 @@ window.SENDAS = (function () {
             if ((i + j) % 2) continue; // cada ladrillo mide dos pasos de largo
             if (q < 1 && hash(sem, i, j) > q) continue;
             const o = -w / 2 + (j + 0.5) * (w / carriles);
-            ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
+            if (q < 1) {
+              // suelto: corrido, más chico y torcido
+              const fl = 1 - q,
+                g = (hash(sem, i, j + 90) - 0.5) * fl * 1.6,
+                ux = dx * Math.cos(g) - dy * Math.sin(g),
+                uy = dx * Math.sin(g) + dy * Math.cos(g),
+                sx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * fl * 30 + nx * (hash(sem, i, j + 50) - 0.5) * fl * 20,
+                sy = y + ny * o + dy * (hash(sem, i, j + 40) - 0.5) * fl * 30 + ny * (hash(sem, i, j + 50) - 0.5) * fl * 20;
+              ladrillo(c, sx, sy, ux, uy, 29 * (1 - fl * 0.3), (w / carriles - 3) * (1 - fl * 0.2), LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
+            } else ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
           }
         });
     }
