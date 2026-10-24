@@ -1435,6 +1435,8 @@
       HUD.abrir(html, botones);
     },
     cerrarMenu,
+    usarLente,
+    trabajadores: () => trabajadores,
     mouse: () => mouse,
     hora: () => amb.h,
     noche: () => amb.n,

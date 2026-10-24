@@ -22,6 +22,10 @@ window.CONTROLES = (function () {
     inventario: ["KeyI", "KeyB"],
     pausa: ["Escape", "KeyP"],
     seguir: ["Enter", "Space", "KeyE", "KeyF"],
+    // la cámara de Eikholt en 3D: girar y cambiar a la vista baja
+    camaraIzq: ["KeyZ"],
+    camaraDer: ["KeyX"],
+    camara: ["KeyV"],
   };
   // botones estándar del mando (Gamepad API): 0 ✕/A · 1 ○/B · 2 □/X · 3 △/Y · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Select · 9 Start · 10 L3
 // · 11 R3 · 16 PS · 17 panel táctil
@@ -42,16 +46,18 @@ window.CONTROLES = (function () {
     abajo: [13],
     izquierda: [14],
     derecha: [15],
+    camara: [11],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", camaraIzq: "Z", camaraDer: "X", camara: "V" };
 
   const abajo = new Set();
   let antes = {},
     ahora = {},
     mouse = false,
     usandoMando = false,
-    eje = { x: 0, y: 0 };
+    eje = { x: 0, y: 0 },
+    ejeDer = { x: 0, y: 0 };
   addEventListener("keydown", (e) => {
     if (e.target && e.target.tagName === "INPUT") return;
     if (e.code === "Tab") e.preventDefault();
@@ -91,6 +97,9 @@ window.CONTROLES = (function () {
           ahora[a] = true;
           usandoMando = true;
         }
+      const rx = g.axes[2] || 0,
+        ry = g.axes[3] || 0;
+      ejeDer = Math.hypot(rx, ry) > 0.2 ? { x: rx, y: ry } : { x: 0, y: 0 };
       const ax = g.axes[0] || 0,
         ay = g.axes[1] || 0;
       if (Math.hypot(ax, ay) > 0.2) {
@@ -109,6 +118,7 @@ window.CONTROLES = (function () {
   return {
     actualizar,
     eje: () => eje,
+    ejeDer: () => ejeDer,
     pulsado: (a) => !!ahora[a],
     recien: (a) => !!ahora[a] && !antes[a],
     soltar: () => {
