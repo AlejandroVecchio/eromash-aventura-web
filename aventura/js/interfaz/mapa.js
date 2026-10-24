@@ -205,25 +205,154 @@ window.MAPA = (function () {
     pend.forEach((a) => fn(...a));
   }
 
+  // ---------- el mapa grande: zoom, arrastre y la marca propia ----------
+  // Pedido de Alejandro (24/10/2026): acercar el mapa (rueda, pellizco o los botones + y −), moverlo arrastrando y
+  // marcar un solo lugar u objetivo con un toque; la marca se ve con su propia flecha dorada en el juego y en el
+  // minimapa, y se borra tocándola de nuevo, con el botón o al llegar.
+  const ZOOM_MAX = 5;
+  const vistaMapa = { z: 1, cx: 0, cy: 0 };
+  const marca = () => (st && st.marca ? st.marca : null);
+  function acotar() {
+    vistaMapa.z = Math.max(1, Math.min(ZOOM_MAX, vistaMapa.z));
+    const mw = W.ANCHO / vistaMapa.z / 2,
+      mh = W.ALTO / vistaMapa.z / 2;
+    vistaMapa.cx = Math.max(mw, Math.min(W.ANCHO - mw, vistaMapa.cx));
+    vistaMapa.cy = Math.max(mh, Math.min(W.ALTO - mh, vistaMapa.cy));
+  }
+  // de unidades del mundo a píxeles del lienzo y al revés
+  const escala = (cv) => (cv.width / W.ANCHO) * vistaMapa.z;
+  const aLienzo = (cv, x, y) => [(x - vistaMapa.cx) * escala(cv) + cv.width / 2, (y - vistaMapa.cy) * escala(cv) + cv.height / 2];
+  const aMundo = (cv, px, py) => [(px - cv.width / 2) / escala(cv) + vistaMapa.cx, (py - cv.height / 2) / escala(cv) + vistaMapa.cy];
+  function zoomEn(cv, f, px, py) {
+    const [wx, wy] = aMundo(cv, px, py);
+    vistaMapa.z *= f;
+    acotar();
+    // que el punto bajo el cursor quede en el mismo lugar
+    const [nx, ny] = aLienzo(cv, wx, wy);
+    vistaMapa.cx += (nx - px) / escala(cv);
+    vistaMapa.cy += (ny - py) / escala(cv);
+    acotar();
+    dibujar();
+  }
+  function ponerMarca(x, y) {
+    const m = marca();
+    if (m && Math.hypot(m[0] - x, m[1] - y) < 260 / Math.sqrt(vistaMapa.z)) st.marca = null;
+    else st.marca = [Math.round(x), Math.round(y)];
+    dibujar();
+    botonQuitar();
+  }
+  function botonQuitar() {
+    const b = document.getElementById("mapaQuitar");
+    if (b) b.disabled = !marca();
+  }
   function abrir() {
-    A.menu(`<h2>${t("mp.titulo")}</h2><canvas id="mapaLienzo" class="mapa"></canvas><div class="sub mapa-ley">${t("mp.leyenda")}</div>`, [{ texto: t("ui.cerrar"), fn: A.cerrarMenu }]);
+    vistaMapa.z = vistaMapa.z || 1;
+    vistaMapa.cx = jug.x;
+    vistaMapa.cy = jug.y;
+    acotar();
+    A.menu(
+      `<h2>${t("mp.titulo")}</h2><div class="mapa-marco"><canvas id="mapaLienzo" class="mapa"></canvas>` +
+        `<div class="mapa-zoom"><button id="mapaMas" aria-label="${t("mp.acercar")}">+</button><button id="mapaMenos" aria-label="${t("mp.alejar")}">−</button></div></div>` +
+        `<div class="sub mapa-ley">${t("mp.leyenda")} ${t("mp.ayuda_marca")}</div>`,
+      [
+        { texto: t("mp.quitar_marca"), id: "mapaQuitar", fn: () => ((st.marca = null), dibujar(), botonQuitar()) },
+        { texto: t("ui.cerrar"), fn: A.cerrarMenu },
+      ],
+    );
     document.getElementById("capaCaja").classList.add("ancha");
+    // el botón de quitar: los botones del menú no traen id, se busca por su texto
+    document.querySelectorAll("#capaCaja button").forEach((b) => b.textContent === t("mp.quitar_marca") && (b.id = "mapaQuitar"));
+    botonQuitar();
+    const cv = document.getElementById("mapaLienzo");
+    const enLienzo = (e) => {
+      const r = cv.getBoundingClientRect();
+      return [((e.clientX - r.left) / r.width) * cv.width, ((e.clientY - r.top) / r.height) * cv.height];
+    };
+    document.getElementById("mapaMas").onclick = () => zoomEn(cv, 1.5, cv.width / 2, cv.height / 2);
+    document.getElementById("mapaMenos").onclick = () => zoomEn(cv, 1 / 1.5, cv.width / 2, cv.height / 2);
+    cv.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const [px, py] = enLienzo(e);
+        zoomEn(cv, e.deltaY < 0 ? 1.25 : 0.8, px, py);
+      },
+      { passive: false },
+    );
+    // arrastrar mueve, tocar sin moverse marca; con dos dedos se pellizca
+    const dedos = new Map();
+    let movido = 0,
+      pellizco = 0;
+    cv.style.touchAction = "none";
+    cv.addEventListener("pointerdown", (e) => {
+      cv.setPointerCapture(e.pointerId);
+      dedos.set(e.pointerId, enLienzo(e));
+      movido = 0;
+      if (dedos.size === 2) {
+        const [p, q] = [...dedos.values()];
+        pellizco = Math.hypot(p[0] - q[0], p[1] - q[1]);
+      }
+    });
+    cv.addEventListener("pointermove", (e) => {
+      if (!dedos.has(e.pointerId)) return;
+      const antes = dedos.get(e.pointerId),
+        ahora = enLienzo(e);
+      dedos.set(e.pointerId, ahora);
+      if (dedos.size === 2) {
+        const [p, q] = [...dedos.values()],
+          d = Math.hypot(p[0] - q[0], p[1] - q[1]);
+        if (pellizco > 0) zoomEn(cv, d / pellizco, (p[0] + q[0]) / 2, (p[1] + q[1]) / 2);
+        pellizco = d;
+        movido = 99;
+        return;
+      }
+      movido += Math.abs(ahora[0] - antes[0]) + Math.abs(ahora[1] - antes[1]);
+      if (movido > 6) {
+        vistaMapa.cx -= (ahora[0] - antes[0]) / escala(cv);
+        vistaMapa.cy -= (ahora[1] - antes[1]) / escala(cv);
+        acotar();
+        dibujar();
+      }
+    });
+    const soltar = (e) => {
+      if (!dedos.has(e.pointerId)) return;
+      const p = dedos.get(e.pointerId);
+      dedos.delete(e.pointerId);
+      if (dedos.size < 2) pellizco = 0;
+      if (e.type === "pointerup" && movido <= 6 && dedos.size === 0) ponerMarca(...aMundo(cv, p[0], p[1]));
+    };
+    cv.addEventListener("pointerup", soltar);
+    cv.addEventListener("pointercancel", soltar);
     dibujar();
   }
   function dibujar() {
     const cv = document.getElementById("mapaLienzo");
     if (!cv) return;
     if (!base) base = pintarBase(ANCHO_MAPA);
-    cv.width = base.width;
-    cv.height = base.height;
+    if (cv.width !== base.width) {
+      cv.width = base.width;
+      cv.height = base.height;
+    }
     const c = cv.getContext("2d");
-    c.drawImage(base, 0, 0);
-    const k = base.width / W.ANCHO;
-    c.drawImage(niebla, 0, 0);
-    const nombres = [];
+    // de cerca, la base grande del minimapa para que no se vea borrosa
+    const fondo = vistaMapa.z > 1.6 && baseMini ? baseMini : base;
+    const vw = W.ANCHO / vistaMapa.z,
+      vh = W.ALTO / vistaMapa.z,
+      wx0 = vistaMapa.cx - vw / 2,
+      wy0 = vistaMapa.cy - vh / 2;
+    c.fillStyle = "#111111";
+    c.fillRect(0, 0, cv.width, cv.height);
+    const kf = fondo.width / W.ANCHO,
+      kn = niebla.width / W.ANCHO;
+    c.drawImage(fondo, wx0 * kf, wy0 * kf, vw * kf, vh * kf, 0, 0, cv.width, cv.height);
+    c.drawImage(niebla, wx0 * kn, wy0 * kn, vw * kn, vh * kn, 0, 0, cv.width, cv.height);
+    const nombres = [],
+      zi = Math.min(1.6, 1 + (vistaMapa.z - 1) * 0.15);
     cadaMarca((tipo, x, y, op, pri) => {
-      ICONOS.dibujar(c, tipo, x * k, y * k, [16, 12, 10, 7][pri] * (op.apagado ? ACHICAR : 1), op);
-      if (op.nombre) nombres.push([op.nombre, x * k, y * k - 17]);
+      const [px, py] = aLienzo(cv, x, y);
+      if (px < -20 || py < -20 || px > cv.width + 20 || py > cv.height + 20) return;
+      ICONOS.dibujar(c, tipo, px, py, [16, 12, 10, 7][pri] * zi * (op.apagado ? ACHICAR : 1), op);
+      if (op.nombre) nombres.push([op.nombre, px, py - 17 * zi]);
     });
     // nombres de los lugares descubiertos
     c.font = '700 13px "Eromash Text", system-ui, sans-serif';
@@ -239,14 +368,35 @@ window.MAPA = (function () {
     const o = A.H.objetivo();
     const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
     if (p) {
+      const [px, py] = aLienzo(cv, p[0], p[1]);
       c.strokeStyle = "#73D5DB";
       c.lineWidth = 2;
       c.beginPath();
-      c.arc(p[0] * k, p[1] * k, 8 + Math.sin(J.t * 4) * 2, 0, Math.PI * 2);
+      c.arc(px, py, 9, 0, Math.PI * 2);
       c.stroke();
     }
+    // la marca propia: un banderín dorado
+    const mk = marca();
+    if (mk) {
+      const [px, py] = aLienzo(cv, mk[0], mk[1]);
+      c.strokeStyle = "#111111";
+      c.lineWidth = 2;
+      c.fillStyle = "#FFD98A";
+      c.beginPath();
+      c.moveTo(px, py);
+      c.lineTo(px - 8, py - 14);
+      c.arc(px, py - 18, 9, Math.PI * 0.8, Math.PI * 2.2);
+      c.closePath();
+      c.fill();
+      c.stroke();
+      c.fillStyle = "#111111";
+      c.beginPath();
+      c.arc(px, py - 18, 3.5, 0, Math.PI * 2);
+      c.fill();
+    }
+    const [jx, jy] = aLienzo(cv, jug.x, jug.y);
     c.save();
-    c.translate(jug.x * k, jug.y * k);
+    c.translate(jx, jy);
     c.rotate(Math.atan2(jug.dir[1], jug.dir[0]));
     c.fillStyle = "#C8402D";
     c.strokeStyle = "#F2ECEC";
@@ -323,25 +473,26 @@ window.MAPA = (function () {
       if (dentro(n.x, n.y)) rombo(n.x, n.y, "#7BC86C", 3);
     }
     if (A.ciervo && A.ciervo.activo) rombo(A.ciervo.x, A.ciervo.y, "#9A6BD8", 5);
-    // el objetivo: anillo rúnico si se ve, flecha en el borde si no
+    // el objetivo (rúnico) y la marca propia (dorada): anillo si se ve, flecha en el borde si no
     const o = A.H.objetivo();
     const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
-    if (p) {
-      if (dentro(p[0], p[1])) {
-        const [px, py] = aqui(p[0], p[1]);
-        c.strokeStyle = "#73D5DB";
+    const senal = (q, col) => {
+      if (!q) return;
+      if (dentro(q[0], q[1])) {
+        const [px, py] = aqui(q[0], q[1]);
+        c.strokeStyle = col;
         c.lineWidth = 2;
         c.beginPath();
         c.arc(px, py, 6 + Math.sin(J.t * 4) * 1.5, 0, Math.PI * 2);
         c.stroke();
       } else {
-        const a = Math.atan2(p[1] - jug.y, p[0] - jug.x),
+        const a = Math.atan2(q[1] - jug.y, q[0] - jug.x),
           m = MINI / 2 - 9,
           f = m / Math.max(Math.abs(Math.cos(a)), Math.abs(Math.sin(a)));
         c.save();
         c.translate(MINI / 2 + Math.cos(a) * f, MINI / 2 + Math.sin(a) * f);
         c.rotate(a);
-        c.fillStyle = "#73D5DB";
+        c.fillStyle = col;
         c.beginPath();
         c.moveTo(7, 0);
         c.lineTo(-5, -6);
@@ -350,7 +501,9 @@ window.MAPA = (function () {
         c.fill();
         c.restore();
       }
-    }
+    };
+    senal(marca(), "#FFD98A");
+    senal(p, "#73D5DB");
     // Eromash en el centro, apuntando a donde mira
     c.save();
     c.translate(MINI / 2, MINI / 2);
@@ -400,8 +553,20 @@ window.MAPA = (function () {
       armarNiebla();
       marcar();
     },
+    // la marca propia en el seguimiento, con la distancia
+    seguimiento() {
+      const m = marca();
+      if (!m) return null;
+      return { secundaria: true, rotulo: t("mp.marca_rotulo"), nombre: t("mp.marca_nombre"), objetivos: [{ texto: t("mp.marca_ir"), estado: "actual", metros: Math.max(1, Math.hypot(m[0] - jug.x, m[1] - jug.y) / 43) }] };
+    },
     actualizar(dt) {
       if (!st) return;
+      // al llegar, la marca se borra sola
+      const m = marca();
+      if (m && J.modo === "juego" && Math.hypot(m[0] - jug.x, m[1] - jug.y) < 180) {
+        st.marca = null;
+        HUD.aviso(t("mp.marca_llegaste"), "#FFD98A");
+      }
       paso += dt;
       if (paso > 0.5) {
         paso = 0;
@@ -413,5 +578,5 @@ window.MAPA = (function () {
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   // descubre de golpe un pedazo del mapa (las piedras del camino): radio en unidades del mundo
-  return { abrir, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
+  return { abrir, marca, descubrir: (x, y, radio) => st && marcar(x, y, Math.round(radio / CEL)) };
 })();

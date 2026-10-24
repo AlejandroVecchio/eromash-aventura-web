@@ -160,6 +160,14 @@ I18N.textos({
   "hd.unico_caido": { es: "{0} cayó para siempre", en: "{0} has fallen for good" },
 
   // ---------- mapa ----------
+  "mp.acercar": { es: "Acercar", en: "Zoom in" },
+  "mp.alejar": { es: "Alejar", en: "Zoom out" },
+  "mp.ayuda_marca": { es: "Acercá con la rueda, pellizcando o con + y −, y arrastrá para moverte. Tocá un lugar para marcarlo (una marca a la vez); tocala de nuevo para borrarla.", en: "Zoom with the wheel, a pinch or + and −, and drag to move around. Tap a spot to mark it (one mark at a time); tap it again to clear it." },
+  "mp.quitar_marca": { es: "Quitar la marca", en: "Clear mark" },
+  "mp.marca_rotulo": { es: "Tu marca", en: "Your mark" },
+  "mp.marca_nombre": { es: "Lugar marcado en el mapa", en: "Place marked on the map" },
+  "mp.marca_ir": { es: "Seguí la flecha dorada", en: "Follow the golden arrow" },
+  "mp.marca_llegaste": { es: "Llegaste a tu marca", en: "You reached your mark" },
   "mp.titulo": { es: "Mapa de Eldervald", en: "Map of Eldervald" },
   "mp.leyenda": { es: "Lo oscuro todavía no lo caminaste. Cada lugar, estructura, piedra, altar, campamento y cofre que viste queda con su miniatura; lo que ya completaste queda más chico y gris.", en: "The dark parts you haven't walked yet. Every place, structure, stone, altar, camp and chest you have seen keeps its icon; what you have already completed turns smaller and grey." },
 });

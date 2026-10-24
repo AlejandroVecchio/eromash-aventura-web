@@ -849,14 +849,15 @@
     if (o.donde === "ciervo") return ciervo.derrotado ? null : [ciervo.x, ciervo.y];
     return P[o.donde] || null;
   }
-  function dibujarHaz(p, x0, y0, x1, y1) {
+  // rgb/col: el color del haz y de la flecha (rúnico para la misión, dorado para la marca propia del mapa)
+  function dibujarHaz(p, x0, y0, x1, y1, rgb = "115,213,219", col = DIB.RUNICO) {
     if (!p || ciervo.activo || dist(jug, p) < 7 * 30) return;
     const vis = p[0] > x0 && p[0] < x1 && p[1] > y0 && p[1] < y1 + 200;
     if (vis) {
       c.save();
       const g = c.createLinearGradient(0, p[1] - 700, 0, p[1]);
-      g.addColorStop(0, "rgba(115,213,219,0)");
-      g.addColorStop(1, "rgba(115,213,219,0.28)");
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(1, `rgba(${rgb},0.28)`);
       c.fillStyle = g;
       c.beginPath();
       c.moveTo(p[0] - 10, p[1] - 700);
@@ -865,7 +866,7 @@
       c.lineTo(p[0] - 22, p[1]);
       c.fill();
       c.restore();
-      DIB.halo(c, p[0], p[1], 40, DIB.RUNICO, 0.6 + Math.sin(J.t * 3) * 0.2);
+      DIB.halo(c, p[0], p[1], 40, col, 0.6 + Math.sin(J.t * 3) * 0.2);
     } else {
       // flecha rúnica en el borde de la vista
       const cx = (x0 + x1) / 2,
@@ -880,7 +881,7 @@
       c.translate(ax, ay);
       c.rotate(a);
       c.globalAlpha = 0.85;
-      DIB.P(c, [16, 0, -10, -12, -4, 0, -10, 12], DIB.RUNICO);
+      DIB.P(c, [16, 0, -10, -12, -4, 0, -10, 12], col);
       c.restore();
     }
   }
@@ -1000,6 +1001,7 @@
     });
     c.globalAlpha = 1;
     dibujarHaz(dondeObjetivo(), x0, y0, x1, y1);
+    if (window.MAPA) dibujarHaz(MAPA.marca(), x0, y0, x1, y1, "255,217,138", "#FFD98A");
     // el aire del bosque: viñeta suave (se apaga en calidad baja)
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
@@ -1122,7 +1124,10 @@
       }
       lista.push({ rotulo: t("ui.mision", [H.etapa()]), nombre: tav("mision_" + m), objetivos: objs });
     } else lista.push({ rotulo: tav("mision_fin"), nombre: tav("obj_fin"), objetivos: [] });
-    SIS.forEach((s0) => s0.seguimiento && lista.push(s0.seguimiento()));
+    SIS.forEach((s0) => {
+      const sg = s0.seguimiento && s0.seguimiento();
+      if (sg) lista.push(sg);
+    });
     HUD.misiones(lista);
     const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));

@@ -108,6 +108,11 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .capa .caja { max-height: 88vh; overflow: auto; box-sizing: border-box; }
 .capa .caja.ancha { width: min(1060px, calc(100vw - 32px)); }
 canvas.mapa { display: block; max-width: 100%; max-height: 64vh; width: auto; height: auto; margin: 0 auto; background: #111111; }
+.mapa-marco { position: relative; }
+canvas.mapa { cursor: crosshair; }
+.mapa-zoom { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.mapa-zoom button { width: 40px; height: 40px; font-size: 22px; font-weight: 700; line-height: 1; border: 2px solid #F2ECEC; background: rgba(17,17,17,0.85); color: #F2ECEC; cursor: pointer; }
+.mapa-zoom button:hover { background: #9C2315; }
 .mapa-ley { margin: 10px 0 0 !important; font-size: 12px !important; }
 .diario-resumen p { margin: 0 0 8px; font-size: 14px; }
 .diario-resumen b { color: var(--oro); font-weight: 800; }
