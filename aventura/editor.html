@@ -104,6 +104,9 @@
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
   .herr .ancho3 { grid-column: 1 / -1; }
   .herr .ancho2 { grid-column: span 2; }
+  #pincelPanel { margin: 4px 12px; padding: 6px 0; border: 1px solid #7BC86C; }
+  #pincelPanel .fila select { width: 100%; }
+  .pincelAyuda { display: block; padding: 2px 16px; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
   #selInterior { margin: 4px 16px; background: #2A3A3C; border-color: #73D5DB; }
   /* los interiores: el cuarto de frente a la izquierda, su panel a la derecha */
   #cuartos { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 1fr) 320px; background: #0A0606; }
@@ -149,7 +152,8 @@
       <button id="hIA" data-i18n="ed.ia"></button>
       <button id="hComandos" data-i18n="ed.comandos"></button>
       <button id="hRegion" data-i18n="ed.region"></button>
-      <button id="hInteriores" class="ancho2" data-i18n="ed.interiores"></button>
+      <button id="hPincel" data-i18n="ed.pincel"></button>
+      <button id="hInteriores" data-i18n="ed.interiores"></button>
     </div>
     <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
     <div class="fila">
@@ -199,6 +203,22 @@
       </div>
       <small id="aguaAyuda" class="ayudita" data-i18n="ed.agua_puntos"></small>
       <div id="aguaElegida" class="oculto"><div class="botones3"><button id="aguaSacar" data-i18n="ed.agua_sacar"></button><button id="aguaSoltar" data-i18n="ed.sel_soltar"></button></div></div>
+    </div>
+    <div id="pincelPanel" class="oculto">
+      <div class="fila"><select id="pincelModo">
+        <option value="bosque" data-i18n="ed.pincel_bosque"></option>
+        <option value="abetal" data-i18n="ed.pincel_abetal"></option>
+        <option value="robledal" data-i18n="ed.pincel_robledal"></option>
+        <option value="abedular" data-i18n="ed.pincel_abedular"></option>
+        <option value="rocas" data-i18n="ed.pincel_rocas"></option>
+        <option value="sotobosque" data-i18n="ed.pincel_sotobosque"></option>
+        <option value="elegido" data-i18n="ed.pincel_elegido"></option>
+        <option value="abrir" data-i18n="ed.pincel_abrir"></option>
+      </select></div>
+      <div class="fila"><span data-i18n="ed.pincel_radio"></span><input id="pincelRadio" type="range" min="60" max="2400" step="20" value="600" /><b id="pincelRadioV"></b></div>
+      <div class="fila" id="pincelFilaDensidad"><span data-i18n="ed.pincel_densidad"></span><input id="pincelDensidad" type="range" min="1" max="12" step="1" value="4" /><b id="pincelDensidadV"></b></div>
+      <div class="fila" id="pincelFilaBordes"><label><input id="pincelBordes" type="checkbox" checked /><span data-i18n="ed.pincel_bordes"></span></label></div>
+      <small class="pincelAyuda" data-i18n="ed.pincel_ayuda"></small>
     </div>
     <div id="selPanel" class="oculto">
       <b id="selNombre"></b>
@@ -330,5 +350,6 @@
 <script src="js/motor/interiores.js"></script>
 <script src="js/editor/cuartos.js"></script>
 <script src="js/editor/mundo.js"></script>
+<script src="js/editor/pincel.js"></script>
 </body>
 </html>

@@ -613,6 +613,7 @@
     }
     if (window.EDITOR_IA) EDITOR_IA.dibujar(c, cam, V, enVista, tt);
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.dibujar(c, cam, V, cursor, tt);
+    if (window.EDITOR_PINCEL) EDITOR_PINCEL.dibujar(c, cam, V, cursor, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -1754,8 +1755,10 @@
     $("hNota").classList.toggle("activo", h === "nota");
     $("hMedir").classList.toggle("activo", h === "medir");
     $("hRegion").classList.toggle("activo", h === "region");
+    $("hPincel").classList.toggle("activo", h === "pincel");
+    $("pincelPanel").classList.toggle("oculto", h !== "pincel");
     $("hIA").classList.toggle("activo", !!window.EDITOR_IA && EDITOR_IA.abierta());
-    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" || h === "region" ? "cell" : "not-allowed";
+    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" || h === "region" ? "cell" : h === "pincel" ? "none" : "not-allowed";
   }
   $("hPoner").onclick = () => ponerHerr("poner");
   $("hMover").onclick = () => ponerHerr("mover");
@@ -1848,6 +1851,7 @@
   cv.addEventListener("pointermove", (e) => {
     const [x, y] = aMundo(e.offsetX, e.offsetY);
     cursor = { x, y };
+    if (window.EDITOR_PINCEL && EDITOR_PINCEL.mover(x, y, e)) return;
     if (arrastre && arrastre.pan) {
       const [dx, dy] = giroInverso(((e.offsetX - arrastre.sx) * dpr) / cam.z, ((e.offsetY - arrastre.sy) * dpr) / cam.z);
       cam.x = arrastre.cx - dx;
@@ -1917,6 +1921,7 @@
       return;
     }
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.clic(x, y, e)) return;
+    if (window.EDITOR_PINCEL && EDITOR_PINCEL.clic(x, y, e)) return;
     // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
     const ni = herr !== "borrar" ? notaEn(x, y) : -1;
     if (ni >= 0) {
@@ -2094,6 +2099,7 @@
   });
   cv.addEventListener("pointerup", (e) => {
     const [x, y] = aMundo(e.offsetX, e.offsetY);
+    if (window.EDITOR_PINCEL && EDITOR_PINCEL.soltar(x, y, e)) return;
     if (arrastre && arrastre.dos && herr === "poner") {
       recordar();
       const o = nuevasOpciones();
@@ -2510,6 +2516,7 @@
       return EDITOR_CUARTOS.tecla(e);
     }
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
+    if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida()) : null);
     // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
     if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
@@ -2845,6 +2852,7 @@
     avisar,
     ponerHerr,
     girarCamara,
+    elegido: () => elegido,
     elegir: (id) => {
       elegido = id;
       variando = null;
@@ -2882,10 +2890,10 @@
       return { caja: [r1(cam.x - vw / 2), r1(cam.y - vh / 2), r1(cam.x + vw / 2), r1(cam.y + vh / 2)], deRect: false };
     },
     olvidarZona: () => (ultimaCaja = null),
-    cosasEn: (x0, y0, x1, y1) => visibles(x0, y0, x1, y1).filter((d) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1).map((d) => ({ id: d.id, x: r1(d.x), y: r1(d.y), historia: !!(d.cosa && nombradas.has(d.cosa)), agregado: d.agregado != null })),
+    cosasEn: (x0, y0, x1, y1) => visibles(x0, y0, x1, y1).filter((d) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1).map((d) => ({ id: d.id, x: r1(d.x), y: r1(d.y), historia: !!(d.cosa && nombradas.has(d.cosa)), agregado: d.agregado != null, u: d.agregado != null ? (est.poner[d.agregado] || {}).u : undefined, natural: esNatural(d.id) })),
     caminosEn: (x0, y0, x1, y1) => W.CAMINOS.filter((cm) => cm.p.some(([x, y]) => x > x0 - 300 && x < x1 + 300 && y > y0 - 300 && y < y1 + 300)).map((cm) => ({ p: cm.p.map(rp), w: cm.w, tipo: cm.tipo || "tierra" })),
     // aplica lo que propuso la IA: { poner: [{ id, x, y, o }], caminos: [{ p, w, tipo, borde }], quitar: [{ id, x, y }] }
-    aplicar: (ops) => {
+    aplicar: (ops, opc) => {
       recordar();
       const nuevos = [];
       (ops.poner || []).forEach((a) => {
@@ -2895,11 +2903,16 @@
       });
       (ops.caminos || []).forEach((cm) => est.caminos.push({ p: cm.p.map(rp), w: r1(cm.w || 110), tipo: cm.tipo || "tierra", borde: cm.borde || "pasto", fundir: !!cm.fundir }));
       (ops.quitar || []).forEach((q) => {
+        if (q.u) {
+          const i = est.poner.findIndex((a) => a.u === q.u);
+          if (i >= 0) est.poner.splice(i, 1);
+          return;
+        }
         const cosa = W.COSAS.find((o) => o.id === q.id && Math.abs(o.x - q.x) < 8 && Math.abs(o.y - q.y) < 8);
         if (cosa && !nombradas.has(cosa)) est.quitar.push({ id: cosa.id, x: r1(cosa.x), y: r1(cosa.y) });
       });
       guardar();
-      if (nuevos.length) {
+      if (nuevos.length && !(opc && opc.sinElegir)) {
         ponerHerr("mover");
         grupo = nuevos.length > 1 ? nuevos.map((a) => ({ a })) : [];
         elegida = { a: nuevos[nuevos.length - 1] };
