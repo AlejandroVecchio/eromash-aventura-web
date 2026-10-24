@@ -361,7 +361,7 @@ window.PLANO25 = (function () {
     const especial = (nombre, x, z, ry, ficha, sem) => {
       const casa = CASAS25.crear(ficha, sem);
       cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa, nombre });
-      especiales.push({ x, z, mx: casa.W / M / 2 + 7, mz: casa.D / M / 2 + 7, ang: ry });
+      especiales.push({ x, z, mx: casa.W / M / 2 + 3.5, mz: casa.D / M / 2 + 3.5, ang: ry });
       for (const h of casa.huella(x * M, z * M, ry)) choques.push({ poli: h });
       return casa;
     };
@@ -649,14 +649,14 @@ window.PLANO25 = (function () {
             // el frente (w+) mira a la calle: w+ en el mundo es (-sin ry, cos ry) = (-nx, -nz)
             const ry = Math.atan2(nx, -nz);
             // el lote entero: la casa, el anexo o la leña de un costado, el árbol del otro y el terreno cercado de atrás
-            const mx = ancho / 2 + 2.2,
-              mz = fondo / 2 + 3.2;
-            const [lx, lz] = aMundo(x, z, ry, 0, -2.2);
-            if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 4) && !solapa(lx, lz, mx, mz, ry, 0.6)) {
+            const mx = ancho / 2 + 1.6,
+              mz = fondo / 2 + 2.2;
+            const [lx, lz] = aMundo(x, z, ry, 0, -1.6);
+            if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 2) && !solapa(lx, lz, mx, mz, ry, 0.6)) {
               const lote = { x: lx, z: lz, mx, mz, ang: ry };
               ocupado.push(lote);
               casas.push({ x, z, ry, ancho, fondo, sem: sem++, lote });
-              u += ancho + 2 + rC() * 5; // casa al lado de casa: el lote ya guarda su aire
+              u += ancho + 1 + rC() * 2; // casa al lado de casa: el lote ya guarda su aire
               puesta = true;
               break;
             }
@@ -665,15 +665,16 @@ window.PLANO25 = (function () {
         }
       }
     }
-    // unas 60 casas de vecinos (el resto son los edificios con nombre), juntas en barrios: en cada cuadrante se eligen
+    // unas 90 casas de vecinos (24/10/2026: más apretada, como en las láminas) (el resto son los edificios con nombre), juntas en barrios: en cada cuadrante se eligen
     // las más cercanas a su centro, así quedan apretadas a lo largo de sus calles y no desparramadas por todo el recinto
     const BARRIOS = [
-      { x: 62, z: -58, n: 12 }, // el noreste, entre la Guardia y la plaza
-      { x: -58, z: -52, n: 13 }, // el noroeste, frente a Sanación
-      { x: -58, z: 70, n: 15 }, // el sudoeste, alrededor de los oficios
-      { x: 58, z: 58, n: 17 }, // el sudeste, alrededor del Hongo Dorado
+      { x: 62, z: -58, n: 19 }, // el noreste, entre la Guardia y la plaza
+      { x: -58, z: -52, n: 21 }, // el noroeste, frente a Sanación
+      { x: -58, z: 70, n: 23 }, // el sudoeste, alrededor de los oficios
+      { x: 58, z: 58, n: 27 }, // el sudeste, alrededor del Hongo Dorado
     ];
     const elegidas = [];
+
     for (const b of BARRIOS) {
       const del = casas.filter((cc) => Math.sign(cc.x) === Math.sign(b.x) && Math.sign(cc.z) === Math.sign(b.z));
       del.sort((p, q) => Math.hypot(p.x - b.x, p.z - b.z) - Math.hypot(q.x - b.x, q.z - b.z));
@@ -684,8 +685,31 @@ window.PLANO25 = (function () {
       const usados = new Set(elegidas.map((cc) => cc.lote));
       for (const cc of casas) if (!usados.has(cc.lote)) ocupado.splice(ocupado.indexOf(cc.lote), 1);
     }
-    elegidas.forEach((cc, i) => {
-      const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: i % 4 === 1 }, cc.sem);
+    // ninguna casa pisa a otra: si el anexo de una toca la huella de otra ya puesta, esa no se levanta
+    const separadas = (A, B) => {
+      for (const Q of [A, B])
+        for (let i = 0; i < Q.length; i++) {
+          const [x1, y1] = Q[i],
+            [x2, y2] = Q[(i + 1) % Q.length],
+            nx = y2 - y1,
+            ny = x1 - x2;
+          let a0 = 1e18, a1 = -1e18, b0 = 1e18, b1 = -1e18;
+          for (const [x, y] of A) { const d = x * nx + y * ny; a0 = Math.min(a0, d); a1 = Math.max(a1, d); }
+          for (const [x, y] of B) { const d = x * nx + y * ny; b0 = Math.min(b0, d); b1 = Math.max(b1, d); }
+          if (a1 + 30 < b0 || b1 + 30 < a0) return true;
+        }
+      return false;
+    };
+    const puestas = [];
+    const levantadas = [];
+    for (const cc of elegidas) {
+      const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: levantadas.length % 4 === 1 }, cc.sem);
+      const h = casa.huella(cc.x * M, cc.z * M, cc.ry);
+      if (h.some((A) => puestas.some((B) => !separadas(A, B)))) continue;
+      puestas.push(...h);
+      levantadas.push([cc, casa]);
+    }
+    levantadas.forEach(([cc, casa], i) => {
       cosas.push({ tipo: "casa", x: cc.x * M, y: cc.z * M, ry: cc.ry, casa, nombre: "casa" + i });
       for (const h of casa.huella(cc.x * M, cc.z * M, cc.ry)) choques.push({ poli: h });
       const W2 = cc.ancho / 2,
@@ -703,7 +727,7 @@ window.PLANO25 = (function () {
           [bx, bz] = aMundo(cc.x, cc.z, cc.ry, u1, w1);
         asset("cerca", ax, az, { x2: bx * M, y2: bz * M, sem: cc.sem });
       };
-      const fondoT = 3.5 + rT() * 1.5;
+      const fondoT = 2.4 + rT() * 1.1;
       cerco(-W2 - 1.8, -D2 - fondoT, W2 + 1.8, -D2 - fondoT);
       cerco(-W2 - 1.8, -D2 - fondoT, -W2 - 1.8, -D2 + 1);
       cerco(W2 + 1.8, -D2 - fondoT, W2 + 1.8, -D2 + 1);
