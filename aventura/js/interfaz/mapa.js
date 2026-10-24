@@ -24,18 +24,48 @@ window.MAPA = (function () {
     c.fillStyle = "#1E2019";
     c.fillRect(0, 0, ancho, h);
     c.scale(k, k);
-    // el bosque
-    c.fillStyle = "#2C3A24";
+    // el bosque: verde oscuro con arbolitos dibujados, para que se lea como bosque
+    c.fillStyle = "#1E2C1B";
     c.fillRect(W.BORDE, W.BORDE * 0.5, W.ANCHO - W.BORDE * 2, W.ALTO - W.BORDE * 1.5);
-    // manchas de bosque espeso
-    for (let y = 0; y < W.ALTO; y += 500)
-      for (let x = 0; x < W.ANCHO; x += 500) {
-        const d = W.ruido(x, y);
-        if (d > 0.5 && x > W.BORDE && y > W.BORDE * 0.5 && x < W.ANCHO - W.BORDE && y < W.ALTO - W.BORDE) {
-          c.fillStyle = d > 0.65 ? "#1C2A1A" : "#24321F";
-          c.fillRect(x, y, 520, 520);
-        }
+    const enClaro = (x, y) => {
+      for (const id in W.LUGARES) {
+        const L = W.LUGARES[id];
+        if (Math.hypot(x - L.p[0], (y - L.p[1]) * 1.15) < L.r * 1.25 + 120) return true;
       }
+      return Math.hypot(x - W.CIUDAD.c[0], (y - W.CIUDAD.c[1]) * (W.CIUDAD.rx / W.CIUDAD.ry)) < W.CIUDAD.rx + 200;
+    };
+    const paso = Math.max(180, Math.round(W.ANCHO / ancho) * 9);
+    const ra = DIB.azar(77);
+    for (let y = W.BORDE * 0.5; y < W.ALTO - W.BORDE; y += paso)
+      for (let x = W.BORDE; x < W.ANCHO - W.BORDE; x += paso) {
+        const px = x + (ra() - 0.5) * paso * 0.8,
+          py = y + (ra() - 0.5) * paso * 0.8;
+        if (enClaro(px, py)) continue;
+        const d = W.ruido(px, py),
+          h = paso * (0.8 + d * 0.5);
+        c.fillStyle = d > 0.6 ? "#132015" : "#18261A";
+        c.beginPath();
+        c.moveTo(px, py - h);
+        c.lineTo(px + h * 0.45, py + h * 0.2);
+        c.lineTo(px - h * 0.45, py + h * 0.2);
+        c.fill();
+        c.fillStyle = d > 0.6 ? "#22381F" : "#2A4226";
+        c.beginPath();
+        c.moveTo(px, py - h);
+        c.lineTo(px + h * 0.45, py + h * 0.2);
+        c.lineTo(px + h * 0.1, py + h * 0.1);
+        c.fill();
+      }
+    // los claros: pasto claro con el borde suave
+    for (const id in W.LUGARES) {
+      const L = W.LUGARES[id];
+      [[1.45, "#3A5228"], [1.2, "#4E6A32"], [0.95, "#5E7A3A"]].forEach(([k, col]) => {
+        c.fillStyle = col;
+        c.beginPath();
+        c.ellipse(L.p[0], L.p[1], L.r * k + 80, (L.r * k + 80) * 0.87, 0, 0, Math.PI * 2);
+        c.fill();
+      });
+    }
     const trazo = (pts, w, col) => {
       c.beginPath();
       c.moveTo(pts[0][0], pts[0][1]);
@@ -54,7 +84,9 @@ window.MAPA = (function () {
     });
     W.RIOS.forEach((r) => trazo(r.p, r.w, "#2E5A66"));
     trazo(W.QUEBRADA.p, W.QUEBRADA.w, "#141410");
-    W.CAMINOS.forEach((r) => trazo(r.p, Math.max(140, r.w * 0.9), "#8A7458"));
+    // caminos: tierra clara con borde oscuro, bien marcados
+    W.CAMINOS.forEach((r) => trazo(r.p, Math.max(200, r.w * 1.3), "#2A2016"));
+    W.CAMINOS.forEach((r) => trazo(r.p, Math.max(130, r.w * 0.85), "#C2A472"));
     W.PUENTES.forEach((p) => trazo([p.a, p.b], 160, "#B89A6E"));
     // Eikholt
     const C0 = W.CIUDAD;
@@ -325,7 +357,7 @@ window.MAPA = (function () {
     },
     hud() {
       const el = document.getElementById("hudMini");
-      el.classList.toggle("oculto", !st || J.modo === "menu");
+      el.classList.toggle("oculto", !st || J.modo === "menu" || !!J.dentro);
       paseMini -= 1;
       if (paseMini > 0) return;
       paseMini = 4; // cada cuatro cuadros alcanza

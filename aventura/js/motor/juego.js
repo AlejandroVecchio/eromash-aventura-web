@@ -923,6 +923,7 @@
   }
 
   function dibujar() {
+    if (J.dentro) return J.dentro.dibujar(c, cw, ch);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.fillStyle = "#33301F";
     c.fillRect(0, 0, cw, ch);
@@ -993,6 +994,27 @@
     }
   }
   let vineta = null;
+  // dibuja a Eromash en otro lugar y a otra escala (los interiores): se presta la posición un instante
+  function dibujarJugadorEn(ctx, x, y, k) {
+    const px = jug.x,
+      py = jug.y,
+      c0 = c;
+    jug.x = x;
+    jug.y = y;
+    c = ctx;
+    c.save();
+    c.translate(x, y);
+    c.scale(k, k);
+    c.translate(-x, -y);
+    try {
+      dibujarJugador();
+    } finally {
+      c.restore();
+      c = c0;
+      jug.x = px;
+      jug.y = py;
+    }
+  }
   // ---------- la silueta de Eromash detrás de las cosas ----------
   // Cuando un árbol, una casa o una piedra lo tapa, se ve su figura en un tono casi blanco a través del objeto.
   // Se dibuja Eromash aparte, se recorta con lo que tiene delante (solo donde lo tapa) y se pinta claro encima.
@@ -1081,7 +1103,7 @@
     } else lista.push({ rotulo: tav("mision_fin"), nombre: tav("obj_fin"), objetivos: [] });
     SIS.forEach((s0) => s0.seguimiento && lista.push(s0.seguimiento()));
     HUD.misiones(lista);
-    const cer = J.modo === "juego" && !jug.muerto ? cercano() : null;
+    const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
     cadaSis("hud");
     HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : null);
@@ -1212,7 +1234,15 @@
       if (CONTROLES.recien("pausa")) pausa();
       else if (CONTROLES.recien("diario")) diario();
     }
-    if (J.modo === "juego" || J.modo === "dialogo" || J.modo === "cine") {
+    if (J.dentro && (J.modo === "juego" || J.modo === "dialogo")) {
+      // adentro de una casa el bosque queda en pausa
+      J.t += dt;
+      H.E.tiempo += dt;
+      J.timers.forEach((tm) => (tm.t -= dt));
+      J.timers.filter((tm) => tm.t <= 0).forEach((tm) => tm.fn());
+      J.timers = J.timers.filter((tm) => tm.t > 0);
+      J.dentro.paso(dt);
+    } else if (J.modo === "juego" || J.modo === "dialogo" || J.modo === "cine") {
       J.t += dt;
       H.E.tiempo += dt;
       actualizarJugador(dt);
@@ -1275,7 +1305,7 @@
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
   // lo que los sistemas pueden usar del motor
   const A = {
-    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano,
+    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn,
     avisar: (k, col) => HUD.aviso(t(k), col),
     menu: (html, botones) => {
       J.modo = "menu";

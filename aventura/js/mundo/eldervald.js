@@ -161,7 +161,10 @@ window.ELDERVALD = (function () {
   const COSAS = [];
   const NOMBRADAS = {}; // las que el juego necesita encontrar (carro, piedra, mesa…)
   const PUNTOS = {}; // dónde se paran los NPC, dónde está cada objetivo
+  // las casas, más grandes que el resto (se entran: ver interiores.js)
+  const ESCALA_CASA = { casaEikholt: 1.7, casaLindes: 1.6, herreriaAsa: 1.5, casaSanacion: 1.5, hongoDorado: 1.45, cordeleriaFolke: 1.4, cobertizoRefugio: 1.4 };
   function poner(id, p, o = {}, nombre) {
+    if (ESCALA_CASA[id]) o.s = (o.s || 1) * ESCALA_CASA[id];
     const a = ASSETS.LISTA[id];
     const k = o.s || 1,
       ch = a && a.choque ? (a.choque.r ? { r: a.choque.r * k } : { w: a.choque.w * k, h: a.choque.h * k }) : null;
@@ -257,14 +260,14 @@ window.ELDERVALD = (function () {
     {
       const r = azar(4471),
         hechas = COSAS.filter((o) => Math.abs(o.x - c[0]) < CIUDAD.rx && Math.abs(o.y - c[1]) < CIUDAD.ry && o.choque);
-      for (let k = 0; k < 400 && hechas.length < 90; k++) {
+      for (let k = 0; k < 600 && hechas.length < 70; k++) {
         const a = r() * TAU,
           d = 0.42 + r() * 0.46,
           x = c[0] + Math.cos(a) * CIUDAD.rx * d,
           y = c[1] + Math.sin(a) * CIUDAD.ry * d;
-        if (Math.abs(x - c[0]) < 200 || Math.abs(y - c[1]) < 170) continue; // las calles a las puertas
+        if (Math.abs(x - c[0]) < 380 || Math.abs(y - c[1]) < 320) continue; // las calles a las puertas
         if (x > c[0] + 1500 && Math.abs(y - c[1]) < 900) continue; // las huertas
-        if (hechas.some((o) => Math.abs(o.x - x) < 300 && Math.abs(o.y - y) < 190)) continue;
+        if (hechas.some((o) => Math.abs(o.x - x) < 470 && Math.abs(o.y - y) < 300)) continue;
         hechas.push(poner("casaEikholt", [x, y], { v: Math.floor(r() * 3), techo: Math.floor(r() * 3), sem: k, s: 0.9 + r() * 0.2 }));
       }
     }

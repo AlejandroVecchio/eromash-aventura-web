@@ -52,12 +52,15 @@ window.PODERES = (function () {
       C0 = W.CIUDAD.c,
       px = (dx, dy) => [C0[0] + dx * W.M, C0[1] + dy * W.M];
     const herr = W.NOMBRADAS.herreria;
-    GENTE_CIUDAD.push({ id: "asa", x: herr ? herr.x + 150 : px(-66, 22)[0], y: herr ? herr.y + 60 : px(-66, 22)[1], mira: { vista: "S", espejo: false } });
+    if (!window.INTERIORES) GENTE_CIUDAD.push({ id: "asa", x: herr ? herr.x + 150 : px(-66, 22)[0], y: herr ? herr.y + 60 : px(-66, 22)[1], mira: { vista: "S", espejo: false } });
     GENTE_CIUDAD.push({ id: "svend", x: C0[0] + 120, y: C0[1] + W.CIUDAD.ry + 60, mira: { vista: "S", espejo: false } });
     const san = W.COSAS.find((o) => o.id === "casaSanacion"),
       hon = W.COSAS.find((o) => o.id === "hongoDorado");
-    if (san) GENTE_CIUDAD.push({ id: "thora", x: san.x + 40, y: san.y + 70, mira: { vista: "S", espejo: false } });
-    if (hon) GENTE_CIUDAD.push({ id: "ulf", x: hon.x - 60, y: hon.y + 70, mira: { vista: "S", espejo: false } });
+    // Thora, Ulf y Ása atienden adentro (ver interiores.js)
+    if (!window.INTERIORES) {
+      if (san) GENTE_CIUDAD.push({ id: "thora", x: san.x + 40, y: san.y + 70, mira: { vista: "S", espejo: false } });
+      if (hon) GENTE_CIUDAD.push({ id: "ulf", x: hon.x - 60, y: hon.y + 70, mira: { vista: "S", espejo: false } });
+    }
   }
   let rumor = 0;
   function hablarCon(n) {
@@ -403,5 +406,5 @@ window.PODERES = (function () {
   }
 
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { soltar, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { hablarCon, soltar, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();
