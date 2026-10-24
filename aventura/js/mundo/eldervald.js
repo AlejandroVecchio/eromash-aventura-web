@@ -1031,6 +1031,32 @@ window.ELDERVALD = (function () {
         if (c.id === q.id && Math.abs(c.x - q.x) < 6 && Math.abs(c.y - q.y) < 6) COSAS.splice(i, 1);
       }
     });
+    // lo movido (también lo de la historia) se corre en el lugar, así lo que lo busca por nombre lo sigue
+    // encontrando; la gente y los objetivos que estaban pegados a eso se corren con él
+    const apartarBosque = (c, x, y) => {
+      const ancho = c.choque ? (c.choque.w ? c.choque.w / 2 : c.choque.r * 1.3) + 40 : 0;
+      if (!ancho) return;
+      for (let i = COSAS.length - 1; i >= 0; i--) {
+        const t = COSAS[i];
+        if (t.arbol && Math.abs(t.x - x) < ancho && t.y > y - 120 && t.y < y + 60) COSAS.splice(i, 1);
+      }
+    };
+    (AG.mover || []).forEach((m) => {
+      const c = COSAS.find((o) => o.id === m.id && Math.abs(o.x - m.x) < 6 && Math.abs(o.y - m.y) < 6);
+      if (!c) return;
+      const dx = m.nx - c.x,
+        dy = m.ny - c.y,
+        r = (c.choque ? (c.choque.w ? c.choque.w / 2 : c.choque.r) : 0) + 140;
+      for (const k in PUNTOS) {
+        const p = PUNTOS[k];
+        if (Array.isArray(p) && Math.hypot(p[0] - c.x, p[1] - c.y) < r) PUNTOS[k] = [p[0] + dx, p[1] + dy];
+      }
+      c.x = m.nx;
+      c.y = m.ny;
+      if (c.o.x2 !== undefined) (c.o.x2 += dx), (c.o.y2 += dy);
+      c.movido = true;
+      apartarBosque(c, c.x, c.y);
+    });
     (AG.poner || []).forEach((a) => {
       const def = ASSETS.LISTA[a.id];
       if (!def) return;

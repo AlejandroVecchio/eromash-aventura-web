@@ -16,7 +16,7 @@
   const CLAVE = "eromash-aventura-editor";
 
   // ---------- estado ----------
-  let est = { poner: [], quitar: [], caminos: [], notas: [] };
+  let est = { poner: [], quitar: [], mover: [], caminos: [], notas: [] };
   try {
     const b = JSON.parse(localStorage.getItem(CLAVE) || "null");
     if (b && b.poner) est = b;
@@ -26,6 +26,7 @@
   }
   if (!est.notas) est.notas = [];
   if (!est.caminos) est.caminos = [];
+  if (!est.mover) est.mover = [];
   const historial = [];
   const recordar = () => {
     historial.push(JSON.stringify(est));
@@ -37,7 +38,9 @@
     } catch (e) {}
     if (!est.notas) est.notas = [];
     if (!est.caminos) est.caminos = [];
-    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.caminos.length, est.notas.length]);
+    if (!est.mover) est.mover = [];
+    armarMovidos();
+    $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]);
     armarIr();
   };
   const r1 = (v) => Math.round(v);
@@ -63,8 +66,21 @@
 
   // ---------- lo que se ve: el mundo con lo agregado y sin lo sacado ----------
   const sacado = (o) => est.quitar.some((q) => q.id === o.id && Math.abs(o.x - q.x) < 6 && Math.abs(o.y - q.y) < 6);
-  const nombradas = new Set();
-  Object.values(W.NOMBRADAS).forEach((v) => (Array.isArray(v) ? v.forEach((x) => nombradas.add(x)) : nombradas.add(v)));
+  // lo de la historia: tiene que estar (no se saca), pero se puede mover
+  const nombradas = new Map(); // cosa → nombre en el juego
+  Object.keys(W.NOMBRADAS).forEach((k) => {
+    const v = W.NOMBRADAS[k];
+    (Array.isArray(v) ? v : [v]).forEach((x) => x && x.id && !nombradas.has(x) && nombradas.set(x, k.replace(/\d+$/, "")));
+  });
+  // lo del mundo que se movió (est.mover: { id, x, y } donde estaba → { nx, ny }), para dibujarlo en su lugar nuevo
+  let movidos = new Map(); // cosa → índice en est.mover
+  function armarMovidos() {
+    movidos = new Map();
+    est.mover.forEach((m, i) => {
+      const cosa = W.COSAS.find((o) => o.id === m.id && Math.abs(o.x - m.x) < 6 && Math.abs(o.y - m.y) < 6);
+      if (cosa) movidos.set(cosa, i);
+    });
+  }
   function opcionesDe(a) {
     const o = Object.assign({}, a.o || {});
     const k = W.ESCALA_CASA[a.id];
@@ -74,8 +90,15 @@
   function visibles(x0, y0, x1, y1) {
     const l = [];
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 600, (o) => {
-      if (o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o)) return;
-      l.push({ id: o.id, x: o.x, y: o.y, o: o.o, alto: o.alto, choque: o.choque, cosa: o });
+      if (movidos.has(o) || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o)) return;
+      l.push({ id: o.id, x: o.x, y: o.y, o: o.o, alto: o.alto, choque: o.choque, cosa: o, piso: !!o.o.piso });
+    });
+    movidos.forEach((i, o) => {
+      const m = est.mover[i];
+      if (!m || m.nx < x0 - 400 || m.nx > x1 + 400 || m.ny < y0 - 60 || m.ny > y1 + 900) return;
+      const op = Object.assign({}, o.o);
+      if (op.x2 !== undefined) (op.x2 += m.nx - o.x), (op.y2 += m.ny - o.y);
+      l.push({ id: o.id, x: m.nx, y: m.ny, o: op, alto: o.alto, choque: o.choque, cosa: o, movido: i, piso: !!o.o.piso });
     });
     est.poner.forEach((a, i) => {
       const def = ASSETS.LISTA[a.id];
@@ -174,6 +197,25 @@
         c.fill();
       });
     }
+    // lo de la historia: un rombo rúnico al pie; con el puntero encima, qué es
+    if (!lejos) {
+      const lista2 = visibles(x0, y0, x1, y1);
+      lista2.forEach((d) => {
+        if (!nombradas.has(d.cosa)) return;
+        const r = 8 / cam.z;
+        c.strokeStyle = "#73D5DB";
+        c.lineWidth = 2.5 / cam.z;
+        c.beginPath();
+        c.moveTo(d.x, d.y - r);
+        c.lineTo(d.x + r, d.y);
+        c.lineTo(d.x, d.y + r);
+        c.lineTo(d.x - r, d.y);
+        c.closePath();
+        c.stroke();
+      });
+      const h = cursor && !arrastre && !sel ? tocado(cursor.x, cursor.y) : null;
+      if (h && (nombradas.has(h.cosa) || $("historia").checked)) etiqueta(h);
+    }
     est.quitar.forEach((q) => {
       if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) return;
       const r = 10 / cam.z;
@@ -234,6 +276,34 @@
     }
     $("donde").textContent = cursor ? t("ed.donde", [Math.round(cursor.x / W.U), Math.round(cursor.y / W.U), cam.z.toFixed(2)]) : "";
     requestAnimationFrame(dibujar);
+  }
+
+  // el cartelito de lo que está bajo el puntero: su nombre y, si es de la historia, que tiene que estar
+  function etiqueta(d) {
+    const k = 1 / cam.z,
+      nom = t("as." + d.id),
+      hist = nombradas.get(d.cosa);
+    const l1 = nom === "as." + d.id ? d.id : nom,
+      l2 = hist ? t("ed.de_historia", [hist]) : t("ed.agregado_o_mundo");
+    c.save();
+    c.translate(d.x, d.y);
+    c.scale(k, k);
+    c.font = "bold 14px system-ui, sans-serif";
+    const w1 = c.measureText(l1).width;
+    c.font = "12px system-ui, sans-serif";
+    const w = Math.max(w1, c.measureText(l2).width) + 20;
+    c.fillStyle = "rgba(17,17,17,0.92)";
+    c.fillRect(-w / 2, 14, w, 46);
+    c.fillStyle = hist ? "#73D5DB" : "#E0B2B2";
+    c.fillRect(-w / 2, 14, 3, 46);
+    c.textAlign = "center";
+    c.fillStyle = "#F2ECEC";
+    c.font = "bold 14px system-ui, sans-serif";
+    c.fillText(l1, 0, 33);
+    c.fillStyle = hist ? "#73D5DB" : "#B5A5A0";
+    c.font = "12px system-ui, sans-serif";
+    c.fillText(l2, 0, 51);
+    c.restore();
   }
 
   function partir(txt, n) {
@@ -462,6 +532,10 @@
       if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
       n.x = r1(x - sel.dx);
       n.y = r1(y - sel.dy);
+    } else if (sel && sel.mueve && sel.d.movido != null) {
+      const m = est.mover[sel.d.movido];
+      m.nx = r1(x - sel.dx);
+      m.ny = r1(y - sel.dy);
     } else if (sel && sel.mueve) {
       sel.d.x = x - sel.dx;
       sel.d.y = y - sel.dy;
@@ -541,16 +615,12 @@
       const d = tocado(x, y);
       if (!d) return;
       recordar();
-      if (d.agregado == null) {
-        // mover algo del mundo: se saca de donde estaba y se pone una copia
-        if (nombradas.has(d.cosa)) return avisar(t("ed.no_se_saca"));
-        est.quitar.push({ id: d.id, x: r1(d.x), y: r1(d.y) });
-        const o = Object.assign({}, d.cosa.o);
-        const k = W.ESCALA_CASA[d.id];
-        if (k && o.s) o.s = o.s / k;
-        est.poner.push({ id: d.id, x: r1(d.x), y: r1(d.y), o });
-        d.agregado = est.poner.length - 1;
-        d.cosa = null;
+      if (d.agregado == null && d.movido == null) {
+        // mover algo del mundo (también lo de la historia): queda anotado dónde estaba y adónde va, y el juego lo
+        // corre en el lugar (con la gente y los objetivos que tiene al lado)
+        est.mover.push({ id: d.id, x: r1(d.cosa.x), y: r1(d.cosa.y), nx: r1(d.x), ny: r1(d.y) });
+        d.movido = est.mover.length - 1;
+        movidos.set(d.cosa, d.movido);
       }
       sel = { d, dx: x - d.x, dy: y - d.y, mueve: true };
       cv.style.cursor = "grabbing";
@@ -563,7 +633,8 @@
       } else {
         if (nombradas.has(d.cosa)) return avisar(t("ed.no_se_saca"));
         recordar();
-        est.quitar.push({ id: d.id, x: r1(d.x), y: r1(d.y) });
+        if (d.movido != null) est.mover.splice(d.movido, 1);
+        est.quitar.push({ id: d.id, x: r1(d.cosa.x), y: r1(d.cosa.y) });
       }
       guardar();
     }
@@ -658,12 +729,25 @@
   const corto = (s) => (s.length > 40 ? s.slice(0, 39) + "…" : s);
   function armarIr() {
     const notas = est.notas.length ? `<optgroup label="${t("ed.notas")}">` + est.notas.map((n, i) => `<option value="nota${i}">${i + 1}. ${corto(n.texto || "…").replace(/</g, "&lt;")}</option>`).join("") + "</optgroup>" : "";
-    ir.innerHTML = `<option value="">${t("ed.ir")}</option>` + notas + `<option value="ciudad">${t("av.lugar_eikholt")}</option>` + Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => `<option value="${k}">${t("av.lugar_" + k)}</option>`).join("");
+    const hist =
+      `<optgroup label="${t("ed.historia_grupo")}">` +
+      [...nombradas.keys()]
+        .map((o, i) => ({ o, i, n: t("as." + o.id) }))
+        .sort((a, b) => a.n.localeCompare(b.n))
+        .map((h) => `<option value="hist${h.i}">${h.n} · ${nombradas.get(h.o)}</option>`)
+        .join("") +
+      "</optgroup>";
+    ir.innerHTML = `<option value="">${t("ed.ir")}</option>` + notas + `<option value="ciudad">${t("av.lugar_eikholt")}</option>` + Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => `<option value="${k}">${t("av.lugar_" + k)}</option>`).join("") + hist;
   }
   ir.addEventListener("change", () => {
     const k = ir.value;
     if (!k) return;
-    const n = k.startsWith("nota") ? est.notas[+k.slice(4)] : null;
+    let n = k.startsWith("nota") ? est.notas[+k.slice(4)] : null;
+    if (k.startsWith("hist")) {
+      const o = [...nombradas.keys()][+k.slice(4)],
+        m = movidos.has(o) ? est.mover[movidos.get(o)] : null;
+      n = m ? { x: m.nx, y: m.ny } : o;
+    }
     const p = n ? [n.x, n.y] : k === "ciudad" ? W.CIUDAD.c : W.LUGARES[k].p;
     cam.x = p[0];
     cam.y = p[1];
@@ -678,7 +762,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -718,11 +802,12 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "caminos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
         if (!nuevo.caminos) nuevo.caminos = [];
+        if (!nuevo.mover) nuevo.mover = [];
         recordar();
         est = nuevo;
         guardar();
@@ -740,7 +825,7 @@
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
-    est = { poner: [], quitar: [], caminos: [], notas: [] };
+    est = { poner: [], quitar: [], mover: [], caminos: [], notas: [] };
     guardar();
   };
 
