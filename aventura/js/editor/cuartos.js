@@ -61,7 +61,7 @@ window.EDITOR_CUARTOS = (function () {
   $("cuCerrar").onclick = () => cerrar();
   $("cuProbar").onclick = () => {
     const lang = new URLSearchParams(location.search).get("lang");
-    open("index.html?borrador=1&jugar=1&cuarto=" + pl + (lang ? "&lang=" + lang : ""), "_blank");
+    open("index.html?borrador=1&jugar=9&cuarto=" + pl + (window.EDITOR_HISTORIA ? EDITOR_HISTORIA.consulta() : "") + (lang ? "&lang=" + lang : ""), "_blank");
   };
   $("cuComoEra").onclick = () => {
     if (cf() && confirm(t("ed.cu_como_era_seguro"))) cambiar((p) => Object.keys(p).forEach((x) => delete p[x]));

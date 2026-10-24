@@ -1823,6 +1823,15 @@
       J.cam.x = jug.x;
       J.cam.y = jug.y;
     }
+    // ?mision=EL-03: arranca con las misiones anteriores hechas; ?hora=22: a esa hora (Probar del editor)
+    const mi = H.MISIONES.findIndex((m) => m.id === q.get("mision"));
+    if (mi > 0) {
+      for (let i = 0; i < mi; i++) H.MISIONES[i].objetivos.forEach((o) => (H.E.banderas[o.hecho] = true));
+      H.E.mision = mi;
+      H.avisar("cambio");
+    }
+    const hr = Number(q.get("hora"));
+    if (q.get("hora") && isFinite(hr)) H.E.tiempo = (((hr - 9 + 24) % 24) / 24) * LUZ.DIA;
     // ?en=x,y: aparece ahí (lo elige el editor con Probar en el juego); si cae en algo que choca, al lado libre más cerca
     const en = (q.get("en") || "").split(",").map(Number);
     if (en.length === 2 && en.every(isFinite)) {

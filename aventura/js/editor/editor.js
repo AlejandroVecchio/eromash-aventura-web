@@ -614,6 +614,7 @@
     if (window.EDITOR_IA) EDITOR_IA.dibujar(c, cam, V, enVista, tt);
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.dibujar(c, cam, V, cursor, tt);
     if (window.EDITOR_PINCEL) EDITOR_PINCEL.dibujar(c, cam, V, cursor, tt);
+    if (window.EDITOR_HISTORIA) EDITOR_HISTORIA.dibujar(c, cam, V);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -2803,7 +2804,8 @@
     probando = false;
     $("bProbar").classList.remove("activo");
     guardar();
-    open("index.html?borrador=1&jugar=1&en=" + r1(x) + "," + r1(y) + (params.get("lang") ? "&lang=" + params.get("lang") : ""), "_blank");
+    // la ranura 9 es la de prueba: no pisa las partidas de verdad (1 a 3)
+    open("index.html?borrador=1&jugar=9&en=" + r1(x) + "," + r1(y) + (window.EDITOR_HISTORIA ? EDITOR_HISTORIA.consulta() : "") + (params.get("lang") ? "&lang=" + params.get("lang") : ""), "_blank");
   }
   $("bProbar").onclick = () => {
     if (probando) return probarEn(cam.x, cam.y);

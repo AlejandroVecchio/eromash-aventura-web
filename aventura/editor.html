@@ -171,7 +171,7 @@
       <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
       <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
     </div>
-    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label></div>
+    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label><select id="verHistoria" style="flex: 1"></select></div>
     <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
     <div class="fila">
       <label><input id="original" type="checkbox" /><span data-i18n="ed.original"></span></label>
@@ -242,6 +242,9 @@
       <div id="cuenta"></div>
       <div id="donde"></div>
       <div id="guardadoV"></div>
+      <div class="fila" style="padding: 0"><span data-i18n="ed.probar_con"></span><select id="probarMision"></select><select id="probarHora">
+        <option value="" data-i18n="ed.hora_ahora"></option><option value="7" data-i18n="ed.hora_alba"></option><option value="13" data-i18n="ed.hora_dia"></option><option value="18.5" data-i18n="ed.hora_tarde"></option><option value="23" data-i18n="ed.hora_noche"></option>
+      </select></div>
       <div class="botones">
         <button id="bDeshacer" data-i18n="ed.deshacer"></button>
         <button id="bRehacer" data-i18n="ed.rehacer"></button>
@@ -339,6 +342,7 @@
 <script src="js/mundo/assets-piedras.js"></script>
 <script src="js/mundo/assets-interiores.js"></script>
 <script src="js/mundo/assets-sotanos.js"></script>
+<script src="js/historia/guion.js"></script>
 <script src="js/mundo/caminos.js"></script>
 <script src="js/personajes/vikingo.js"></script>
 <script src="js/personajes/gente.js"></script>
@@ -351,5 +355,6 @@
 <script src="js/editor/cuartos.js"></script>
 <script src="js/editor/mundo.js"></script>
 <script src="js/editor/pincel.js"></script>
+<script src="js/editor/historia.js"></script>
 </body>
 </html>
