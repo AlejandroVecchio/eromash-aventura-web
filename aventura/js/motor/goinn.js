@@ -244,6 +244,73 @@ window.GOINN = (function () {
     A.dialogoLibre(lineas);
   }
 
+
+  // ---------- lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios ----------
+  let c0 = null; // el lienzo de turno (lo pasa el motor a fondo y objetos)
+  function trofeo(k, x, y) {
+    const c = c0,
+      H0 = "#F2ECEC",
+      HS = "#C8BCA4";
+    c.save();
+    c.translate(x, y);
+    switch (k) {
+      case 0: // cornamenta
+        DIB.L(c, -14, 4, 14, 4, HS, 4); DIB.L(c, -10, 4, -16, -8, H0, 3); DIB.L(c, 0, 4, -2, -10, H0, 3); DIB.L(c, 10, 4, 16, -8, H0, 3); break;
+      case 1: // asta de ciervo
+        DIB.L(c, -16, 6, 16, -6, H0, 4); DIB.L(c, -4, 2, -8, -10, H0, 3); DIB.L(c, 6, -2, 4, -14, H0, 3); break;
+      case 2: // escama
+        DIB.P(c, [-14, 0, 0, -10, 14, -2, 4, 8], "#6E5E4C"); DIB.P(c, [0, -10, 14, -2, 4, 8, 2, -2], "#8C7A62"); break;
+      case 3: // pluma
+        DIB.P(c, [-16, 8, 14, -10, 6, 2], "#E6DCCB"); DIB.L(c, -16, 8, 14, -10, "#8C7A62", 2); break;
+      case 4: // cuerno
+        DIB.P(c, [-16, 4, 12, -8, 16, -4, -12, 8], "#E6DCCB"); DIB.P(c, [12, -8, 16, -4, 8, -2], "#8C7A62"); break;
+      case 5: // atado de hierbas
+        for (let i = 0; i < 4; i++) DIB.L(c, -10 + i * 6, 8, -6 + i * 7, -10, i % 2 ? "#6F8F4E" : "#4E6B3A", 3);
+        DIB.R(c, -12, 0, 24, 4, "#9C2315"); break;
+      case 6: // pergamino
+        DIB.R(c, -14, -6, 28, 12, "#E6DCCB"); DIB.E(c, -14, 0, 4, 7, "#C8BCA4"); DIB.E(c, 14, 0, 4, 7, "#C8BCA4"); break;
+      case 7: // hebilla
+        DIB.R(c, -12, -8, 24, 16, "#4E4234"); DIB.R(c, -7, -4, 14, 8, "#3E8A92"); DIB.L(c, 0, -8, 0, 8, "#8C7A62", 2); break;
+      case 8: // garra
+        DIB.P(c, [-10, 8, -4, -10, 6, -14, 2, -6, 6, 8], "#F2ECEC"); DIB.P(c, [2, -6, 6, -14, 6, 8], HS); break;
+      case 9: // piedras rotas
+        DIB.P(c, [-14, 6, -10, -4, -2, 0, -4, 8], "#6A6E72"); DIB.P(c, [0, 8, 2, -6, 12, -2, 12, 8], "#7E8286"); break;
+      case 10: // hoja roja
+        DIB.P(c, [-14, 6, -2, -12, 14, -4, 2, 10], "#C8402D"); DIB.L(c, -14, 6, 10, -6, "#7A1A10", 2); break;
+      default: // disco tallado
+        DIB.E(c, 0, 0, 14, 10, "#7A5A3A"); DIB.E(c, 0, 0, 9, 6, "#5C4430"); FUTHARK.dibujar(c, "othala", 0, 5, 10, "#E0B2B2", 2);
+    }
+    c.restore();
+  }
+  function cosaCamara(tipo, x, y) {
+    const c = c0;
+    DIB.E(c, x, y, 34, 10, "rgba(0,0,0,0.4)");
+    if (tipo === "barril") {
+      DIB.P(c, [x - 26, y, x - 30, y - 30, x - 26, y - 62, x + 26, y - 62, x + 30, y - 30, x + 26, y], "#6A4A30");
+      DIB.P(c, [x - 26, y, x - 30, y - 30, x - 26, y - 62, x, y - 62, x, y], "#553A26");
+      DIB.R(c, x - 30, y - 46, 60, 5, "#2E2620");
+      DIB.R(c, x - 30, y - 18, 60, 5, "#2E2620");
+      DIB.E(c, x, y - 62, 26, 8, "#7A5A3A");
+    } else if (tipo === "cofre") {
+      DIB.R(c, x - 32, y - 34, 64, 34, "#6A4A30");
+      DIB.R(c, x - 32, y - 34, 30, 34, "#553A26");
+      DIB.P(c, [x - 32, y - 34, x - 26, y - 48, x + 26, y - 48, x + 32, y - 34], "#7A5A3A");
+      DIB.R(c, x - 32, y - 26, 64, 4, "#2E2620");
+      DIB.R(c, x - 4, y - 30, 8, 10, "#B88A3A");
+    } else if (tipo === "cantaro") {
+      DIB.P(c, [x - 12, y, x - 18, y - 22, x - 10, y - 40, x - 6, y - 48, x + 6, y - 48, x + 10, y - 40, x + 18, y - 22, x + 12, y], "#8A4A30");
+      DIB.P(c, [x - 12, y, x - 18, y - 22, x - 10, y - 40, x - 6, y - 48, x, y - 48, x, y], "#6E3A26");
+    } else {
+      // rollos sobre un estante bajo
+      DIB.R(c, x - 34, y - 30, 68, 30, "#4E3A28");
+      DIB.R(c, x - 34, y - 30, 68, 6, "#6A4E36");
+      for (let i = 0; i < 4; i++) {
+        DIB.R(c, x - 30 + i * 15, y - 44, 12, 14, "#E6DCCB");
+        DIB.E(c, x - 24 + i * 15, y - 44, 6, 3, "#C8BCA4");
+      }
+    }
+  }
+
   const sistema = {
     iniciar(api) {
       A = api;
@@ -333,30 +400,68 @@ window.GOINN = (function () {
       if (st.vencido && cerca(R[0], R[1] + 1150, 180)) dar(30, t("gn.accion_volver"), () => A.teletransportar(C[0], C[1] - 300));
     },
     fondo(c, x0, y0, x1, y1) {
+      c0 = c;
       if (x1 < Z.x0 - 2000) return;
       DIB.R(c, x0, y0, x1 - x0, y1 - y0, "#0C0F11");
-      // la cámara: piedra vieja en redondo, el círculo de los doce huecos y la escalera
-      DIB.E(c, C[0], C[1], 820, 580, "#24282C");
-      DIB.E(c, C[0], C[1], 760, 520, "#34383C");
-      for (let k = 0; k < 3; k++) DIB.alfa(c, 0.5, () => DIB.E(c, C[0], C[1], 640 - k * 150, 440 - k * 104, k % 2 ? "#3A3E42" : "#2E3236"));
+      // la cámara de los custodios, como en la lámina: piso de lajas en anillos, el círculo tallado con su inscripción,
+      // los doce huecos de luz con el trofeo de cada proeza y la escalera que baja de la bodega
+      DIB.E(c, C[0], C[1], 830, 590, "#1C1F22");
+      DIB.E(c, C[0], C[1], 760, 520, "#3A3D40");
+      const rl = DIB.azar(606);
+      c.lineWidth = 3;
+      c.strokeStyle = "#2A2D30";
+      for (let k = 1; k <= 4; k++) {
+        c.beginPath();
+        c.ellipse(C[0], C[1], 760 - k * 100, 520 - k * 68, 0, 0, Math.PI * 2);
+        c.stroke();
+        const n0 = 10 + k * 4;
+        for (let i = 0; i < n0; i++) {
+          const ang = (i / n0) * Math.PI * 2 + rl() * 0.1,
+            r0 = 760 - k * 100,
+            r1 = r0 + 100;
+          c.beginPath();
+          c.moveTo(C[0] + Math.cos(ang) * r0, C[1] + Math.sin(ang) * r0 * 0.684);
+          c.lineTo(C[0] + Math.cos(ang) * r1, C[1] + Math.sin(ang) * r1 * 0.684);
+          c.stroke();
+          if (rl() < 0.35) DIB.alfa(c, 0.25, () => DIB.E(c, C[0] + Math.cos(ang + 0.1) * (r0 + 50), C[1] + Math.sin(ang + 0.1) * (r0 + 50) * 0.684, 26, 10, "#4A4E52"));
+        }
+      }
       const n = trofeos(),
         luz = st.ritual ? 1 : 0;
-      c.save();
-      c.beginPath();
-      c.ellipse(C[0], C[1], 300, 210, 0, 0, Math.PI * 2);
-      c.strokeStyle = luz ? "#73D5DB" : "#1E2226";
-      c.lineWidth = 8;
-      c.stroke();
-      c.restore();
-      for (let k = 0; k < 12; k++) {
-        const a = (k / 12) * Math.PI * 2 - Math.PI / 2,
-          hx = C[0] + Math.cos(a) * 300,
-          hy = C[1] + Math.sin(a) * 210,
-          lit = luz || k < n;
-        DIB.E(c, hx, hy, 22, 15, lit ? "#73D5DB" : "#16191C");
+      // el círculo tallado: anillo con runas, ocho cuñas en el centro y las líneas de luz hacia cada hueco
+      DIB.E(c, C[0], C[1], 340, 238, "#33363A");
+      DIB.E(c, C[0], C[1], 250, 175, "#2E3134");
+      DIB.E(c, C[0], C[1], 160, 112, "#36393C");
+      for (let k = 0; k < 8; k++) {
+        const ang = (k / 8) * Math.PI * 2;
+        DIB.L(c, C[0], C[1], C[0] + Math.cos(ang) * 160, C[1] + Math.sin(ang) * 112, "#24272A", 3);
       }
-      if (luz) DIB.alfa(c, 0.18 + Math.sin(J.t * 2) * 0.06, () => DIB.E(c, C[0], C[1], 300, 210, "#73D5DB"));
-      for (let k = 0; k < 4; k++) DIB.R(c, C[0] - 110 + k * 8, C[1] + 420 + k * 26, 220 - k * 16, 22, k % 2 ? "#2A2E32" : "#3A3E42");
+      const RUNAS = ["fehu", "uruz", "thurisaz", "ansuz", "raidho", "kenaz", "gebo", "wunjo", "hagalaz", "naudiz", "isa", "jera", "eihwaz", "perthro", "algiz", "sowilo", "tiwaz", "berkano", "ehwaz", "mannaz", "laguz", "ingwaz", "dagaz", "othala"];
+      for (let k = 0; k < 24; k++) {
+        const ang = (k / 24) * Math.PI * 2 - Math.PI / 2 + 0.13;
+        FUTHARK.dibujar(c, RUNAS[k], C[0] + Math.cos(ang) * 205, C[1] + Math.sin(ang) * 143 + 9, 18, luz ? "#73D5DB" : "#1E2124", 3);
+      }
+      for (let k = 0; k < 12; k++) {
+        const ang = (k / 12) * Math.PI * 2 - Math.PI / 2,
+          hx = C[0] + Math.cos(ang) * 310,
+          hy = C[1] + Math.sin(ang) * 218,
+          lit = luz || k < n;
+        if (lit) DIB.alfa(c, 0.7, () => DIB.L(c, C[0] + Math.cos(ang) * 250, C[1] + Math.sin(ang) * 175, hx, hy, "#73D5DB", 3));
+        DIB.E(c, hx, hy, 40, 27, lit ? "#2E6A72" : "#191C1F");
+        DIB.E(c, hx, hy, 32, 21, lit ? "#3E8A92" : "#24272A");
+        if (lit) {
+          DIB.alfa(c, 0.35 + Math.sin(J.t * 2.4 + k) * 0.12, () => DIB.E(c, hx, hy, 46, 31, "#73D5DB"));
+          trofeo(k, hx, hy - 4);
+        }
+      }
+      if (luz) DIB.alfa(c, 0.12 + Math.sin(J.t * 2) * 0.05, () => DIB.E(c, C[0], C[1], 340, 238, "#73D5DB"));
+      // la escalera de piedra que sube a la bodega, con su baranda de madera
+      for (let k = 0; k < 5; k++) {
+        DIB.R(c, C[0] - 120 + k * 8, C[1] + 410 + k * 24, 240 - k * 16, 24, "#2A2D30");
+        DIB.R(c, C[0] - 120 + k * 8, C[1] + 410 + k * 24, 240 - k * 16, 8, k % 2 ? "#4A4E52" : "#42464A");
+      }
+      DIB.R(c, C[0] - 134, C[1] + 400, 12, 130, "#5C4430");
+      DIB.R(c, C[0] + 122, C[1] + 400, 12, 130, "#5C4430");
       // las raíces: un piso oscuro con venas, la luz azul goteando de las heridas
       const ra = radioArena();
       DIB.E(c, R[0], R[1], 2100 * ra, 1480 * ra, "#121719");
@@ -427,19 +532,76 @@ window.GOINN = (function () {
     },
     objetos(lista, visible, c) {
       if (!aqui()) return;
-      // la pared de la cámara, al fondo, con el portal
+      c0 = c;
+      // la pared curva de la cámara, con pilares de runas, el arco rúnico del portal, el estandarte de Algiz y lo que
+      // dejaron los custodios: barriles, cofres, cántaros y rollos
       lista.push({
         y: C[1] - 520,
         f: () => {
-          DIB.P(c, [C[0] - 820, C[1] - 40, C[0] - 700, C[1] - 700, C[0] - 300, C[1] - 900, C[0] + 300, C[1] - 900, C[0] + 700, C[1] - 700, C[0] + 820, C[1] - 40, C[0] + 760, C[1] - 40, C[0] + 640, C[1] - 520, C[0], C[1] - 600, C[0] - 640, C[1] - 520, C[0] - 760, C[1] - 40], "#22262A");
+          const tramo = (a0, a1) => {
+            const p0 = [C[0] + Math.cos(a0) * 800, C[1] + Math.sin(a0) * 545],
+              p1 = [C[0] + Math.cos(a1) * 800, C[1] + Math.sin(a1) * 545],
+              alto = 380;
+            const lado = Math.cos((a0 + a1) / 2) < 0;
+            DIB.P(c, [p0[0], p0[1], p1[0], p1[1], p1[0], p1[1] - alto, p0[0], p0[1] - alto], lado ? "#2C3034" : "#353A3E");
+            // las hiladas de piedra
+            for (let f = 1; f < 6; f++) DIB.L(c, p0[0], p0[1] - f * 64, p1[0], p1[1] - f * 64, "#24282C", 2);
+            for (let f = 0; f < 6; f++) {
+              const u = (f % 2 ? 0.33 : 0.66),
+                x = p0[0] + (p1[0] - p0[0]) * u,
+                y = p0[1] + (p1[1] - p0[1]) * u - f * 64;
+              DIB.L(c, x, y, x, y - 64, "#24282C", 2);
+            }
+          };
+          const N = 14,
+            a0 = Math.PI * 1.04,
+            a1 = Math.PI * 1.96;
+          for (let k = 0; k < N; k++) tramo(a0 + ((a1 - a0) * k) / N, a0 + ((a1 - a0) * (k + 1)) / N);
+          // los pilares con runas talladas
+          ["ansuz", "algiz", "eihwaz", "othala", "dagaz"].forEach((rn, k) => {
+            const ang = a0 + ((a1 - a0) * (k + 0.5)) / 5;
+            if (k === 2) return; // el del centro es el portal
+            const x = C[0] + Math.cos(ang) * 780,
+              y = C[1] + Math.sin(ang) * 532;
+            DIB.P(c, [x - 46, y, x - 46, y - 420, x + 46, y - 420, x + 46, y], "#3E4246");
+            DIB.P(c, [x - 46, y, x - 46, y - 420, x - 6, y - 420, x - 6, y], "#30343A");
+            DIB.R(c, x - 56, y - 440, 112, 26, "#46494C");
+            FUTHARK.dibujar(c, rn, x + 4, y - 200, 60, st.ritual ? "#73D5DB" : "#5E6A6E", 5);
+          });
+          // el portal: arco de piedra con runas que se encienden
           const px = C[0],
-            py = C[1] - 380;
-          DIB.P(c, [px - 150, py + 10, px - 150, py - 260, px - 90, py - 330, px + 90, py - 330, px + 150, py - 260, px + 150, py + 10], "#3A3E42");
-          DIB.P(c, [px - 104, py + 10, px - 104, py - 236, px - 60, py - 286, px + 60, py - 286, px + 104, py - 236, px + 104, py + 10], st.ritual ? "#73D5DB" : "#101214");
-          if (st.ritual) DIB.alfa(c, 0.5 + Math.sin(J.t * 3) * 0.2, () => DIB.P(c, [px - 70, py, px - 70, py - 210, px - 40, py - 250, px + 40, py - 250, px + 70, py - 210, px + 70, py], "#E6F6F8"));
-          for (let k = 0; k < 7; k++) FUTHARK.dibujar(c, ["othala", "algiz", "eihwaz", "dagaz", "eihwaz", "algiz", "othala"][k], px - 132 + k * 44, py - 300 + Math.abs(k - 3) * 14, 26, st.ritual ? "#73D5DB" : "#4E5458", 3);
+            py = C[1] - 420;
+          DIB.P(c, [px - 170, py + 10, px - 170, py - 300, px - 110, py - 380, px + 110, py - 380, px + 170, py - 300, px + 170, py + 10], "#43474B");
+          DIB.P(c, [px - 170, py + 10, px - 170, py - 300, px - 110, py - 380, px, py - 380, px, py + 10], "#373B3F");
+          DIB.P(c, [px - 112, py + 10, px - 112, py - 262, px - 66, py - 316, px + 66, py - 316, px + 112, py - 262, px + 112, py + 10], st.ritual ? "#73D5DB" : "#101214");
+          if (st.ritual) {
+            DIB.alfa(c, 0.5 + Math.sin(J.t * 3) * 0.2, () => DIB.P(c, [px - 76, py, px - 76, py - 230, px - 44, py - 272, px + 44, py - 272, px + 76, py - 230, px + 76, py], "#E6F6F8"));
+            DIB.alfa(c, 0.35, () => DIB.P(c, [px - 112, py + 10, px + 112, py + 10, px + 200, py + 140, px - 200, py + 140], "#73D5DB"));
+          }
+          const arco = ["raidho", "algiz", "eihwaz", "dagaz", "othala", "dagaz", "eihwaz", "algiz", "raidho"];
+          arco.forEach((rn, k) => {
+            const ang = Math.PI + (k / (arco.length - 1)) * Math.PI;
+            FUTHARK.dibujar(c, rn, px + Math.cos(ang) * 142, py - 160 + Math.sin(ang) * 190 + 12, 24, st.ritual ? "#73D5DB" : "#4E5458", 3);
+          });
+          // el estandarte rojo con Algiz, a la derecha
+          const bx = C[0] + 560,
+            by = C[1] - 560;
+          DIB.P(c, [bx - 60, by - 200, bx + 60, by - 200, bx + 60, by, bx, by - 30, bx - 60, by], "#9C2315");
+          DIB.P(c, [bx - 60, by - 200, bx, by - 200, bx, by - 30, bx - 60, by], "#7A1A10");
+          DIB.R(c, bx - 70, by - 210, 140, 10, "#5C4430");
+          FUTHARK.dibujar(c, "algiz", bx, by - 50, 90, "#E0B2B2", 6);
         },
       });
+      // lo que dejaron los custodios contra la pared
+      const COSAS_CAMARA = [
+        [-560, -390, "barril"], [-500, -430, "barril"], [-420, -470, "cofre"], [-300, -500, "cantaro"], [-250, -505, "rollos"],
+        [260, -505, "cofre"], [360, -488, "cantaro"], [430, -462, "rollos"], [620, -340, "barril"], [660, -290, "cantaro"], [690, -230, "rollos"],
+      ];
+      for (const [dx, dy, tipo] of COSAS_CAMARA) {
+        const x = C[0] + dx,
+          y = C[1] + dy;
+        if (visible(x, y)) lista.push({ y, f: () => cosaCamara(tipo, x, y) });
+      }
       if (visible(svan.x, svan.y)) lista.push({ y: svan.y, f: () => GENTE.dibujar(c, "svanhild", svan.x, svan.y, J.t, svan.mira) });
       // los pilares de raíz y la raíz madre
       const raiz = (x, y, w, alto, sem) => {
@@ -634,6 +796,8 @@ window.GOINN = (function () {
       dar({ x: C[0], y: C[1], r: st.ritual ? 900 : 380, col: "#73D5DB", f: st.ritual ? 0.8 : 0.35 });
       dar({ x: svan.x, y: svan.y - 60, r: 260, col: "#FFD98A", f: 0.6 });
       dar({ x: C[0], y: C[1] + 440, r: 260, col: "#FFD98A", f: 0.5 });
+      // las antorchas de la cámara, contra la pared
+      for (const dx of [-560, 560]) dar({ x: C[0] + dx, y: C[1] - 420, r: 340, col: "#FFD98A", f: 0.45 });
       dar({ x: R[0], y: R[1], r: 1600, col: "#73D5DB", f: 0.45 });
       const m = madre();
       dar({ x: m[0], y: m[1] - 200, r: 700, col: "#73D5DB", f: 0.6 });
