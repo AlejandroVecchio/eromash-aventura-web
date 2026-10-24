@@ -389,6 +389,17 @@
       c.stroke();
       c.restore();
     }
+    if (cortando && cursor) {
+      const cm = caminoElegido(),
+        m = cm && marcaEn(cm, cursor.x, cursor.y);
+      cortando.marcas.concat(m ? [m] : []).forEach((q) => {
+        c.strokeStyle = "#C8402D";
+        c.lineWidth = 5 / cam.z;
+        c.beginPath();
+        c.arc(q.q[0], q.q[1], 12 / cam.z, 0, Math.PI * 2);
+        c.stroke();
+      });
+    }
     dibujarAgua();
     if (camino) {
       c.fillStyle = "#FFD98A";
@@ -977,9 +988,11 @@
     const e = est.estiloCaminos.find((q) => q.i === cm.base);
     return e.tramos || (e.tramos = []);
   }
+  let cortando = null; // Cortar: { marcas: [{ k, q, u }] }: k el tramo, q el punto, u la distancia desde el comienzo
   let tramoSel = null; // el tramo elegido del camino elegido (de p[k] a p[k + 1])
   function elegirCamino(cm) {
     tramoSel = null;
+    if (cortando) (cortando = null), $("camCortar").classList.remove("activo");
     camElegido = cm ? (cm.base != null ? { base: cm.base } : { nuevo: cm.nuevo }) : null;
     pintarPanelCamino();
   }
@@ -1034,6 +1047,78 @@
     sacarCamino(cm);
   };
   $("camSoltar").onclick = () => elegirCamino(null);
+  // cortar: parte el camino elegido en dos y saca lo del medio (un tramo entero, o lo que quede entre dos clics)
+  // a y b: { p, tramos } de cada pedazo que queda; uno con menos de dos puntos no queda
+  function partirCamino(cm, a, b) {
+    recordar();
+    const estilo = { tipo: cm.tipo || "tierra", borde: cm.borde || "", fundir: !!cm.fundir, w: cm.w };
+    const limpio = (tr) => (tr.some((q) => q) ? tr : undefined);
+    if (cm.nuevo != null) {
+      const c0 = est.caminos[cm.nuevo];
+      if (a.p.length >= 2) Object.assign(c0, { p: a.p, tramos: limpio(a.tramos) });
+      else est.caminos.splice(cm.nuevo, 1);
+    } else if (a.p.length >= 2) {
+      puntosDe(cm);
+      Object.assign(est.estiloCaminos.find((q) => q.i === cm.base), { p: a.p, tramos: limpio(a.tramos) });
+    } else {
+      est.quitarCaminos.push(cm.base);
+      est.estiloCaminos = est.estiloCaminos.filter((q) => q.i !== cm.base);
+    }
+    if (b.p.length >= 2) est.caminos.push(Object.assign({}, estilo, { p: b.p, tramos: limpio(b.tramos) }));
+    camElegido = null;
+    tramoSel = null;
+    cortando = null;
+    guardar();
+    pintarPanelCamino();
+  }
+  const rp = (q) => [r1(q[0]), r1(q[1])];
+  $("camTramoSacar").onclick = () => {
+    const cm = caminoElegido();
+    if (!cm || tramoSel == null) return;
+    const tr = cm.tramos || [];
+    partirCamino(cm, { p: cm.p.slice(0, tramoSel + 1).map(rp), tramos: tr.slice(0, tramoSel) }, { p: cm.p.slice(tramoSel + 1).map(rp), tramos: tr.slice(tramoSel + 1) });
+  };
+  // Cortar: dos clics sobre el camino elegido; lo que queda entre los dos se saca
+  $("camCortar").onclick = () => {
+    if (!caminoElegido()) return;
+    cortando = cortando ? null : { marcas: [] };
+    $("camCortar").classList.toggle("activo", !!cortando);
+    if (cortando) avisar(t("ed.cam_cortar_ayuda"));
+  };
+  function marcaEn(cm, x, y) {
+    let mejor = null,
+      dm = Infinity,
+      u = 0;
+    for (let k = 1; k < cm.p.length; k++) {
+      const [ax, ay] = cm.p[k - 1],
+        [bx, by] = cm.p[k],
+        dx = bx - ax,
+        dy = by - ay,
+        l = dx * dx + dy * dy,
+        f = l ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l)) : 0,
+        q = [ax + dx * f, ay + dy * f],
+        d = Math.hypot(x - q[0], y - q[1]);
+      if (d < dm) (dm = d), (mejor = { k: k - 1, q, u: u + Math.sqrt(l) * f });
+      u += Math.sqrt(l);
+    }
+    return dm < Math.max(cm.w / 2, 20 / cam.z) ? mejor : null;
+  }
+  function cortarEn(x, y) {
+    const cm = caminoElegido();
+    if (!cm) return (cortando = null);
+    const m = marcaEn(cm, x, y);
+    if (!m) return;
+    cortando.marcas.push(m);
+    if (cortando.marcas.length < 2) return;
+    const [m1, m2] = cortando.marcas.sort((a, b) => a.u - b.u),
+      tr = cm.tramos || [];
+    $("camCortar").classList.remove("activo");
+    partirCamino(
+      cm,
+      { p: cm.p.slice(0, m1.k + 1).map(rp).concat([rp(m1.q)]), tramos: tr.slice(0, m1.k + 1) },
+      { p: [rp(m2.q)].concat(cm.p.slice(m2.k + 1).map(rp)), tramos: tr.slice(m2.k) },
+    );
+  }
   function sacarCamino(cm) {
     recordar();
     if (cm.nuevo != null) est.caminos.splice(cm.nuevo, 1);
@@ -1675,6 +1760,8 @@
       return;
     }
     if (caja.classList.contains("ver")) cerrarNota();
+    if (cortando) return cortarEn(x, y);
+    if (probando) return probarEn(x, y);
     // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
     const ni = herr !== "borrar" ? notaEn(x, y) : -1;
     if (ni >= 0) {
@@ -1978,6 +2065,8 @@
     const trazando = camino || rio;
     if ((e.key === "Enter" || e.key === "Escape") && rio) terminarRio();
     else if (e.key === "Enter" && camino) terminarCamino();
+    if (e.key === "Escape" && probando) (probando = false), $("bProbar").classList.remove("activo");
+    if (e.key === "Escape" && cortando) (cortando = null), $("camCortar").classList.remove("activo");
     if (e.key === "Escape" && trazando) camino && terminarCamino();
     else if (e.key === "Escape") {
       elegirAgua(null);
@@ -2144,9 +2233,19 @@
       $("archivo").value = "";
     });
   });
-  $("bProbar").onclick = () => {
+  // Probar en el juego: primero se elige en el mapa dónde aparece Eromash (otro clic en el botón: el centro de la vista)
+  let probando = false;
+  function probarEn(x, y) {
+    probando = false;
+    $("bProbar").classList.remove("activo");
     guardar();
-    open("index.html?borrador=1&jugar=1" + (params.get("lang") ? "&lang=" + params.get("lang") : ""), "_blank");
+    open("index.html?borrador=1&jugar=1&en=" + r1(x) + "," + r1(y) + (params.get("lang") ? "&lang=" + params.get("lang") : ""), "_blank");
+  }
+  $("bProbar").onclick = () => {
+    if (probando) return probarEn(cam.x, cam.y);
+    probando = true;
+    $("bProbar").classList.add("activo");
+    avisar(t("ed.probar_donde"));
   };
   $("bLimpiar").onclick = () => {
     if (!confirm(t("ed.limpiar_seguro"))) return;

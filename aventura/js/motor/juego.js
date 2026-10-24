@@ -1464,6 +1464,19 @@
       J.cam.x = jug.x;
       J.cam.y = jug.y;
     }
+    // ?en=x,y: aparece ahí (lo elige el editor con Probar en el juego); si cae en algo que choca, al lado libre más cerca
+    const en = (q.get("en") || "").split(",").map(Number);
+    if (en.length === 2 && en.every(isFinite)) {
+      let [x, y] = en;
+      for (let r = 0; r < 600 && !W.libre(x, y, R); r += 20) {
+        const ok = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => [en[0] + Math.cos((k * Math.PI) / 4) * r, en[1] + Math.sin((k * Math.PI) / 4) * r]).find(([a, b]) => W.libre(a, b, R));
+        if (ok) [x, y] = ok;
+      }
+      jug.x = x;
+      jug.y = y;
+      J.cam.x = x;
+      J.cam.y = y;
+    }
   } else titulo();
   requestAnimationFrame(cuadro);
 })();
