@@ -21,7 +21,7 @@ window.SENDAS = (function () {
     h ^= h >>> 12;
     return (h >>> 0) / 4294967296;
   }
-  function trazo(c, pts, w, col) {
+  function trazo(c, pts, w, col, cap) {
     if (pts.length < 2 || w <= 0) return;
     c.beginPath();
     c.moveTo(pts[0][0], pts[0][1]);
@@ -29,7 +29,7 @@ window.SENDAS = (function () {
     c.strokeStyle = col;
     c.lineWidth = w;
     c.lineJoin = "round";
-    c.lineCap = "round";
+    c.lineCap = cap || "round";
     c.stroke();
   }
   function distLinea(x, y, p) {
@@ -161,6 +161,42 @@ window.SENDAS = (function () {
     const yo = lista.indexOf(cm.deTramos || cm);
     const tapado = (x, y) =>
       cerca.length > 0 && (tipo === "tierra" ? sobreOtro(x, y, -4) : sobreOtro(x, y, -4, (o) => (o.tipo || "tierra") !== "tierra" && lista.indexOf(o) < yo));
+    // un empedrado que termina adentro de otro camino (de tierra, o de un empedrado que gana el cruce) no cierra con
+    // una punta redonda: el cordón y el fondo se cortan derechos en el borde del otro, y de ahí para adentro las piedras
+    // o ladrillos se van soltando hasta perderse en la tierra o en las piedras del otro
+    const cede = (o) => (o.tipo || "tierra") === "tierra" || lista.indexOf(o) < yo;
+    const metido = (x, y) => cerca.some((o) => cede(o) && distLinea(x, y, o.p) < (o.w || 110) / 2);
+    const entra = (k) => {
+      if (tipo === "tierra" || !cerca.length || (cm.puntas && !cm.puntas[k])) return 0;
+      const q = p[k ? p.length - 1 : 0];
+      if (!metido(q[0], q[1])) return 0;
+      let d = 0;
+      for (; d < L / 2; d += 6) {
+        const [[x, y]] = recortar(p, k ? L - d : d, k ? L - d : d);
+        if (!metido(x, y)) break;
+      }
+      return d;
+    };
+    const ea = entra(0),
+      eb = entra(1);
+    // cuánto queda del empedrado en ese punto por estar metido en otro camino (1 entero, 0 nada)
+    const suelto = (d) => Math.min(1, ea ? 1 - (ea - d) / (w * 1.2) : 1, eb ? 1 - (d - (L - eb)) / (w * 1.2) : 1);
+    // el empedrado entero: con punta redonda en las puntas libres y cortado derecho donde entra en otro
+    const losa = (pts, ancho, col) => {
+      if (!(ea || eb)) return trazo(c, pts, ancho, col);
+      // el cuerpo (pts ≠ p) ya viene recortado por las puntas que se funden
+      const a = Math.max(ea, pts !== p && fa ? FUNDE * 0.75 : 0),
+        b = Math.min(L - eb, pts !== p && fb ? L - FUNDE * 0.75 : L);
+      losaEntre(a, b, ancho, col);
+    };
+    const losaEntre = (a, b, ancho, col) => {
+      if (b - a < 2) return;
+      const pts = recortar(p, a, b);
+      trazo(c, pts, ancho, col, "butt");
+      // la punta libre sigue redonda
+      if (!ea) E(c, pts[0][0], pts[0][1], ancho / 2, ancho / 2, col);
+      if (!eb) E(c, pts[pts.length - 1][0], pts[pts.length - 1][1], ancho / 2, ancho / 2, col);
+    };
 
     if (tipo === "tierra") {
       if (fundir) {
@@ -215,16 +251,16 @@ window.SENDAS = (function () {
     } else if (tipo === "adoquin") {
       // abajo un poco de tierra (lo que se ve donde faltan piedras), el cordón y la junta
       if (en("base")) {
-        trazo(c, p, w + 18, "#4A3C28");
-        trazo(c, cuerpo, w + 26, "#3E3A36");
+        losa(p, w + 18, "#4A3C28");
+        losa(cuerpo, w + 26, "#3E3A36");
       }
-      if (en("losa")) trazo(c, cuerpo, w + 4, "#4A4640");
+      if (en("losa")) losa(cuerpo, w + 4, "#4A4640");
       if (en("detalle"))
         recorrer(p, 22, (x, y, dx, dy, d, i) => {
-          if (!dentro(x, y) || tapado(x, y)) return;
+          if (!dentro(x, y) || tapado(x, y) || suelto(d) <= 0) return;
           const nx = -dy,
             ny = dx,
-            q = queda(d),
+            q = Math.min(queda(d), suelto(d)),
             off = i % 2 ? 11 : 0;
           for (let o = -w / 2 + 12 + off, j = 0; o <= w / 2 - 10; o += 22, j++) {
             if (q < 1 && hash(sem, i, j) > q) continue;
@@ -236,18 +272,18 @@ window.SENDAS = (function () {
         });
     } else if (tipo === "ladrillo") {
       if (en("base")) {
-        trazo(c, p, w + 18, "#4A3C28");
-        trazo(c, cuerpo, w + 28, "#4E4A44");
-        trazo(c, cuerpo, w + 10, "#5E5850");
+        losa(p, w + 18, "#4A3C28");
+        losa(cuerpo, w + 28, "#4E4A44");
+        losa(cuerpo, w + 10, "#5E5850");
       }
-      if (en("losa")) trazo(c, cuerpo, w, "#4A2E22");
+      if (en("losa")) losa(cuerpo, w, "#4A2E22");
       // ladrillos a soga: carriles a lo ancho, cada uno corrido medio ladrillo del de al lado
       if (en("detalle"))
         recorrer(p, 16, (x, y, dx, dy, d, i) => {
-          if (!dentro(x, y) || tapado(x, y)) return;
+          if (!dentro(x, y) || tapado(x, y) || suelto(d) <= 0) return;
           const nx = -dy,
             ny = dx,
-            q = queda(d),
+            q = Math.min(queda(d), suelto(d)),
             carriles = Math.max(2, Math.floor(w / 15));
           for (let j = 0; j < carriles; j++) {
             if ((i + j) % 2) continue; // cada ladrillo mide dos pasos de largo
