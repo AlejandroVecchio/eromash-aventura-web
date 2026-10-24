@@ -227,33 +227,102 @@
   // El gran tocón del árbol de linde, con la piedra antigua atrapada entre las raíces y la cuña de hierro en la raíz
   // viva (o.cuna); mientras está, rezuma savia por la grieta.
   function granTocon(c, x, y, t, o) {
-    const s = o.s || 1;
-    sombra(c, x + 20 * s, y + 6 * s, 200 * s, 40 * s, 0.4);
-    // raíces enormes
-    [[-1, 200, 30], [-1, 140, 60], [1, 160, 50], [1, 220, 20], [-1, 60, 70]].forEach(([l, dx, dy], i) => {
-      P(c, [x + l * 60 * s, y - 90 * s, x + l * dx * s, y + dy * 0.4 * s, x + l * (dx - 40) * s, y + dy * 0.4 * s + 10 * s, x + l * 30 * s, y], i % 2 ? C.troncoSombra : C.tronco);
-    });
-    // la piedra antigua, abrazada
-    P(c, [x - 60 * s, y - 4 * s, x - 70 * s, y - 70 * s, x - 30 * s, y - 100 * s, x + 20 * s, y - 92 * s, x + 30 * s, y - 4 * s], PIEDRA[1]);
-    P(c, [x - 30 * s, y - 100 * s, x + 20 * s, y - 92 * s, x + 30 * s, y - 4 * s, x - 10 * s, y - 4 * s], PIEDRA[2]);
-    alfa(c, 0.35, () => FUTHARK.dibujar(c, "eihwaz", x - 20 * s, y - 30 * s, 40 * s, RUNICO, 3 * s));
-    // el tocón, ancho como una casa chica
-    P(c, [x - 120 * s, y - 60 * s, x - 112 * s, y - 150 * s, x + 118 * s, y - 150 * s, x + 126 * s, y - 60 * s, x + 60 * s, y - 40 * s, x - 70 * s, y - 50 * s], C.corteza);
-    P(c, [x + 20 * s, y - 50 * s, x + 30 * s, y - 150 * s, x + 118 * s, y - 150 * s, x + 126 * s, y - 60 * s], C.tronco);
-    E(c, x + 3 * s, y - 150 * s, 116 * s, 40 * s, C.maderaLuz);
-    for (let k = 1; k < 5; k++) c.beginPath(), c.ellipse(x + 3 * s, y - 150 * s, 116 * s * (k / 5), 40 * s * (k / 5), 0, 0, TAU), (c.strokeStyle = C.madera), (c.lineWidth = 2 * s), c.stroke();
-    E(c, x - 50 * s, y - 158 * s, 40 * s, 12 * s, C.musgo2);
-    // la raíz viva con la cuña
-    P(c, [x + 60 * s, y - 50 * s, x + 150 * s, y - 20 * s, x + 170 * s, y + 6 * s, x + 50 * s, y - 10 * s], C.tronco);
+    // un abeto de linde de los primeros tiempos, cortado hace generaciones: el tocón es ancho como una casa chica, con
+    // el borde del corte roto y una astilla alta atrás; sus raíces de contrafuerte bajan al piso y abrazan la piedra
+    // antigua (Eihwaz) que tenía al pie. La raíz viva de la derecha lleva la cuña de hierro (o.cuna) que la sangra.
+    const s = o.s || 1,
+      rnd = azar(311);
+    sombra(c, x + 24 * s, y + 8 * s, 230 * s, 46 * s, 0.42);
+    const R0 = 118 * s, // radio de la base del tronco
+      RT = 100 * s, // radio del corte
+      H = 150 * s; // alto del corte
+    // una raíz: sale del pie del tronco en el ángulo a (0 = derecha, π/2 = adelante) y se hunde en el piso a lo lejos
+    function raiz(a, largo, grueso, luz) {
+      const ca = Math.cos(a),
+        sa = Math.sin(a),
+        bx = x + ca * R0 * 0.86,
+        by = y - 4 * s + sa * R0 * 0.28,
+        ex = x + ca * largo * s,
+        ey = y + sa * largo * 0.34 * s,
+        g = grueso * s,
+        arriba = [],
+        medio = [],
+        abajo = [];
+      // de la base a la punta: el lomo baja de la altura del pie del tronco al piso y la raíz se angosta
+      for (let k = 0; k <= 8; k++) {
+        const u = k / 8,
+          px = bx + (ex - bx) * u,
+          py = by + (ey - by) * u,
+          lomo = (58 * s + g * 0.4) * Math.pow(1 - u, 1.6) + g * 0.35 * (1 - u * 0.7),
+          ancho = g * (1 - u * 0.72),
+          ond = Math.sin(u * 7 + a * 3) * 3 * s;
+        arriba.push(px + ond, py - lomo);
+        medio.push(px + ond, py - lomo * 0.45);
+        abajo.push(px - sa * ancho * 0.25, py + ancho * 0.22);
+      }
+      const vuelta = (l) => {
+        const o = [];
+        for (let k = l.length - 2; k >= 0; k -= 2) o.push(l[k], l[k + 1]);
+        return o;
+      };
+      P(c, arriba.concat(vuelta(abajo)), luz ? C.tronco : C.troncoSombra);
+      P(c, arriba.concat(vuelta(medio)), luz ? C.corteza : C.tronco);
+      return [bx + (ex - bx) * 0.45, by + (ey - by) * 0.45 - g * 0.6];
+    }
+    // las raíces de atrás, debajo del tronco
+    raiz(-2.6, 230, 34, false);
+    raiz(-0.5, 240, 30, true);
+    raiz(-1.6, 170, 26, false);
+    // el cuerpo: ensanchado al pie, en sombra a la izquierda y con luz a la derecha
+    const cuerpo = [x - R0, y - 8 * s, x - R0 * 0.96, y - 40 * s, x - RT, y - H, x + RT, y - H, x + R0 * 0.98, y - 40 * s, x + R0, y - 8 * s];
+    P(c, cuerpo, C.corteza);
+    P(c, [x - R0, y - 8 * s, x - R0 * 0.96, y - 40 * s, x - RT, y - H, x - 10 * s, y - H, x - 4 * s, y - 2 * s], C.tronco);
+    P(c, [x - R0, y - 8 * s, x - R0 * 0.96, y - 40 * s, x - RT, y - H, x - RT * 0.7, y - H, x - R0 * 0.72, y - 2 * s], C.troncoSombra);
+    // la corteza en surcos verticales, gruesa y partida
+    for (let k = 0; k < 11; k++) {
+      const u = -0.9 + k * 0.18,
+        xb = x + u * R0,
+        xt = x + u * RT,
+        lado = u > 0;
+      alfa(c, 0.7, () => L(c, xb, y - 30 * s - rnd() * 14 * s, xt + (rnd() - 0.5) * 6 * s, y - H + 16 * s + rnd() * 30 * s, lado ? C.tronco : "#241A12", (2 + rnd() * 2) * s));
+    }
+    // el corte viejo: anillos, grietas desde el centro y el borde roto
+    E(c, x, y - H, RT, 32 * s, "#7E6040");
+    E(c, x + 4 * s, y - H + 2 * s, RT * 0.92, 28 * s, C.maderaLuz);
+    c.strokeStyle = "#7E6040";
+    c.lineWidth = 2 * s;
+    for (let k = 1; k < 6; k++) {
+      c.beginPath();
+      c.ellipse(x + 4 * s, y - H + 2 * s, RT * 0.92 * (k / 6), 28 * s * (k / 6), 0, 0, TAU);
+      c.stroke();
+    }
+    [[-0.4, 0.9], [0.5, 0.95], [2.4, 0.8], [1.3, 0.6]].forEach(([a, l]) => L(c, x + 4 * s, y - H + 2 * s, x + 4 * s + Math.cos(a) * RT * 0.92 * l, y - H + 2 * s + Math.sin(a) * 28 * s * l, "#3A2A1A", 3 * s));
+    // la astilla alta que quedó atrás a la izquierda, del lado roto
+    P(c, [x - RT * 0.9, y - H - 4 * s, x - RT * 0.62, y - H - 74 * s, x - RT * 0.42, y - H - 30 * s, x - RT * 0.2, y - H - 22 * s, x - RT * 0.1, y - H - 6 * s], C.tronco);
+    P(c, [x - RT * 0.62, y - H - 74 * s, x - RT * 0.42, y - H - 30 * s, x - RT * 0.2, y - H - 22 * s, x - RT * 0.1, y - H - 6 * s, x - RT * 0.5, y - H - 10 * s], "#8A6A44");
+    // el musgo que se le subió
+    E(c, x + 46 * s, y - H + 6 * s, 34 * s, 10 * s, C.musgo2);
+    E(c, x + 52 * s, y - H + 4 * s, 20 * s, 6 * s, C.musgoClaro);
+    P(c, [x - R0 * 0.98, y - 30 * s, x - R0 * 0.9, y - 70 * s, x - R0 * 0.7, y - 60 * s, x - R0 * 0.62, y - 16 * s], C.musgo);
+    // la piedra antigua, al pie y adelante a la izquierda, con las raíces cruzándola
+    P(c, [x - 104 * s, y + 26 * s, x - 112 * s, y - 40 * s, x - 78 * s, y - 70 * s, x - 34 * s, y - 62 * s, x - 22 * s, y + 24 * s], PIEDRA[1]);
+    P(c, [x - 78 * s, y - 70 * s, x - 34 * s, y - 62 * s, x - 22 * s, y + 24 * s, x - 56 * s, y + 26 * s], PIEDRA[2]);
+    alfa(c, 0.55 + 0.15 * Math.sin(t * 1.3), () => FUTHARK.dibujar(c, "eihwaz", x - 60 * s, y - 34 * s, 36 * s, RUNICO, 3 * s));
+    // las raíces de adelante: una abraza la piedra
+    raiz(2.35, 210, 30, false);
+    raiz(1.75, 150, 22, false);
+    const [cx, cy] = raiz(0.55, 230, 36, true);
+    raiz(1.15, 190, 26, true);
+    E(c, x - 80 * s, y - 4 * s, 18 * s, 6 * s, C.musgo2);
     if (o.cuna) {
-      P(c, [x + 96 * s, y - 40 * s, x + 112 * s, y - 64 * s, x + 122 * s, y - 60 * s, x + 108 * s, y - 32 * s], C.hierro);
-      P(c, [x + 112 * s, y - 64 * s, x + 122 * s, y - 60 * s, x + 118 * s, y - 56 * s], C.hierroLuz);
-      // la savia que rezuma
+      // la cuña de hierro clavada en la raíz viva, y la savia que rezuma
+      P(c, [cx - 8 * s, cy + 6 * s, cx + 4 * s, cy - 22 * s, cx + 16 * s, cy - 18 * s, cx + 6 * s, cy + 8 * s], C.hierro);
+      P(c, [cx + 4 * s, cy - 22 * s, cx + 16 * s, cy - 18 * s, cx + 12 * s, cy - 13 * s], C.hierroLuz);
       const g = (t * 0.6) % 1;
-      L(c, x + 104 * s, y - 30 * s, x + 104 * s, y - 14 * s, "#C8A040", 3 * s);
-      E(c, x + 104 * s, y - 14 * s + g * 16 * s, 3 * s, 4 * s, "#E0B850");
-      E(c, x + 100 * s, y + 6 * s, 16 * s, 5 * s, "#A88A30");
-    } else E(c, x + 104 * s, y - 34 * s, 6 * s, 4 * s, "#3A2A1A");
+      L(c, cx, cy + 8 * s, cx + 2 * s, cy + 24 * s, "#C8A040", 3 * s);
+      E(c, cx + 2 * s, cy + 24 * s + g * 14 * s, 3 * s, 4 * s, "#E0B850");
+      E(c, cx + 2 * s, cy + 44 * s, 16 * s, 5 * s, "#A88A30");
+    } else E(c, cx, cy, 6 * s, 4 * s, "#3A2A1A");
   }
 
   // La cabaña de los leñadores: techo vencido, herramientas oxidadas y el banco con la caja debajo.

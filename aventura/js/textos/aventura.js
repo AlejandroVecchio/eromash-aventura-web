@@ -8,6 +8,8 @@ I18N.textos({
   "as.hongosRocio": { es: "Hongos de rocío", en: "Dew mushrooms" },
   "as.roca": { es: "Roca con musgo", en: "Mossy boulder" },
   "as.troncoCaido": { es: "Tronco caído con orejas de ámbar", en: "Fallen log with amber ears" },
+  "as.pinoTalado": { es: "Pino talado al borde del claro", en: "Pine felled at the clearing's edge" },
+  "as.arbolQuebrado": { es: "Árbol quebrado desde el pie", en: "Tree snapped at the base" },
   "as.farol": { es: "Farol de la senda", en: "Trail lantern" },
   "as.piedraLinde": { es: "Piedra rúnica de la Linde", en: "Linde rune stone" },
   "as.puestoEydis": { es: "Puesto de Eydis", en: "Eydis's outpost" },

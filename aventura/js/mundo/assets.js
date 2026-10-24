@@ -335,6 +335,121 @@ window.ASSETS = (function () {
     });
   }
 
+  // un tronco acostado en el piso, de (x0, y0) a (x1, y1), grueso r0 en la base y r1 en la punta: lomo con luz,
+  // flanco en sombra y muñones de ramas (los usan el pino talado y el árbol quebrado)
+  function troncoTendido(c, x0, y0, x1, y1, r0, r1, rnd, s) {
+    const l = Math.hypot(x1 - x0, y1 - y0) || 1,
+      nx = -(y1 - y0) / l,
+      ny = (x1 - x0) / l;
+    sombra(c, (x0 + x1) / 2 + 6 * s, (y0 + y1) / 2 + 4 * s, l * 0.52, r0 * 0.7, 0.3);
+    P(c, [x0, y0 - r0 * 1.8, x1, y1 - r1 * 1.8, x1 + nx * r1 * 0.3, y1 + 1 * s, x0 + nx * r0 * 0.3, y0 + 2 * s], C.troncoSombra);
+    P(c, [x0, y0 - r0 * 1.8, x1, y1 - r1 * 1.8, x1, y1 - r1 * 0.9, x0, y0 - r0 * 0.9], C.tronco);
+    P(c, [x0, y0 - r0 * 1.8, x1, y1 - r1 * 1.8, x1, y1 - r1 * 1.45, x0, y0 - r0 * 1.45], C.corteza);
+    // muñones de ramas, para arriba y para el costado
+    for (let k = 1; k < 6; k++) {
+      const u = 0.2 + k * 0.13 + (rnd() - 0.5) * 0.06,
+        px = x0 + (x1 - x0) * u,
+        r = r0 + (r1 - r0) * u,
+        py = y0 + (y1 - y0) * u - r * 1.6,
+        lado = k % 2 ? 1 : -1;
+      L(c, px, py, px + lado * (6 + rnd() * 10) * s, py - (10 + rnd() * 12) * s, k % 2 ? C.tronco : C.troncoSombra, 3 * s);
+    }
+    // el musgo que le crece encima
+    alfa(c, 0.8, () => P(c, [x0 + (x1 - x0) * 0.15, y0 + (y1 - y0) * 0.15 - r0 * 1.8, x0 + (x1 - x0) * 0.42, y0 + (y1 - y0) * 0.42 - r0 * 1.7, x0 + (x1 - x0) * 0.36, y0 + (y1 - y0) * 0.36 - r0 * 1.5, x0 + (x1 - x0) * 0.2, y0 + (y1 - y0) * 0.2 - r0 * 1.55], C.musgo2));
+  }
+
+  // la copa de un pino acostada: pisos que apuntan hacia la punta (d), cada uno con su cara de luz arriba
+  function copaTendida(c, ex, ey, d, s, cols, luz) {
+    for (let k = 0; k < 4; k++) {
+      const cx = ex + d * (k * 30 - 10) * s,
+        w = (44 - k * 8) * s,
+        cy = ey - 12 * s;
+      P(c, [cx, cy - w * 0.75, cx + d * 46 * s, cy - 2 * s, cx, cy + w * 0.3, cx + d * 12 * s, cy - 4 * s], cols[k % cols.length]);
+      P(c, [cx, cy - w * 0.75, cx + d * 46 * s, cy - 2 * s, cx + d * 12 * s, cy - w * 0.25], luz);
+    }
+  }
+
+  // El pino talado: tocón cortado a hacha (la boca de caída y la bisagra que se partió), virutas alrededor y el tronco
+  // acostado donde cayó, con la copa ya seca en la punta. Marca dónde los leñadores le ganaron al bosque un claro.
+  // o.dir: hacia qué lado cayó (1 derecha, -1 izquierda); o.ang: cuánto se va hacia adelante o hacia atrás.
+  function pinoTalado(c, x, y, t, o) {
+    const s = o.s || 1,
+      rnd = azar((o.sem || 1) * 389),
+      d = o.dir || 1,
+      ang = o.ang || 0,
+      L0 = (130 + rnd() * 40) * s,
+      bx = x + d * 22 * s,
+      by = y + 4 * s,
+      ex = bx + d * L0,
+      ey = by + ang * L0;
+    // la copa seca, acostada en la punta: pisos de pino ya marrones
+    copaTendida(c, ex, ey, d, s, ["#4A4A2A", "#5A5430", "#4E4A2C"], "#76683C");
+    troncoTendido(c, bx, by, ex, ey, 14 * s, 8 * s, rnd, s);
+    // la base cortada del tronco que cayó, mirando al tocón
+    E(c, bx, by - 15 * s, 7 * s, 14 * s, C.maderaLuz);
+    E(c, bx, by - 15 * s, 4 * s, 8 * s, "#B08A58");
+    // el tocón: corte plano con la boca de caída del lado del árbol y la astilla de la bisagra
+    const w = 15 * s,
+      h = 18 * s;
+    sombra(c, x + 4 * s, y + 2 * s, w + 8 * s, 6 * s, 0.32);
+    P(c, [x - w - 6 * s, y + 1 * s, x - w, y - 5 * s, x - w + 4 * s, y + 1 * s], C.troncoSombra);
+    P(c, [x + w + 6 * s, y + 1 * s, x + w, y - 5 * s, x + w - 4 * s, y + 1 * s], C.tronco);
+    P(c, [x - w, y, x - w, y - h, x + w, y - h, x + w, y], C.corteza);
+    P(c, [x - w, y, x - w, y - h, x - w * 0.3, y - h, x - w * 0.4, y], C.tronco);
+    E(c, x, y - h, w, w * 0.4, C.maderaLuz);
+    E(c, x, y - h, w * 0.6, w * 0.24, "#B08A58");
+    // la boca de caída (cuña sacada a hacha) y la bisagra rota que quedó parada
+    P(c, [x + d * w, y - h, x + d * w * 0.3, y - h + 2 * s, x + d * w, y - h + 8 * s], "#2A2016");
+    P(c, [x - d * w * 0.2, y - h - 1 * s, x - d * w * 0.05, y - h - 10 * s, x + d * w * 0.1, y - h - 1 * s], "#B08A58");
+    // virutas
+    for (let k = 0; k < 6; k++) {
+      const a = rnd() * TAU,
+        r = (18 + rnd() * 22) * s;
+      E(c, x + Math.cos(a) * r, y + 6 * s + Math.sin(a) * r * 0.35, 3 * s, 1.6 * s, k % 2 ? C.maderaLuz : "#B08A58", a);
+    }
+  }
+
+  // El árbol quebrado: el viento (o algo más grande) lo partió cerca del pie. Queda un tocón alto en astillas y el resto
+  // del árbol tendido al lado, la copa todavía verde. o.dir y o.ang como el pino talado; o.roble: era un roble.
+  function arbolQuebrado(c, x, y, t, o) {
+    const s = o.s || 1,
+      rnd = azar((o.sem || 1) * 613),
+      d = o.dir || 1,
+      ang = o.ang || 0,
+      roble = !!o.roble,
+      L0 = (120 + rnd() * 50) * s,
+      bx = x + d * 18 * s,
+      by = y + 3 * s,
+      ex = bx + d * L0,
+      ey = by + ang * L0;
+    // la copa caída, primero (queda detrás del tronco)
+    if (roble)
+      [0, 1, 2].forEach((k) => {
+        const mx = ex + d * (k * 22 - 6) * s,
+          my = ey - (16 + (k % 2) * 14) * s,
+          mr = (30 - k * 4) * s;
+        P(c, poli(mx, my, mr, mr * 0.7, 7, 0.3 + k, [1, 0.86, 1.04, 0.9, 1.02, 0.88, 0.96]), C.roble[k]);
+        P(c, [mx, my - mr * 0.7, mx + mr * 0.9, my - mr * 0.2, mx + mr * 0.3, my], C.robleLuz);
+      });
+    else copaTendida(c, ex, ey, d, s, C.pino, C.pinoLuz);
+    troncoTendido(c, bx, by, ex, ey, 14 * s, 8 * s, rnd, s);
+    // la punta partida del tronco caído: astillas claras
+    P(c, [bx, by - 26 * s, bx - d * 9 * s, by - 20 * s, bx - d * 2 * s, by - 14 * s, bx - d * 13 * s, by - 7 * s, bx, by], "#B08A58");
+    // el tocón alto, en sombra a la izquierda, con el borde en dientes
+    const w = 14 * s,
+      h = (34 + rnd() * 16) * s,
+      dientes = [];
+    for (let k = 0; k <= 6; k++) dientes.push(x - w + (k * 2 * w) / 6, y - h + (k % 2 ? -(8 + rnd() * 14) * s : rnd() * 6 * s));
+    sombra(c, x + 5 * s, y + 2 * s, w + 9 * s, 6 * s, 0.34);
+    P(c, [x - w - 7 * s, y + 1 * s, x - w, y - 6 * s, x - w + 4 * s, y + 1 * s], C.troncoSombra);
+    P(c, [x + w + 7 * s, y + 1 * s, x + w, y - 6 * s, x + w - 4 * s, y + 1 * s], C.tronco);
+    P(c, [x - w, y].concat(dientes, [x + w, y]), roble ? C.corteza : C.tronco);
+    P(c, [x - w, y, dientes[0], dientes[1], dientes[2], dientes[3], x - w * 0.3, y], C.troncoSombra);
+    // la madera desnuda adentro de los dientes, del lado que cayó
+    for (let k = 1; k < 6; k += 2) P(c, [dientes[k * 2 - 2], dientes[k * 2 - 1], dientes[k * 2], dientes[k * 2 + 1], dientes[k * 2 + 2], dientes[k * 2 + 3], dientes[k * 2] + d * 2 * s, dientes[k * 2 + 1] + 10 * s], "#B08A58");
+    P(c, [x - w, y - 4 * s, x - w + 2 * s, y - 20 * s, x - w * 0.4, y - 12 * s, x - w * 0.5, y], C.musgo2);
+  }
+
   // ======================================================================
   //  CAMINOS Y SEÑALES
   // ======================================================================
@@ -1056,6 +1171,8 @@ window.ASSETS = (function () {
     hongosRocio: { f: hongosRocio, alto: 20, choque: null, grupo: "naturaleza", luz: true },
     roca: { f: roca, alto: 34, choque: { r: 26 }, grupo: "naturaleza" },
     troncoCaido: { f: troncoCaido, alto: 30, choque: { w: 130, h: 20 }, grupo: "naturaleza" },
+    pinoTalado: { f: pinoTalado, alto: 40, choque: { r: 16 }, grupo: "naturaleza" },
+    arbolQuebrado: { f: arbolQuebrado, alto: 60, choque: { r: 16 }, grupo: "naturaleza" },
     farol: { f: farol, alto: 90, choque: { r: 6 }, grupo: "caminos", luz: true },
     piedraLinde: { f: piedraLinde, alto: 62, choque: { r: 12 }, grupo: "caminos", luz: true },
     puestoEydis: { f: puestoEydis, alto: 220, choque: { w: 210, h: 40 }, grupo: "puesto" },

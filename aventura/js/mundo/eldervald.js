@@ -930,6 +930,24 @@ window.ELDERVALD = (function () {
     if (distLinea(x, y, QUEBRADA.p) < QUEBRADA.w / 2 + 40) return false;
     return true;
   }
+  // el centro del claro (lugar o recinto) que tiene cerca (x, y), si no hay camino al lado; si no, null
+  function claroCerca(x, y, m = 90) {
+    for (const c of CAMINOS) if (distLinea(x, y, c.p) < c.w / 2 + 90) return null;
+    for (const k in LUGARES) {
+      const L = LUGARES[k];
+      if (k !== "eikholt" && Math.hypot(x - L.p[0], (y - L.p[1]) * 1.15) < L.r + m) return L.p;
+    }
+    for (const r of RECINTOS) if (x > r[0] - m && x < r[2] + m && y > r[1] - m && y < r[3] + m) return [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+    return null;
+  }
+  // lo que queda donde se taló o se quebró un árbol: tocón, pino talado o árbol quebrado (r2: su propia semilla)
+  function restoDeArbol(px, py, cl, r2, q) {
+    const hacia = r2() < 0.5 ? Math.sign(cl[0] - px) || 1 : Math.sign(px - cl[0]) || 1,
+      o = { s: 1.3 + r2() * 0.6, sem: Math.floor(r2() * 1000), dir: hacia, ang: (r2() - 0.5) * 0.5 };
+    if (q < 0.33) return { id: "pinoTalado", x: px, y: py, o, choque: { r: 16 * o.s }, alto: 40 * o.s, arbol: true, resto: true };
+    if (q < 0.58) return { id: "arbolQuebrado", x: px, y: py, o: Object.assign(o, { roble: r2() < 0.35 }), choque: { r: 16 * o.s }, alto: 60 * o.s, arbol: true, resto: true };
+    return { id: "tocon", x: px, y: py, o: { s: 1.4 + r2() * 0.8, sem: Math.floor(r2() * 1000) }, choque: { r: 24 }, alto: 30, arbol: true, resto: true };
+  }
   const PASO_BOSQUE = 96;
   const DECO = []; // helechos y hongos que se pintan en el piso
   for (let y = PASO_BOSQUE / 2; y < ALTO; y += PASO_BOSQUE)
@@ -944,7 +962,17 @@ window.ELDERVALD = (function () {
         else if (rnd() < 0.05 + dens * 0.12 && libreDeTodo(px, py, 40)) DECO.push({ id: "alfombraMusgo", x: px, y: py, s: 0.9 + rnd() * 0.9, sem: rnd() * 10 });
         continue;
       }
-      if (!libreDeTodo(px, py, 70)) continue;
+      if (!libreDeTodo(px, py, 70)) {
+        // al borde de un claro (no de un camino ni del agua), donde iba un árbol: a veces un tocón, un pino talado o un
+        // árbol quebrado, así el bosque no corta de golpe. Con su propia semilla, para no correr el resto del bosque.
+        const cl = !borde && libreDeTodo(px, py, 14) && claroCerca(px, py);
+        if (cl) {
+          const r2 = azar(Math.floor(px) * 7919 + Math.floor(py) * 104729),
+            q = r2();
+          if (q < 0.6) COSAS.push(restoDeArbol(px, py, cl, r2, q / 0.6));
+        }
+        continue;
+      }
       // los gigantes del bosque viejo: abetos de tronco ancho (a unos se les ve la copa, a otros ni eso) y algún roble anciano
       const g = rnd();
       if (!borde && dens > 0.5 && g < 0.055 && libreDeTodo(px, py, 120)) {
@@ -963,7 +991,18 @@ window.ELDERVALD = (function () {
       const k = rnd(),
         tipo = dens > 0.55 ? (k < 0.75 ? "pino" : k < 0.9 ? "roble" : "abedul") : k < 0.45 ? "pino" : k < 0.75 ? "roble" : k < 0.9 ? "abedul" : "roca";
       const s = tipo === "roca" ? 0.9 + rnd() * 0.8 : 1.8 + rnd() * 0.9 + (borde ? 0.4 : 0);
-      COSAS.push({ id: tipo, x: px, y: py, o: { s, sem: rnd() * 10, pisos: 3 + Math.floor(rnd() * 3) }, choque: { r: ASSETS.LISTA[tipo].choque.r * s }, alto: ASSETS.LISTA[tipo].alto * s, arbol: tipo !== "roca" });
+      const arbol = { id: tipo, x: px, y: py, o: { s, sem: rnd() * 10, pisos: 3 + Math.floor(rnd() * 3) }, choque: { r: ASSETS.LISTA[tipo].choque.r * s }, alto: ASSETS.LISTA[tipo].alto * s, arbol: tipo !== "roca" };
+      // cerca de un claro el bosque ralea: más cerca, más árboles talados o quebrados en vez de parados
+      const cl2 = !borde && tipo !== "roca" && claroCerca(px, py, 260);
+      if (cl2) {
+        const r2 = azar(Math.floor(px) * 15485863 + Math.floor(py) * 32452843),
+          lejos = claroCerca(px, py, 160) ? 0.32 : 0.14;
+        if (r2() < lejos) {
+          COSAS.push(restoDeArbol(px, py, cl2, r2, r2()));
+          continue;
+        }
+      }
+      COSAS.push(arbol);
     }
   // a la sombra de un gigante no crece otro árbol: se sacan los que quedaron pegados al tronco
   {
