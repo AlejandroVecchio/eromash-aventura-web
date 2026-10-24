@@ -278,7 +278,7 @@ window.PODERES = (function () {
     },
     actualizar(dt) {
       if (!pj) return;
-      energia = Math.min(100, energia + 6 * dt);
+      energia = Math.min(100, energia + 6 * (J.regenRunica || 1) * dt);
       escudoT = Math.max(0, escudoT - dt);
       if (escudoT <= 0) escudo = 0;
       if (sol > 0) {
