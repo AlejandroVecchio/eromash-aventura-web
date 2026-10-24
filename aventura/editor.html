@@ -99,6 +99,21 @@
   #iaChat p.error { border-left-color: #C8402D; }
   #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
+  .herr .ancho3 { grid-column: 1 / -1; }
+  #selInterior { margin: 4px 16px; background: #2A3A3C; border-color: #73D5DB; }
+  /* los interiores: el cuarto de frente a la izquierda, su panel a la derecha */
+  #cuartos { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 1fr) 320px; background: #0A0606; }
+  #cuartos.oculto { display: none; }
+  #cuartoLienzo { width: 100%; height: 100%; display: block; touch-action: none; }
+  #cuartos aside { overflow: auto; }
+  #cuartos aside header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  #cuartos .fila select { flex: 1; }
+  #cuartos small { display: block; padding: 2px 16px; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
+  #cuSel { margin: 6px 12px; padding: 8px 4px; border: 1px solid #73D5DB; }
+  #cuSel b { padding: 0 12px; color: #73D5DB; }
+  #cuSel .botones3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  #cuLista { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 6px 12px 16px; }
+  @media (max-width: 760px) { #cuartos { grid-template-columns: 1fr; grid-template-rows: 55% 45%; } }
   body.foco .ed { grid-template-columns: minmax(0, 1fr); }
   body.foco aside, body.foco #ayuda { display: none; }
   body.foco #revision, body.foco #iaPanel { right: 12px; }
@@ -129,6 +144,7 @@
       <button id="hMedir" data-i18n="ed.medir"></button>
       <button id="hIA" data-i18n="ed.ia"></button>
       <button id="hComandos" data-i18n="ed.comandos"></button>
+      <button id="hInteriores" class="ancho3" data-i18n="ed.interiores"></button>
     </div>
     <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
     <div class="fila">
@@ -190,6 +206,7 @@
       <div class="fila"><label><input id="selEsp" type="checkbox" /><span data-i18n="ed.sel_esp"></span></label></div>
       <div class="fila"><span data-i18n="ed.sel_orden"></span><button id="selAtras" data-i18n="ed.sel_atras"></button><button id="selAdelante" data-i18n="ed.sel_adelante"></button><b id="selOrdenV">0</b></div>
       <div class="botones3"><button id="selAgregar" data-i18n="ed.sel_agregar"></button><button id="selComo" data-i18n="ed.sel_como"></button><button id="selSoltar" data-i18n="ed.sel_soltar"></button></div>
+      <button id="selInterior" class="oculto" data-i18n="ed.sel_interior"></button>
       <div class="botones3"><button id="selIguales" data-i18n="ed.sel_iguales"></button><button id="selDuplicar" data-i18n="ed.sel_duplicar"></button><button id="selSacar" data-i18n="ed.sel_sacar"></button></div>
     </div>
     <div class="fila"><select id="ir"></select></div>
@@ -217,6 +234,26 @@
   </aside>
 </div>
 <div id="ayuda" data-i18n="ed.ayuda"></div>
+<div id="cuartos" class="oculto">
+  <canvas id="cuartoLienzo"></canvas>
+  <aside>
+    <header><h1 data-i18n="ed.cu_titulo"></h1><button id="cuCerrar" data-i18n="ed.cu_volver"></button></header>
+    <small data-i18n="ed.cu_ayuda"></small>
+    <div class="fila"><select id="cuPlantilla"></select></div>
+    <div class="fila soloCuarto"><span data-i18n="ed.cu_pared"></span><select id="cuPared"></select></div>
+    <div class="fila soloCuarto"><span data-i18n="ed.cu_ventana"></span><input id="cuVentana" type="range" min="0" max="1450" step="10" /></div>
+    <div class="fila soloCuarto"><span data-i18n="ed.cu_estandarte"></span><input id="cuEstandarte" type="range" min="0" max="1450" step="10" /></div>
+    <div class="fila"><label class="soloCuarto"><input id="cuRepisa" type="checkbox" /><span data-i18n="ed.cu_repisa"></span></label><label><input id="cuLuz" type="checkbox" checked /><span data-i18n="ed.cu_luz"></span></label></div>
+    <div class="fila"><small id="cuCuenta"></small><button id="cuComoEra" data-i18n="ed.cu_como_era"></button></div>
+    <div id="cuSel" class="oculto">
+      <b id="cuSelNombre"></b><small id="cuSelTipo"></small>
+      <div class="fila"><span data-i18n="ed.sel_tam"></span><input id="cuSelEsc" type="range" min="0.3" max="2.5" step="0.05" value="1" /><b id="cuSelEscV">1.00</b></div>
+      <div class="botones3" style="padding: 4px 12px"><button id="cuSelEsp" data-i18n="ed.cu_dar_vuelta"></button><button id="cuSelComo" data-i18n="ed.sel_como"></button><button id="cuSelSacar" data-i18n="ed.sel_sacar"></button></div>
+    </div>
+    <div class="grupo" style="padding: 0 16px" data-i18n="ed.cu_muebles"></div>
+    <div id="cuLista"></div>
+  </aside>
+</div>
 <canvas id="mini" width="200" height="130"></canvas>
 <div id="revision" class="oculto"><div class="cab"><b id="revTitulo"></b><button id="revCerrar" data-i18n="ed.cerrar"></button></div><ul id="revLista"></ul></div>
 <div id="atajos" class="oculto"><div class="cab"><b data-i18n="ed.atajos_titulo"></b><button id="atajosCerrar" data-i18n="ed.cerrar"></button></div><pre data-i18n="ed.atajos"></pre></div>
@@ -273,10 +310,14 @@
 <script src="js/mundo/assets-interiores.js"></script>
 <script src="js/mundo/assets-sotanos.js"></script>
 <script src="js/mundo/caminos.js"></script>
+<script src="js/personajes/vikingo.js"></script>
+<script src="js/personajes/gente.js"></script>
 <script src="js/mundo/eldervald.js"></script>
 <script src="js/mundo/agregados.js"></script>
 <script src="js/editor/editor.js"></script>
 <script src="js/editor/comandos.js"></script>
 <script src="js/editor/ia.js"></script>
+<script src="js/motor/interiores.js"></script>
+<script src="js/editor/cuartos.js"></script>
 </body>
 </html>

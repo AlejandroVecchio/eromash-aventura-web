@@ -12,6 +12,8 @@ window.AGREGADOS = {
   lagos: [],
   quitarRios: [],
   quitarLagos: [],
+  // los interiores cambiados con el editor (pestaña Interiores)
+  cuartos: {},
   // notas para Claude: qué hacer en ese lugar (el juego no las usa)
   notas: [],
 };
