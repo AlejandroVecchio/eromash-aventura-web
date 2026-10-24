@@ -103,7 +103,24 @@ window.SENDAS = (function () {
   // capa: "base" (contornos y cordones), "cuerpo" (la superficie) o "borde" (con qué se funde a los costados); sin capa
   // pinta todo junto. Para que los caminos se unan (del mismo material o de otro) se pintan todos de a capas: primero
   // las bases de todos, después los cuerpos y al final los bordes, que no se pintan sobre otro camino (otros).
+  // tramos: [tipo | null, …], uno por tramo (de p[k] a p[k + 1]); null es el tipo del camino. Los tramos seguidos del
+  // mismo tipo se pintan juntos como un camino aparte, y como van de a capas se unen con los de al lado.
   function pintar(c, cm, sem, x0, y0, x1, y1, capa, otros) {
+    const tr = cm.tramos;
+    if (!tr || !tr.some((t, k) => t && t !== (cm.tipo || "tierra") && k < cm.p.length - 1)) return pintarUno(c, cm, sem, x0, y0, x1, y1, capa, otros);
+    let ini = 0,
+      n = 0;
+    const tipoDe = (k) => tr[k] || cm.tipo || "tierra";
+    for (let k = 1; k <= cm.p.length - 1; k++) {
+      if (k < cm.p.length - 1 && tipoDe(k) === tipoDe(ini)) continue;
+      const tramo = Object.assign({}, cm, { p: cm.p.slice(ini, k + 1), tipo: tipoDe(ini), tramos: null, fundir: false, deTramos: cm });
+      // las puntas fundidas, solo en las puntas de verdad
+      if (cm.fundir && ini === 0 && k === cm.p.length - 1) tramo.fundir = true;
+      pintarUno(c, tramo, sem + n++ * 17, x0, y0, x1, y1, capa, otros);
+      ini = k;
+    }
+  }
+  function pintarUno(c, cm, sem, x0, y0, x1, y1, capa, otros) {
     const en = (k) => !capa || capa === k;
     const p = cm.p,
       w = cm.w || 110,
@@ -202,7 +219,7 @@ window.SENDAS = (function () {
     // los costados: con qué se funde
     const borde = cm.borde || "";
     // los otros caminos que pasan cerca: ahí no va borde (es donde se une con ellos)
-    const cerca = (otros || []).filter((o) => o !== cm && o.p.some(([x, y]) => x > minx - 2000 && x < maxx + 2000 && y > miny - 2000 && y < maxy + 2000));
+    const cerca = (otros || []).filter((o) => o !== cm && o !== cm.deTramos && o.p.some(([x, y]) => x > minx - 2000 && x < maxx + 2000 && y > miny - 2000 && y < maxy + 2000));
     const sobreOtro = (x, y) => cerca.some((o) => distLinea(x, y, o.p) < (o.w || 110) / 2 + 4);
     if (borde && en("borde")) {
       recorrer(p, 26, (x, y, dx, dy, d, i) => {

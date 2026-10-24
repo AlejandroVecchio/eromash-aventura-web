@@ -279,6 +279,18 @@
       const cm0 = caminoElegido(),
         cm = sel && sel.vertice != null ? Object.assign({}, cm0, { p: sel.p }) : cm0;
       if (sel && sel.vertice != null) SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1);
+      // el tramo elegido, resaltado
+      if (tramoSel != null && cm.p[tramoSel + 1]) {
+        c.save();
+        c.strokeStyle = "rgba(115,213,219,0.85)";
+        c.lineWidth = Math.max(8 / cam.z, cm.w * 0.25);
+        c.lineCap = "round";
+        c.beginPath();
+        c.moveTo(cm.p[tramoSel][0], cm.p[tramoSel][1]);
+        c.lineTo(cm.p[tramoSel + 1][0], cm.p[tramoSel + 1][1]);
+        c.stroke();
+        c.restore();
+      }
       // sus puntos, para moverlos (y entre punto y punto, dónde se le agrega uno)
       cm.p.forEach(([x, y], k) => {
         c.fillStyle = "#111111";
@@ -718,10 +730,10 @@
     CAM0.forEach((cm, i) => {
       if (est.quitarCaminos.includes(i)) return;
       const e = est.estiloCaminos.find((q) => q.i === i);
-      lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, p: e.p || cm.p, base: i }) : Object.assign(cm, { base: i }));
+      lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, p: e.p || cm.p, tramos: e.tramos, base: i }) : Object.assign(cm, { base: i }));
     });
     est.caminos.forEach((cm, i) => lista.push(Object.assign({}, cm, { sem: 1000 + i, nuevo: i })));
-    const nuevas = new Map(lista.map((cm) => [(cm.base != null ? "b" + cm.base : "n" + cm.nuevo), JSON.stringify([cm.p, cm.w, cm.tipo, cm.borde, cm.fundir])]));
+    const nuevas = new Map(lista.map((cm) => [(cm.base != null ? "b" + cm.base : "n" + cm.nuevo), JSON.stringify([cm.p, cm.w, cm.tipo, cm.borde, cm.fundir, cm.tramos])]));
     const repintar = [];
     nuevas.forEach((f, k) => firmasCam.get(k) !== f && repintar.push(k));
     firmasCam.forEach((f, k) => !nuevas.has(k) && repintar.push(k));
@@ -760,7 +772,11 @@
         const { cm, alInicio } = camino.sigue,
           nuevos = camino.p.slice(1);
         const p = puntosDe(cm);
-        if (alInicio) p.unshift(...nuevos.reverse());
+        if (alInicio) {
+          p.unshift(...nuevos.reverse());
+          const tr = tramosDe(cm);
+          if (tr.length) tr.unshift(...nuevos.map(() => null));
+        }
         else p.push(...nuevos);
       } else est.caminos.push(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino()));
       guardar();
@@ -801,7 +817,16 @@
     if (!camElegido) return null;
     return W.CAMINOS.find((cm) => (camElegido.base != null ? cm.base === camElegido.base : cm.nuevo === camElegido.nuevo)) || null;
   }
+  // los tipos por tramo del camino (est.caminos[i].tramos, o los de base en est.estiloCaminos)
+  function tramosDe(cm) {
+    if (cm.nuevo != null) return est.caminos[cm.nuevo].tramos || (est.caminos[cm.nuevo].tramos = []);
+    puntosDe(cm);
+    const e = est.estiloCaminos.find((q) => q.i === cm.base);
+    return e.tramos || (e.tramos = []);
+  }
+  let tramoSel = null; // el tramo elegido del camino elegido (de p[k] a p[k + 1])
   function elegirCamino(cm) {
+    tramoSel = null;
     camElegido = cm ? (cm.base != null ? { base: cm.base } : { nuevo: cm.nuevo }) : null;
     pintarPanelCamino();
   }
@@ -809,6 +834,11 @@
     const cm = caminoElegido();
     $("camPanel").classList.toggle("oculto", herr !== "camino" && !cm);
     $("camElegido").classList.toggle("oculto", !cm);
+    $("camTramo").classList.toggle("oculto", !cm || tramoSel == null || tramoSel >= cm.p.length - 1);
+    if (cm && tramoSel != null) {
+      $("camTramoN").textContent = t("ed.cam_tramo", [tramoSel + 1]);
+      $("camTramoTipo").value = (cm.tramos && cm.tramos[tramoSel]) || "";
+    }
     if (cm) {
       $("camTipo").value = cm.tipo || "tierra";
       $("camBorde").value = cm.borde || "";
@@ -833,6 +863,16 @@
     guardar();
   }
   ["camTipo", "camBorde", "camFundir"].forEach((id) => $(id).addEventListener("change", cambiarCamino));
+  $("camTramoTipo").addEventListener("change", () => {
+    const cm = caminoElegido();
+    if (!cm || tramoSel == null) return;
+    recordar();
+    const tr = tramosDe(cm);
+    while (tr.length < cm.p.length - 1) tr.push(null);
+    tr[tramoSel] = $("camTramoTipo").value || null;
+    if (tr.every((q) => !q)) tr.length = 0;
+    guardar();
+  });
   $("camAncho").addEventListener("input", () => ($("camAnchoV").textContent = $("camAncho").value));
   $("camAncho").addEventListener("change", cambiarCamino);
   $("camSacar").onclick = () => {
@@ -875,6 +915,10 @@
       if (v && !v.nuevo && cm.p.length > 2) {
         recordar();
         puntosDe(cm).splice(v.k, 1);
+        // los dos tramos de ese punto quedan en uno (con el tipo del primero)
+        const tr = tramosDe(cm);
+        if (tr.length) tr.splice(v.k === 0 ? 0 : v.k, 1);
+        tramoSel = null;
         guardar();
       }
       return;
@@ -1285,8 +1329,8 @@
       cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
       cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
     } else if (sel && sel.vertice != null) {
-      sel.p[sel.vertice] = [r1(x), r1(y)];
-      sel.movio = true;
+      if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
+      if (sel.movio) sel.p[sel.vertice] = [r1(x), r1(y)];
     } else if (sel && sel.lago != null) {
       if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
     } else if (sel && sel.nota != null) {
@@ -1361,7 +1405,7 @@
       if (v && !(punta && herr === "camino")) {
         const p = cm.p.map((q) => q.slice());
         if (v.nuevo) p.splice(v.k, 0, [r1(x), r1(y)]);
-        sel = { vertice: v.k, p, cm };
+        sel = { vertice: v.k, p, cm, x0: x, y0: y, seg: v.nuevo ? v.k - 1 : null };
         return;
       }
     }
@@ -1484,9 +1528,18 @@
       if (sel.movio) {
         recordar();
         const p = puntosDe(sel.cm);
+        // un punto nuevo parte un tramo en dos, y los dos quedan del tipo que tenía
+        if (sel.seg != null) {
+          const tr = tramosDe(sel.cm);
+          if (tr.length > sel.seg) tr.splice(sel.seg + 1, 0, tr[sel.seg] || null);
+        }
         p.length = 0;
         sel.p.forEach((q) => p.push(q));
         guardar();
+      } else if (sel.seg != null) {
+        // un clic en un tramo (sin arrastrar) lo elige, para cambiarle el tipo solo a él
+        tramoSel = tramoSel === sel.seg ? null : sel.seg;
+        pintarPanelCamino();
       }
     } else if (sel && sel.lago != null) {
       if (sel.movio) {

@@ -57,8 +57,8 @@ window.ELDERVALD = (function () {
   // los caminos que se trazaron en el editor (agregados.js), ya en unidades del mundo
   // (y los de base que se cambiaron de tipo; los que se sacaron se sacan con el bosque ya armado, más abajo)
   CAMINOS.forEach((cm, i) => (cm.sem = i));
-  ((window.AGREGADOS && window.AGREGADOS.estiloCaminos) || []).forEach((e) => CAMINOS[e.i] && Object.assign(CAMINOS[e.i], { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || CAMINOS[e.i].w }));
-  ((window.AGREGADOS && window.AGREGADOS.caminos) || []).forEach((cm, i) => cm.p && cm.p.length > 1 && CAMINOS.push({ p: cm.p, w: cm.w || 110, tipo: cm.tipo, borde: cm.borde, fundir: cm.fundir, sem: 1000 + i, agregado: true }));
+  ((window.AGREGADOS && window.AGREGADOS.estiloCaminos) || []).forEach((e) => CAMINOS[e.i] && Object.assign(CAMINOS[e.i], { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || CAMINOS[e.i].w, tramos: e.tramos }));
+  ((window.AGREGADOS && window.AGREGADOS.caminos) || []).forEach((cm, i) => cm.p && cm.p.length > 1 && CAMINOS.push({ p: cm.p, w: cm.w || 110, tipo: cm.tipo, borde: cm.borde, fundir: cm.fundir, tramos: cm.tramos, sem: 1000 + i, agregado: true }));
   // la empalizada doble de Eikholt: una elipse con cuatro puertas (sur, oeste, este, norte)
   const CIUDAD = { c: m(810, 565), rx: 150 * U, ry: 110 * U, puertas: [Math.PI / 2, Math.PI, 0, -Math.PI / 2], hueco: 150 };
   // lagunas del mapa
