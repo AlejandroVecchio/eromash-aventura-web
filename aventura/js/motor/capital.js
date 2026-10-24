@@ -12,7 +12,7 @@ window.CAPITAL = (function () {
     // Bergljot, portavoz de la Asamblea: mayor, manto verde, el bastón de roble con muescas (lanza sin punta)
     bergljot: { nombre: "bergljot", alto: 1.02, ancho: 0.98, piel: "#D8B49A", pielSombra: "#B8947A", pelo: "#B8B4AC", ropa: "#5E4A36", ropaSombra: "#46362A", capa: "#3E5A34", capaSombra: "#2C4226", falda: true, pantalon: "#46362A", botas: "#2A2018", cinto: "#7A5634", rodete: true },
     // Håkon, capitán de la Guardia del Roble: casco, capa verde oscuro con la cornamenta, lanza
-    hakon: { nombre: "hakon", alto: 1.08, ancho: 1.15, piel: "#C8987A", pielSombra: "#A87A5E", pelo: "#8A6A3A", barba: "#8A6A3A", barbaCana: "#C8B8A8", ropa: "#5A5E5A", ropaSombra: "#464A46", capa: "#2C4226", capaSombra: "#1E3018", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", lanza: true },
+    hakon: { nombre: "hakon", alto: 1.08, ancho: 1.15, piel: "#C8987A", pielSombra: "#A87A5E", pelo: "#8A6A3A", barba: "#8A6A3A", barbaCana: "#C8B8A8", ropa: "#5A5E5A", ropaSombra: "#464A46", capa: "#2C4226", capaSombra: "#1E3018", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", lanza: true, insignia: true },
     // Tyra, hija de Ulf, mensajera: chica, trenza rubia, descalza y apurada
     tyra: { nombre: "tyra", alto: 0.86, ancho: 0.86, piel: "#E0B898", pielSombra: "#C0987A", pelo: "#D8B060", ropa: "#7A3A2A", ropaSombra: "#5E2C20", falda: true, pantalon: "#5E4430", botas: "#C0987A", cinto: "#E0D4C0", trenza: true },
     // Folke, cordelero: barba gris, delantal de cuero, soga en las manos

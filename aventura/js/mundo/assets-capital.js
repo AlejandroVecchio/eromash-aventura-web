@@ -293,7 +293,7 @@
     if (o.estandarte) estandarteCiervo(c, sx - 20 * s, y - H + 4 * s, t, { s: s * 0.7, sem, corto: true });
   }
 
-  // El estandarte oficial: la cornamenta del Ciervo en blanco hueso sobre verde oscuro, con cola de golondrina.
+  // El estandarte oficial: la insignia de Eikholt (DIB.insignia) en blanco hueso sobre verde oscuro, con cola de golondrina.
   function estandarteCiervo(c, x, y, t, o) {
     const s = o.s || 1,
       h = (o.corto ? 120 : 230) * s,
@@ -306,16 +306,8 @@
       by = y - h + 13 * s;
     P(c, [bx, by, bx + 58 * s, by, bx + 58 * s + v, by + 92 * s, bx + 29 * s + v, by + 74 * s, bx + v, by + 92 * s], "#2C4226");
     P(c, [bx + 44 * s, by, bx + 58 * s, by, bx + 58 * s + v, by + 92 * s, bx + 50 * s + v, by + 86 * s], "#3E5A34");
-    // la cornamenta
-    const cx = bx + 29 * s + v * 0.5,
-      cy = by + 50 * s;
-    [-1, 1].forEach((l) => {
-      L(c, cx, cy, cx + l * 18 * s, cy - 30 * s, C.hueso, 3 * s);
-      L(c, cx + l * 7 * s, cy - 12 * s, cx + l * 20 * s, cy - 14 * s, C.hueso, 2.5 * s);
-      L(c, cx + l * 13 * s, cy - 21 * s, cx + l * 8 * s, cy - 34 * s, C.hueso, 2.5 * s);
-      L(c, cx + l * 18 * s, cy - 30 * s, cx + l * 24 * s, cy - 38 * s, C.hueso, 2.5 * s);
-    });
-    E(c, cx, cy + 4 * s, 5 * s, 6 * s, C.hueso);
+    // la insignia de Eikholt (DIB.insignia)
+    DIB.insignia(c, (x2, y2) => [bx + 29 * s + v * 0.5 + x2 * 56 * s, by + 8 * s + y2 * 56 * s], "#F2ECEC");
   }
 
   // El Roble de Eikholt: un gigante. Raíces como contrafuertes donde se meten las casas viejas (dos puertitas

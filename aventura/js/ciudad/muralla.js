@@ -169,7 +169,7 @@ window.MURALLA25 = (function () {
         afuera();
       }
     }
-    return { dibujar, alto: ZF + 40 };
+    return { dibujar, alto: ZF + 40, radio: U + 160 };
   }
 
   // una atalaya fundida en la muralla: más ancha que el muro, nace del suelo y sube por encima del adarve
@@ -205,21 +205,10 @@ window.MURALLA25 = (function () {
           const v = Math.sin(t * 1.4 + sem) * 6;
           P(c, [...q(0, ZT - 30), ...q(1, ZT - 30), ...q(1, 150, v), ...q(0.5, 190, v), ...q(0, 150, v)], "#2C4226");
           P(c, [...q(0.72, ZT - 30), ...q(1, ZT - 30), ...q(1, 150, v), ...q(0.86, 165, v)], "#3E5A34");
-          // el nudo de la cuadrilla, en blanco hueso
-          const [mx, my] = q(0.5, 300, v * 0.6);
-          c.strokeStyle = C.hueso;
-          c.lineWidth = 4;
-          c.beginPath();
-          c.moveTo(mx, my - 34);
-          c.lineTo(mx + 20, my);
-          c.lineTo(mx, my + 34);
-          c.lineTo(mx - 20, my);
-          c.closePath();
-          c.moveTo(mx - 20, my - 20);
-          c.lineTo(mx + 20, my + 20);
-          c.moveTo(mx + 20, my - 20);
-          c.lineTo(mx - 20, my + 20);
-          c.stroke();
+          // la insignia de Eikholt (DIB.insignia), en blanco hueso sobre el verde
+          const alto = 200,
+            z0 = ZT - 50;
+          DIB.insignia(c, (x2, y2) => q(0.5 + (x2 * alto) / 120, z0 - y2 * alto, v * 0.6), "#F2ECEC");
         }
       }
       // el piso del cuarto, que sobresale
@@ -233,8 +222,11 @@ window.MURALLA25 = (function () {
       for (const f of caras(Q)) {
         if (pr.mira(f[4], f[5])[1] <= 0.01) continue;
         const l2 = lx(f[4], f[5]);
-        P(c, [...pr(f[0], f[1], ZT + 22), ...pr(f[2], f[3], ZT + 22), ...pr(f[2], f[3], ZT + 70), ...pr(f[0], f[1], ZT + 70)], LUZ(l2, TRONCO));
-        alfa(c, 0.85, () => P(c, [...pr(f[0] * 0.8 + f[2] * 0.2, f[1] * 0.8 + f[3] * 0.2, ZT + 74), ...pr(f[0] * 0.2 + f[2] * 0.8, f[1] * 0.2 + f[3] * 0.8, ZT + 74), ...pr(f[0] * 0.2 + f[2] * 0.8, f[1] * 0.2 + f[3] * 0.8, ZC - 10), ...pr(f[0] * 0.8 + f[2] * 0.2, f[1] * 0.8 + f[3] * 0.2, ZC - 10)], C.ambar));
+        // el cuarto cerrado: la pared de troncos entera y la ventana alumbrada, opaca (no se ve a través)
+        P(c, [...pr(f[0], f[1], ZT + 22), ...pr(f[2], f[3], ZT + 22), ...pr(f[2], f[3], ZC), ...pr(f[0], f[1], ZC)], LUZ(l2, TRONCO));
+        const mix = (s2, z) => pr(f[0] * (1 - s2) + f[2] * s2, f[1] * (1 - s2) + f[3] * s2, z);
+        P(c, [...mix(0.22, ZT + 80), ...mix(0.78, ZT + 80), ...mix(0.78, ZC - 22), ...mix(0.22, ZC - 22)], "#1A140E");
+        P(c, [...mix(0.25, ZT + 84), ...mix(0.75, ZT + 84), ...mix(0.75, ZC - 26), ...mix(0.25, ZC - 26)], C.ambar);
         for (const s of [0, 1]) {
           const a = pr(s ? f[2] : f[0], s ? f[3] : f[1], ZT + 22),
             b = pr(s ? f[2] : f[0], s ? f[3] : f[1], ZC);

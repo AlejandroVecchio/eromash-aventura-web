@@ -56,6 +56,7 @@
 <script src="js/ciudad/muralla.js"></script>
 <script src="js/ciudad/roble.js"></script>
 <script src="js/ciudad/ting.js"></script>
+<script src="js/ciudad/enseres.js"></script>
 <script src="js/ciudad/oficios.js"></script>
 <script src="js/ciudad/porton.js"></script>
 <script src="js/ciudad/plano.js"></script>
@@ -101,6 +102,7 @@
   };
   const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
   const objetivo = { x: cam.x, y: cam.y };
+  window.MUESTRA = { plano, cam, objetivo }; // para revisar la muestra desde afuera (capturas casa por casa)
   for (const k in LUGARES) {
     const b = document.createElement("button");
     b.textContent = t("ci.lugar_" + k);
@@ -136,7 +138,7 @@
   // la gente de cada barrio: los de la Guardia en el campo, los forasteros alrededor del fuego, los que esperan en
   // Sanación, los que toman afuera del Hongo, los de los oficios (parados, que hablan; alguno va y viene)
   const RONDAS = [
-    ["entrenamiento", 10, 700, ["eydis", "orm"]],
+    ["entrenamiento", 10, 700, ["guardia"]],
     ["forasteros", 9, 520, null],
     ["sanacion", 6, 700, ["herido", "svanhild", "trabajador"]],
     ["hongo", 8, 900, null],
@@ -160,7 +162,7 @@
   gente.push({ id: "eydis", x: TING[0] + 60, y: TING[1] + 230, vx: 0, vy: 0, s: 1, horas: [23, 4] });
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2;
-    gente.push({ id: i % 2 ? "orm" : "eydis", x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
+    gente.push({ id: "guardia", x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
   }
   for (const [k, n, rad, quien] of RONDAS) {
     const c0 = L[k];
@@ -208,13 +210,15 @@
   // lo que alumbra de noche: faroles, braseros y fuegos (y las runas), y las ventanas de cada casa
   const luces = [];
   for (const o of plano.cosas) {
+    // lo que alumbra por sí (faroles, braseros, fuegos), sea dibujo o volumen
+    const id = o.id || "";
+    if (/farol|Farol|brasero|fogon|posteHongo|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : /brasero/.test(id) ? 520 : 420, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: /brasero|fogon|chimenea/.test(id) });
     if (o.tipo === "casa") {
       if (/^(casa|hongo|lindes|herreria|sanacion|hospederia|cuartel|carpinteria|curtiembre|cordeleria)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 520, col: "#FFD98A", f: 0.45 });
       if (/^(puerta_|atalaya)/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 700, col: "#FFD98A", f: 0.8 });
+      if (/^piedraCupula/.test(o.nombre || "")) luces.push({ x: o.x, y: o.y, z: 0, r: 600, col: "#73D5DB", f: 0.6 });
       continue;
     }
-    const id = o.id || "";
-    if (/farol|Farol|brasero|fogon|posteHongo|chimeneaHerreria/.test(id)) luces.push({ x: o.x, y: o.y, z: 0, r: /fogon|chimenea/.test(id) ? 900 : /brasero/.test(id) ? 520 : 420, col: "#FFD98A", f: /fogon|chimenea/.test(id) ? 1 : 0.85, fuego: /brasero|fogon|chimenea/.test(id) });
   }
   // los faroles colgados de la copa del Roble
   for (let i = 0; i < 6; i++) luces.push({ x: Math.cos(i * 1.05) * 700, y: Math.sin(i * 1.05) * 500, z: 0, r: 600, col: "#FFD98A", f: 0.7 });
@@ -286,7 +290,17 @@
     }
     const h = +hora.value;
     vHora.textContent = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
-    const extra = gente.filter((p) => !p.horas || aHora(h, p.horas)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { vista: "S", camina: !!(p.vx || p.vy), espejo: p.vx < 0, hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
+    // de lejos la gente no se dibuja (VISTA25.LEJOS.gente): es lo primero que se apaga al alejar
+    // cada persona mira hacia un lado del mundo (hacia donde camina, o quieta hacia donde quedó); la vista de las ocho
+    // sale de ese rumbo girado con la cámara, así al girar se la ve de costado o de espaldas
+    const coG = Math.cos(cam.g), siG = Math.sin(cam.g);
+    const mirada = (p) => {
+      if (p.vx || p.vy) p.rumbo = Math.atan2(p.vy, p.vx);
+      if (p.rumbo === undefined) p.rumbo = ((p.x * 13 + p.y * 7) % 628) / 100;
+      const dx = Math.cos(p.rumbo), dy = Math.sin(p.rumbo);
+      return GENTE.vistaDe(dx * coG - dy * siG, (dx * siG + dy * coG) * cam.k);
+    };
+    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => !p.horas || aHora(h, p.horas)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: p.habla && Math.sin(tt * 0.7 + p.x) > 0.3 }) }));
     extra.push({ x: eromash.x, y: eromash.y, f: dibujarEromash });
     VISTA25.dibujar(c, cam, cw, ch, tt, extra);
     // el aire de la tarde: un velo cálido y la viñeta del bosque

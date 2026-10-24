@@ -89,7 +89,7 @@ window.RAIZ25 = (function () {
       const [hx, hy] = vp[3];
       halo(c, hx, hy, 90, RUNICO, a * 0.5);
     }
-    return { dibujar, alto: alto + 20 };
+    return { dibujar, alto: alto + 20, radio: largo + ancho };
   }
   return { crear };
 })();

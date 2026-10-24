@@ -73,7 +73,7 @@ window.OFICIOS25 = (function () {
       E(c, ox, oy - 12, 12, 6, "#8A7A5A");
       void P;
     }
-    return { dibujar, alto: 200 };
+    return { dibujar, alto: 200, radio: largo / 2 + 120 };
   }
   // una cara de cuatro puntas en el plano, con el tono según la luz (la normal en el piso: nu, nw)
   function cara(c, pr, pts, nu, nw, tonos) {
@@ -127,7 +127,7 @@ window.OFICIOS25 = (function () {
       void t;
       void sem;
     }
-    return { dibujar, alto: 160 };
+    return { dibujar, alto: 160, radio: largo / 2 + 120 };
   }
 
   // El muelle de los pescadores: tablas sobre postes que entran al río, bolardos para atar y redes colgadas a secar.
@@ -187,7 +187,7 @@ window.OFICIOS25 = (function () {
       });
       void sem;
     }
-    return { dibujar, alto: 140 };
+    return { dibujar, alto: 140, radio: largo / 2 + 160 };
   }
 
   // Un bote de pescador (un færing): casco de tablas con proa y popa en punta, la borda clara y los remos adentro;
@@ -247,7 +247,7 @@ window.OFICIOS25 = (function () {
         r1 = pr(L2 * 0.5, 14, 46);
       L(c, r0[0], r0[1], r1[0], r1[1], C.maderaLuz, 3);
     }
-    return { dibujar, alto: 120 };
+    return { dibujar, alto: 120, radio: largo / 2 + 60 };
   }
 
   return { paseoSogas, puente, muelle, bote };

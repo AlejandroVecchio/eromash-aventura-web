@@ -3,7 +3,7 @@
 // cada uno con sus tres medidas y su lugar en el piso, así el círculo gira con la cámara como las casas (antes era un
 // dibujo de frente que quedaba igual girara como girara la vista). Caras planas, luz de arriba a la derecha.
 // En el plano de cada piedra u va a lo ancho y w de frente (w+ mira al menhir en los asientos).
-//   TING25.menhir(sem) · TING25.asiento(sem) → { dibujar(c, x, y, giro, k, t), alto }
+//   TING25.menhir(sem) · TING25.asiento(sem) · TING25.cupula(sem) → { dibujar(c, x, y, giro, k, t), alto }
 window.TING25 = (function () {
   "use strict";
   const { P, E, alfa, azar, sombra, halo, RUNICO } = DIB;
@@ -43,57 +43,69 @@ window.TING25 = (function () {
     return { caras, base, arriba };
   }
 
-  // El menhir de la piedra dormida: alto, negro, de cinco caras con la punta quebrada, y la runa de Tiwaz raspada que
-  // apenas se enciende de azul rúnico (la piedra "casi contesta").
-  function menhir(sem) {
+  // Una piedra parada con una runa grabada que brilla en azul rúnico, en la cara que más mira a la cámara.
+  // op: { lados, ru, rw, alto, angosta, tonos, punta, runa, rh (alto de la runa), zr (dónde empieza), luz (0-1) }
+  function runica(sem, op) {
     const r = azar(sem * 13 + 1);
     const base = [];
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2 + 0.3,
-        rad = 46 + r() * 16;
-      base.push([Math.cos(a) * rad, Math.sin(a) * rad * 0.8]);
+    for (let i = 0; i < op.lados; i++) {
+      const a = (i / op.lados) * Math.PI * 2 + 0.3;
+      base.push([Math.cos(a) * op.ru * (0.85 + r() * 0.3), Math.sin(a) * op.rw * (0.85 + r() * 0.3)]);
     }
-    const ALTO = 330;
-    const TONOS = ["#141416", "#1C1C1E", "#2C2C30", "#38383E"];
+    const ALTO = op.alto,
+      punta = op.punta || base.map(() => r() * 0.16);
     function dibujar(c, x, y, giro, k, t) {
       const pr = CASAS25.proyector(x, y, giro, k);
-      sombra(c, x + 30, y + 8, 90, 24, 0.4);
-      const { caras, arriba } = prisma(c, pr, base, ALTO, 0.55, TONOS, [0, 0.12, 0.04, 0.18, 0.08]);
-      // la runa en la cara que más mira a la cámara
+      sombra(c, x + op.ru * 0.6, y + 8, op.ru * 1.9, op.ru * 0.5, 0.4);
+      const { caras } = prisma(c, pr, base, ALTO, op.angosta, op.tonos, punta);
       const f = caras.slice().sort((a, b) => b.ny - a.ny)[0];
       if (!f) return;
       const [u0, w0] = base[f.i],
         [u1, w1] = base[f.j];
       const mu = (u0 + u1) / 2,
         mw = (w0 + w1) / 2,
-        du = (u1 - u0) / Math.hypot(u1 - u0, w1 - w0),
-        dw = (w1 - w0) / Math.hypot(u1 - u0, w1 - w0);
-      const late = 0.35 + Math.sin(t * 0.9) * 0.2;
-      const h = 110,
-        zb = 110;
+        lc = Math.hypot(u1 - u0, w1 - w0),
+        du = (u1 - u0) / lc,
+        dw = (w1 - w0) / lc;
+      const late = (op.luz || 0.35) + Math.sin(t * 0.9 + sem) * 0.2;
+      const h = op.rh,
+        zb = op.zr;
       const punto = (a, b) => {
         const z = zb - b * h;
-        const enc = 1 - (z / ALTO) * 0.45; // la cara se angosta hacia arriba
+        const enc = 1 - (z / ALTO) * (1 - op.angosta); // la cara se angosta hacia arriba
         return pr(mu * enc + du * a * h, mw * enc + dw * a * h, z);
       };
-      alfa(c, late, () => {
-        c.strokeStyle = RUNICO;
-        c.lineWidth = 5;
-        c.lineCap = "round";
-        c.beginPath();
-        for (const [a, b, d, e] of FUTHARK.T.tiwaz) {
-          const p = punto(a, b),
-            q = punto(d, e);
-          c.moveTo(p[0], p[1]);
-          c.lineTo(q[0], q[1]);
-        }
-        c.stroke();
-      });
+      for (const [ancho, col, al] of [[h * 0.12, "rgba(115,213,219,0.25)", 1], [h * 0.045, RUNICO, late]]) {
+        alfa(c, Math.min(1, al), () => {
+          c.strokeStyle = col;
+          c.lineWidth = ancho;
+          c.lineCap = "round";
+          c.beginPath();
+          for (const [a, b, d, e] of FUTHARK.T[op.runa]) {
+            const p = punto(a, b),
+              q = punto(d, e);
+            c.moveTo(p[0], p[1]);
+            c.lineTo(q[0], q[1]);
+          }
+          c.stroke();
+        });
+      }
       const m = punto(0, -0.5);
-      if (!window.CALIDAD || CALIDAD.nivel !== "baja") halo(c, m[0], m[1], 120, RUNICO, late * 0.35);
-      void arriba;
+      if (!window.CALIDAD || CALIDAD.nivel !== "baja") halo(c, m[0], m[1], h * 1.1, RUNICO, late * 0.35);
     }
     return { dibujar, alto: ALTO + 20 };
+  }
+
+  // El menhir de la piedra dormida: alto, negro, de cinco caras con la punta quebrada, y la runa de Tiwaz raspada que
+  // apenas se enciende de azul rúnico (la piedra "casi contesta").
+  function menhir(sem) {
+    return runica(sem, { lados: 5, ru: 92, rw: 66, alto: 340, angosta: 0.62, tonos: ["#141416", "#1C1C1E", "#2C2C30", "#38383E"], punta: [0, 0.12, 0.04, 0.18, 0.08], runa: "tiwaz", rh: 130, zr: 120, luz: 0.35 });
+  }
+
+  // Las piedras de la cúpula al pie de la muralla: menhires grises más altos que la empalizada, con Algiz (la
+  // protección) encendida en azul rúnico.
+  function cupula(sem) {
+    return runica(sem, { lados: 6, ru: 80, rw: 50, alto: 520, angosta: 0.6, tonos: ["#3A3E42", "#4A4E52", "#5E6266", "#6A6E72"], runa: "algiz", rh: 170, zr: 330, luz: 0.7 });
   }
 
   // Una de las doce piedras del círculo: piedras paradas, más altas que una persona, de seis caras con la punta gastada
@@ -126,5 +138,5 @@ window.TING25 = (function () {
     return { dibujar, alto: ALTO + 10 };
   }
 
-  return { menhir, asiento, prisma };
+  return { menhir, asiento, cupula, runica, prisma };
 })();

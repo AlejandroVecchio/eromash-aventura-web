@@ -269,6 +269,25 @@ window.VISTA25 = (function () {
     c.translate(-cam.x, -cam.y);
   }
 
+  // Lo que se deja de dibujar al alejar, para que la vista de lejos no trabe la PC: primero la gente (en ciudad.html),
+  // después lo chico (faroles, barriles, carros, leña, huertas), después la mitad de los árboles y al final todos;
+  // de muy lejos quedan las casas, la muralla, las calles y el Roble. LEJOS.* son las escalas (cam.esc) de cada corte.
+  const LEJOS = { gente: 0.2, chico: 0.17, arboles: 0.13, arbolesTodos: 0.085, huertas: 0.1 };
+  const ARBOLES = { pino: 1, abedul: 1, helechos: 1, roca: 1, arbusto: 1 };
+  function seVe(o, esc) {
+    if (esc >= LEJOS.chico) return true;
+    if (o.tipo === "casa") {
+      if (o.piso) return esc >= LEJOS.huertas;
+      return !o.id || (o.casa.alto || 0) >= 200 || esc >= LEJOS.chico;
+    }
+    if (ARBOLES[o.id]) {
+      if (esc < LEJOS.arbolesTodos) return false;
+      return esc >= LEJOS.arboles || ((o.x * 7 + o.y * 3) & 1) === 0;
+    }
+    const d = ASSETS.LISTA[o.id];
+    return !!d && d.alto >= 300;
+  }
+
   // lo que se ve: [{ y (orden), f }] con las cosas del plano cerca de la cámara
   function cosasVisibles(cam, rad, V, t, lista) {
     const b0x = Math.floor((cam.x - rad) / BALDE),
@@ -281,13 +300,58 @@ window.VISTA25 = (function () {
         if (!l) continue;
         for (const o of l) {
           if (Math.hypot(o.x - cam.x, o.y - cam.y) > rad) continue;
+          if (!seVe(o, cam.esc)) continue;
           const [sx, sy] = V(o.x, o.y);
           lista.push({ y: sy, x: sx, cosa: o, f: (c) => dibujarCosa(c, o, sx, sy, cam, V, t) });
         }
       }
   }
+  // De lejos cada volumen se dibuja una vez en un lienzo chico (con su giro redondeado a 1/128 de vuelta) y después se
+  // pega: así alejar la cámara no redibuja cientos de casas y tramos de muralla cuadro a cuadro. De cerca (y lo que
+  // se mueve) se dibuja siempre en vivo.
+  const FIGURAS = new Map(),
+    TOPE_FIGURAS = 1200,
+    PASOS_GIRO = 128;
+  let nuevasEsteCuadro = 0;
+  function figura(o, giro, k, esc) {
+    const v = o.casa;
+    const R = v.radio || (v.ancho ? v.ancho / 2 + 160 : v.W ? Math.hypot(v.W, v.D) / 2 + 80 : 400),
+      A = (v.alto || 400) + 60;
+    const eB = esc < 0.06 ? 0.06 : esc < 0.1 ? 0.1 : esc < 0.15 ? 0.15 : 0.2;
+    const gq = ((Math.round((giro / (Math.PI * 2)) * PASOS_GIRO) % PASOS_GIRO) + PASOS_GIRO) % PASOS_GIRO;
+    const kq = Math.round(k * 20);
+    const base = (o.nombre || o.id || "") + "|" + o.x + "|" + o.y + "|" + kq + "|" + eB + "|";
+    let f = FIGURAS.get(base + gq);
+    if (!f) {
+      if (nuevasEsteCuadro > 24) {
+        // sin presupuesto este cuadro: la de giro más cercano que ya esté hecha, si hay
+        for (let d = 1; d < 12 && !f; d++) f = FIGURAS.get(base + ((gq + d) % PASOS_GIRO)) || FIGURAS.get(base + ((gq - d + PASOS_GIRO) % PASOS_GIRO));
+        return f || null;
+      }
+      nuevasEsteCuadro++;
+      const kk = kq / 20;
+      const w = Math.ceil(2 * R * eB) + 4,
+        h = Math.ceil((A + 2 * R * kk + 60) * eB) + 4;
+      const cv = document.createElement("canvas");
+      cv.width = w;
+      cv.height = h;
+      const cx = cv.getContext("2d");
+      cx.setTransform(eB, 0, 0, eB, R * eB + 2, (A + R * kk) * eB + 2);
+      v.dibujar(cx, 0, 0, (gq / PASOS_GIRO) * Math.PI * 2, kk, 0);
+      f = { cv, R, A, kk, eB };
+      FIGURAS.set(base + gq, f);
+      if (FIGURAS.size > TOPE_FIGURAS) FIGURAS.delete(FIGURAS.keys().next().value);
+    }
+    return f;
+  }
   function dibujarCosa(c, o, sx, sy, cam, V, t) {
-    if (o.tipo === "casa") return o.casa.dibujar(c, sx, sy, o.ry + cam.g, cam.k, t);
+    if (o.tipo === "casa") {
+      if (cam.esc < 0.2) {
+        const f = figura(o, o.ry + cam.g, cam.k, cam.esc);
+        if (f) return c.drawImage(f.cv, sx - f.R - 2 / f.eB, sy - f.A - f.R * f.kk - 2 / f.eB, f.cv.width / f.eB, f.cv.height / f.eB);
+      }
+      return o.casa.dibujar(c, sx, sy, o.ry + cam.g, cam.k, t);
+    }
     if (o.punta) {
       // un tramo de empalizada: sus dos puntas en la vista; se ve la cara de adentro (con la pasarela) si mira a la cámara
       const a = V(o.punta[0], o.punta[1]),
@@ -302,12 +366,15 @@ window.VISTA25 = (function () {
     }
     // lo que gira con la cámara (el Roble): se le pasa hacia dónde mira
     if (o.o.gira) return ASSETS.dibujar(c, o.id, sx, sy, t, Object.assign({}, o.o, { giro: cam.g, k: cam.k, ojo: [cam.x, cam.y] }));
+    // los animales miran hacia un lado del mundo (o.rumbo): al girar la cámara se dan vuelta
+    if (o.o.rumbo !== undefined) return ASSETS.dibujar(c, o.id, sx, sy, t, Object.assign({}, o.o, { espejo: Math.cos(o.o.rumbo + cam.g) < 0 }));
     ASSETS.dibujar(c, o.id, sx, sy, t, o.o);
   }
 
   // dibuja todo: el piso, las cosas del plano y lo que traiga extra ([{ x, y (mundo), f(c, sx, sy) }])
   function dibujar(c, cam, cw, ch, t, extra = []) {
     const V = proyector(cam);
+    nuevasEsteCuadro = 0;
     const vw = cw / cam.esc,
       vh = ch / cam.esc;
     const rad = Math.hypot(vw, vh / cam.k) / 2 + 300;
@@ -324,10 +391,11 @@ window.VISTA25 = (function () {
       lista.push({ y: sy, x: sx, f: (c) => e.f(c, sx, sy) });
     }
     // lo pintado en el piso (losas, charcos) va primero, debajo de todo lo parado
-    lista.sort((a, b) => (b.cosa && b.cosa.o && b.cosa.o.piso ? 1 : 0) - (a.cosa && a.cosa.o && a.cosa.o.piso ? 1 : 0) || a.y - b.y);
+    const enPiso = (d) => (d.cosa && (d.cosa.piso || (d.cosa.o && d.cosa.o.piso)) ? 1 : 0);
+    lista.sort((a, b) => enPiso(b) - enPiso(a) || a.y - b.y);
     for (const d of lista) d.f(c);
     return { V, lista };
   }
 
-  return { iniciar, dibujar, proyector, aVista, aPiso, TROZO };
+  return { iniciar, dibujar, proyector, aVista, aPiso, TROZO, LEJOS };
 })();

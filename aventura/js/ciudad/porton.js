@@ -102,7 +102,7 @@ window.PORTON25 = (function () {
         const u0 = lado * (TC + 10),
           w0 = -T - 30,
           SW = 105,
-          H = ZT - 40;
+          H = ZT - 125; // alta, pero sin asomar por detrás del cuarto de vigía cuando se mira desde afuera
         const forma = [[-1, 0], [-1.05, 0.5], [-0.9, 0.82], [-0.5, 0.97], [0, 1.02], [0.5, 0.97], [0.9, 0.82], [1.05, 0.5], [1, 0]];
         const en = (s, z, w) => pr(u0 + s * SW, w, z * H);
         sombra(c, ...pr(u0 + 20, w0, 0), SW * 1.3, 40 * k + 14, 0.34);
