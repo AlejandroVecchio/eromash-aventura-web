@@ -175,13 +175,12 @@
       late = viva ? 0.85 + Math.sin(t * 1.8 + (o.sem || 0)) * 0.15 : 0.25 + Math.max(0, Math.sin(t * 1.1 + (o.sem || 0))) * 0.35;
     halo(c, x, y - 60 * s, (viva ? 130 : 60) * s, RUNICO, late);
     sombra(c, x + 8 * s, y + 3, 30 * s, 8 * s);
-    const piedra = "#565A62",
-      clara = "#6C7078",
-      oscura = "#40444C";
-    P(c, [x - 22 * s, y, x - 20 * s, y - 92 * s, x - 6 * s, y - 116 * s, x + 14 * s, y - 108 * s, x + 22 * s, y - 80 * s, x + 22 * s, y], piedra);
-    P(c, [x - 6 * s, y - 116 * s, x + 14 * s, y - 108 * s, x + 22 * s, y - 80 * s, x + 22 * s, y, x + 6 * s, y], clara);
-    P(c, [x - 22 * s, y, x - 20 * s, y - 92 * s, x - 14 * s, y - 60 * s, x - 14 * s, y], oscura);
-    E(c, x - 16 * s, y - 4 * s, 10 * s, 4 * s, C.musgo2);
+    // piedra ancha con su forma propia (cinco siluetas distintas, ver formaPiedra)
+    const f = ASSETS.formaPiedra(x, y, 37 * s, 120 * s, o.sem),
+      W = f.w,
+      H = f.h;
+    ASSETS.pintarPiedra(c, f, ["#565A62", "#6C7078", "#40444C"]);
+    E(c, x - W * 0.7, y - 4 * s, 10 * s, 4 * s, C.musgo2);
     // la serpiente: una cinta en S que baja por la cara
     const col = viva ? RUNICO_CLARO : "#3A3E46";
     c.save();
@@ -189,23 +188,26 @@
     c.lineWidth = 7 * s;
     c.lineCap = "round";
     c.beginPath();
-    c.moveTo(x - 10 * s, y - 100 * s);
-    c.bezierCurveTo(x + 22 * s, y - 92 * s, x + 18 * s, y - 64 * s, x - 2 * s, y - 58 * s);
-    c.bezierCurveTo(x - 20 * s, y - 52 * s, x - 18 * s, y - 24 * s, x + 12 * s, y - 14 * s);
+    c.moveTo(x - W * 0.5, y - H * 0.84);
+    c.bezierCurveTo(x + W * 0.95, y - H * 0.78, x + W * 0.8, y - H * 0.52, x, y - H * 0.48);
+    c.bezierCurveTo(x - W * 0.85, y - H * 0.44, x - W * 0.85, y - H * 0.2, x + W * 0.55, y - H * 0.1);
     c.stroke();
     c.restore();
     // cabeza de la serpiente
-    P(c, [x - 16 * s, y - 104 * s, x - 6 * s, y - 108 * s, x - 2 * s, y - 100 * s, x - 10 * s, y - 96 * s], viva ? RUNICO : "#34383F");
-    R(c, x - 10 * s, y - 104 * s, 2 * s, 2 * s, viva ? "#FFFFFF" : "#22252A");
-    // runas en el cuerpo de la serpiente
+    const hx = x - W * 0.5,
+      hy = y - H * 0.84;
+    P(c, [hx - 6 * s, hy - 4 * s, hx + 4 * s, hy - 8 * s, hx + 8 * s, hy, hx, hy + 4 * s], viva ? RUNICO : "#34383F");
+    R(c, hx, hy - 4 * s, 2 * s, 2 * s, viva ? "#FFFFFF" : "#22252A");
+    // runas grandes, cada una en un hueco de la S
     const runas = o.runas || ["ansuz", "laguz", "othala", "eihwaz"];
-    const pos = [[4, -88], [6, -68], [-10, -44], [0, -26]];
-    alfa(c, 0.4 + late * 0.6, () => runas.forEach((r, i) => F.dibujar(c, r, x + pos[i][0] * s, y + pos[i][1] * s + 5 * s, 9 * s, col, 1.5 * s)));
+    const pos = [[0.1, 0.66], [-0.45, 0.62], [0.42, 0.3], [-0.35, 0.22]],
+      rh = Math.min(16 * s, H * 0.13);
+    alfa(c, 0.4 + late * 0.6, () => runas.forEach((r, i) => F.dibujar(c, r, x + pos[i][0] * W, y - pos[i][1] * H + rh / 2, rh, col, 2 * s)));
     // motas de luz que suben cuando está viva
     if (viva)
       for (let k = 0; k < 5; k++) {
         const u = (t * 0.25 + k / 5 + (o.sem || 0)) % 1;
-        alfa(c, Math.sin(u * Math.PI), () => R(c, x + Math.sin(k * 2.3 + t) * 22 * s, y - 40 * s - u * 110 * s, 2.5 * s, 2.5 * s, RUNICO_CLARO));
+        alfa(c, Math.sin(u * Math.PI), () => R(c, x + Math.sin(k * 2.3 + t) * 26 * s, y - 40 * s - u * 110 * s, 2.5 * s, 2.5 * s, RUNICO_CLARO));
       }
   }
 
@@ -477,7 +479,7 @@
     cofreRunico: { f: cofreRunico, alto: 54, choque: { w: 66, h: 14 }, grupo: "secretos", luz: true },
     urnaTumulo: { f: urnaTumulo, alto: 46, choque: { w: 64, h: 14 }, grupo: "secretos" },
     arcaEnterrada: { f: arcaEnterrada, alto: 30, choque: null, grupo: "secretos" },
-    piedraSusurro: { f: piedraSusurro, alto: 120, choque: { r: 20 }, grupo: "secretos", luz: true },
+    piedraSusurro: { f: piedraSusurro, alto: 125, choque: { r: 26 }, grupo: "secretos", luz: true },
     altarRuna: { f: altarRuna, alto: 110, choque: { r: 34 }, grupo: "secretos", luz: true },
     brasero: { f: brasero, alto: 60, choque: { r: 16 }, grupo: "secretos", luz: true },
     salonQuemado: { f: salonQuemado, alto: 150, choque: null, grupo: "ruinas" },

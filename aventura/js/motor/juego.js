@@ -16,7 +16,8 @@
   const CUERPO = 1 / 1.96; // la escala del vikingo de la arena
 
   const lienzo = document.getElementById("lienzo"),
-    c = lienzo.getContext("2d");
+    principal = lienzo.getContext("2d");
+  let c = principal; // se cambia un instante para dibujar la silueta de Eromash aparte
   let cw = 0,
     ch = 0,
     esc = 1;
@@ -706,7 +707,7 @@
     const jp = p.salto > 0 ? Math.sin((1 - p.salto / 0.42) * Math.PI) : 0;
     const anda = p.anda || 0,
       bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * (anda === 2 ? 16 : anda ? 11 : 2.5))) * (anda ? 8 : 2);
-    DIB.E(c, p.x, p.y, 58 * (1 - jp * 0.35), 16 * (1 - jp * 0.35), "rgba(0,0,0,0.45)");
+    if (!enSilueta) DIB.E(c, p.x, p.y, 58 * (1 - jp * 0.35), 16 * (1 - jp * 0.35), "rgba(0,0,0,0.45)");
     const h = 150,
       w = 125,
       yy = p.y - h + 8 - bob - jp * 70,
@@ -946,7 +947,7 @@
     const lista = [];
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 420, (o) => {
       if (o.oculto || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1) return;
-      lista.push({ y: o.y, f: () => dibujarCosa(o) });
+      lista.push({ y: o.y, f: () => dibujarCosa(o), cosa: o });
     });
     W.DECO.forEach((d) => {
       if (d.id === "hongosRocio" && d.x > x0 - 40 && d.x < x1 + 40 && d.y > y0 && d.y < y1 + 40) lista.push({ y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
@@ -960,6 +961,7 @@
     lista.push({ y: jug.y, f: dibujarJugador, jugador: true });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((d) => d.f());
+    siluetaJugador(lista);
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
     LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9);
     LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
@@ -991,16 +993,68 @@
     }
   }
   let vineta = null;
+  // ---------- la silueta de Eromash detrás de las cosas ----------
+  // Cuando un árbol, una casa o una piedra lo tapa, se ve su figura en un tono casi blanco a través del objeto.
+  // Se dibuja Eromash aparte, se recorta con lo que tiene delante (solo donde lo tapa) y se pinta claro encima.
+  let enSilueta = false;
+  const silCv = document.createElement("canvas"),
+    silC = silCv.getContext("2d"),
+    tapaCv = document.createElement("canvas"),
+    tapaC = tapaCv.getContext("2d");
+  function siluetaJugador(lista) {
+    if (jug.muerto) return;
+    const bx = jug.x - 100,
+      by = jug.y - 150,
+      bw = 200,
+      bh = 170;
+    const tapan = lista.filter((d) => d.cosa && d.y > jug.y && !d.cosa.o.piso && d.cosa.y - d.cosa.alto * 1.3 < jug.y && Math.abs(d.cosa.x - jug.x) < 420);
+    if (!tapan.length) return;
+    const w = Math.ceil(bw * esc),
+      h = Math.ceil(bh * esc);
+    if (silCv.width !== w || silCv.height !== h) {
+      silCv.width = tapaCv.width = w;
+      silCv.height = tapaCv.height = h;
+    }
+    // lo que tapa, opaco, en el mismo encuadre
+    tapaC.setTransform(1, 0, 0, 1, 0, 0);
+    tapaC.clearRect(0, 0, w, h);
+    tapaC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
+    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x, d.cosa.y, J.t, d.cosa.o));
+    // Eromash solo, sin su sombra
+    silC.setTransform(1, 0, 0, 1, 0, 0);
+    silC.globalCompositeOperation = "source-over";
+    silC.clearRect(0, 0, w, h);
+    silC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
+    c = silC;
+    enSilueta = true;
+    try {
+      dibujarJugador();
+    } finally {
+      c = principal;
+      enSilueta = false;
+    }
+    silC.setTransform(1, 0, 0, 1, 0, 0);
+    silC.globalCompositeOperation = "destination-in";
+    silC.drawImage(tapaCv, 0, 0);
+    silC.globalCompositeOperation = "source-in";
+    silC.fillStyle = "#F2ECEC";
+    silC.fillRect(0, 0, w, h);
+    silC.globalCompositeOperation = "source-over";
+    c.save();
+    c.globalAlpha = 0.7;
+    c.drawImage(silCv, bx, by, w / esc, h / esc);
+    c.restore();
+  }
   // árboles y casas que tapan a Eromash se vuelven transparentes
   function dibujarCosa(o) {
     let a = 1;
     if (o.alto > 90 && o.y > jug.y && o.y - jug.y < o.alto * 0.9) {
       const ancho = o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20;
-      if (Math.abs(jug.x - o.x) < ancho) a = 0.42;
+      if (Math.abs(jug.x - o.x) < ancho) a = 0.62;
     }
     // la copa de los gigantes tapa desde muy arriba: [desde, hasta, ancho] medidos desde el pie del árbol
     const cp = o.o.copa;
-    if (cp && o.y > jug.y && o.y - jug.y > cp[0] - 40 && o.y - jug.y < cp[1] && Math.abs(jug.x - o.x) < cp[2]) a = 0.42;
+    if (cp && o.y > jug.y && o.y - jug.y > cp[0] - 40 && o.y - jug.y < cp[1] && Math.abs(jug.x - o.x) < cp[2]) a = 0.62;
     if (a < 1) DIB.alfa(c, a, () => ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o));
     else ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o);
   }

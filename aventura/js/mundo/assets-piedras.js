@@ -8,48 +8,74 @@
   const C = ASSETS.C;
   const F = FUTHARK;
 
+
+  // ---------- formas de piedra ----------
+  // Cinco siluetas para que no haya dos piedras iguales: losa redonda, menhir en punta, inclinada, rota y arco.
+  // Cada una trae su contorno, la cara de la luz (derecha) y la de la sombra (izquierda) en medidas de -1 a 1
+  // (x en medios anchos, y en altos hacia arriba). La semilla elige la forma y estira un poco el ancho y el alto.
+  const FORMAS = [
+    { borde: [-1, 0, -1, -0.72, -0.7, -0.93, 0, -1, 0.7, -0.94, 1, -0.74, 1, 0], luz: [0.2, -1, 0.7, -0.94, 1, -0.74, 1, 0, 0.45, 0], sombra: [-1, 0, -1, -0.72, -0.75, -0.9, -0.7, 0] },
+    { borde: [-0.9, 0, -0.85, -0.72, -0.35, -1, 0.3, -0.96, 0.85, -0.7, 1, 0], luz: [0.3, -0.96, 0.85, -0.7, 1, 0, 0.4, 0, 0.05, -0.9], sombra: [-0.9, 0, -0.85, -0.72, -0.55, -0.88, -0.55, 0] },
+    { borde: [-1, 0, -0.95, -0.84, 0.85, -1, 1, -0.9, 1, 0], luz: [0.3, -0.95, 0.85, -1, 1, -0.9, 1, 0, 0.45, 0], sombra: [-1, 0, -0.95, -0.84, -0.65, -0.87, -0.68, 0] },
+    { borde: [-1, 0, -1, -0.8, -0.55, -0.95, -0.2, -0.84, 0.15, -1, 0.6, -0.88, 1, -0.93, 1, 0], luz: [0.15, -1, 0.6, -0.88, 1, -0.93, 1, 0, 0.45, 0, 0.35, -0.9], sombra: [-1, 0, -1, -0.8, -0.7, -0.9, -0.7, 0] },
+    { borde: [-1, 0, -1, -0.62, -0.6, -0.88, 0, -1, 0.6, -0.88, 1, -0.62, 1, 0], luz: [0, -1, 0.6, -0.88, 1, -0.62, 1, 0, 0.4, 0], sombra: [-1, 0, -1, -0.62, -0.72, -0.8, -0.72, 0] },
+  ];
+  // devuelve la forma de esta piedra ya medida: { borde, luz, sombra, w, h, i } en coordenadas del mundo
+  function formaPiedra(x, y, w, h, sem) {
+    const i = Math.floor((sem || 0) * 7) % FORMAS.length,
+      kw = 0.92 + (((sem || 0) * 13) % 1) * 0.22,
+      kh = 0.92 + (((sem || 0) * 17) % 1) * 0.14,
+      W = w * kw,
+      H = h * kh,
+      m = (pts) => pts.map((v, k) => (k % 2 ? y + v * H : x + v * W));
+    const F = FORMAS[i];
+    return { borde: m(F.borde), luz: m(F.luz), sombra: m(F.sombra), w: W, h: H, i, norm: F.borde };
+  }
+  function pintarPiedra(c, f, cols) {
+    P(c, f.borde, cols[0]);
+    P(c, f.luz, cols[1]);
+    P(c, f.sombra, cols[2]);
+  }
+
   // ---------- Piedra del camino ----------
   // o.leida: la pintura de la cinta se aviva y queda una vela de sebo encendida al pie.
   function piedraCamino(c, x, y, t, o) {
     const s = o.s || 1,
-      leida = !!o.leida;
-    sombra(c, x + 10 * s, y + 3, 34 * s, 8 * s);
-    const gris = "#6A6660",
-      clara = "#827C74",
-      oscura = "#4C4844";
-    // losa de punta redonda, apenas inclinada
-    P(c, [x - 26 * s, y, x - 27 * s, y - 70 * s, x - 18 * s, y - 92 * s, x, y - 100 * s, x + 18 * s, y - 94 * s, x + 26 * s, y - 74 * s, x + 25 * s, y], gris);
-    P(c, [x + 4 * s, y - 100 * s, x + 18 * s, y - 94 * s, x + 26 * s, y - 74 * s, x + 25 * s, y, x + 12 * s, y], clara);
-    P(c, [x - 26 * s, y, x - 27 * s, y - 70 * s, x - 20 * s, y - 86 * s, x - 18 * s, y], oscura);
-    // la cinta de la serpiente: un arco que baja por los bordes y se anuda abajo
-    const tinta = leida ? "#C8402D" : "#6E4A3A";
+      leida = !!o.leida,
+      f = formaPiedra(x, y, 38 * s, 104 * s, o.sem);
+    sombra(c, x + 10 * s, y + 3, f.w + 8 * s, 9 * s);
+    pintarPiedra(c, f, ["#6A6660", "#827C74", "#4C4844"]);
+    // la cinta de la serpiente: sigue el borde de la piedra por dentro y se anuda abajo
+    const tinta = leida ? "#C8402D" : "#6E4A3A",
+      n = f.norm;
     c.save();
     c.strokeStyle = tinta;
     c.lineWidth = 6 * s;
     c.lineCap = "round";
+    c.lineJoin = "round";
     c.beginPath();
-    c.moveTo(x - 18 * s, y - 8 * s);
-    c.lineTo(x - 19 * s, y - 66 * s);
-    c.quadraticCurveTo(x - 14 * s, y - 88 * s, x, y - 90 * s);
-    c.quadraticCurveTo(x + 15 * s, y - 88 * s, x + 18 * s, y - 68 * s);
-    c.lineTo(x + 16 * s, y - 16 * s);
-    c.quadraticCurveTo(x + 8 * s, y - 4 * s, x - 6 * s, y - 14 * s);
+    for (let k = 0; k < n.length; k += 2) {
+      const px = x + n[k] * f.w * 0.74,
+        py = y - 10 * s + n[k + 1] * (f.h - 22 * s);
+      if (k === 0) c.moveTo(px, py);
+      else c.lineTo(px, py);
+    }
+    c.quadraticCurveTo(x + f.w * 0.4, y - 2 * s, x - 6 * s, y - 14 * s);
     c.stroke();
     c.restore();
-    // cabeza de la serpiente mordiéndose la cola
-    P(c, [x - 10 * s, y - 18 * s, x - 2 * s, y - 22 * s, x + 2 * s, y - 14 * s, x - 6 * s, y - 10 * s], tinta);
-    // runas dentro de la cinta
-    const runas = o.runas || ["raidho", "ehwaz", "mannaz"];
-    alfa(c, leida ? 1 : 0.7, () => runas.forEach((r, i) => F.dibujar(c, r, x - 1 * s, y - (70 - i * 20) * s, 12 * s, leida ? "#F2ECEC" : "#3A3632", 1.8 * s)));
-    // musgo al pie
-    E(c, x - 14 * s, y - 2 * s, 14 * s, 5 * s, C.musgo2);
-    E(c, x + 16 * s, y - 1 * s, 8 * s, 3 * s, C.musgo);
+    P(c, [x - 12 * s, y - 18 * s, x - 3 * s, y - 22 * s, x + 1 * s, y - 13 * s, x - 7 * s, y - 9 * s], tinta);
+    // runas dentro de la cinta, en columna
+    const runas = o.runas || ["raidho", "ehwaz", "mannaz"],
+      paso = (f.h - 44 * s) / 3;
+    alfa(c, leida ? 1 : 0.75, () => runas.forEach((r, i) => F.dibujar(c, r, x, y - 26 * s - i * paso, paso * 0.72, leida ? "#F2ECEC" : "#3A3632", 2.4 * s)));
+    E(c, x - f.w * 0.55, y - 2 * s, 14 * s, 5 * s, C.musgo2);
+    E(c, x + f.w * 0.6, y - 1 * s, 8 * s, 3 * s, C.musgo);
     if (leida) {
-      // vela de sebo
-      R(c, x + 30 * s, y - 14 * s, 6 * s, 14 * s, "#E0D6C0");
+      const vx = x + f.w + 8 * s;
+      R(c, vx - 3 * s, y - 14 * s, 6 * s, 14 * s, "#E0D6C0");
       const fl = Math.sin(t * 9 + (o.sem || 0)) * 1.2 * s;
-      halo(c, x + 33 * s, y - 20 * s, 26 * s, "#FFD98A", 0.7);
-      P(c, [x + 33 * s + fl, y - 26 * s, x + 30.5 * s, y - 17 * s, x + 35.5 * s, y - 17 * s], "#FFD98A");
+      halo(c, vx, y - 20 * s, 26 * s, "#FFD98A", 0.7);
+      P(c, [vx + fl, y - 26 * s, vx - 2.5 * s, y - 17 * s, vx + 2.5 * s, y - 17 * s], "#FFD98A");
     }
   }
 
@@ -75,15 +101,13 @@
     const late = viva ? 0.85 + Math.sin(t * 2 + (o.sem || 0)) * 0.15 : 0.2 + carga * 0.6 + Math.max(0, Math.sin(t * 1.3 + (o.sem || 0))) * 0.2;
     if (viva || carga > 0) halo(c, x, y - 70 * s, (70 + 90 * Math.max(carga, viva ? 1 : 0)) * s, d.col, late * 0.9);
     sombra(c, x + 10 * s, y + 3, 32 * s, 8 * s);
-    // base: tres piedras chatas
-    P(c, poli(x, y - 2 * s, 34 * s, 10 * s, 7, 0.4), oscura);
-    // menhir facetado, más angosto arriba
-    P(c, [x - 20 * s, y - 4 * s, x - 17 * s, y - 104 * s, x - 6 * s, y - 132 * s, x + 10 * s, y - 128 * s, x + 19 * s, y - 100 * s, x + 21 * s, y - 4 * s], gris);
-    P(c, [x - 6 * s, y - 132 * s, x + 10 * s, y - 128 * s, x + 19 * s, y - 100 * s, x + 21 * s, y - 4 * s, x + 6 * s, y - 4 * s, x + 2 * s, y - 110 * s], clara);
-    P(c, [x - 20 * s, y - 4 * s, x - 17 * s, y - 104 * s, x - 12 * s, y - 116 * s, x - 11 * s, y - 4 * s], oscura);
+    // base chata y la piedra con su forma
+    const f = formaPiedra(x, y - 4 * s, 36 * s, 128 * s, o.sem);
+    P(c, poli(x, y - 2 * s, f.w + 10 * s, 11 * s, 7, 0.4), oscura);
+    pintarPiedra(c, f, [gris, clara, oscura]);
     // el sello de cada rito, chico, arriba de la runa grande
     const sx = x + 1 * s,
-      sy = y - 112 * s;
+      sy = y - 4 * s - f.h * 0.8;
     alfa(c, 0.85, () => {
       if (o.tipo === "luna") {
         E(c, sx, sy, 6 * s, 6 * s, viva ? d.col : "#2E3038");
@@ -97,13 +121,13 @@
       else if (o.tipo === "escarcha") P(c, [sx, sy - 7 * s, sx + 5 * s, sy, sx, sy + 7 * s, sx - 5 * s, sy], viva ? d.col : "#323A42");
     });
     // la runa grande tallada: oscura y honda dormida, encendida desde abajo según la carga
-    const ry = y - 60 * s,
-      rh = 52 * s;
+    const rh = Math.min(48 * s, f.h * 0.4),
+      ry = y - 4 * s - f.h * 0.42 - rh / 2;
     F.dibujar(c, d.runa, x + 1 * s, ry + rh / 2, rh, viva ? d.col : "#24242A", 5 * s);
     if (!viva && carga > 0) {
       c.save();
       c.beginPath();
-      c.rect(x - 30 * s, ry + rh / 2 - rh * carga, 60 * s, rh * carga + 4 * s);
+      c.rect(x - f.w, ry + rh / 2 - rh * carga, f.w * 2, rh * carga + 4 * s);
       c.clip();
       F.dibujar(c, d.runa, x + 1 * s, ry + rh / 2, rh, d.col, 5 * s);
       c.restore();
@@ -122,12 +146,14 @@
   }
 
   Object.assign(ASSETS.LISTA, {
-    piedraCamino: { f: piedraCamino, alto: 100, choque: { r: 20 }, grupo: "piedras" },
-    piedraRito: { f: piedraRito, alto: 132, choque: { r: 20 }, grupo: "piedras", luz: true },
+    piedraCamino: { f: piedraCamino, alto: 110, choque: { r: 26 }, grupo: "piedras" },
+    piedraRito: { f: piedraRito, alto: 140, choque: { r: 26 }, grupo: "piedras", luz: true },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     piedraCamino: { leida: true },
     piedraRito: { tipo: "brasa", viva: true },
   });
   ASSETS.RITO = RITO;
+  ASSETS.formaPiedra = formaPiedra;
+  ASSETS.pintarPiedra = pintarPiedra;
 })();
