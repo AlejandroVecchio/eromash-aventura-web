@@ -374,6 +374,45 @@ window.GOINN = (function () {
         c.lineWidth = 18 + rnd() * 26;
         c.stroke();
       }
+      // como en el boceto «Bajo las raíces»: charcos y arroyos de agua rúnica que bajan de las raíces roídas
+      const rr = DIB.azar(9191);
+      for (let k = 0; k < 14; k++) {
+        const a = rr() * Math.PI * 2,
+          d = (0.3 + rr() * 0.6) * ra,
+          px = R[0] + Math.cos(a) * 1800 * d,
+          py = R[1] + Math.sin(a) * 1250 * d,
+          w = 80 + rr() * 160;
+        DIB.E(c, px, py, w, w * 0.32, "#16262A");
+        DIB.alfa(c, 0.35 + Math.sin(J.t * 1.3 + k) * 0.08, () => DIB.E(c, px - w * 0.1, py - 2, w * 0.7, w * 0.18, "#2E6A72"));
+      }
+      for (const p of pilares) {
+        // el arroyo que sale del pie de cada raíz hacia el centro
+        c.beginPath();
+        c.moveTo(p.x + p.r * 0.3, p.y + 10);
+        c.quadraticCurveTo((p.x + R[0]) / 2 + 120, (p.y + R[1]) / 2, p.x + (R[0] - p.x) * 0.55, p.y + (R[1] - p.y) * 0.55);
+        c.strokeStyle = "#173236";
+        c.lineWidth = 26;
+        c.stroke();
+        DIB.alfa(c, 0.55 + Math.sin(J.t * 2 + p.sem) * 0.15, () => {
+          c.strokeStyle = "#4FA6AE";
+          c.lineWidth = 7;
+          c.stroke();
+        });
+      }
+      // los troncos de raíz caídos sobre el piso mojado
+      for (let k = 0; k < 6; k++) {
+        const a = rr() * Math.PI * 2,
+          d = (0.5 + rr() * 0.35) * ra,
+          px = R[0] + Math.cos(a) * 1800 * d,
+          py = R[1] + Math.sin(a) * 1250 * d,
+          l = 160 + rr() * 200,
+          g = a + Math.PI / 2 + (rr() - 0.5);
+        const ux = Math.cos(g) * l,
+          uy = Math.sin(g) * l * 0.5;
+        DIB.P(c, [px - ux, py - uy - 10, px + ux, py + uy - 10, px + ux, py + uy + 14, px - ux, py - uy + 14], "#2A241C");
+        DIB.P(c, [px - ux, py - uy - 10, px + ux, py + uy - 10, px + ux, py + uy - 2, px - ux, py - uy - 2], "#3E4A2E");
+        DIB.E(c, px + ux, py + uy + 2, 10, 13, "#B89E78");
+      }
       // el portal de vuelta, cuando ya no queda nada que pelear
       if (st.vencido) DIB.alfa(c, 0.5 + Math.sin(J.t * 3) * 0.15, () => DIB.E(c, R[0], R[1] + 1150, 130, 50, "#73D5DB"));
       // las heridas de luz por sellar
@@ -404,23 +443,66 @@ window.GOINN = (function () {
       if (visible(svan.x, svan.y)) lista.push({ y: svan.y, f: () => GENTE.dibujar(c, "svanhild", svan.x, svan.y, J.t, svan.mira) });
       // los pilares de raíz y la raíz madre
       const raiz = (x, y, w, alto, sem) => {
+        // una raíz de Yggdrasil como en el boceto: corteza con musgo, roída hasta la madera clara, y el agua rúnica que
+        // chorrea por la herida hasta un charco al pie
         const r = DIB.azar(sem);
-        DIB.E(c, x, y, w * 1.4, w * 0.45, "#0A0D0E");
-        DIB.P(c, [x - w, y, x - w * 0.7, y - alto * 0.4, x - w * 0.55, y - alto, x + w * 0.55, y - alto, x + w * 0.75, y - alto * 0.4, x + w, y], "#2E2820");
-        DIB.P(c, [x + w * 0.1, y, x + w * 0.2, y - alto, x + w * 0.55, y - alto, x + w * 0.75, y - alto * 0.4, x + w, y], "#3E352A");
-        for (let k = 0; k < 5; k++) {
-          const bx = x - w * 0.5 + r() * w;
-          DIB.L(c, bx, y - alto * (0.2 + r() * 0.6), bx + (r() - 0.5) * 40, y - alto * (0.1 + r() * 0.3), "#1E1A14", 6);
-        }
+        DIB.E(c, x, y, w * 1.5, w * 0.48, "#0A0D0E");
+        DIB.alfa(c, 0.6, () => DIB.E(c, x + w * 0.2, y + w * 0.25, w * 0.9, w * 0.2, "#2E6A72"));
         // las raíces que se abren en el piso
-        for (let k = 0; k < 4; k++) {
-          const a = Math.PI * (0.1 + k * 0.27);
-          DIB.P(c, [x + Math.cos(a) * w * 0.6, y, x + Math.cos(a) * w * 2.2, y + Math.sin(a) * w * 0.5, x + Math.cos(a) * w * 0.9, y - 16], "#2A241C");
+        for (let k = 0; k < 5; k++) {
+          const ang = Math.PI * (0.05 + k * 0.22);
+          DIB.P(c, [x + Math.cos(ang) * w * 0.6, y, x + Math.cos(ang) * w * 2.3, y + Math.sin(ang) * w * 0.5, x + Math.cos(ang) * w * 0.9, y - 18], k % 2 ? "#2A241C" : "#34402A");
         }
-        // la luz que gotea
-        const g = (J.t * 0.6 + sem * 0.37) % 1;
-        DIB.alfa(c, 0.8, () => DIB.E(c, x + w * 0.3, y - alto * 0.6 + g * alto * 0.5, 5, 9, "#73D5DB"));
+        // el tronco: mitad izquierda en sombra, la derecha con luz y musgo
+        const tronco = [x - w, y, x - w * 0.72, y - alto * 0.4, x - w * 0.56, y - alto, x + w * 0.56, y - alto, x + w * 0.76, y - alto * 0.4, x + w, y];
+        DIB.P(c, tronco, "#2A251E");
+        DIB.P(c, [x + w * 0.05, y, x + w * 0.15, y - alto, x + w * 0.56, y - alto, x + w * 0.76, y - alto * 0.4, x + w, y], "#3A3328");
+        DIB.P(c, [x + w * 0.3, y - alto * 0.15, x + w * 0.4, y - alto * 0.85, x + w * 0.6, y - alto * 0.8, x + w * 0.8, y - alto * 0.35, x + w * 0.85, y - alto * 0.12], "#3E4E2C");
+        for (let k = 0; k < 6; k++) {
+          const bx = x - w * 0.6 + r() * w * 1.1;
+          DIB.L(c, bx, y - alto * (0.15 + r() * 0.7), bx + (r() - 0.5) * 30, y - alto * (0.05 + r() * 0.3), "#1A1612", 6);
+        }
+        // la herida roída: madera clara astillada
+        const hy = y - alto * (0.32 + r() * 0.18),
+          hx = x - w * 0.1,
+          hw = w * 0.55,
+          hh = alto * 0.16;
+        DIB.P(c, [hx - hw, hy, hx - hw * 0.6, hy - hh, hx + hw * 0.5, hy - hh * 1.1, hx + hw, hy - hh * 0.2, hx + hw * 0.7, hy + hh * 0.5, hx - hw * 0.4, hy + hh * 0.6], "#B89E78");
+        DIB.P(c, [hx - hw * 0.2, hy - hh * 0.9, hx + hw * 0.5, hy - hh * 1.1, hx + hw, hy - hh * 0.2, hx + hw * 0.7, hy + hh * 0.5, hx + hw * 0.1, hy + hh * 0.3], "#D8C3A0");
+        for (let k = 0; k < 6; k++) {
+          const sx = hx - hw * 0.7 + (k / 5) * hw * 1.5;
+          DIB.P(c, [sx - 6, hy + hh * 0.5, sx + 6, hy + hh * 0.5, sx + (r() - 0.5) * 10, hy + hh * (1 + r() * 0.8)], "#C8B08A");
+          DIB.P(c, [sx - 5, hy - hh * 0.9, sx + 5, hy - hh * 0.9, sx + (r() - 0.5) * 10, hy - hh * (1.4 + r() * 0.5)], "#8A7458");
+        }
+        // el agua rúnica que cae de la herida hasta el pie
+        const baja = window.CALIDAD && CALIDAD.nivel === "baja";
+        for (let k = 0; k < 2; k++) {
+          const cx = hx - hw * 0.3 + k * hw * 0.7;
+          DIB.alfa(c, 0.75, () => DIB.R(c, cx - 4, hy + hh * 0.5, 8, y - hy - hh * 0.5 - 6, "#4FA6AE"));
+          DIB.alfa(c, 0.9, () => DIB.R(c, cx - 1.5, hy + hh * 0.5, 3, y - hy - hh * 0.5 - 6, "#BDF0F2"));
+          if (!baja) {
+            const g = (J.t * 0.9 + sem * 0.31 + k * 0.5) % 1;
+            DIB.alfa(c, 0.9, () => DIB.E(c, cx, hy + hh * 0.5 + g * (y - hy - hh * 0.5), 5, 9, "#E6F6F8"));
+          }
+        }
       };
+      // las agujas de roca alrededor de la arena
+      const aguja = (x, y, h, sem) => {
+        const r = DIB.azar(sem),
+          w = h * (0.22 + r() * 0.1);
+        DIB.E(c, x, y, w * 1.3, w * 0.4, "#0A0D0E");
+        DIB.P(c, [x - w, y, x - w * 0.3, y - h * 0.7, x + w * 0.05, y - h, x + w * 0.4, y - h * 0.6, x + w, y], "#1C2226");
+        DIB.P(c, [x + w * 0.05, y - h, x + w * 0.4, y - h * 0.6, x + w, y, x + w * 0.2, y], "#2C3438");
+        DIB.L(c, x - w * 0.4, y - h * 0.3, x - w * 0.1, y - h * 0.55, "#12161A", 3);
+      };
+      const ra2 = radioArena();
+      for (let k = 0; k < 22; k++) {
+        const ang = (k / 22) * Math.PI * 2 + 0.13,
+          px = R[0] + Math.cos(ang) * 2080 * ra2,
+          py = R[1] + Math.sin(ang) * 1470 * ra2,
+          hh = 140 + ((k * 53) % 7) * 34;
+        if (visible(px, py)) lista.push({ y: py, f: () => aguja(px, py, hh, 300 + k) });
+      }
       for (const p of pilares) if (visible(p.x, p.y)) lista.push({ y: p.y, f: () => raiz(p.x, p.y, p.r, 1400, p.sem + 11) });
       const m = madre();
       if (visible(m[0], m[1])) lista.push({ y: m[1], f: () => raiz(m[0], m[1], 300, 1800, 77) });
@@ -429,35 +511,56 @@ window.GOINN = (function () {
         const segs = cuerpo(),
           p = pelea,
           muere = p.muerte != null ? Math.min(1, p.muerte / 2.2) : 0;
-        // el cuerpo: tramos de trazo grueso con las puntas redondas, para que se lea como una sola sierpe
-        const ancho = (i) => (52 - (i / segs.length) * 40) * (1 - muere * 0.3);
-        for (let i = 1; i < segs.length - 1; i++) {
-          const a = segs[i],
-            b = segs[i + 1];
+        // el cuerpo, como en el boceto de Alejandro: placas en bloque, verde oscuro con la panza clara, púas negras y
+        // el veneno negro que chorrea; la luz llega de arriba a la derecha y la mitad izquierda queda en sombra
+        const ancho = (i) => (54 - (i / segs.length) * 40) * (1 - muere * 0.3);
+        const GV = { osc: "#2B3A28", med: "#3B5034", luz: "#536B47", panza: "#8C8A5C", panzaOsc: "#6E6C46", pua: "#121212", veneno: "#0A0A0A" };
+        const placa = (x, y, r, i) => {
+          const h = r * 2,
+            w = r * 1.08,
+            k = r * 0.38;
+          // la unión con la placa siguiente
+          const nx = segs[i + 1];
+          if (nx) {
+            const r2 = ancho(i + 1);
+            DIB.P(c, [x, y - h, nx.x, nx.y - r2 * 2, nx.x, nx.y, x, y], GV.med);
+            DIB.P(c, [x, y - h, nx.x, nx.y - r2 * 2, nx.x, nx.y - r2 * 1.55, x, y - h * 0.77], GV.luz);
+            DIB.P(c, [x, y - r * 0.55, nx.x, nx.y - r2 * 0.55, nx.x, nx.y, x, y], GV.panza);
+          }
+          // la placa: octógono en bloque, mitad izquierda en sombra
+          DIB.P(c, [x - w + k, y, x + w - k, y, x + w, y - k, x + w, y - h + k, x + w - k, y - h, x - w + k, y - h, x - w, y - h + k, x - w, y - k], GV.med);
+          DIB.P(c, [x - w + k, y, x, y, x, y - h, x - w + k, y - h, x - w, y - h + k, x - w, y - k], GV.osc);
+          DIB.P(c, [x - w * 0.2, y - h, x + w - k, y - h, x + w, y - h + k, x + w, y - h * 0.72, x - w * 0.1, y - h * 0.8], GV.luz);
+          DIB.P(c, [x - w + k, y, x + w - k, y, x + w, y - k, x + w, y - r * 0.55, x - w, y - r * 0.55, x - w, y - k], GV.panza);
+          DIB.P(c, [x - w + k, y, x, y, x, y - r * 0.55, x - w, y - r * 0.55, x - w, y - k], GV.panzaOsc);
+          // la púa del lomo
+          if (i % 2 === 0) DIB.P(c, [x - r * 0.28, y - h + 2, x + r * 0.05, y - h - r * 0.7, x + r * 0.3, y - h + 2], GV.pua);
+          // el veneno que chorrea por el costado
+          if (i % 3 === 1) {
+            const g = (J.t * 0.5 + i * 0.29) % 1;
+            DIB.P(c, [x - w * 0.5 - 3, y - h * 0.7, x - w * 0.5 + 3, y - h * 0.7, x - w * 0.5 + 2, y - h * 0.35, x - w * 0.5 - 2, y - h * 0.35], GV.veneno);
+            DIB.alfa(c, 1 - g, () => DIB.E(c, x - w * 0.5, y - h * 0.35 + g * h * 0.35, 3, 4 + g * 2, GV.veneno));
+          }
+        };
+        for (let i = segs.length - 1; i >= 1; i--) {
+          const a = segs[i];
           if (!visible(a.x, a.y)) continue;
           const r = ancho(i);
           lista.push({
-            y: Math.max(a.y, b.y),
+            y: a.y,
             f: () =>
               DIB.alfa(c, 1 - muere * 0.6, () => {
-                const tramo = (dy, w, col) => {
-                  c.beginPath();
-                  c.moveTo(a.x, a.y + dy);
-                  c.lineTo(b.x, b.y + dy);
-                  c.strokeStyle = col;
-                  c.lineWidth = w;
-                  c.lineCap = "round";
-                  c.stroke();
-                };
-                tramo(6, r * 2.1, "rgba(4,6,6,0.6)");
-                tramo(-r * 0.7, r * 2, "#2A332C");
-                tramo(-r * 1.05, r * 1.1, "#36423A");
-                tramo(-r * 1.25, r * 0.35, "#4E5E52");
-                if (i % 2 === 0) {
-                  const mx = (a.x + b.x) / 2,
-                    my = (a.y + b.y) / 2 - r * 1.5;
-                  DIB.P(c, [mx - r * 0.25, my + r * 0.2, mx, my - r * 0.45, mx + r * 0.25, my + r * 0.2], "#1A201C");
+                DIB.E(c, a.x, a.y + 4, r * 1.4, r * 0.4, "rgba(4,6,6,0.55)");
+                // la punta de la cola: un cuerno de placas que se afina
+                if (i === segs.length - 1) {
+                  const q = segs[i - 1],
+                    dx = a.x - q.x,
+                    dy = a.y - q.y,
+                    l = Math.hypot(dx, dy) || 1;
+                  DIB.P(c, [a.x, a.y - r * 2, a.x + (dx / l) * r * 2.6, a.y + (dy / l) * r * 2.6 - r * 2.4, a.x, a.y], GV.med);
+                  DIB.P(c, [a.x, a.y - r * 2, a.x + (dx / l) * r * 2.6, a.y + (dy / l) * r * 2.6 - r * 2.4, a.x, a.y - r * 1.3], GV.luz);
                 }
+                placa(a.x, a.y, r, i);
               }),
           });
         }
@@ -467,30 +570,60 @@ window.GOINN = (function () {
           f: () =>
             DIB.alfa(c, 1 - muere * 0.6, () => {
               const lev = p.estado === "aviso" ? -30 : p.estado === "expuesta" ? 10 : -10,
-                hy = cb.y - 50 + lev - p.golpe * 20,
-                ang = Math.atan2(Math.sin(p.mira) / 1.25, Math.cos(p.mira)),
-                abre = p.estado === "aviso" ? 0.32 : 0.05;
+                hy = cb.y - 70 + lev - p.golpe * 20,
+                lado = Math.cos(p.mira) < 0 ? -1 : 1,
+                incl = Math.max(-0.35, Math.min(0.35, Math.sin(p.mira) * 0.4)),
+                abre = p.estado === "aviso" ? 0.42 : p.estado === "expuesta" ? 0.18 : 0.08;
               DIB.E(c, cb.x, cb.y + 6, 90, 28, "#060808");
               if (golpeable()) DIB.alfa(c, 0.5 + Math.sin(J.t * 8) * 0.2, () => DIB.E(c, cb.x, cb.y + 8, 100, 32, "#FFD98A"));
+              // el cuello, de la cabeza al piso
+              const r0 = ancho(0);
+              DIB.P(c, [cb.x - r0 * 1.1, cb.y, cb.x + r0 * 1.1, cb.y, cb.x + r0 * 0.9, hy + 10, cb.x - r0 * 0.9, hy + 10], GV.med);
+              DIB.P(c, [cb.x - r0 * 1.1, cb.y, cb.x, cb.y, cb.x, hy + 10, cb.x - r0 * 0.9, hy + 10], GV.osc);
+              DIB.P(c, [cb.x - lado * r0 * 0.2, cb.y, cb.x + lado * r0 * 0.9, cb.y, cb.x + lado * r0 * 0.7, hy + 20, cb.x - lado * r0 * 0.1, hy + 20], GV.panza);
               c.save();
               c.translate(cb.x, hy);
-              c.rotate(ang);
-              // las mandíbulas: se abren en el aviso y muestran el rojo de adentro
-              if (abre > 0.1) DIB.P(c, [10, 0, 120, -40, 120, 40], "#5E130D");
+              c.scale(lado, 1);
+              c.rotate(incl * lado);
+              // el cuerno de atrás, más oscuro, y las púas de la nuca
+              DIB.P(c, [-34, -40, -14, -46, -98, -118], "#B8AC98");
+              DIB.P(c, [-60, -30, -46, -50, -36, -30], GV.pua);
+              DIB.P(c, [-80, -14, -70, -38, -58, -12], GV.pua);
+              // la mandíbula de abajo: baja en el aviso y deja ver la boca roja
               c.save();
-              c.rotate(-abre);
-              DIB.P(c, [-60, -6, -40, -36, 30, -42, 100, -16, 124, -2, 20, -4], "#36423A");
-              DIB.P(c, [-30, -30, 30, -38, 96, -14, 30, -22], "#4E5E52");
-              c.restore();
-              c.save();
+              c.translate(-10, 4);
               c.rotate(abre);
-              DIB.P(c, [-60, 6, -40, 36, 30, 42, 100, 16, 124, 2, 20, 4], "#2A332C");
+              DIB.P(c, [-40, -4, 104, 0, 112, 12, 96, 26, -30, 24], GV.osc);
+              DIB.P(c, [-30, 12, 100, 14, 96, 26, -30, 24], GV.panza);
+              DIB.P(c, [-20, -4, 104, 0, 100, 6, -20, 4], "#9C2315");
+              for (let k = 0; k < 3; k++) DIB.P(c, [96 - k * 26, 0, 90 - k * 26, -16 + k * 3, 84 - k * 26, 0], "#F2ECEC");
               c.restore();
-              // los cuernos de hueso y los ojos
-              DIB.P(c, [-40, -30, -96, -60, -52, -14], "#D8CCB4");
-              DIB.P(c, [-40, 30, -96, 60, -52, 14], "#C8BCA4");
-              DIB.E(c, 40, -28, 10, 7, "#FFD98A");
-              DIB.E(c, 40, 28, 10, 7, "#FFD98A");
+              // la boca por dentro
+              if (abre > 0.1) {
+                DIB.P(c, [-14, 2, 104, 2, 100, 2 + abre * 110, -14, 6 + abre * 40], "#5E130D");
+                DIB.P(c, [10, 4, 90, 4, 82, abre * 70, 10, 6 + abre * 30], "#C8402D");
+                DIB.P(c, [30, 6, 70, 6, 60, abre * 50, 34, 8 + abre * 20], "#9C2315");
+              }
+              // el cráneo en bloque: hocico cuadrado, la cara de arriba con luz
+              DIB.P(c, [-56, -36, 40, -46, 108, -32, 120, -14, 116, 4, -50, 6], GV.med);
+              DIB.P(c, [-50, -40, 40, -50, 104, -36, 40, -34, -44, -26], GV.luz);
+              DIB.P(c, [-56, -36, -44, -26, -40, 6, -50, 6], GV.osc);
+              DIB.P(c, [60, -4, 116, -4, 116, 4, 60, 6], GV.panzaOsc);
+              // los colmillos de arriba
+              for (let k = 0; k < 4; k++) DIB.P(c, [110 - k * 22, 2, 104 - k * 22, 22 + (k === 0 ? 10 : 0), 98 - k * 22, 2], "#F2ECEC");
+              // el ojo amarillo
+              DIB.E(c, 56, -26, 9, 9, "#FFD98A");
+              DIB.E(c, 58, -26, 3, 6, "#111111");
+              // el cuerno de adelante, hueso claro
+              DIB.P(c, [-22, -44, 2, -48, -76, -126], "#E6DCCB");
+              DIB.P(c, [-22, -44, -10, -46, -76, -126], "#CFC3AF");
+              // el veneno negro que cae de los colmillos
+              for (let k = 0; k < 3; k++) {
+                const g = (J.t * 0.9 + k * 0.37) % 1,
+                  gx = 104 - k * 30;
+                DIB.P(c, [gx - 3, 14, gx + 3, 14, gx + 1, 30 + abre * 40, gx - 1, 30 + abre * 40], GV.veneno);
+                DIB.alfa(c, 1 - g, () => DIB.E(c, gx, 34 + abre * 40 + g * 70, 3, 5, GV.veneno));
+              }
               c.restore();
             }),
         });
