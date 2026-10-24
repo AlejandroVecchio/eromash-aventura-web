@@ -141,6 +141,18 @@
     caja(x + 64 * s, y - 4 * s, 50 * s, 86 * s, 1);
     caja(x - 30 * s, y - 100 * s, 46 * s, 76 * s, 2);
     F.dibujar(c, "fehu", x - 60 * s, y - 20 * s, 30 * s, "#E0B2B2", 3 * s);
+    // o.vela: un cabo de vela arriba, la única luz del sótano además de la trampilla
+    if (o.vela) {
+      const vx = x - 14 * s,
+        vy = y - 184 * s,
+        tit = Math.sin(t * 11 + x) * 2 * s;
+      E(c, vx, vy + 2 * s, 14 * s, 5 * s, "#E0B2B2");
+      R(c, vx - 7 * s, vy - 26 * s, 14 * s, 28 * s, "#F2ECEC");
+      R(c, vx + 2 * s, vy - 26 * s, 5 * s, 28 * s, "#E0B2B2");
+      halo(c, vx, vy - 38 * s, 40 * s, "#FF8D71", 0.5);
+      P(c, [vx - 5 * s, vy - 28 * s, vx + tit, vy - 52 * s, vx + 5 * s, vy - 28 * s], "#FFD98A");
+      P(c, [vx - 2 * s, vy - 28 * s, vx + tit * 0.5, vy - 40 * s, vx + 2 * s, vy - 28 * s], "#F2ECEC");
+    }
   }
 
   // ---------- Atril con el libro de saber ----------

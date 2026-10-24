@@ -30,6 +30,11 @@ window.INTERIORES = (function () {
     const cama = (x, y, s) => mueble("camaPieles", x, y, { s: s || 1 }, 210, "in.accion_cama", dormir);
     const hogar = (x) => mueble("hogarPiedra", x, FONDO + 30, { s: 0.85 }, 150, "in.accion_hogar", calentarse);
     const examinar = (clave2) => () => A.dialogoLibre([["eromash", clave2]]);
+    // la tabla suelta de la pared con un nicho detrás
+    const tabla = (x) => {
+      const k = clave + "_tabla";
+      mueble("tablaSuelta", x, FONDO + 10, { abierta: !!st.cofres[k], brillo: !st.cofres[k] }, 60, "in.accion_tabla", (q) => abrirNicho(q, k));
+    };
     let pared = "cabana",
       ventana = 1150,
       estandarte = null,
@@ -61,8 +66,6 @@ window.INTERIORES = (function () {
       pared = "taberna";
       mueble("mostrador", 800, 680, { s: 1 }, 320, "in.accion_mostrador", hidromiel);
       mueble("barriles", 1370, 700, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.taberna_barriles"));
-      // detrás de los barriles, la puerta de piedra del sótano viejo con sus doce huecos (goinn.js)
-      if (window.GOINN) mueble("puertaPiedra", 1310, FONDO + 20, { s: 0.8, luces: GOINN.trofeos(), abierta: GOINN.abierta() }, 90, "in.accion_puerta_piedra", () => GOINN.puerta());
       mueble("mesaBanco", 470, 830, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa"));
       mueble("mesaBanco", 1120, 850, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa2"));
       hogar(260);
@@ -70,28 +73,189 @@ window.INTERIORES = (function () {
       estandarte = 990;
       ventana = 560;
     } else {
-      // las casas de la gente: tres maneras de vivir, y no todas tienen arcón
-      const conArcon = Math.floor(sem * 7) % 3 === 0;
-      if (v === 0) {
+      // las casas de la gente: cinco maneras de vivir, y no todas tienen arcón
+      const conArcon = Math.floor(sem * 7) % 3 === 0,
+        vi = v % 5;
+      if (vi === 0) {
         hogar(360);
         cama(1170, 760);
         mueble("mesaBanco", 720, 820, {}, 170, "in.accion_mesa", examinar("in.casa_mesa"));
         if (conArcon) arcon(1380, 860);
-      } else if (v === 1) {
+      } else if (vi === 1) {
         mueble("telar", 380, FONDO + 60, {}, 120, "in.accion_telar", examinar("in.casa_telar"));
         hogar(800);
         mueble("mesaBanco", 1080, 820, {}, 170, "in.accion_mesa", examinar("in.casa_mesa2"));
         mueble("barriles", 1380, 700, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.casa_barriles"));
         if (conArcon) arcon(560, 850);
-        ventana = 1200;
-      } else {
+        tabla(1160);
+        ventana = 1250;
+      } else if (vi === 2) {
         mueble("escritorioRunico", 560, 790, { s: 0.85 }, 260, "in.accion_escritorio", examinar("in.casa_escritorio"));
         cama(1160, 760);
         repisa = true;
         if (conArcon) arcon(1380, 860);
+      } else if (vi === 3) {
+        // la casa del cazador: el armero contra la pared y pieles por todos lados
+        mueble("armero", 420, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.casa_armero"));
+        hogar(1000);
+        cama(1260, 800, 0.9);
+        mueble("mesaBanco", 700, 830, {}, 170, "in.accion_mesa", examinar("in.casa_mesa3"));
+        if (conArcon) arcon(1400, 680);
+        ventana = 700;
+      } else {
+        // la casa del escriba: rollos, el atril y la vela que no se apaga
+        mueble("estanteRollos", 420, FONDO + 10, { s: 0.9, sem }, 140, "in.accion_rollos", examinar("in.casa_rollos"));
+        mueble("atril", 760, 770, { s: 1, leido: true }, 70, "in.accion_atril", examinar("in.casa_atril"));
+        cama(1200, 790, 0.9);
+        tabla(640);
+        if (conArcon) arcon(1400, 690);
+        ventana = 1050;
+        repisa = true;
       }
     }
+    // la trampilla del sótano: a la vista en los cuartos grandes, debajo de la alfombra en algunas casas
+    const lugarTrampilla = { lindes: [1120, 690], herreria: [1180, 850], sanacion: [770, 830], taberna: [800, 855] };
+    const LT = [[480, 735], [620, 725], [900, 690], [760, 700], [960, 860]];
+    const rs = DIB.azar(Math.round(sem * 1000) + 77);
+    const conSotano = tipo !== "casa" || rs() < 0.7;
+    if (conSotano) {
+      const [tx, ty] = lugarTrampilla[tipo] || LT[v % 5];
+      const escondida = tipo === "casa" && rs() < 0.5;
+      const tr = { id: "trampilla", x: tx, y: ty, o: { s: 1, abierta: !!st.cofres[clave + "_tr"] }, r: 100, piso: true, accion: "in.accion_trampilla" };
+      tr.fn = (q) => {
+        if (!q.o.abierta) {
+          q.o.abierta = true;
+          st.cofres[clave + "_tr"] = true;
+          return;
+        }
+        bajar(q);
+      };
+      tr.texto = (q) => (q.o.abierta ? "in.accion_bajar" : "in.accion_trampilla");
+      m.push(tr);
+      if (escondida && !st.cofres[clave + "_alf"]) {
+        const al = { id: "alfombra", x: tx, y: ty + 8, o: { s: 0.62, pista: true }, r: 130, piso: true, accion: "in.accion_alfombra" };
+        al.fn = (q) => {
+          q.o.movida = true;
+          q.o.s = 0.5;
+          q.x = tx - 190;
+          st.cofres[clave + "_alf"] = true;
+          tr.tapada = null;
+          HUD.aviso(t("in.alfombra_trampilla"), "#E0B2B2");
+        };
+        tr.tapada = al;
+        m.push(al);
+      } else if (escondida) m.push({ id: "alfombra", x: tx - 190, y: ty + 8, o: { s: 0.5, movida: true }, r: 0, piso: true, quieto: true });
+    }
     return { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa };
+  }
+
+  // ---------- los sótanos ----------
+  // Debajo de la trampilla: piedra húmeda, vigas bajas, la escalera de mano que sube a la luz de la casa y lo que la
+  // gente guarda (o esconde). Cada sótano tiene su cofre; algunos, un atril con un libro de saber, una tabla suelta o
+  // los huesos de alguien que bajó y no volvió.
+  const CLASE_SOTANO = { taberna: "bodega", lindes: "archivo", herreria: "carbonera", sanacion: "despensa" };
+  function armarSotano(tipo, edificio, clave) {
+    const m = [];
+    const sem = edificio.o.sem || 0;
+    const clase = CLASE_SOTANO[tipo] || ["despensa", "escondite", "viejo"][Math.floor(DIB.azar(Math.round(sem * 1000) + 191)() * 3)];
+    const mueble = (id, x, y, o, r, accion, fn) => m.push({ id, x, y, o: Object.assign({ s: 1 }, o), r, accion, fn });
+    const examinar = (k) => () => A.dialogoLibre([["eromash", k]]);
+    const kc = clave + "_cofre";
+    mueble("escaleraMano", 300, FONDO + 8, { s: 1 }, 80, "in.accion_subir", subir);
+    const cofre = (x, y, rico) => mueble("cofreSotano", x, y, { abierto: !!st.cofres[kc] }, 110, "in.accion_cofre", (q) => abrirCofre(q, kc, rico));
+    const atril = (x, y, libro) => {
+      const k = clave + "_libro";
+      mueble("atril", x, y, { leido: !!st.cofres[k] }, 70, "in.accion_atril", (q) => leerLibro(q, k, libro));
+    };
+    const tabla = (x) => {
+      const k = clave + "_tabla_s";
+      mueble("tablaSuelta", x, FONDO + 10, { abierta: !!st.cofres[k], brillo: !st.cofres[k] }, 60, "in.accion_tabla", (q) => abrirNicho(q, k));
+    };
+    if (clase === "bodega") {
+      mueble("barriles", 620, FONDO + 40, { s: 0.95 }, 120, "in.accion_barriles", examinar("in.sot_bodega_barriles"));
+      mueble("barriles", 860, FONDO + 50, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.sot_bodega_barriles2"));
+      mueble("cajas", 520, 830, { s: 1, vela: true }, 110, "in.accion_cajas", examinar("in.sot_bodega_cajas"));
+      cofre(1380, 840, false);
+      // al fondo, la puerta de piedra del sótano viejo con sus doce huecos (goinn.js)
+      if (window.GOINN) mueble("puertaPiedra", 1180, FONDO + 20, { s: 0.85, luces: GOINN.trofeos(), abierta: GOINN.abierta() }, 100, "in.accion_puerta_piedra", () => GOINN.puerta());
+    } else if (clase === "archivo") {
+      mueble("estanteRollos", 640, FONDO + 10, { s: 1, sem: 0.3 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos"));
+      mueble("estanteRollos", 960, FONDO + 10, { s: 1, sem: 0.7 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos2"));
+      atril(820, 790, "in.libro_lindes");
+      cofre(1360, 820, true);
+    } else if (clase === "carbonera") {
+      mueble("armero", 700, FONDO + 20, { s: 1 }, 150, "in.accion_armero", examinar("in.sot_carbonera_armero"));
+      mueble("cajas", 1060, 760, { s: 1.05, vela: true }, 110, "in.accion_cajas", examinar("in.sot_carbonera_cajas"));
+      mueble("barriles", 1350, FONDO + 40, { s: 0.8 }, 100, "in.accion_barriles", examinar("in.sot_carbonera_barriles"));
+      cofre(560, 840, false);
+    } else if (clase === "despensa") {
+      mueble("barriles", 640, FONDO + 40, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.sot_despensa_barriles"));
+      mueble(tipo === "sanacion" ? "estanteHierbas" : "estanteRollos", 980, FONDO + 15, { s: 0.9, sem }, 150, tipo === "sanacion" ? "in.accion_hierbas" : "in.accion_estante", examinar(tipo === "sanacion" ? "in.sot_despensa_hierbas" : "in.sot_despensa_estante"));
+      mueble("cajas", 760, 820, { s: 0.95, vela: true }, 110, "in.accion_cajas", examinar("in.sot_despensa_cajas"));
+      cofre(1330, 830, false);
+    } else if (clase === "escondite") {
+      mueble("huesos", 1240, FONDO + 30, { s: 1 }, 110, "in.accion_huesos", examinar("in.sot_huesos"));
+      atril(720, 780, "in.libro_escondite");
+      tabla(940);
+      cofre(1360, 850, true);
+    } else {
+      mueble("armero", 760, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.sot_viejo_armero"));
+      mueble("cajas", 560, 820, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
+      mueble("barriles", 1100, FONDO + 40, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.sot_viejo_barriles"));
+      cofre(1360, 830, false);
+    }
+    return { muebles: m, gente: [], pared: "sotano", ventana: 0, estandarte: null, repisa: false, sotano: clase };
+  }
+  function bajar(q) {
+    const arriba = dentro;
+    arriba.vuelta = { x: q.x + 130, y: Math.min(RH - 40, q.y + 30) };
+    const s0 = armarSotano(arriba.tipo, arriba.puerta.cosa, arriba.puerta.clave);
+    dentro = Object.assign(s0, { tipo: arriba.tipo, puerta: arriba.puerta, arriba, ix: 380, iy: FONDO + 110, fundido: 1, saliendo: 0 });
+    jug.mira = { vista: "S", espejo: false };
+    HUD.aviso(t("in.sotano_" + s0.sotano), "#E0B2B2");
+  }
+  function subir() {
+    const a = dentro.arriba;
+    if (!a) return;
+    a.ix = a.vuelta.x;
+    a.iy = a.vuelta.y;
+    a.fundido = 1;
+    a.saliendo = 0;
+    // la puerta de piedra se pudo abrir abajo
+    dentro = a;
+    jug.mira = { vista: "S", espejo: false };
+  }
+  function abrirCofre(q, k, rico) {
+    if (st.cofres[k]) return;
+    st.cofres[k] = true;
+    q.o.abierto = true;
+    const r = DIB.azar(k.length * 613 + k.charCodeAt(k.length - 2));
+    const plata = Math.round((rico ? 60 : 34) + r() * (rico ? 50 : 36));
+    PODERES.darPlata(plata);
+    HUD.aviso(t("in.cofre_plata", [plata]), "#FFD98A");
+    if (rico || r() < 0.5) J.retrasar(0.5, () => PODERES.darFragmento());
+  }
+  function abrirNicho(q, k) {
+    if (st.cofres[k]) return;
+    st.cofres[k] = true;
+    q.o.abierta = true;
+    q.o.brillo = false;
+    const r = DIB.azar(k.length * 401 + k.charCodeAt(0));
+    if (r() < 0.45) {
+      PODERES.darFragmento();
+      HUD.aviso(t("in.nicho_fragmento"), "#A9C2F0");
+    } else {
+      const plata = Math.round(18 + r() * 26);
+      PODERES.darPlata(plata);
+      HUD.aviso(t("in.nicho_plata", [plata]), "#FFD98A");
+    }
+  }
+  function leerLibro(q, k, libro) {
+    A.dialogoLibre([["eromash", libro]]);
+    if (st.cofres[k]) return;
+    st.cofres[k] = true;
+    q.o.leido = true;
+    J.retrasar(0.3, () => PODERES.darFragmento());
   }
 
   // ---------- entrar y salir ----------
@@ -173,6 +337,7 @@ window.INTERIORES = (function () {
     const [a, b] = bordes(y);
     if (x < a || x > b) return true;
     for (const q of dentro.muebles) {
+      if (q.piso) continue;
       const fondo = q.y < FONDO + 80; // los pegados a la pared tapan una franja ancha
       const ry = fondo ? 70 : 34;
       if (Math.abs(x - q.x) < q.r && Math.abs(y - (q.y - 10)) < ry) return true;
@@ -191,10 +356,17 @@ window.INTERIORES = (function () {
       }
     };
     // la puerta, abajo a la izquierda
-    const dp = Math.hypot(dentro.ix - 220, dentro.iy - 860);
+    const dp = dentro.sotano ? Infinity : Math.hypot(dentro.ix - 220, dentro.iy - 860);
     if (dp < 150) prueba(dp, t("in.accion_salir"), salir);
     for (const q of dentro.muebles) {
-      if (q.id === "arconCasa" && q.o.abierto) continue;
+      if (!q.fn || q.tapada) continue;
+      if ((q.id === "arconCasa" || q.id === "cofreSotano") && q.o.abierto) continue;
+      if (q.id === "tablaSuelta" && q.o.abierta) continue;
+      if (q.piso) {
+        const d = Math.hypot(dentro.ix - q.x, (dentro.iy - (q.y - 20)) * 1.4) - q.r * 0.6;
+        if (d < 90) prueba(Math.max(0, d), t(q.texto ? q.texto(q) : q.accion), () => q.fn(q));
+        continue;
+      }
       const fondo = q.y < FONDO + 80,
         dx = Math.max(0, Math.abs(dentro.ix - q.x) - q.r * 0.8),
         dy = fondo ? Math.max(0, dentro.iy - (q.y + 70)) : Math.abs(dentro.iy - q.y);
@@ -234,7 +406,7 @@ window.INTERIORES = (function () {
       jug.dir = [e.x / l, e.y / l];
       jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
       // salir caminando por la puerta
-      if (dentro.iy > RH - 50 && dentro.ix < 330 && e.y > 0.5) salir();
+      if (!dentro.sotano && dentro.iy > RH - 50 && dentro.ix < 330 && e.y > 0.5) salir();
     }
     jug.anda = mov ? 1 : 0;
     // la gente mira a Eromash
@@ -251,7 +423,54 @@ window.INTERIORES = (function () {
   function plancha(c, pts, col) {
     DIB.P(c, pts, col);
   }
+  // el sótano: piedra húmeda, vigas bajas sobre postes y piso de tierra con lajas
+  function dibujarSotano(c, d, tt) {
+    const r = DIB.azar(d.sotano.length * 31 + 5);
+    c.fillStyle = "#0C0909";
+    c.fillRect(0, 0, RW, RH);
+    for (let fila = 0; fila * 70 < FONDO + 40; fila++) {
+      const y = FONDO - fila * 70;
+      for (let x = -60 + (fila % 2) * 70; x < RW + 60; ) {
+        const w = 110 + r() * 80,
+          tono = ["#2A2426", "#252022", "#2E2729", "#221C1E"][Math.floor(r() * 4)];
+        DIB.P(c, [x + 6, y - 4, x + w - 6, y - 6 + r() * 4, x + w - 2, y - 64 + r() * 6, x + 4, y - 66 + r() * 6], tono);
+        DIB.P(c, [x + 6, y - 60, x + w - 6, y - 62, x + w - 10, y - 66, x + 10, y - 66], "#3A3234");
+        x += w;
+      }
+    }
+    // humedad que baja por la piedra
+    for (let k = 0; k < 7; k++) {
+      const x = 120 + k * 230 + r() * 60;
+      DIB.alfa(c, 0.35, () => DIB.P(c, [x, 0, x + 26, 0, x + 18 + r() * 10, 260 + r() * 200, x + 6, 300 + r() * 160], "#141A18"));
+    }
+    // postes y vigas bajas
+    [520, 1100].forEach((x) => {
+      DIB.P(c, [x - 22, 120, x + 22, 120, x + 24, FONDO, x - 24, FONDO], "#2A0806");
+      DIB.P(c, [x + 10, 120, x + 22, 120, x + 24, FONDO, x + 12, FONDO], "#3E0E08");
+    });
+    plancha(c, [0, 70, RW, 58, RW, 126, 0, 138], "#2A0806");
+    plancha(c, [0, 126, RW, 114, RW, 126, 0, 138], "#120403");
+    // telarañas en las esquinas
+    DIB.alfa(c, 0.4, () => {
+      for (let i = 0; i < 5; i++) DIB.L(c, 0, 140, 70 + i * 26, 140 + 70 - i * 12, "#B5A5A0", 1.2);
+      for (let i = 0; i < 3; i++) c.beginPath(), (c.strokeStyle = "#B5A5A0"), (c.lineWidth = 1), c.arc(0, 140, 40 + i * 30, 0, Math.PI / 2), c.stroke();
+    });
+    // el piso: tierra apisonada con lajas
+    plancha(c, [200, FONDO, 1400, FONDO, 1640, RH, -40, RH], "#24170F");
+    for (let i = 0; i < 46; i++) {
+      const u = r(),
+        v = r(),
+        y = FONDO + 14 + v * (RH - FONDO - 20),
+        a = (y - FONDO) / (RH - FONDO),
+        x = 200 - a * 240 + u * (1200 + a * 480),
+        w = 50 + a * 50 + r() * 30,
+        hh = 12 + a * 18;
+      DIB.P(c, [x - w, y, x - w * 0.8, y - hh, x + w * 0.8, y - hh * 1.1, x + w, y + 2], ["#3A2E28", "#342823", "#2E241F"][i % 3]);
+    }
+    plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 16, 190, FONDO + 16], "rgba(0,0,0,0.55)");
+  }
   function dibujarPared(c, d, tt) {
+    if (d.pared === "sotano") return dibujarSotano(c, d, tt);
     const r = DIB.azar(7);
     const tonos = {
       cabana: ["#1E0E0B", "#190C0A", "#22110D", "#0E0707"],
@@ -374,7 +593,7 @@ window.INTERIORES = (function () {
     dibujarPared(c, d, tt);
     // muebles, gente y Eromash ordenados por el piso
     const lista = [];
-    d.muebles.forEach((q) => lista.push({ y: q.y, f: () => ASSETS.dibujar(c, q.id, q.x, q.y, tt, q.o) }));
+    d.muebles.forEach((q) => lista.push({ y: q.piso ? -1 : q.y, f: () => ASSETS.dibujar(c, q.id, q.x, q.y, tt, q.o) }));
     d.gente.forEach((n) =>
       lista.push({ y: n.y, f: () => {
         const s = escala(n.y);
@@ -410,6 +629,11 @@ window.INTERIORES = (function () {
       if (q.id === "escritorioRunico") L0.push({ x: q.x - 300 * s * 0.72, y: q.y - 260 * s, r: 420, col: "255,217,138", f: 0.9 }, { x: q.x, y: q.y - 40, r: 380, col: "74,120,208", f: 0.5 });
       if (q.id === "mostrador") L0.push({ x: q.x + 40 * s, y: q.y - 220 * s, r: 460, col: "255,217,138", f: 0.9 });
       if (q.id === "mesaBanco") L0.push({ x: q.x - 120 * s, y: q.y - 190 * s, r: 340, col: "255,217,138", f: 0.85 });
+      if (q.id === "escaleraMano") L0.push({ x: q.x, y: 60, r: 560, col: "255,217,138", f: 0.95 });
+      if (q.id === "cajas" && q.o.vela) L0.push({ x: q.x - 14 * s, y: q.y - 220 * s, r: 320, col: "255,141,113", f: 0.8 + Math.sin(J.t * 9 + q.x) * 0.06 });
+      if (q.id === "cofreSotano") L0.push({ x: q.x, y: q.y - 80, r: q.o.abierto ? 220 : 170, col: "255,217,138", f: q.o.abierto ? 0.6 : 0.4 });
+      if (q.id === "atril") L0.push({ x: q.x, y: q.y - 160, r: q.o.leido ? 160 : 260, col: "74,120,208", f: q.o.leido ? 0.35 : 0.7 });
+      if (q.id === "tablaSuelta" && q.o.brillo) L0.push({ x: q.x + 44 * s, y: q.y - 120 * s, r: 120, col: "255,217,138", f: 0.4 });
       if (q.id === "yunque") L0.push({ x: q.x + 10 * s, y: q.y - 144 * s, r: 220, col: "255,141,113", f: 0.6 });
     });
     if (d.luzVentana) L0.push({ x: d.luzVentana.x, y: d.luzVentana.y, r: d.luzVentana.r, col: "200,224,240", f: 0.6 });
@@ -434,7 +658,7 @@ window.INTERIORES = (function () {
     n.setTransform(0.5, 0, 0, 0.5, 0, 0);
     n.globalCompositeOperation = "source-over";
     n.clearRect(0, 0, RW, RH);
-    n.fillStyle = "rgba(10,5,6,0.66)";
+    n.fillStyle = d.sotano ? "rgba(6,4,5,0.74)" : "rgba(10,5,6,0.66)";
     n.fillRect(0, 0, RW, RH);
     n.globalCompositeOperation = "destination-out";
     luces.forEach((l) => {
@@ -507,5 +731,5 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, salirA, adentro: () => !!dentro };
+  return { puertas, salirA, adentro: () => !!dentro, cuarto: () => dentro };
 })();
