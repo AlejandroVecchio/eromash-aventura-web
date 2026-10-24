@@ -40,6 +40,12 @@ window.RECORRER25 = (function () {
     bandada = null,
     nubes = [];
   let divTarjeta = null;
+  // en el juego (sistema EIKHOLT): el motor lee los controles y mueve a Eromash, lo que hay a mano se ofrece con E por el
+  // HUD de siempre (aMano) y lo encontrado se guarda en la partida (estado / cargar)
+  let juego = false,
+    dibujarEro = null,
+    alCofre = null,
+    antes = null;
 
   // ---------- los barrios: el más cercano dentro de su radio pone su nombre al entrar ----------
   let ZONAS = [];
@@ -47,7 +53,9 @@ window.RECORRER25 = (function () {
   // ---------- quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio ----------
   const FRASES_GENERICAS = { guardia: "ek.dice_guardia_", trabajador: "ek.dice_vecino_", trabajador2: "ek.dice_vecina_", trabajador3: "ek.dice_viajero_", herido: "ek.dice_vecina_", svanhild: null, eydis: null, orm: null };
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
-  function frase(id, n) {
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
+  function frase(id, n, rol) {
+    if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));
     const pre = FRASES_GENERICAS[id];
     if (pre === null) return null;
     const k = pre ? pre + (n % (pre.includes("guardia") ? 5 : pre.includes("viajero") ? 6 : 8)) : "pj." + id + "_" + (n % 4);
@@ -59,6 +67,9 @@ window.RECORRER25 = (function () {
     plano = op.plano;
     libre = op.libre;
     gente = op.gente;
+    juego = !!op.juego;
+    dibujarEro = op.dibujarEro || null;
+    alCofre = op.alCofre || null;
     const L0 = plano.lugares,
       A0 = plano.anclas,
       M = plano.M;
@@ -140,11 +151,12 @@ window.RECORRER25 = (function () {
       #tarjetaCur h2 { margin: 0 0 8px; font-size: 18px; color: #FFD98A; font-weight: 600; text-wrap: balance; }
       #tarjetaCur p { margin: 0; font-size: 14px; line-height: 1.5; color: #E0B2B2; }
       #tarjetaCur .pie { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 12px; color: #9A8A86; gap: 12px; }
+      #tarjetaCur.enJuego { bottom: auto; top: 16%; }
       #tarjetaCur button { font: inherit; background: #2A1E1A; color: #F2ECEC; border: 1px solid #5E130D; padding: 5px 12px; cursor: pointer; }`;
     document.head.appendChild(st);
     divTarjeta = document.createElement("div");
     divTarjeta.id = "tarjetaCur";
-    divTarjeta.className = "ui";
+    divTarjeta.className = juego ? "ui enJuego" : "ui"; // en el juego, arriba: abajo están la barra de acciones y el retrato
     divTarjeta.innerHTML = '<div class="nueva"></div><h2></h2><p></p><div class="pie"><span></span><button type="button"></button></div>';
     divTarjeta.querySelector("button").addEventListener("click", cerrar);
     document.body.appendChild(divTarjeta);
@@ -172,16 +184,31 @@ window.RECORRER25 = (function () {
 
   // ---------- cada cuadro ----------
   function actualizar(dt, t, h, cam, objetivo) {
-    CONTROLES.actualizar();
+    if (!juego) CONTROLES.actualizar();
     // la tarjeta abierta: E la cierra, alejarse también
     if (tarjeta) {
       if (CONTROLES.recien("interactuar") || CONTROLES.recien("pausa")) cerrar();
       else if (Math.hypot(tarjeta.x - ero.x, tarjeta.y - ero.y) > tarjeta.r + 500) cerrar();
     }
     // caminar relativo a la cámara, chocando (deslizándose por la pared si se puede)
-    const ej = CONTROLES.eje();
-    const corre = CONTROLES.pulsado("correr");
-    if (Math.hypot(ej.x, ej.y) > 0.05) {
+    const ej = juego ? { x: 0, y: 0 } : CONTROLES.eje();
+    const corre = !juego && CONTROLES.pulsado("correr");
+    if (juego) {
+      // el motor ya lo movió: solo las huellas y cerrar la tarjeta si se va caminando
+      if (antes && Math.hypot(ero.x - antes[0], ero.y - antes[1]) > 0.5) {
+        const dx = ero.x - antes[0],
+          dy = ero.y - antes[1],
+          p0 = ero.paso;
+        ero.paso += dt * (ero.anda === 2 ? 12 : 8);
+        if (Math.floor(ero.paso / Math.PI) !== Math.floor(p0 / Math.PI)) {
+          const enTierra = Math.hypot(ero.x, ero.y) > plano.plaza + 200 && plano.aCalle(ero.x, ero.y) > 40;
+          if (enTierra || plano.aCalle(ero.x, ero.y) < 10) ero.huellas.push({ x: ero.x, y: ero.y, a: Math.atan2(dy, dx), lado: ero.huellas.length % 2 ? 1 : -1, t });
+          if (ero.huellas.length > 60) ero.huellas.shift();
+        }
+        if (tarjeta && Math.hypot(dx, dy) > 1) cerrar();
+      }
+      antes = [ero.x, ero.y];
+    } else if (Math.hypot(ej.x, ej.y) > 0.05) {
       const g = cam.g,
         v = (corre ? 430 : 260) * dt;
       const dx = (ej.x * Math.cos(g) + ej.y * Math.sin(g)) * v,
@@ -223,7 +250,7 @@ window.RECORRER25 = (function () {
         cerca = { tipo: "cofre", co };
       }
     }
-    if (cerca && !tarjeta && CONTROLES.recien("interactuar")) abrir(cerca);
+    if (cerca && !tarjeta && !juego && CONTROLES.recien("interactuar")) abrir(cerca);
     // el barrio: el primero (el más chico gana: van ordenados de lo puntual a lo grande) que contenga a Eromash
     let z = null;
     for (const [k, c0, r] of ZONAS) if (c0 && Math.hypot(c0[0] - ero.x, c0[1] - ero.y) < r) { z = k; break; }
@@ -250,6 +277,7 @@ window.RECORRER25 = (function () {
       // el cofre queda abierto (su volumen cambia por el abierto)
       const o = plano.cosas.find((q) => q.id === "cofre" && Math.abs(q.x - cc.co.x) < 1 && Math.abs(q.y - cc.co.y) < 1);
       if (o) o.casa = ENSERES25.cofre(cc.co.n + 1, { abierto: true });
+      if (alCofre) alCofre(cc.co.n);
       tarjeta = { titulo: tr("ci.cofre_" + cc.co.n + "_t"), texto: tr("ci.cofre_" + cc.co.n), nueva: true, cofre: true, x: cc.co.x, y: cc.co.y, r: 220 };
     }
     mostrarTarjeta();
@@ -291,14 +319,15 @@ window.RECORRER25 = (function () {
       const radio = p.id === "hakon" ? 1600 : 520;
       if (d < radio && !p.vx && !p.vy) p.miraA = [dx, dy];
       // a veces dicen algo si se queda al lado (una frase a la vez en toda la ciudad)
-      if (d < 230 && enfriaGlobo <= 0 && !ero.anda && !globos.length) {
-        const s = frase(p.id, Math.floor(t * 0.37 + p.x));
+      if (d < 230 && enfriaGlobo <= 0 && !ero.anda && !globos.length && !api.callados) {
+        const s = frase(p.id, Math.floor(t * 0.37 + p.x), p.rol);
         if (s) {
           globos.push({ p, texto: s, t: 0 });
           enfriaGlobo = 6;
         }
       }
     }
+    if (api.callados) globos.length = 0; // mientras Eromash habla con alguien, nadie más dice nada
     for (let i = globos.length - 1; i >= 0; i--) {
       globos[i].t += dt;
       if (globos[i].t > 4.5 || Math.hypot(globos[i].p.x - ero.x, globos[i].p.y - ero.y) > 600) globos.splice(i, 1);
@@ -445,7 +474,9 @@ window.RECORRER25 = (function () {
   // ---------- dibujar ----------
   const VK = {};
   const imgVk = (v) => VK[v] || (VK[v] = VIKINGO.imagen("R", v, "calm"));
-  function dibujarEromash(c, x, y, t) {
+  function dibujarEromash(c, x, y, t, fantasma) {
+    // (la figura a través de lo que lo tapa es siempre la simple: la del juego pone su propia transparencia)
+    if (dibujarEro && !fantasma) return dibujarEro(c, x, y, t);
     const k = 1 / 1.96,
       bote = ero.anda ? Math.abs(Math.sin(ero.paso)) * 6 : Math.sin(t * 2) * 1.2;
     c.save();
@@ -651,7 +682,7 @@ window.RECORRER25 = (function () {
       // (solo si de verdad algo lo tapa: si está a la vista no se lo dibuja dos veces)
       if (VISTA25.tapado(ex, ey)) {
         VISTA25.aVista(c, cam, cw, ch);
-        alfa(c, 0.32, () => dibujarEromash(c, ex, ey, t));
+        alfa(c, 0.32, () => dibujarEromash(c, ex, ey, t, true));
       }
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -659,7 +690,11 @@ window.RECORRER25 = (function () {
       dibujarAire(c, aPant, enPant, e, t, h, noche);
       return;
     }
-    encimaHud(c, aPant, cw, ch, t, e);
+    // los textos van en puntos de la ventana (con más píxeles por punto, la pantalla los agranda igual)
+    const u = c.canvas.clientWidth ? c.canvas.width / c.canvas.clientWidth : 1;
+    c.setTransform(u, 0, 0, u, 0, 0);
+    encimaHud(c, (x, y, z) => aPant(x, y, z).map((v) => v / u), cw / u, ch / u, t, e);
+    c.setTransform(1, 0, 0, 1, 0, 0);
   }
   function dibujarAire(c, aPant, enPant, e, t, h, noche) {
     // (la transparencia se pone directo, sin guardar y restaurar el estado del lienzo por cada bocanada)
@@ -746,7 +781,7 @@ window.RECORRER25 = (function () {
       globo(c, q[0], q[1], g.texto, Math.min(1, g.t * 4, (4.5 - g.t) * 2));
     }
     // el aviso de lo que hay a mano
-    if (cerca && !tarjeta) {
+    if (cerca && !tarjeta && !juego) {
       const [x, y] = cerca.tipo === "cur" ? [cerca.cu.x, cerca.cu.y] : [cerca.co.x, cerca.co.y];
       const q = aPant(x, y, 170);
       const titulo = cerca.tipo === "cur" ? tr("ci.cur_" + cerca.cu.clave + "_t") : tr("ci.abrir");
@@ -777,7 +812,9 @@ window.RECORRER25 = (function () {
         c.fillText(cartelZona.texto, cw / 2, ch * 0.14);
       });
     }
-    // la cuenta de lo encontrado, chica, abajo a la derecha
+    // la cuenta de lo encontrado, chica, abajo a la derecha (en el juego va en la tarjeta)
+    c.textAlign = "left";
+    if (juego) return;
     c.textAlign = "right";
     c.font = '500 12px "DM Sans", system-ui, sans-serif';
     c.fillStyle = "rgba(242,236,236,0.75)";
@@ -812,5 +849,30 @@ window.RECORRER25 = (function () {
     c.restore();
   }
 
-  return { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA };
+  // lo que hay a mano para el HUD del juego: { texto, d, fn }
+  function aMano() {
+    if (!cerca || tarjeta) return null;
+    const x = cerca.tipo === "cur" ? cerca.cu.x : cerca.co.x,
+      y = cerca.tipo === "cur" ? cerca.cu.y : cerca.co.y;
+    const texto = cerca.tipo === "cur" ? tr("ci.mirar") + " · " + tr("ci.cur_" + cerca.cu.clave + "_t") : tr("ci.abrir");
+    const cc = cerca;
+    return { texto, d: Math.hypot(x - ero.x, y - ero.y), fn: () => abrir(cc) };
+  }
+  // lo encontrado, para guardarlo en la partida, y de vuelta (los cofres abiertos quedan abiertos)
+  const estado = () => ({ vistos: [...vistos], abiertos: [...abiertos] });
+  function cargar(o) {
+    vistos.clear();
+    for (const k of (o && o.vistos) || []) vistos.add(k);
+    const ya = new Set((o && o.abiertos) || []);
+    for (const co of plano.cofres) {
+      if (ya.has(co.n) === abiertos.has(co.n)) continue;
+      if (ya.has(co.n)) abiertos.add(co.n);
+      else abiertos.delete(co.n);
+      const ob = plano.cosas.find((q) => q.id === "cofre" && Math.abs(q.x - co.x) < 1 && Math.abs(q.y - co.y) < 1);
+      if (ob) ob.casa = ENSERES25.cofre(co.n + 1, { abierto: ya.has(co.n) });
+    }
+  }
+
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), callados: false };
+  return api;
 })();

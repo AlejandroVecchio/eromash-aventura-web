@@ -66,6 +66,7 @@
 <script src="js/ciudad/recorrer.js"></script>
 <script src="js/ciudad/sombras.js"></script>
 <script src="js/ciudad/luces.js"></script>
+<script src="js/ciudad/mundo.js"></script>
 <script src="js/mundo/luz.js"></script>
 <script>
 (function () {
@@ -81,8 +82,6 @@
   tGirar.textContent = t("ci.muestra_girar");
   tHora.textContent = t("ci.muestra_hora");
   if (q.get("panel") === "0") panel.style.display = "none";
-  const plano = PLANO25.armar();
-  VISTA25.iniciar(plano);
   const c = vista.getContext("2d");
   let cw = 0, ch = 0;
   function medir() {
@@ -91,20 +90,12 @@
   }
   addEventListener("resize", medir);
   medir();
-  const L = plano.lugares;
-  const LUGARES = {
-    plaza: [L.ting[0] + 900, L.ting[1] + 300],
-    ting: [L.ting[0], L.ting[1] + 200],
-    sur: plano.anclas.puerta_sur,
-    oficios: [L.herreria[0] + 400, L.herreria[1] + 900],
-    lindes: [L.lindes[0] + 300, L.lindes[1] + 500],
-    hongo: [L.hongo[0], L.hongo[1] + 900],
-    guardia: [L.entrenamiento[0] + 300, L.entrenamiento[1] + 700],
-    caravanas: [L.forasteros[0] + 600, L.forasteros[1] + 1200],
-    sanacion: [L.sanacion[0] + 600, L.sanacion[1] + 700],
-    muelle: [plano.anclas.muelle[0] + 300, plano.anclas.muelle[1] + 500],
-    lejos: [0, 600],
-  };
+  // el plano, la gente de cada barrio, los choques, las luces y las sombras (MUNDO25, el mismo que usa el juego)
+  const LUG0 = { plaza: 1, ting: 1, sur: 1, oficios: 1, lindes: 1, hongo: 1, guardia: 1, caravanas: 1, sanacion: 1, muelle: 1, lejos: 1 };
+  const enQ = LUG0[q.get("en")] ? q.get("en") : "plaza";
+  const { plano, LUGARES } = MUNDO25.armar({});
+  RECORRER25.ero.x = LUGARES[enQ][0] - 200;
+  RECORRER25.ero.y = LUGARES[enQ][1] - 100;
   const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
   const objetivo = { x: cam.x, y: cam.y };
   window.MUESTRA = { plano, cam, objetivo }; // para revisar la muestra desde afuera (capturas casa por casa)
@@ -128,119 +119,6 @@
   if (q.get("k")) altura.value = q.get("k");
   if (q.get("z")) cerca.value = q.get("z");
   if (q.get("h")) hora.value = q.get("h");
-  // la gente de la plaza: vecinos parados y caminando, y Eromash
-  const gente = [];
-  const ids = Object.keys(GENTE.FICHAS);
-  const rr = (function (s) { let a = s; return () => ((a = (a * 16807) % 2147483647) / 2147483647); })(77);
-  for (let i = 0; i < 140; i++) {
-    const a = rr() * Math.PI * 2, d = 900 + rr() * 2700;
-    const x = Math.cos(a) * d, y = Math.sin(a) * d;
-    if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 40)) continue;
-    gente.push({ id: ids[i % ids.length], x, y, vx: rr() < 0.5 ? (rr() - 0.5) * 80 : 0, vy: 0, s: 1, horas: i % 7 ? [7, 20] : [6, 23] });
-  }
-  const sur = plano.anclas.puerta_sur;
-  for (let i = 0; i < 18; i++) gente.push({ id: ids[(i * 7) % ids.length], x: sur[0] + (rr() - 0.5) * 300, y: sur[1] - rr() * 3000, vx: 0, vy: (rr() < 0.5 ? -1 : 1) * 60, s: 1, horas: i % 6 ? [6, 21] : [0, 24] });
-  // la gente de cada barrio: los de la Guardia en el campo, los forasteros alrededor del fuego, los que esperan en
-  // Sanación, los que toman afuera del Hongo, los de los oficios (parados, que hablan; alguno va y viene)
-  const RONDAS = [
-    ["entrenamiento", 10, 700, ["guardia"]],
-    ["forasteros", 9, 520, null],
-    ["sanacion", 6, 700, ["herido", "svanhild", "trabajador"]],
-    ["hongo", 8, 900, null],
-    ["herreria", 6, 650, null],
-    ["carpinteria", 5, 700, null],
-    ["corral", 4, 900, ["trabajador", "trabajador3"]],
-    ["lindes", 4, 600, null],
-    ["hospederia", 4, 600, null],
-    ["tablon", 4, 300, null],
-  ];
-  // cada barrio tiene su hora: el campo de la Guardia de mañana, el Hongo y el fuego de los forasteros de noche,
-  // los oficios de día; nadie lo marca, se ve si se pasa a la hora justa
-  const HORARIO = {
-    entrenamiento: [6.5, 17], forasteros: [17, 6], sanacion: [7, 22], hongo: [16, 2], herreria: [6, 19],
-    carpinteria: [7, 18], corral: [5, 20], lindes: [8, 20], hospederia: [15, 1], tablon: [7, 19],
-  };
-  const aHora = (h, [a, b]) => (a < b ? h >= a && h < b : h >= a || h < b);
-  // lo que se ve y nadie explica: de madrugada alguien se queda solo frente a la piedra del Ting; al alba, los de la
-  // Guardia hacen la ronda por la vuelta de la plaza
-  const TING = plano.ting;
-  gente.push({ id: "eydis", x: TING[0] + 60, y: TING[1] + 230, vx: 0, vy: 0, s: 1, horas: [23, 4] });
-  for (let i = 0; i < 4; i++) {
-    const a = (i / 4) * Math.PI * 2;
-    gente.push({ id: "guardia", x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
-  }
-  for (const [k, n, rad, quien] of RONDAS) {
-    const c0 = L[k];
-    if (!c0) continue;
-    for (let i = 0; i < n; i++) {
-      const a = rr() * Math.PI * 2, d = rad * (0.4 + rr() * 0.6);
-      const x = c0[0] + Math.cos(a) * d, y = c0[1] + Math.sin(a) * d;
-      if (plano.choques.some((h) => h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 30)) continue;
-      const lista = quien || ids;
-      gente.push({ id: lista[Math.floor(rr() * lista.length)], x, y, vx: rr() < 0.3 ? (rr() - 0.5) * 70 : 0, vy: 0, s: 1, habla: rr() < 0.5, horas: HORARIO[k] });
-    }
-  }
-  // los vecinos con nombre, cada uno en su lugar y a su hora (lo que dicen sale de sus frases de la historia):
-  // Gudrun tararea junto al pozo, Håkon mira desde el campo, Ivar con su copa en la galería del Hongo, Sølve canta de
-  // noche, Ragna cuida sus hongos, los chicos corretean por la plaza
-  const VECINOS = [
-    ["gudrun", L.pozo, 140, 60, [7, 21], { canta: true }],
-    ["hakon", L.entrenamiento, 300, 500, [6, 18]],
-    ["ivar", plano.anclas.hongo_puerta, -200, 160, [17, 2]],
-    ["solve", plano.anclas.hongo_puerta, 160, 220, [19, 2], { habla: true }],
-    ["ragna", L.camas_hongos, 0, 140, [7, 19]],
-    ["folke", L.paseo_sogas, 0, 200, [7, 19]],
-    ["grim", L.corral, -300, 380, [0, 24]],
-    ["sigrun", plano.anclas.sanacion, 120, 120, [8, 21]],
-    ["bergljot", plano.ting, 260, 260, [9, 16]],
-    ["torvald", plano.anclas.svanhild_casa, 200, 260, [8, 18]],
-    ["kolbrun", [L.ting[0] + 1700, L.ting[1] - 400], 0, 0, [8, 18]],
-    ["maren", [0, 0], 1150, 400, [10, 17]],
-    ["sten", plano.anclas.carpinteria, 140, 160, [7, 18]],
-    ["ketil", plano.anclas.puerta_sur, 260, -260, [0, 24]],
-    ["ingrid", L.forasteros, 300, 300, [7, 22]],
-    ["tyra", [0, 0], 2300, 900, [8, 19], { vx: 110 }],
-    ["eirik", [0, 0], -2000, 1500, [8, 19], { vx: -90 }],
-    ["arvid", L.forasteros, -200, 500, [8, 20]],
-  ];
-  for (const [id, c0, dx, dy, horas, op] of VECINOS) if (c0) gente.push(Object.assign({ id, x: c0[0] + dx, y: c0[1] + dy, vx: 0, vy: 0, s: 1, horas }, op || {}));
-  // los choques del plano en una grilla, para preguntar rápido si un punto está libre
-  const CELDA = 400, grilla = new Map();
-  for (const h of plano.choques) {
-    let x0, y0, x1, y1;
-    if (h.circulo) { const [x, y, r] = h.circulo; x0 = x - r; x1 = x + r; y0 = y - r; y1 = y + r; }
-    else if (h.poli) { const xs = h.poli.map((q) => q[0]), ys = h.poli.map((q) => q[1]); x0 = Math.min(...xs); x1 = Math.max(...xs); y0 = Math.min(...ys); y1 = Math.max(...ys); }
-    else continue;
-    for (let gy = Math.floor(y0 / CELDA); gy <= Math.floor(y1 / CELDA); gy++)
-      for (let gx = Math.floor(x0 / CELDA); gx <= Math.floor(x1 / CELDA); gx++) {
-        const k = gx + "," + gy;
-        if (!grilla.has(k)) grilla.set(k, []);
-        grilla.get(k).push(h);
-      }
-  }
-  const dentroPoli = (pts, x, y) => {
-    let d = false;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      const [xi, yi] = pts[i], [xj, yj] = pts[j];
-      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d;
-    }
-    return d;
-  };
-  function libre(x, y) {
-    const l = grilla.get(Math.floor(x / CELDA) + "," + Math.floor(y / CELDA));
-    if (!l) return true;
-    for (const h of l) {
-      if (h.circulo && Math.hypot(h.circulo[0] - x, h.circulo[1] - y) < h.circulo[2] + 20) return false;
-      if (h.poli && dentroPoli(h.poli, x, y)) return false;
-    }
-    return true;
-  }
-  for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
-  // lo que alumbra de noche (LUCES25) y las sombras de lo que está parado (SOMBRAS25)
-  LUCES25.armar(plano);
-  SOMBRAS25.iniciar(plano);
-  // Eromash camina por la ciudad (RECORRER25): curiosidades, cofres, barrios, la gente y los animales que reaccionan
-  RECORRER25.iniciar({ plano, libre, gente, inicio: [LUGARES[q.get("en") || "plaza"][0] - 200, LUGARES[q.get("en") || "plaza"][1] - 100] });
   vista.addEventListener("wheel", (e) => { cerca.value = Math.max(4, Math.min(120, +cerca.value - Math.sign(e.deltaY) * 4)); e.preventDefault(); }, { passive: false });
   let arr = null;
   vista.addEventListener("pointerdown", (e) => { arr = [e.clientX, e.clientY, cam.x, cam.y]; vista.setPointerCapture(e.pointerId); });
@@ -252,7 +130,6 @@
     arr = [e.clientX, e.clientY, objetivo.x, objetivo.y];
   });
   vista.addEventListener("pointerup", () => (arr = null));
-  const velo = document.createElement("canvas");
   let t0 = performance.now(), tt = 0;
   function cuadro(ahora) {
     const dt = Math.min(0.05, (ahora - t0) / 1000);
@@ -271,66 +148,10 @@
     cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
     cam.x += (objetivo.x - cam.x) * Math.min(1, dt * 6);
     cam.y += (objetivo.y - cam.y) * Math.min(1, dt * 6);
-    // los que caminan no atraviesan nada: si el paso siguiente choca, se dan vuelta
-    for (const p of gente) {
-      if (!p.vx && !p.vy) continue;
-      if (p.ronda) {
-        // la ronda sigue la vuelta de la plaza
-        const a = Math.atan2(p.y, p.x) + (50 / 3000) * dt;
-        p.x = Math.cos(a) * 3000; p.y = Math.sin(a) * 3000; p.vx = -Math.sin(a) * 50;
-        continue;
-      }
-      const nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
-      if (!libre(nx, ny) || (!p.huye && Math.random() < dt * 0.15)) { p.vx = -p.vx; p.vy = -p.vy; continue; }
-      p.x = nx; p.y = ny;
-    }
     const h = +hora.value;
     vHora.textContent = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
-    // de lejos la gente no se dibuja (VISTA25.LEJOS.gente): es lo primero que se apaga al alejar
-    // cada persona mira hacia un lado del mundo (hacia donde camina, o quieta hacia donde quedó); la vista de las ocho
-    // sale de ese rumbo girado con la cámara, así al girar se la ve de costado o de espaldas
-    const coG = Math.cos(cam.g), siG = Math.sin(cam.g);
-    const mirada = (p) => {
-      if (p.vx || p.vy) p.rumbo = Math.atan2(p.vy, p.vx);
-      else if (p.miraA) p.rumbo = Math.atan2(p.miraA[1], p.miraA[0]); // lo miran pasar
-      if (p.rumbo === undefined) p.rumbo = ((p.x * 13 + p.y * 7) % 628) / 100;
-      const dx = Math.cos(p.rumbo), dy = Math.sin(p.rumbo);
-      return GENTE.vistaDe(dx * coG - dy * siG, (dx * siG + dy * coG) * cam.k);
-    };
-    for (const p of gente) p.visible = !p.horas || aHora(h, p.horas);
-    // solo la gente que cae en la pantalla arma su dibujo de este cuadro
-    const Vg = VISTA25.proyector(cam), mgx = cw / cam.esc / 2 + 300, mgy = ch / cam.esc / 2 + 400;
-    const enPantalla = (p) => { const [vx, vy] = Vg(p.x, p.y); return Math.abs(vx - cam.x) < mgx && Math.abs(vy - cam.y) < mgy; };
-    const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : gente).filter((p) => p.visible && enPantalla(p)).map((p) => ({ x: p.x, y: p.y, f: (c, sx, sy) => GENTE.dibujar(c, p.id, sx, sy, tt, { ...mirada(p), camina: !!(p.vx || p.vy), hablando: (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
-    extra.push(...RECORRER25.extra(cam, tt));
-    ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
-    // la luz según la hora (LUCES25): sombras que caen según el sol, el color de cada hora, la bruma de lo lejano y de
-    // noche la capa de oscuridad del bosque (LUZ) con agujeros donde alumbra algo
-    const noche = h >= 17 && h < 21 ? (h - 17) / 4 : h >= 21 || h < 5 ? 1 : h < 7 ? (7 - h) / 2 : 0;
-    VISTA25.dibujar(c, cam, cw, ch, tt, extra, (cx) => RECORRER25.piso(cx, cam, tt, h), SOMBRAS25.preparar(cam, h, noche));
-    RECORRER25.encima(c, cam, cw, ch, tt, h, "mundo");
-    c.setTransform(1, 0, 0, 1, 0, 0);
-    LUCES25.antes(c, cam, cw, ch, h, tt, noche);
-    if (noche > 0.01) {
-      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero);
-      LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n: noche, osc: Math.min(0.82, 0.06 + noche * 0.74) }, tt);
-      LUCES25.despues(c, cam, cw, ch, h, tt, noche, enVista);
-    }
-    // el velo cálido y la viñeta, horneados juntos en un lienzo del tamaño de la pantalla: una sola copia por cuadro
-    if (velo.width !== cw || velo.height !== ch) {
-      velo.width = cw;
-      velo.height = ch;
-      const v = velo.getContext("2d");
-      v.fillStyle = "rgba(255,141,113,0.05)";
-      v.fillRect(0, 0, cw, ch);
-      const g = v.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.35, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
-      g.addColorStop(0, "rgba(10,14,12,0)");
-      g.addColorStop(1, "rgba(10,14,12,0.55)");
-      v.fillStyle = g;
-      v.fillRect(0, 0, cw, ch);
-    }
-    c.drawImage(velo, 0, 0);
-    RECORRER25.encima(c, cam, cw, ch, tt, h, "hud");
+    MUNDO25.moverGente(dt, h);
+    MUNDO25.dibujar(c, cam, cw, ch, tt, h);
     requestAnimationFrame(cuadro);
   }
   requestAnimationFrame(cuadro);
