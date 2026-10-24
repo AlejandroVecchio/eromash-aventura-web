@@ -32,10 +32,12 @@
   if (!est.quitarDeco) est.quitarDeco = [];
   const completar = (e) => ["rios", "lagos", "quitarRios", "quitarLagos", "estiloRios", "estiloLagos"].forEach((k) => !e[k] && (e[k] = []));
   completar(est);
-  const historial = [];
+  const historial = [],
+    rehechos = []; // lo deshecho, para rehacerlo (Ctrl+Shift+Z o Ctrl+Y)
   const recordar = () => {
     historial.push(JSON.stringify(est));
-    if (historial.length > 80) historial.shift();
+    if (historial.length > 200) historial.shift();
+    rehechos.length = 0;
   };
   const guardar = () => {
     try {
@@ -53,6 +55,8 @@
     aplicarCaminos();
     aplicarAgua();
     $("cuenta").textContent = t("ed.cuenta", [est.poner.length, est.quitar.length]) + " · " + t("ed.cuenta_mas", [est.mover.length, est.caminos.length, est.notas.length]) + " · " + t("ed.cuenta_agua", [est.rios.length + est.lagos.length]);
+    const h = new Date();
+    $("guardadoV").textContent = t("ed.guardado_a", [String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0"), historial.length]);
     armarIr();
   };
   const r1 = (v) => Math.round(v);
@@ -190,7 +194,15 @@
     if (k) o.s = (o.s || 1) * k;
     return o;
   }
+  // capas: el bosque se puede ocultar y lo del mundo bloquear (solo se toca lo agregado); las notas, ocultar
+  const esNatural = (id) => ((ASSETS.LISTA[id] || {}).grupo === "naturaleza");
+  const sinBosque = () => !$("verBosque").checked;
   function visibles(x0, y0, x1, y1) {
+    const l = visibles0(x0, y0, x1, y1);
+    if (!sinBosque()) return l;
+    return l.filter((d) => !(d.agregado == null && d.movido == null && esNatural(d.id) && !(d.cosa && nombradas.has(d.cosa))));
+  }
+  function visibles0(x0, y0, x1, y1) {
     const l = [];
     W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 600, (o) => {
       if (movidos.has(o) || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1 || sacado(o) || ahogado(o)) return;
@@ -258,6 +270,7 @@
     W.cercanas(x0 - 400, y0 - 200, x1 + 400, y1 + 1200, (o) => {
       if (movidos.has(o) || sacado(o) || ahogado(o) || o.y < y0 - 60 || o.y - o.alto * 1.2 > y1 || o.x < x0 - 500 || o.x > x1 + 500) return;
       if (nv.res < 0.08 && !o.choque && o.alto < 90) return; // muy lejos lo chico ni se ve
+      if (sinBosque() && esNatural(o.id) && !nombradas.has(o)) return;
       l.push(o);
     });
     l.filter((o) => o.o.piso).forEach((o) => ASSETS.dibujar(g, o.id, o.x, o.y, 0, o.o));
@@ -275,7 +288,7 @@
       ty1 = Math.min(Math.ceil(W.ALTO / nv.T) - 1, Math.floor(y1 / nv.T));
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
-        const k = tx + "," + ty + (soloPiso ? "p" + Math.round(cam.g * 100) : "");
+        const k = tx + "," + ty + (soloPiso ? "p" + Math.round(cam.g * 100) : "") + (sinBosque() ? "b" : "");
         let b = nv.m.get(k);
         const vieja = b && b.firma !== firma(tx * nv.T, ty * nv.T, (tx + 1) * nv.T, (ty + 1) * nv.T);
         if ((!b || vieja) && !horneada) {
@@ -406,6 +419,18 @@
       });
     }
     dibujarAgua();
+    // la cuadrícula en metros (1 m ≈ 30 unidades): cada 10 m de cerca, cada 100 m de lejos
+    if ($("grilla").checked) {
+      const paso = cam.z > 0.15 ? 300 : 3000;
+      c.save();
+      c.strokeStyle = "rgba(242,236,236,0.14)";
+      c.lineWidth = 1 / cam.z;
+      c.beginPath();
+      for (let gx = Math.floor(x0 / paso) * paso; gx <= x1; gx += paso) (c.moveTo(gx, y0), c.lineTo(gx, y1));
+      for (let gy = Math.floor(y0 / paso) * paso; gy <= y1; gy += paso) (c.moveTo(x0, gy), c.lineTo(x1, gy));
+      c.stroke();
+      c.restore();
+    }
     if (camino) {
       c.fillStyle = "#FFD98A";
       camino.p.forEach(([x, y]) => {
@@ -508,8 +533,8 @@
       c.lineTo(q.x - r, q.y + r);
       c.stroke();
     });
-    // las notas: un alfiler dorado con su número y, de cerca, el texto
-    est.notas.forEach((n, i) => {
+    // las notas: un alfiler dorado con su número y, de cerca, el texto (verde si ya está hecha)
+    if ($("verNotas").checked) est.notas.forEach((n, i) => {
       const k = 1 / cam.z;
       c.save();
       c.translate(...V(n.x, n.y));
@@ -518,7 +543,7 @@
       c.beginPath();
       c.ellipse(0, 0, 7, 3, 0, 0, Math.PI * 2);
       c.fill();
-      c.fillStyle = notaSel === i ? "#FFFFFF" : "#FFD98A";
+      c.fillStyle = notaSel === i ? "#FFFFFF" : n.hecha ? "#7BC86C" : "#FFD98A";
       c.beginPath();
       c.moveTo(0, 0);
       c.lineTo(-9, -18);
@@ -543,6 +568,44 @@
       }
       c.restore();
     });
+    // el rectángulo para elegir, y la regla
+    vistaT();
+    if (arrastre && arrastre.caja) {
+      const [ax, ay, bx, by] = cajaVista(arrastre);
+      c.save();
+      c.fillStyle = "rgba(255,217,138,0.08)";
+      c.fillRect(ax, ay, bx - ax, by - ay);
+      c.strokeStyle = "#FFD98A";
+      c.lineWidth = 1.5 / cam.z;
+      c.setLineDash([8 / cam.z, 5 / cam.z]);
+      c.strokeRect(ax, ay, bx - ax, by - ay);
+      c.restore();
+    }
+    if (medida && (herr === "medir" || arrastre === medida)) {
+      const [ax, ay] = V(medida.x, medida.y),
+        [bx, by] = V(medida.x2, medida.y2),
+        m = Math.hypot(medida.x2 - medida.x, medida.y2 - medida.y) / 30;
+      c.save();
+      c.strokeStyle = "#73D5DB";
+      c.lineWidth = 3 / cam.z;
+      c.beginPath();
+      c.moveTo(ax, ay);
+      c.lineTo(bx, by);
+      c.stroke();
+      [[ax, ay], [bx, by]].forEach(([px, py]) => (c.beginPath(), c.arc(px, py, 5 / cam.z, 0, Math.PI * 2), c.fillStyle = "#73D5DB", c.fill()));
+      c.translate((ax + bx) / 2, (ay + by) / 2);
+      c.scale(1 / cam.z, 1 / cam.z);
+      c.font = "bold 14px system-ui, sans-serif";
+      const txt = t("ed.medida", [m < 10 ? m.toFixed(1) : Math.round(m)]),
+        w = c.measureText(txt).width + 16;
+      c.fillStyle = "rgba(17,17,17,0.9)";
+      c.fillRect(-w / 2, -30, w, 24);
+      c.fillStyle = "#73D5DB";
+      c.textAlign = "center";
+      c.fillText(txt, 0, -13);
+      c.restore();
+    }
+    if (window.EDITOR_IA) EDITOR_IA.dibujar(c, cam, V, enVista, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -555,7 +618,8 @@
       ASSETS.dibujar(c, elegido, d.x, d.y, tt, d.o);
       c.globalAlpha = 1;
     }
-    $("donde").textContent = cursor ? t("ed.donde", [Math.round(cursor.x / W.U), Math.round(cursor.y / W.U), cam.z.toFixed(2)]) : "";
+    $("donde").textContent = cursor ? t("ed.donde", [Math.round(cursor.x / W.U), Math.round(cursor.y / W.U), cam.z.toFixed(2)]) + " · " + t("ed.donde_m", [Math.round(cursor.x / 30), Math.round(cursor.y / 30)]) : "";
+    pintarMini();
     requestAnimationFrame(dibujar);
   }
 
@@ -1495,6 +1559,7 @@
   const caja = $("notaCaja"),
     area = $("notaTexto");
   function notaEn(x, y) {
+    if (!$("verNotas").checked) return -1;
     let mejor = -1,
       dm = 26 / cam.z;
     const [vx, vy] = V(x, y);
@@ -1511,6 +1576,7 @@
   function abrirNota(i) {
     notaSel = i;
     area.value = est.notas[i].texto || "";
+    $("notaHecha").checked = !!est.notas[i].hecha;
     $("notaNum").textContent = t("ed.nota_n", [i + 1]);
     caja.classList.add("ver");
     setTimeout(() => area.focus(), 0);
@@ -1518,7 +1584,10 @@
   function cerrarNota() {
     if (notaSel >= 0 && est.notas[notaSel]) {
       const v = area.value.trim();
-      if (v !== (est.notas[notaSel].texto || "")) recordar();
+      const hecha = $("notaHecha").checked;
+      if (v !== (est.notas[notaSel].texto || "") || hecha !== !!est.notas[notaSel].hecha) recordar();
+      if (hecha) est.notas[notaSel].hecha = true;
+      else delete est.notas[notaSel].hecha;
       if (v) est.notas[notaSel].texto = v;
       else est.notas.splice(notaSel, 1);
       guardar();
@@ -1549,40 +1618,86 @@
   let elegido = null;
   const lista = $("lista");
   const fichas = [];
+  // favoritos (la estrella de cada ficha) y los últimos usados: arriba de todo cuando no se busca nada
+  const leerL = (k) => {
+    try {
+      return JSON.parse(localStorage.getItem(CLAVE + k) || "[]") || [];
+    } catch (e) {
+      return [];
+    }
+  };
+  let favs = leerL("-favs"),
+    recs = leerL("-recientes");
+  const guardarL = (k, v) => {
+    try {
+      localStorage.setItem(CLAVE + k, JSON.stringify(v));
+    } catch (e) {}
+  };
+  function recientes(id) {
+    recs = [id].concat(recs.filter((x) => x !== id)).slice(0, 10);
+    guardarL("-recientes", recs);
+  }
+  function ficha(a) {
+    const b = document.createElement("button");
+    b.className = "obj" + (a.id === elegido ? " elegido" : "");
+    b.type = "button";
+    b.dataset.id = a.id;
+    b.draggable = true;
+    b.title = a.nom;
+    const m = document.createElement("canvas");
+    m.width = 300;
+    m.height = 140;
+    const s2 = document.createElement("span");
+    s2.textContent = a.nom;
+    const st = document.createElement("i");
+    st.className = "estrella" + (favs.includes(a.id) ? " si" : "");
+    st.textContent = favs.includes(a.id) ? "★" : "☆";
+    st.title = t("ed.favorito");
+    st.addEventListener("click", (e) => {
+      e.stopPropagation();
+      favs = favs.includes(a.id) ? favs.filter((x) => x !== a.id) : favs.concat([a.id]);
+      guardarL("-favs", favs);
+      armarLista();
+    });
+    b.append(m, s2, st);
+    b.addEventListener("click", () => {
+      elegido = a.id;
+      variando = null;
+      ponerHerr("poner");
+      lista.querySelectorAll(".obj").forEach((x) => x.classList.toggle("elegido", x.dataset.id === a.id));
+      if (dosPuntos(a.id)) avisar(t("ed.dos_puntos"));
+    });
+    b.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/eromash-asset", a.id));
+    lista.appendChild(b);
+    fichas.push({ m, a });
+  }
   function armarLista() {
     lista.innerHTML = "";
     fichas.length = 0;
     const q = $("buscar").value.trim().toLowerCase();
-    const porGrupo = {};
+    const porGrupo = {},
+      todos = {};
     ASSETS.catalogo().forEach((a) => {
       const nom = t("as." + a.id);
+      todos[a.id] = Object.assign({ nom }, a);
       if (q && !nom.toLowerCase().includes(q) && !a.id.toLowerCase().includes(q)) return;
-      (porGrupo[a.grupo] = porGrupo[a.grupo] || []).push(Object.assign({ nom }, a));
+      (porGrupo[a.grupo] = porGrupo[a.grupo] || []).push(todos[a.id]);
     });
-    Object.keys(porGrupo).forEach((g) => {
+    const titulo = (txt) => {
       const h = document.createElement("div");
       h.className = "grupo";
-      h.textContent = t("as.grupo." + g);
+      h.textContent = txt;
       lista.appendChild(h);
-      porGrupo[g].forEach((a) => {
-        const b = document.createElement("button");
-        b.className = "obj" + (a.id === elegido ? " elegido" : "");
-        b.type = "button";
-        const m = document.createElement("canvas");
-        m.width = 300;
-        m.height = 140;
-        const s = document.createElement("span");
-        s.textContent = a.nom;
-        b.append(m, s);
-        b.addEventListener("click", () => {
-          elegido = a.id;
-          ponerHerr("poner");
-          lista.querySelectorAll(".obj").forEach((x) => x.classList.toggle("elegido", x === b));
-          if (dosPuntos(a.id)) avisar(t("ed.dos_puntos"));
-        });
-        lista.appendChild(b);
-        fichas.push({ m, a });
-      });
+    };
+    if (!q) {
+      const f = favs.filter((id) => todos[id]),
+        r = recs.filter((id) => todos[id]);
+      if (f.length) (titulo(t("ed.favoritos")), f.forEach((id) => ficha(todos[id])));
+      if (r.length) (titulo(t("ed.recientes")), r.forEach((id) => ficha(todos[id])));
+    }
+    Object.keys(porGrupo).forEach((g) => {
+      titulo(t("as.grupo." + g));
+      porGrupo[g].forEach(ficha);
     });
     pintarFichas();
   }
@@ -1627,7 +1742,9 @@
     $("hMover").classList.toggle("activo", h === "mover");
     $("hBorrar").classList.toggle("activo", h === "borrar");
     $("hNota").classList.toggle("activo", h === "nota");
-    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" ? "cell" : "not-allowed";
+    $("hMedir").classList.toggle("activo", h === "medir");
+    $("hIA").classList.toggle("activo", !!window.EDITOR_IA && EDITOR_IA.abierta());
+    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" ? "cell" : "not-allowed";
   }
   $("hPoner").onclick = () => ponerHerr("poner");
   $("hMover").onclick = () => ponerHerr("mover");
@@ -1635,6 +1752,8 @@
   $("hNota").onclick = () => ponerHerr("nota");
   $("hCamino").onclick = () => ponerHerr("camino");
   $("hAgua").onclick = () => ponerHerr("agua");
+  $("hMedir").onclick = () => ponerHerr("medir");
+  $("hIA").onclick = () => window.EDITOR_IA && EDITOR_IA.alternar();
   // el mapa original: prendido o no y su transparencia quedan recordados en este navegador
   try {
     const o = JSON.parse(localStorage.getItem(CLAVE + "-original") || "null");
@@ -1654,10 +1773,20 @@
   pintarOriginal();
   $("escala").addEventListener("input", () => ($("escalaV").textContent = (+$("escala").value).toFixed(2)));
   const dosPuntos = (id) => (ASSETS.EJEMPLO[id] || {}).x2 !== undefined;
+  let variando = null; // la variación que toca al próximo que se pone (la vista previa ya la muestra)
   function nuevasOpciones() {
     const o = { sem: +$("variante").value || 0, v: +$("variante").value || 0 };
     if (+$("escala").value !== 1) o.esc = +$("escala").value;
     if ($("espejo").checked) o.esp = true;
+    // variar: cada uno sale un poco distinto (variante, tamaño y para qué lado mira), como el follaje de los editores
+    if ($("variar").checked && !variando) {
+      variando = { sem: Math.floor(Math.random() * 12), esp: Math.random() < 0.5, esc: 0.85 + Math.random() * 0.3 };
+    }
+    if ($("variar").checked && variando) {
+      o.sem = o.v = variando.sem;
+      if (variando.esp) o.esp = !o.esp;
+      o.esc = Math.round((o.esc || 1) * variando.esc * 100) / 100;
+    }
     const ej = ASSETS.EJEMPLO[elegido] || {};
     Object.keys(ej).forEach((k) => {
       if (k !== "x2" && k !== "y2" && o[k] === undefined) o[k] = ej[k];
@@ -1675,6 +1804,7 @@
     // con la cámara girada todo se compara en la vista, donde los objetos están parados
     [x, y] = V(x, y);
     l.forEach((d0) => {
+      if ($("bloquear").checked && d0.agregado == null) return;
       const d = enVista(d0);
       // lo que va de punta a punta se toca en todo su largo
       if (d.o && d.o.x2 !== undefined) {
@@ -1701,6 +1831,7 @@
   let cursor = null,
     arrastre = null,
     sel = null,
+    medida = null, // la última regla tirada con Medir
     espacio = false;
   cv.addEventListener("contextmenu", (e) => e.preventDefault());
   cv.addEventListener("pointermove", (e) => {
@@ -1710,6 +1841,9 @@
       const [dx, dy] = giroInverso(((e.offsetX - arrastre.sx) * dpr) / cam.z, ((e.offsetY - arrastre.sy) * dpr) / cam.z);
       cam.x = arrastre.cx - dx;
       cam.y = arrastre.cy - dy;
+    } else if (arrastre && (arrastre.caja || arrastre.medir)) {
+      arrastre.x2 = x;
+      arrastre.y2 = y;
     } else if (sel && sel.rioV != null) {
       if (Math.hypot(x - sel.x0, y - sel.y0) > 5 / cam.z) sel.movio = true;
       if (sel.movio) sel.p[sel.rioV] = [r1(x), r1(y)];
@@ -1767,6 +1901,10 @@
     if (caja.classList.contains("ver")) cerrarNota();
     if (cortando) return cortarEn(x, y);
     if (probando) return probarEn(x, y);
+    if (herr === "medir") {
+      medida = arrastre = { medir: true, x, y, x2: x, y2: y };
+      return;
+    }
     // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
     const ni = herr !== "borrar" ? notaEn(x, y) : -1;
     if (ni >= 0) {
@@ -1878,12 +2016,18 @@
       if (!arrastre.dos) {
         recordar();
         est.poner.push(nuevo({ id: elegido, x: r1(x), y: r1(y), o: nuevasOpciones() }));
+        variando = null;
         guardar();
+        recientes(elegido);
         arrastre = null;
       }
     } else if (herr === "mover") {
       const d = tocado(x, y);
-      if (!d) return;
+      // en un lugar vacío (o con Shift) se arrastra un rectángulo para elegir todo lo que queda adentro
+      if (!d || e.shiftKey) {
+        arrastre = { caja: true, x, y, x2: x, y2: y, suma: e.shiftKey || e.ctrlKey || e.metaKey };
+        return;
+      }
       const g = d.agregado != null ? { a: est.poner[d.agregado] } : { cosa: d.cosa };
       if (e.ctrlKey || e.metaKey) {
         // Ctrl+clic: lo suma al grupo o lo saca
@@ -1946,6 +2090,7 @@
       est.poner.push(nuevo({ id: elegido, x: r1(arrastre.x), y: r1(arrastre.y), o }));
       guardar();
     }
+    if (arrastre && arrastre.caja) elegirEnCaja(arrastre);
     if (arrastre && arrastre.lago) {
       const [rx, ry] = medidaLago(arrastre, { x, y });
       recordar();
@@ -2004,6 +2149,323 @@
     sel = null;
     ponerHerr(herr);
   });
+
+  // ---------- elegir con un rectángulo (y todos los iguales) ----------
+  // El rectángulo se arrastra en la pantalla (con la cámara girada también): entra lo que tiene el pie adentro.
+  let ultimaCaja = null; // [x0, y0, x1, y1] del mundo: la zona de lo último elegido con el rectángulo (la usa la IA)
+  const gDe = (d) => (d.agregado != null ? { a: est.poner[d.agregado] } : { cosa: d.cosa });
+  function cajaVista(a) {
+    const p = V(a.x, a.y),
+      q = V(a.x2, a.y2);
+    return [Math.min(p[0], q[0]), Math.min(p[1], q[1]), Math.max(p[0], q[0]), Math.max(p[1], q[1])];
+  }
+  function cajaMundo(a) {
+    const [vx0, vy0, vx1, vy1] = cajaVista(a),
+      pts = [desdeVista(vx0, vy0), desdeVista(vx1, vy0), desdeVista(vx0, vy1), desdeVista(vx1, vy1)];
+    return [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))];
+  }
+  function elegirEnCaja(a) {
+    const [vx0, vy0, vx1, vy1] = cajaVista(a);
+    if (vx1 - vx0 < 8 / cam.z && vy1 - vy0 < 8 / cam.z) {
+      // un clic en lo vacío suelta lo elegido
+      if (!a.suma) soltarElegida();
+      return;
+    }
+    const [x0, y0, x1, y1] = cajaMundo(a);
+    ultimaCaja = [r1(x0), r1(y0), r1(x1), r1(y1)];
+    const dentro = visibles(x0 - 50, y0 - 50, x1 + 50, y1 + 50)
+      .filter((d) => !($("bloquear").checked && d.agregado == null))
+      .filter((d) => {
+        const [x, y] = V(d.x, d.y);
+        return x >= vx0 && x <= vx1 && y >= vy0 && y <= vy1;
+      })
+      .slice(0, 600);
+    if (!a.suma) grupo = [];
+    else if (!grupo.length && elegida) grupo.push(elegida);
+    dentro.forEach((d) => {
+      const g = gDe(d);
+      if (!grupo.some((h) => mismo(h, g))) grupo.push(g);
+    });
+    if (!grupo.length) {
+      soltarElegida();
+      return avisar(t("ed.caja_vacia"));
+    }
+    elegida = grupo[grupo.length - 1];
+    if (grupo.length === 1) grupo = [];
+    pintarElegida();
+    avisar(t("ed.caja_elegidos", [Math.max(1, grupo.length)]));
+  }
+  // todos los que son el mismo objeto que lo elegido, en lo que se ve
+  function elegirIguales() {
+    if (!elegida) return;
+    const id = elegida.a ? elegida.a.id : elegida.cosa.id,
+      vw = cw / cam.z,
+      vh = ch / cam.z,
+      rr = Math.hypot(vw, vh) / 2;
+    const l = visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr).filter((d) => d.id === id && !($("bloquear").checked && d.agregado == null));
+    grupo = [];
+    l.forEach((d) => {
+      const g = gDe(d);
+      if (!grupo.some((h) => mismo(h, g))) grupo.push(g);
+    });
+    if (!grupo.some((h) => mismo(h, elegida))) grupo.push(elegida);
+    if (grupo.length === 1) grupo = [];
+    pintarElegida();
+    avisar(t("ed.caja_elegidos", [Math.max(1, grupo.length)]));
+  }
+  $("selIguales").onclick = elegirIguales;
+  $("selDuplicar").onclick = () => duplicar();
+  $("selSacar").onclick = () => sacarElegidos();
+  $("hComandos").onclick = () => window.EDITOR_COMANDOS && EDITOR_COMANDOS.abrir();
+
+  // ---------- copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) ----------
+  // Lo copiado queda en este navegador, así se pega también en otra zona o después de recargar.
+  let copia = null;
+  try {
+    copia = JSON.parse(localStorage.getItem(CLAVE + "-copia") || "null");
+  } catch (e) {}
+  function copiar() {
+    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    if (!l.length) return avisar(t("ed.nada_elegido")), false;
+    const items = l.map((g) => {
+      if (g.a) return { id: g.a.id, x: g.a.x, y: g.a.y, o: JSON.parse(JSON.stringify(g.a.o || {})) };
+      const m = movidos.has(g.cosa) ? est.mover[movidos.get(g.cosa)] : null,
+        o = JSON.parse(JSON.stringify(Object.assign({}, g.cosa.o, (m && m.o) || {}))),
+        x = m ? m.nx : g.cosa.x,
+        y = m ? m.ny : g.cosa.y;
+      if (o.x2 !== undefined && m && !(m.o && m.o.x2 !== undefined)) (o.x2 += m.nx - g.cosa.x), (o.y2 += m.ny - g.cosa.y);
+      // las casas del mundo ya traen su escala de casa: al pegarlas como agregado se la vuelve a poner
+      const k = W.ESCALA_CASA[g.cosa.id];
+      if (k && o.s) o.s = Math.round((o.s / k) * 1000) / 1000;
+      return { id: g.cosa.id, x, y, o };
+    });
+    const cx = items.reduce((s2, it) => s2 + it.x, 0) / items.length,
+      cy = items.reduce((s2, it) => s2 + it.y, 0) / items.length;
+    copia = items.map((it) => {
+      const o = it.o;
+      delete o.pegado;
+      if (o.x2 !== undefined) (o.x2 -= cx), (o.y2 -= cy);
+      return { id: it.id, dx: r1(it.x - cx), dy: r1(it.y - cy), o };
+    });
+    try {
+      localStorage.setItem(CLAVE + "-copia", JSON.stringify(copia));
+    } catch (e) {}
+    avisar(t("ed.copiados", [copia.length]));
+    return true;
+  }
+  function pegar(x, y) {
+    if (!copia || !copia.length) return avisar(t("ed.nada_copiado"));
+    recordar();
+    const nuevos = copia.map((it) => {
+      const o = JSON.parse(JSON.stringify(it.o));
+      if (o.x2 !== undefined) (o.x2 = r1(o.x2 + x)), (o.y2 = r1(o.y2 + y));
+      const a = { id: it.id, x: r1(x + it.dx), y: r1(y + it.dy), o, u: uid() };
+      est.poner.push(a);
+      return a;
+    });
+    guardar();
+    ponerHerr("mover");
+    grupo = nuevos.length > 1 ? nuevos.map((a) => ({ a })) : [];
+    elegida = { a: nuevos[nuevos.length - 1] };
+    pintarElegida();
+  }
+  function duplicar() {
+    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    if (!l.length || !copiar()) return;
+    const ps = l.map((g) => datosDe(g).p);
+    pegar(ps.reduce((s2, q) => s2 + q[0], 0) / ps.length + 60, ps.reduce((s2, q) => s2 + q[1], 0) / ps.length + 40);
+  }
+
+  // ---------- marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve ----------
+  let marcas = {};
+  try {
+    marcas = JSON.parse(localStorage.getItem(CLAVE + "-marcas") || "{}") || {};
+  } catch (e) {}
+  function marcador(n, guardarla) {
+    if (guardarla) {
+      marcas[n] = { x: r1(cam.x), y: r1(cam.y), z: cam.z, g: Math.round((giroMeta * 180) / Math.PI) };
+      try {
+        localStorage.setItem(CLAVE + "-marcas", JSON.stringify(marcas));
+      } catch (e) {}
+      return avisar(t("ed.marca_guardada", [n]));
+    }
+    const m = marcas[n];
+    if (!m) return avisar(t("ed.marca_vacia", [n]));
+    cam.x = m.x;
+    cam.y = m.y;
+    cam.z = m.z;
+    girarCamara(m.g || 0, true);
+  }
+
+  // ---------- modo foco (Tab): solo el mapa ----------
+  function foco() {
+    document.body.classList.toggle("foco");
+    setTimeout(medir, 0);
+  }
+
+  // ---------- revisar: avisos de cosas que pueden estar mal antes de subir ----------
+  function revisar() {
+    const problemas = [],
+      distCam = (x, y) => W.CAMINOS.some((cm) => cm.p.some((q, k) => k && distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], q[0], q[1]) < cm.w / 2 - 12));
+    est.poner.forEach((a) => {
+      const def = ASSETS.LISTA[a.id];
+      if (!def) return problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_no_existe", [a.id]) });
+      const nom = t("as." + a.id);
+      if (a.x < 0 || a.y < 0 || a.x > W.ANCHO || a.y > W.ALTO) problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_afuera", [nom]) });
+      const md = ASSETS.medidas(a.id, opcionesDe(a));
+      if (md.choque && !def.piso && a.o.x2 === undefined && distCam(a.x, a.y)) problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_camino", [nom]) });
+      if (md.choque && !def.piso && enAguaNueva(a.x, a.y)) problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_agua", [nom]) });
+      if (a.pegado && !est.poner.some((b) => b.u === a.pegado) && !a.pegado.startsWith("m:")) problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_suelto", [nom]) });
+    });
+    // dos agregados que chocan uno dentro del otro
+    for (let i = 0; i < est.poner.length && problemas.length < 300; i++)
+      for (let j = i + 1; j < est.poner.length; j++) {
+        const a = est.poner[i],
+          b = est.poner[j];
+        if (Math.abs(a.x - b.x) > 200 || Math.abs(a.y - b.y) > 200) continue;
+        const ma = ASSETS.LISTA[a.id] && ASSETS.medidas(a.id, opcionesDe(a)),
+          mb = ASSETS.LISTA[b.id] && ASSETS.medidas(b.id, opcionesDe(b));
+        if (!ma || !mb || !ma.choque || !mb.choque || !ma.choque.r || !mb.choque.r) continue;
+        if (Math.hypot(a.x - b.x, a.y - b.y) < (ma.choque.r + mb.choque.r) * 0.5) problemas.push({ x: a.x, y: a.y, txt: t("ed.rev_encima", [t("as." + a.id), t("as." + b.id)]) });
+      }
+    est.notas.forEach((n, i) => !n.hecha && problemas.push({ x: n.x, y: n.y, txt: t("ed.rev_nota", [i + 1, corto(n.texto || "…")]) }));
+    const ul = $("revLista");
+    ul.innerHTML = "";
+    if (!problemas.length) {
+      const li = document.createElement("li");
+      li.textContent = t("ed.rev_ok");
+      ul.appendChild(li);
+    }
+    problemas.forEach((q) => {
+      const li = document.createElement("li"),
+        b = document.createElement("button");
+      b.type = "button";
+      b.textContent = q.txt;
+      b.onclick = () => {
+        cam.x = q.x;
+        cam.y = q.y;
+        cam.z = Math.max(cam.z, 0.5);
+      };
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    $("revTitulo").textContent = t("ed.rev_titulo", [problemas.length]);
+    $("revision").classList.remove("oculto");
+  }
+  $("bRevisar").onclick = revisar;
+  $("revCerrar").onclick = () => $("revision").classList.add("oculto");
+
+  // ---------- borradores con nombre ----------
+  const leerBorradores = () => {
+    try {
+      return JSON.parse(localStorage.getItem(CLAVE + "-borradores") || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  function armarBorradores() {
+    const b = leerBorradores();
+    $("borradores").innerHTML = `<option value="">${t("ed.borradores")}</option>` + Object.keys(b).sort().map((k) => `<option value="${encodeURIComponent(k)}">${k.replace(/</g, "&lt;")} · ${b[k].fecha || ""}</option>`).join("");
+  }
+  $("bBorrador").onclick = () => {
+    const nom = (prompt(t("ed.borrador_nombre")) || "").trim();
+    if (!nom) return;
+    const b = leerBorradores(),
+      h = new Date();
+    b[nom] = { est, fecha: h.toLocaleDateString() + " " + String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0") };
+    try {
+      localStorage.setItem(CLAVE + "-borradores", JSON.stringify(b));
+      avisar(t("ed.borrador_ok", [nom]));
+    } catch (e) {
+      avisar(t("ed.borrador_mal"));
+    }
+    armarBorradores();
+  };
+  $("borradores").addEventListener("change", () => {
+    const k = decodeURIComponent($("borradores").value);
+    $("borradores").value = "";
+    const b = leerBorradores()[k];
+    if (!b || !confirm(t("ed.borrador_abrir", [k]))) return;
+    recordar();
+    est = JSON.parse(JSON.stringify(b.est));
+    completar(est);
+    soltarElegida();
+    guardar();
+  });
+  armarBorradores();
+
+  // ---------- minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí ----------
+  const mini = $("mini"),
+    mc = mini.getContext("2d");
+  function pintarMini() {
+    const w = mini.width,
+      h = mini.height,
+      k = w / W.ANCHO;
+    mc.fillStyle = "#1E2C1B";
+    mc.fillRect(0, 0, w, h);
+    if (croquis.complete && croquis.naturalWidth) mc.drawImage(croquis, 0, 0, w, (croquis.naturalHeight * w) / croquis.naturalWidth);
+    mc.fillStyle = "#FFD98A";
+    est.poner.forEach((a) => mc.fillRect(a.x * k - 1, a.y * k - 1, 2, 2));
+    est.notas.forEach((n) => {
+      mc.fillStyle = n.hecha ? "#7BC86C" : "#FFD98A";
+      mc.beginPath();
+      mc.arc(n.x * k, n.y * k, 3, 0, Math.PI * 2);
+      mc.fill();
+    });
+    // la vista (girada, si la cámara lo está)
+    const vw = cw / cam.z,
+      vh = ch / cam.z;
+    mc.strokeStyle = "#F2ECEC";
+    mc.lineWidth = 1.5;
+    mc.beginPath();
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy], i) => {
+      const [x, y] = desdeVista(cam.x + (sx * vw) / 2, cam.y + (sy * vh) / 2);
+      i ? mc.lineTo(x * k, y * k) : mc.moveTo(x * k, y * k);
+    });
+    mc.closePath();
+    mc.stroke();
+  }
+  let miniArrastre = false;
+  const miniIr = (e) => {
+    const r = mini.getBoundingClientRect();
+    cam.x = ((e.clientX - r.left) / r.width) * W.ANCHO;
+    cam.y = ((e.clientY - r.top) / r.width) * W.ANCHO;
+    pedir();
+  };
+  mini.addEventListener("pointerdown", (e) => {
+    mini.setPointerCapture(e.pointerId);
+    miniArrastre = true;
+    miniIr(e);
+  });
+  mini.addEventListener("pointermove", (e) => miniArrastre && miniIr(e));
+  mini.addEventListener("pointerup", () => (miniArrastre = false));
+
+  // ---------- arrastrar un objeto de la lista al mapa ----------
+  cv.addEventListener("dragover", (e) => e.preventDefault());
+  cv.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/eromash-asset");
+    if (!id || !ASSETS.LISTA[id]) return;
+    const [x, y] = aMundo(e.offsetX, e.offsetY);
+    elegido = id;
+    recordar();
+    const o = nuevasOpciones();
+    if (o.x2 !== undefined || dosPuntos(id)) {
+      const ej = ASSETS.EJEMPLO[id] || {};
+      o.x2 = r1(x + (ej.x2 || 160));
+      o.y2 = r1(y + (ej.y2 || 0));
+    }
+    est.poner.push(nuevo({ id, x: r1(x), y: r1(y), o }));
+    variando = null;
+    guardar();
+    recientes(id);
+    ponerHerr("poner");
+    lista.querySelectorAll(".obj").forEach((b) => b.classList.toggle("elegido", b.dataset.id === id));
+  });
+
+  // ---------- la hoja de atajos (?) ----------
+  $("bAtajos").onclick = () => $("atajos").classList.toggle("oculto");
+  $("atajosCerrar").onclick = () => $("atajos").classList.add("oculto");
   cv.addEventListener(
     "wheel",
     (e) => {
@@ -2025,6 +2487,40 @@
   const teclas = {};
   addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type !== "checkbox" && e.target.type !== "range") return;
+    if (e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+    if (window.EDITOR_COMANDOS && EDITOR_COMANDOS.abierta()) return;
+    const ctrl = e.ctrlKey || e.metaKey;
+    // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
+    if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
+      e.preventDefault();
+      return marcador(e.code.slice(5), ctrl);
+    }
+    if (ctrl && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      return window.EDITOR_COMANDOS && EDITOR_COMANDOS.abrir();
+    }
+    if (ctrl && e.key.toLowerCase() === "c") return copiar();
+    if (ctrl && e.key.toLowerCase() === "v") {
+      e.preventDefault();
+      return cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y);
+    }
+    if (ctrl && e.key.toLowerCase() === "d") {
+      e.preventDefault();
+      return duplicar();
+    }
+    if (ctrl && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
+      e.preventDefault();
+      return rehacer();
+    }
+    if (e.key === "Tab" && !ctrl) {
+      e.preventDefault();
+      return foco();
+    }
+    if (e.key === "?") return $("atajos").classList.toggle("oculto");
+    if (e.key === "7") ponerHerr("medir");
+    if (e.key === "8") window.EDITOR_IA && EDITOR_IA.alternar();
+    if (e.key === "g" || e.key === "G") $("grilla").checked = !$("grilla").checked;
+    if (e.key === "h" || e.key === "H") $("verBosque").checked = !$("verBosque").checked;
     if (e.code === "Space") {
       espacio = true;
       e.preventDefault();
@@ -2072,6 +2568,7 @@
     else if (e.key === "Enter" && camino) terminarCamino();
     if (e.key === "Escape" && probando) (probando = false), $("bProbar").classList.remove("activo");
     if (e.key === "Escape" && cortando) (cortando = null), $("camCortar").classList.remove("activo");
+    if (e.key === "Escape") ($("atajos").classList.add("oculto"), $("revision").classList.add("oculto"), (medida = null));
     if (e.key === "Escape" && trazando) camino && terminarCamino();
     else if (e.key === "Escape") {
       elegirAgua(null);
@@ -2080,7 +2577,7 @@
       soltarElegida();
       lista.querySelectorAll(".obj").forEach((x) => x.classList.remove("elegido"));
     }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") deshacer();
+    if (ctrl && !e.shiftKey && e.key.toLowerCase() === "z") deshacer();
     if ((e.key === "Delete" || e.key === "Backspace") && rio) {
       rio.p.pop();
       if (!rio.p.length) rio = null;
@@ -2088,7 +2585,8 @@
     else if ((e.key === "Delete" || e.key === "Backspace") && camino) {
       camino.p.pop();
       if (!camino.p.length) camino = null;
-    } else if (e.key === "Delete" || e.key === "Backspace") ponerHerr("borrar");
+    } else if ((e.key === "Delete" || e.key === "Backspace") && (elegida || grupo.length)) sacarElegidos();
+    else if (e.key === "Delete" || e.key === "Backspace") ponerHerr("borrar");
   });
   addEventListener("keyup", (e) => {
     if (e.code === "Space") espacio = false;
@@ -2129,9 +2627,42 @@
   }
   $("camara").addEventListener("input", () => girarCamara(+$("camara").value, true));
   $("norte").addEventListener("click", () => girarCamara(0, true));
+  // Supr con algo elegido: saca todo lo elegido (lo de la historia no se saca)
+  function sacarElegidos() {
+    const l = grupo.length > 1 ? grupo : elegida ? [elegida] : [];
+    if (!l.length) return;
+    recordar();
+    let quedan = 0;
+    l.forEach((g) => {
+      if (g.a) {
+        const i = est.poner.indexOf(g.a);
+        if (i >= 0) est.poner.splice(i, 1);
+        return;
+      }
+      if (nombradas.has(g.cosa)) return quedan++;
+      const i = movidos.has(g.cosa) ? movidos.get(g.cosa) : -1;
+      if (i >= 0) est.mover.splice(i, 1), armarMovidos();
+      est.quitar.push({ id: g.cosa.id, x: r1(g.cosa.x), y: r1(g.cosa.y) });
+    });
+    soltarElegida();
+    guardar();
+    if (quedan) avisar(t("ed.no_se_saca"));
+  }
+  function rehacer() {
+    const s = rehechos.pop();
+    if (!s) return;
+    historial.push(JSON.stringify(est));
+    est = JSON.parse(s);
+    soltarElegida();
+    camElegido = null;
+    aguaSel = null;
+    guardar();
+  }
+  $("bRehacer").onclick = rehacer;
   function deshacer() {
     const s = historial.pop();
     if (!s) return;
+    rehechos.push(JSON.stringify(est));
     est = JSON.parse(s);
     soltarElegida();
     camElegido = null;
@@ -2144,7 +2675,7 @@
   const ir = $("ir");
   const corto = (s) => (s.length > 40 ? s.slice(0, 39) + "…" : s);
   function armarIr() {
-    const notas = est.notas.length ? `<optgroup label="${t("ed.notas")}">` + est.notas.map((n, i) => `<option value="nota${i}">${i + 1}. ${corto(n.texto || "…").replace(/</g, "&lt;")}</option>`).join("") + "</optgroup>" : "";
+    const notas = est.notas.length ? `<optgroup label="${t("ed.notas")}">` + est.notas.map((n, i) => `<option value="nota${i}">${n.hecha ? "✓ " : ""}${i + 1}. ${corto(n.texto || "…").replace(/</g, "&lt;")}</option>`).join("") + "</optgroup>" : "";
     const hist =
       `<optgroup label="${t("ed.historia_grupo")}">` +
       [...nombradas.keys()]
@@ -2271,5 +2802,76 @@
   armarLista();
   guardar();
   requestAnimationFrame(dibujar);
-  window.EDITOR = { est: () => est, cam, ponerHerr, elegir: (id) => (elegido = id), girarCamara };
+  // lo que usan la paleta de comandos (comandos.js) y la IA (ia.js)
+  window.EDITOR = {
+    est: () => est,
+    cam,
+    W,
+    t,
+    avisar,
+    ponerHerr,
+    girarCamara,
+    elegir: (id) => {
+      elegido = id;
+      variando = null;
+      ponerHerr("poner");
+      lista.querySelectorAll(".obj").forEach((x) => x.classList.toggle("elegido", x.dataset.id === id));
+    },
+    acciones: {
+      deshacer: () => deshacer(),
+      rehacer: () => rehacer(),
+      copiar: () => copiar(),
+      pegar: () => (cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y)),
+      duplicar: () => duplicar(),
+      iguales: () => elegirIguales(),
+      sacar: () => sacarElegidos(),
+      revisar: () => revisar(),
+      foco: () => foco(),
+      grilla: () => ($("grilla").checked = !$("grilla").checked),
+      bosque: () => ($("verBosque").checked = !$("verBosque").checked),
+      bloquear: () => ($("bloquear").checked = !$("bloquear").checked),
+      notas: () => ($("verNotas").checked = !$("verNotas").checked),
+      norte: () => girarCamara(0, true),
+      probar: () => $("bProbar").click(),
+      descargar: () => $("bDescargar").click(),
+      atajos: () => $("atajos").classList.toggle("oculto"),
+      borrador: () => $("bBorrador").click(),
+    },
+    // los lugares de «Ir a…»: [{ nom, x, y }]
+    lugares: () => [{ nom: t("av.lugar_eikholt"), x: W.CIUDAD.c[0], y: W.CIUDAD.c[1] }].concat(Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => ({ nom: t("av.lugar_" + k), x: W.LUGARES[k].p[0], y: W.LUGARES[k].p[1] }))).concat([...nombradas.keys()].map((o) => ({ nom: t("as." + o.id) + " · " + nombradas.get(o), x: o.x, y: o.y }))),
+    ir: (x, y, z) => ((cam.x = x), (cam.y = y), (cam.z = z || Math.max(cam.z, 0.3)), pedir()),
+    // la zona para la IA: lo último elegido con el rectángulo o, si no, lo que se ve
+    zona: () => {
+      if (ultimaCaja) return { caja: ultimaCaja.slice(), deRect: true };
+      const vw = cw / cam.z,
+        vh = ch / cam.z;
+      return { caja: [r1(cam.x - vw / 2), r1(cam.y - vh / 2), r1(cam.x + vw / 2), r1(cam.y + vh / 2)], deRect: false };
+    },
+    olvidarZona: () => (ultimaCaja = null),
+    cosasEn: (x0, y0, x1, y1) => visibles(x0, y0, x1, y1).filter((d) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1).map((d) => ({ id: d.id, x: r1(d.x), y: r1(d.y), historia: !!(d.cosa && nombradas.has(d.cosa)), agregado: d.agregado != null })),
+    caminosEn: (x0, y0, x1, y1) => W.CAMINOS.filter((cm) => cm.p.some(([x, y]) => x > x0 - 300 && x < x1 + 300 && y > y0 - 300 && y < y1 + 300)).map((cm) => ({ p: cm.p.map(rp), w: cm.w, tipo: cm.tipo || "tierra" })),
+    // aplica lo que propuso la IA: { poner: [{ id, x, y, o }], caminos: [{ p, w, tipo, borde }], quitar: [{ id, x, y }] }
+    aplicar: (ops) => {
+      recordar();
+      const nuevos = [];
+      (ops.poner || []).forEach((a) => {
+        const n = { id: a.id, x: r1(a.x), y: r1(a.y), o: a.o || {}, u: uid() };
+        est.poner.push(n);
+        nuevos.push(n);
+      });
+      (ops.caminos || []).forEach((cm) => est.caminos.push({ p: cm.p.map(rp), w: r1(cm.w || 110), tipo: cm.tipo || "tierra", borde: cm.borde || "pasto", fundir: !!cm.fundir }));
+      (ops.quitar || []).forEach((q) => {
+        const cosa = W.COSAS.find((o) => o.id === q.id && Math.abs(o.x - q.x) < 8 && Math.abs(o.y - q.y) < 8);
+        if (cosa && !nombradas.has(cosa)) est.quitar.push({ id: cosa.id, x: r1(cosa.x), y: r1(cosa.y) });
+      });
+      guardar();
+      if (nuevos.length) {
+        ponerHerr("mover");
+        grupo = nuevos.length > 1 ? nuevos.map((a) => ({ a })) : [];
+        elegida = { a: nuevos[nuevos.length - 1] };
+        pintarElegida();
+      }
+    },
+    pedir: () => pedir(),
+  };
 })();

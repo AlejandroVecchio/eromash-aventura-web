@@ -66,7 +66,45 @@
   #notaCaja textarea { font: inherit; font-size: 15px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 8px; resize: vertical; }
   #notaCaja .botones { display: flex; gap: 6px; justify-content: flex-end; }
   #notaCaja .listo { background: #9C2315; border-color: #C8402D; }
+  .obj { position: relative; }
+  .obj .estrella { position: absolute; top: 4px; right: 6px; font-style: normal; font-size: 16px; color: #B5A5A0; padding: 0 2px; line-height: 1; }
+  .obj .estrella.si { color: #FFD98A; }
+  #guardadoV { font-size: 12px; color: #7BC86C; }
+  footer select { font-size: 13px; padding: 6px; }
+  #notaCaja .hecha { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+  #mini { position: absolute; left: 12px; top: 12px; width: 200px; height: 130px; border: 1px solid #4A3630; background: #1E2C1B; cursor: pointer; touch-action: none; }
+  #revision, #atajos, #iaPanel { position: absolute; background: #1C1714; border: 1px solid #FFD98A; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+  #revision { right: 352px; top: 12px; width: min(380px, calc(100vw - 32px)); max-height: 60%; }
+  #revision ul { margin: 0; padding: 0; list-style: none; overflow: auto; }
+  #revision li button { width: 100%; text-align: left; margin-bottom: 4px; background: #241A17; }
+  #atajos { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); max-height: 80%; }
+  #atajos pre { margin: 0; white-space: pre-wrap; font: inherit; font-size: 13px; line-height: 1.5; overflow: auto; color: #F2ECEC; }
+  .cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .cab b { color: #FFD98A; }
+  #comandos { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); width: min(560px, calc(100vw - 32px)); background: #1C1714; border: 1px solid #FFD98A; display: flex; flex-direction: column; }
+  #comandos input { font: inherit; font-size: 16px; background: #111111; color: #F2ECEC; border: 0; border-bottom: 1px solid #4A3630; padding: 12px 14px; }
+  #comandos ul { list-style: none; margin: 0; padding: 4px 0; max-height: 50vh; overflow: auto; }
+  #comandos li { padding: 8px 14px; font-size: 14px; display: flex; justify-content: space-between; gap: 12px; cursor: pointer; }
+  #comandos li small { color: #B5A5A0; }
+  #comandos li.activo { background: #9C2315; }
+  #iaPanel { right: 352px; bottom: 44px; width: min(420px, calc(100vw - 32px)); max-height: calc(100% - 60px); border-color: #73D5DB; }
+  #iaPanel .cab b { color: #73D5DB; }
+  #iaPanel .fila2 { display: flex; gap: 6px; }
+  #iaPanel .fila2 > * { flex: 1; min-width: 0; font: inherit; font-size: 13px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 7px 8px; }
+  #iaPanel small { color: #B5A5A0; font-size: 12px; line-height: 1.35; }
+  #iaPanel textarea { font: inherit; font-size: 14px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 8px; resize: vertical; }
+  #iaChat { overflow: auto; display: flex; flex-direction: column; gap: 6px; max-height: 32vh; }
+  #iaChat p { margin: 0; font-size: 13px; line-height: 1.4; padding: 6px 8px; background: #241A17; border-left: 3px solid #73D5DB; white-space: pre-wrap; }
+  #iaChat p.yo { border-left-color: #FFD98A; }
+  #iaChat p.error { border-left-color: #C8402D; }
+  #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+  #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
+  body.foco .ed { grid-template-columns: minmax(0, 1fr); }
+  body.foco aside, body.foco #ayuda { display: none; }
+  body.foco #revision, body.foco #iaPanel { right: 12px; }
   @media (max-width: 760px) {
+    #mini { display: none; }
+    #revision, #iaPanel { right: 12px; }
     .ed { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
     aside { border-left: 0; border-top: 1px solid #3A2A26; }
     #ayuda { right: 12px; bottom: calc(45% + 8px); }
@@ -88,15 +126,25 @@
       <button id="hCamino" data-i18n="ed.camino"></button>
       <button id="hNota" data-i18n="ed.nota"></button>
       <button id="hAgua" data-i18n="ed.agua"></button>
+      <button id="hMedir" data-i18n="ed.medir"></button>
+      <button id="hIA" data-i18n="ed.ia"></button>
+      <button id="hComandos" data-i18n="ed.comandos"></button>
     </div>
     <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
     <div class="fila">
       <label><span data-i18n="ed.variante"></span><input id="variante" type="number" min="0" max="20" value="0" /></label>
       <label><input id="espejo" type="checkbox" /><span data-i18n="ed.espejo"></span></label>
+      <label><input id="variar" type="checkbox" /><span data-i18n="ed.variar"></span></label>
     </div>
     <div class="fila">
       <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
       <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
+      <label><input id="grilla" type="checkbox" /><span data-i18n="ed.grilla"></span></label>
+    </div>
+    <div class="fila">
+      <label><input id="verBosque" type="checkbox" checked /><span data-i18n="ed.ver_bosque"></span></label>
+      <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
+      <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
     </div>
     <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
     <div class="fila">
@@ -142,6 +190,7 @@
       <div class="fila"><label><input id="selEsp" type="checkbox" /><span data-i18n="ed.sel_esp"></span></label></div>
       <div class="fila"><span data-i18n="ed.sel_orden"></span><button id="selAtras" data-i18n="ed.sel_atras"></button><button id="selAdelante" data-i18n="ed.sel_adelante"></button><b id="selOrdenV">0</b></div>
       <div class="botones3"><button id="selAgregar" data-i18n="ed.sel_agregar"></button><button id="selComo" data-i18n="ed.sel_como"></button><button id="selSoltar" data-i18n="ed.sel_soltar"></button></div>
+      <div class="botones3"><button id="selIguales" data-i18n="ed.sel_iguales"></button><button id="selDuplicar" data-i18n="ed.sel_duplicar"></button><button id="selSacar" data-i18n="ed.sel_sacar"></button></div>
     </div>
     <div class="fila"><select id="ir"></select></div>
     <div class="fila"><input id="buscar" type="search" /></div>
@@ -149,8 +198,14 @@
     <footer>
       <div id="cuenta"></div>
       <div id="donde"></div>
+      <div id="guardadoV"></div>
       <div class="botones">
         <button id="bDeshacer" data-i18n="ed.deshacer"></button>
+        <button id="bRehacer" data-i18n="ed.rehacer"></button>
+        <button id="bRevisar" data-i18n="ed.revisar"></button>
+        <button id="bAtajos" data-i18n="ed.atajos_b"></button>
+        <button id="bBorrador" data-i18n="ed.borrador_guardar"></button>
+        <select id="borradores"></select>
         <button id="bProbar" data-i18n="ed.probar"></button>
         <button id="bCopiar" data-i18n="ed.copiar"></button>
         <button id="bCargar" data-i18n="ed.cargar"></button>
@@ -162,10 +217,27 @@
   </aside>
 </div>
 <div id="ayuda" data-i18n="ed.ayuda"></div>
+<canvas id="mini" width="200" height="130"></canvas>
+<div id="revision" class="oculto"><div class="cab"><b id="revTitulo"></b><button id="revCerrar" data-i18n="ed.cerrar"></button></div><ul id="revLista"></ul></div>
+<div id="atajos" class="oculto"><div class="cab"><b data-i18n="ed.atajos_titulo"></b><button id="atajosCerrar" data-i18n="ed.cerrar"></button></div><pre data-i18n="ed.atajos"></pre></div>
+<div id="comandos" class="oculto"><input id="comBuscar" type="search" autocomplete="off" /><ul id="comLista"></ul></div>
+<div id="iaPanel" class="oculto">
+  <div class="cab"><b data-i18n="ed.ia_titulo"></b><button id="iaCerrar" data-i18n="ed.cerrar"></button></div>
+  <div class="fila2"><select id="iaQuien"><option value="claude">Claude</option><option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option><option value="otra" data-i18n="ed.ia_otra"></option></select><input id="iaModelo" type="text" spellcheck="false" /></div>
+  <div class="fila2" id="iaFilaClave"><input id="iaClave" type="password" autocomplete="off" spellcheck="false" data-i18n-ph="ed.ia_clave" /></div>
+  <small id="iaClaveAyuda" data-i18n="ed.ia_clave_ayuda"></small>
+  <small id="iaZona"></small>
+  <div id="iaChat"></div>
+  <textarea id="iaPedido" rows="3" data-i18n-ph="ed.ia_ph"></textarea>
+  <div class="botones"><button id="iaZonaVista" data-i18n="ed.ia_zona_vista"></button><button id="iaCopiar" data-i18n="ed.ia_copiar"></button><button id="iaEnviar" class="listo" data-i18n="ed.ia_enviar"></button></div>
+  <div id="iaOtra" class="oculto"><textarea id="iaRespuesta" rows="3" data-i18n-ph="ed.ia_pegar"></textarea><div class="botones"><button id="iaLeer" class="listo" data-i18n="ed.ia_leer"></button></div></div>
+  <div id="iaPropuesta" class="oculto"><b id="iaResumen"></b><div class="botones"><button id="iaDescartar" data-i18n="ed.ia_descartar"></button><button id="iaAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
+</div>
 <div id="aviso"></div>
 <div id="notaCaja">
   <b id="notaNum"></b>
   <textarea id="notaTexto" rows="5" data-i18n-ph="ed.nota_ph"></textarea>
+  <label class="hecha"><input id="notaHecha" type="checkbox" /><span data-i18n="ed.nota_hecha"></span></label>
   <div class="botones"><button id="notaBorrar" data-i18n="ed.nota_borrar"></button><button id="notaListo" class="listo" data-i18n="ed.nota_listo"></button></div>
 </div>
 <script src="../juego/js/comun/calidad.js"></script>
@@ -204,5 +276,7 @@
 <script src="js/mundo/eldervald.js"></script>
 <script src="js/mundo/agregados.js"></script>
 <script src="js/editor/editor.js"></script>
+<script src="js/editor/comandos.js"></script>
+<script src="js/editor/ia.js"></script>
 </body>
 </html>
