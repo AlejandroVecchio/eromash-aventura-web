@@ -187,6 +187,7 @@ I18N.textos({
   "mp.ley_camino": { es: "Piedras del camino", en: "Waystones" },
   "mp.ley_manzano": { es: "Manzanos de Iðunn", en: "Iðunn's apple trees" },
   "mp.ley_puente": { es: "Puentes", en: "Bridges" },
+  "mp.ley_zona": { es: "Mazmorras y travesías", en: "Dungeons and voyages" },
   "mp.ley_hecho": { es: "Mostrar lo ya hecho", en: "Show what's done" },
   "mp.hecho": { es: "hecho", en: "done" },
   "mp.bosque": { es: "Bosque de Eldervald", en: "Eldervald forest" },

@@ -134,6 +134,19 @@ window.ICONOS = (function () {
       pol(c, [x - 3 * u, y - 5 * u, x - 1.8 * u, y - 2 * u, x - 4 * u, y - 2.5 * u], CLARO);
       pol(c, [x + 3 * u, y - 6 * u, x + 4.4 * u, y - 3 * u, x + 1.8 * u, y - 3 * u], CLARO);
     },
+    mazmorra(c, x, y, u, col) {
+      // la boca de piedra con los escalones que bajan y la luz de adentro
+      pol(c, [x - 7 * u, y + 5 * u, x - 6 * u, y - 2 * u, x - 3 * u, y - 6 * u, x + 3 * u, y - 6 * u, x + 6 * u, y - 2 * u, x + 7 * u, y + 5 * u], col);
+      pol(c, [x - 3.6 * u, y + 5 * u, x - 3.6 * u, y - 1 * u, x - 1.6 * u, y - 3.4 * u, x + 1.6 * u, y - 3.4 * u, x + 3.6 * u, y - 1 * u, x + 3.6 * u, y + 5 * u], OSCURO);
+      [1.2, 3].forEach((dy) => linea(c, [x - 2.6 * u, y + dy * u, x + 2.6 * u, y + dy * u], "#FF8D71", 0.9 * u));
+    },
+    barca(c, x, y, u, col) {
+      // el casco con la proa alta y la vela
+      pol(c, [x - 7 * u, y + 1 * u, x + 7 * u, y + 1 * u, x + 4.5 * u, y + 4.5 * u, x - 4.5 * u, y + 4.5 * u], col);
+      pol(c, [x + 5.5 * u, y + 1.5 * u, x + 7.5 * u, y - 3 * u, x + 6.6 * u, y + 1.5 * u], col);
+      linea(c, [x, y + 1 * u, x, y - 7 * u], OSCURO, 1 * u);
+      pol(c, [x - 4 * u, y - 6 * u, x + 4 * u, y - 6 * u, x + 3.4 * u, y - 0.6 * u, x - 3.4 * u, y - 0.6 * u], CLARO);
+    },
     lugar(c, x, y, u, col) {
       pol(c, [x, y - 5 * u, x + 4 * u, y, x, y + 5 * u, x - 4 * u, y], col);
     },

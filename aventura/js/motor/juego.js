@@ -1316,6 +1316,7 @@
     for (const c0 of W.CAMINOS) if (W.distLinea(jug.x, jug.y, c0.p) < c0.w) s0 *= 0.4;
     if (Math.hypot(jug.x - W.CIUDAD.c[0], (jug.y - W.CIUDAD.c[1]) * 1.3) < W.CIUDAD.rx) s0 = 0;
     for (const k of ["tumulo", "claro"]) if (dist(jug, W.LUGARES[k].p) < W.LUGARES[k].r * 1.6) s0 = Math.max(s0, k === "tumulo" ? 1.4 : 0.6);
+    if (J.ambZona && J.ambZona.sombra != null) return Math.max(J.ambZona.sombra, J.oscuro || 0);
     return Math.max(s0, J.oscuro || 0);
   }
   // cada asset que alumbra: radio y color (se suma su posición en el mundo)
@@ -1423,7 +1424,7 @@
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
     cadaSis("aire", c, x0, y0, x1, y1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
-    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, amb.niebla != null ? amb.niebla : 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
     LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
     c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
     cadaSis("sobreLuz", c, x0, y0, x1, y1); // lo que brilla en la oscuridad: luciérnagas, brasas, motas rúnicas
@@ -1888,12 +1889,14 @@
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
       alejarMeta = zoomJug;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
+      J.ambZona = null; // y cambiar el aire del lugar: { tono: [r, g, b] de la oscuridad, osc, niebla, sombra } (las mazmorras)
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
       esc = escBase / alejar;
       amb = LUZ.ambiente(H.E.tiempo, sombraAqui() + (window.VIDA ? VIDA.nubes() : 0), dt);
       if (window.VIDA) VIDA.clima(amb);
       if (J.oscuro) amb = Object.assign({}, amb, { n: Math.max(amb.n, 0.8), o: 0 });
+      if (J.ambZona) amb = Object.assign({}, amb, J.ambZona);
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));

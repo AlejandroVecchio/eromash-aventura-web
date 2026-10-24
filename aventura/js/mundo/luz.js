@@ -57,7 +57,8 @@ window.LUZ = (function () {
     if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o) * (1 - ll * 0.85), colorHora(amb.h));
     else if (nv === "alta" && amb.n >= 0.6 && ll < 0.5) rayos(c, cw, ch, x0, t, ((amb.n - 0.6) / 0.4) * 0.55, "200,242,244");
     if (nv === "baja") {
-      c.fillStyle = `rgba(${tono[0]},${tono[1]},${tono[2]},${Math.min(0.42, amb.osc * 0.55)})`;
+      const tb = amb.tono || tono;
+      c.fillStyle = `rgba(${tb[0]},${tb[1]},${tb[2]},${Math.min(0.42, amb.osc * 0.55)})`;
       c.fillRect(0, 0, cw, ch);
       c.restore();
       return;
@@ -71,7 +72,8 @@ window.LUZ = (function () {
     }
     cc.globalCompositeOperation = "source-over";
     cc.clearRect(0, 0, w, h);
-    cc.fillStyle = `rgba(${tono[0]},${tono[1]},${tono[2]},${amb.osc})`;
+    const tn = amb.tono || tono; // una zona puede pedir su propio color de oscuridad (las mazmorras, tibio)
+    cc.fillStyle = `rgba(${tn[0]},${tn[1]},${tn[2]},${amb.osc})`;
     cc.fillRect(0, 0, w, h);
     // agujeros de luz
     cc.globalCompositeOperation = "destination-out";

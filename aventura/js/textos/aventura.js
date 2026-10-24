@@ -43,6 +43,7 @@ I18N.textos({
   "as.zarzas": { es: "Zarzas espectrales", en: "Spectral brambles" },
   "as.grupo.naturaleza": { es: "Naturaleza de Eldervald", en: "Eldervald nature" },
   "as.grupo.texturas": { es: "Tus texturas", en: "Your textures" },
+  "as.grupo.importados": { es: "Tus importados", en: "Your imports" },
   "as.tex_bloque": { es: "{0} (bloque)", en: "{0} (block)" },
   "as.grupo.caminos": { es: "Caminos y señales", en: "Roads and markers" },
   "as.grupo.puesto": { es: "El puesto de Eydis", en: "Eydis's outpost" },

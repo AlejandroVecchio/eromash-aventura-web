@@ -964,6 +964,7 @@ window.VIDA = (function () {
   }
 
   // ---------- el sistema ----------
+  const enZona = () => !!(window.ZONAS && ZONAS.aqui());
   const sistema = {
     iniciar(api) {
       A = api;
@@ -1041,10 +1042,11 @@ window.VIDA = (function () {
           gruposVistos.set(g, ahora);
         });
     },
-    fondo,
-    objetos,
-    aire,
-    sobreLuz,
+    // en las zonas del generador (mazmorras, islas: motor/zonas.js) no hay hojas, bichos ni bandadas del bosque
+    fondo: (...a) => !enZona() && fondo(...a),
+    objetos: (...a) => !enZona() && objetos(...a),
+    aire: (...a) => !enZona() && aire(...a),
+    sobreLuz: (...a) => !enZona() && sobreLuz(...a),
     luces(dar, x0, y0, x1, y1) {
       for (const l of lucesT) dar({ x: l.x, y: l.y, r: l.r * (0.6 + 0.4 * Math.min(1, l.t * 4)), col: l.col, f: Math.max(0, 1 - l.t / l.dur) });
       for (const [x, y, bl] of luciernagas) dar({ x, y, r: 70, col: "#8CF0B4", f: bl * 0.4 });
