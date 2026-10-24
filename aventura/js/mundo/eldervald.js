@@ -454,6 +454,14 @@ window.ELDERVALD = (function () {
       by = Math.min(BH - 1, Math.max(0, Math.floor(c.y / BALDE)));
     BALDES[by * BW + bx].push(c);
   });
+  // pone una cosa con el mundo ya armado (cofres, piedras rúnicas, ruinas de secretos.js)
+  function agregar(id, p, o = {}, nombre) {
+    const c = poner(id, p, o, nombre);
+    if (!o.piso) BALDES[Math.min(BH - 1, Math.max(0, Math.floor(c.y / BALDE))) * BW + Math.min(BW - 1, Math.max(0, Math.floor(c.x / BALDE)))].push(c);
+    return c;
+  }
+  // tipo de suelo en (x, y): 0 libre · 1 agua · 2 quebrada · 3 borde o muro
+  const sueloEn = (x, y) => (x < 0 || y < 0 || x >= ANCHO || y >= ALTO ? 3 : suelo[Math.floor(y / CELDA) * GW + Math.floor(x / CELDA)]);
   function cercanas(x0, y0, x1, y1, fn) {
     const bx0 = Math.max(0, Math.floor(x0 / BALDE)),
       bx1 = Math.min(BW - 1, Math.floor(x1 / BALDE)),
@@ -686,6 +694,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO,
-    m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea,
+    m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE,
   };
 })();

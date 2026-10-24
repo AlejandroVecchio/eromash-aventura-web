@@ -93,7 +93,7 @@
   // gente y criaturas
   if (window.GENTE) {
     const gg = grupo("as.grupo.gente");
-    GENTE.LISTA.forEach((id) =>
+    Object.keys(GENTE.FICHAS).forEach((id) =>
       ["S", "E", "N"].forEach((v) =>
         ficha(gg, I18N.t("av.nombre_" + GENTE.nombre(id)) + " · " + v, 150, 180, (c, t) => {
           piso(c, 150, 180);
@@ -104,14 +104,18 @@
   }
   if (window.CRIATURAS) {
     const gc = grupo("as.grupo.enemigos");
+    // las del bosque profundo tienen tres colores: se muestran de frente en cada uno
+    const PALETAS = ["draugr", "jabali", "cuervo", "fatuo", "trol"];
     CRIATURAS.LISTA.forEach((id) =>
-      ["S", "E", "N"].forEach((v) => {
-        const big = id === "ciervo";
+      ["S", "E", "N", "S1", "S2"].forEach((v) => {
+        const pal = v.length > 1 ? Number(v[1]) : 0;
+        if (pal && !PALETAS.includes(id)) return;
+        const big = id === "ciervo" || id === "trol";
         const w = big ? 360 : 200,
           h = big ? 360 : 200;
-        ficha(gc, I18N.t("cr." + id) + " · " + v, w, h, (c, t) => {
+        ficha(gc, I18N.t("cr." + id) + " · " + (pal ? I18N.t("cat.color", [pal + 1]) : v), w, h, (c, t) => {
           piso(c, w, h);
-          CRIATURAS.dibujar(c, id, w / 2, h - 40, t, { vista: v, mov: 1 });
+          CRIATURAS.dibujar(c, id, w / 2, h - 40, t, { vista: v[0], mov: 1, pal });
         });
       }),
     );

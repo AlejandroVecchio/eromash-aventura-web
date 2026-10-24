@@ -90,6 +90,7 @@ window.HUD = (function () {
   let menu = null;
   function abrir(html, botones) {
     $("capa").classList.remove("oculto");
+    $("capaCaja").className = "caja panel";
     $("capaCaja").innerHTML = html;
     const cont = document.createElement("div");
     $("capaCaja").appendChild(cont);

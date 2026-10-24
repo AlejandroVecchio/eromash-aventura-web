@@ -273,6 +273,11 @@ window.CRIATURAS = (function () {
 
   const DIBUJO = { lobo, errante, custodio, ciervo };
   const LISTA = Object.keys(DIBUJO);
+  // criaturas-bosque.js suma las suyas
+  function registrar(id, f) {
+    DIBUJO[id] = f;
+    if (!LISTA.includes(id)) LISTA.push(id);
+  }
   function dibujar(c, id, x, y, t, o = {}) {
     c.save();
     c.translate(x, y);
@@ -283,5 +288,5 @@ window.CRIATURAS = (function () {
     DIBUJO[id](c, t, o);
     c.restore();
   }
-  return { LISTA, dibujar };
+  return { LISTA, dibujar, registrar };
 })();

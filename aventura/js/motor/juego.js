@@ -40,11 +40,19 @@
     marcas: [], // lo que muestra la Lente: huellas, anillos, runas en el piso
     ondas: [], // la luz rúnica que corre por el suelo
     textos: [], // números de daño
+    zonas: [], // fuego o escarcha que queda en el piso un rato
+    timers: [], // cosas que pasan después de un tiempo de juego (se frenan en pausa)
+    mulDano: 1, // lo suben la herrería y el poder rúnico
   };
+  // los sistemas que se enchufan al motor (secretos.js, hordas.js, poderes.js): cada uno puede tener iniciar,
+  // alEmpezar, actualizar, cercanos, lente, piso, objetos, luces, alMorir, hud y diario
+  const SIS = window.SISTEMAS || [];
+  const cadaSis = (fn, ...a) => SIS.forEach((s0) => s0[fn] && s0[fn](...a));
+  J.retrasar = (seg, fn) => J.timers.push({ t: seg, fn });
   const jug = (J.jugador = {
     x: 0, y: 0, vx: 0, vy: 0, hp: 100, hpMax: 100, sta: 100, staMax: 100,
     mira: { vista: "S", espejo: false }, dir: [0, 1], salto: 0, esq: 0, esqDir: [0, 1], atk: null, combo: 0, comboT: 0,
-    herido: 0, inv: 0, muerto: false, sinGolpe: 0, cansado: false, correr: false, interactuando: 0,
+    herido: 0, inv: 0, muerto: false, sinGolpe: 0, cansado: false, correr: false, interactuando: 0, lento: 0,
   });
   const R = 16; // radio del cuerpo de Eromash
 
@@ -73,8 +81,14 @@
     if (i >= 0) J.avisos.splice(i, 1);
   };
   J.sacudir = (f) => (J.cam.sac = Math.max(J.cam.sac, f));
-  J.herir = (dano, ox, oy) => {
+  J.herir = (dano, ox, oy, tipo) => {
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
+    if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
+    if (tipo === "helado") jug.lento = 2;
+    if (dano <= 0) {
+      jug.inv = 0.4;
+      return;
+    }
     jug.hp -= dano;
     jug.herido = 0.5;
     jug.inv = 0.6;
@@ -93,6 +107,10 @@
   };
   J.soporteRoto = () => {
     if (CB.atados(ciervo) === 0) H.marcar("ataduras_rotas");
+  };
+  J.alMorir = (e) => {
+    enemigoMurio(e);
+    cadaSis("alMorir", e);
   };
   J.ciervoVencido = () => {
     H.marcar("ciervo_vencido");
@@ -270,6 +288,7 @@
         r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0 }, m)));
         setTimeout(r.al, 450);
       }
+    SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
     if (!algo) setTimeout(() => avisar("lente_nada"), 500);
   }
 
@@ -282,9 +301,15 @@
     J.modo = "dialogo";
     mostrarLinea();
   }
+  // diálogo armado por un sistema: lineas = [[quien, clave completa, variables]], alFin al cerrar
+  function dialogoLibre(lineas, alFin) {
+    dlg = { id: "_libre", d: { lineas, libre: true, alFin }, i: 0 };
+    J.modo = "dialogo";
+    mostrarLinea();
+  }
   function mostrarLinea() {
-    const [quien, clave] = dlg.d.lineas[dlg.i];
-    HUD.dialogo(quien, tav(clave), CONTROLES.glifo("seguir"));
+    const [quien, clave, vars] = dlg.d.lineas[dlg.i];
+    HUD.dialogo(quien, dlg.d.libre ? t(clave, vars) : tav(clave), CONTROLES.glifo("seguir"));
     for (const id in npcs) npcs[id].hablando = id === quien ? 1 : 0;
   }
   function seguirDialogo() {
@@ -299,6 +324,7 @@
     alTerminar(id, d);
   }
   function alTerminar(id, d) {
+    if (d.libre) return d.alFin && d.alFin();
     if (d.diario) H.anotar(d.diario);
     if (id === "svanhild_inicio") {
       N.mesa.o.fragmento = true;
@@ -368,8 +394,10 @@
     J.sacudir(0.8);
     setTimeout(() => HUD.fundido(true), 700);
     setTimeout(() => {
-      enemigos.forEach((e) => e.activo && CB.reiniciar(e));
+      enemigos.forEach((e) => e.activo && !e.muerto && CB.reiniciar(e));
       J.avisos.length = 0;
+      J.zonas.length = 0;
+      J.timers.length = 0;
       if (ciervo.activo) CB.reiniciarCiervo(J, ciervo);
       const p = P[H.REAPARECER[H.idMision()] || "puesto"];
       jug.x = p[0];
@@ -408,6 +436,7 @@
     jug.inv = Math.max(0, jug.inv - dt);
     jug.sinGolpe += dt;
     jug.interactuando = Math.max(0, jug.interactuando - dt);
+    jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
     if (jug.sinGolpe > 6 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 4 * dt);
     // empujón
@@ -469,7 +498,7 @@
       jug.atk = { t: 0, d: GOLPES[n], dir, side: n % 2 ? -1 : 1, pego: false };
       jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
     }
-    const vel = (jug.correr ? VEL_CORRER : VEL) * (jug.atk ? 0.35 : 1);
+    const vel = (jug.correr ? VEL_CORRER : VEL) * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -495,15 +524,15 @@
       return Math.abs(da) <= d.arc / 2 || l < r;
     };
     for (const e of enemigos) {
-      if (!e.activo || e.muerto || !enArco(e.x, e.y, e.d.radio)) continue;
+      if (!e.activo || e.muerto || Math.abs(e.x - jug.x) > 300 || !enArco(e.x, e.y, e.d.radio)) continue;
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
       chispa(e.x, e.y - 30);
-      numero(e.x, e.y - 60, d.dano);
-      if (CB.golpear(J, e, d.dano, jug.x, jug.y)) enemigoMurio(e);
+      numero(e.x, e.y - 60, Math.round(d.dano * J.mulDano));
+      CB.golpear(J, e, Math.round(d.dano * J.mulDano), jug.x, jug.y);
     }
     if (ciervo.activo && enArco(ciervo.x, ciervo.y, 60)) {
       const antes = ciervo.vida;
-      CB.golpearCiervo(J, ciervo, d.dano);
+      CB.golpearCiervo(J, ciervo, d.dano * J.mulDano);
       chispa(ciervo.x, ciervo.y - 80);
       numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)));
     }
@@ -542,6 +571,12 @@
         mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_trabajador"), fn: () => dialogo(tr.id === "herido" ? "herido" : "trabajador") };
       }
     }
+    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn) => {
+      if (d < dm) {
+        dm = d;
+        mejor = { texto, fn };
+      }
+    }));
     for (const it of INTER) {
       if (!it.cond()) continue;
       const d = dist(jug, it.p);
@@ -830,6 +865,54 @@
     }
   }
 
+  // ---------- la luz ----------
+  // cuánto tapa el bosque donde está Eromash (0 en caminos y claros, 1 en lo espeso) y los lugares siempre oscuros
+  let amb = { h: 9, n: 0, o: 0, osc: 0.1 };
+  function sombraAqui() {
+    let s0 = Math.max(0, Math.min(1, (W.ruido(jug.x, jug.y) - 0.3) * 2.2));
+    for (const c0 of W.CAMINOS) if (W.distLinea(jug.x, jug.y, c0.p) < c0.w) s0 *= 0.4;
+    if (Math.hypot(jug.x - W.CIUDAD.c[0], (jug.y - W.CIUDAD.c[1]) * 1.3) < W.CIUDAD.rx) s0 = 0;
+    for (const k of ["tumulo", "claro"]) if (dist(jug, W.LUGARES[k].p) < W.LUGARES[k].r * 1.6) s0 = Math.max(s0, k === "tumulo" ? 1.4 : 0.6);
+    return s0;
+  }
+  // cada asset que alumbra: radio y color (se suma su posición en el mundo)
+  const LUZ_ASSET = {
+    farol: [300, "#FFD98A", 14, -70],
+    piedraLinde: [200, "#73D5DB", 0, -34],
+    torreVigia: [320, "#FFD98A", 0, -150],
+    puertaSur: [380, "#FFD98A", 0, -120],
+    herreriaAsa: [420, "#FF8D71", 30, -40],
+    hongoDorado: [380, "#FFD98A", 0, -60],
+    piedraMuralla: [200, "#73D5DB", 0, -60],
+    pedestalPaso: [260, "#73D5DB", 0, -50],
+    soporteAtadura: [220, "#9A6BD8", 0, -40],
+    santuario: [380, "#73D5DB", 0, -80],
+    hongosRocio: [70, "#73D5DB", 0, -6],
+    runaRefugio: [360, "#73D5DB", 0, -40],
+    losaPatio: [200, "#73D5DB", 0, 0],
+  };
+  function juntarLuces(x0, y0, x1, y1) {
+    const L0 = [];
+    const n = amb.n;
+    // la lámpara de Eromash: se ve siempre un poco alrededor (más grande con la mejora de Ása)
+    L0.push({ x: jug.x, y: jug.y - 30, r: (n > 0.3 ? 260 : 200) * (J.lampara || 1), col: "#FFD98A", f: 0.95 });
+    W.cercanas(x0 - 400, y0 - 400, x1 + 400, y1 + 400, (o) => {
+      const l = LUZ_ASSET[o.id];
+      if (!l || o.oculto) return;
+      let f = 1;
+      if (o.id === "runaRefugio" || o.id === "pedestalPaso" || o.id === "losaPatio") f = o.o.luz || 0;
+      if (o.id === "soporteAtadura" && (o.o.roto || !o.o.visto)) f = 0.3;
+      if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * (0.9 + Math.sin(J.t * 7 + o.x) * 0.06) });
+    });
+    if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
+    for (const e of enemigos) if (e.activo && !e.muerto && e.d.luz && e.x > x0 - 300 && e.x < x1 + 300 && e.y > y0 - 300 && e.y < y1 + 300) L0.push({ x: e.x, y: e.y - 60, r: 240, col: ["#8CF0B4", "#73D5DB", "#9A6BD8"][e.pal || 0], f: 0.9 });
+    if (nucleoSuelo) L0.push({ x: nucleoSuelo.x, y: nucleoSuelo.y, r: 200, col: "#73D5DB", f: 1 });
+    if (ciervo.activo || ciervo.mostrarAtaduras) L0.push({ x: ciervo.x, y: ciervo.y - 80, r: 340, col: "#73D5DB", f: 0.8 });
+    J.ondas.forEach((o) => o.tipo === "pulso" && L0.push({ x: o.x, y: o.y, r: 200 + o.t * 900, col: "#73D5DB", f: Math.max(0, 1 - o.t / 0.7) }));
+    cadaSis("luces", (l) => L0.push(l), x0, y0, x1, y1);
+    return L0;
+  }
+
   function dibujar() {
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.fillStyle = "#33301F";
@@ -846,7 +929,9 @@
     W.dibujarPiso(c, x0, y0, x1, y1, esc);
     // lo que va en el piso
     J.marcas.forEach(dibujarMarca);
+    J.zonas.forEach((a) => CB.dibujarAviso(c, a));
     J.avisos.forEach((a) => CB.dibujarAviso(c, a));
+    cadaSis("piso", c, x0, y0, x1, y1);
     J.ondas.forEach(dibujarOnda);
     if (nucleoSuelo) ASSETS.dibujar(c, "nucleo", nucleoSuelo.x, nucleoSuelo.y, J.t, {});
     // todo lo que tiene altura, ordenado por la línea del piso
@@ -861,12 +946,16 @@
     const visible = (x, y) => x > x0 - 200 && x < x1 + 200 && y > y0 - 50 && y < y1 + 300;
     Object.values(npcs).forEach((n) => visible(n.x, n.y) && lista.push({ y: n.y, f: () => dibujarNpc(n) }));
     trabajadores.forEach((n) => visible(n.x, n.y) && lista.push({ y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, camina: n.camina, hablando: n.hablando }) }));
-    enemigos.forEach((e) => e.activo && visible(e.x, e.y) && lista.push({ y: e.y, f: () => CB.dibujar(c, e, J.t) }));
+    enemigos.forEach((e) => e.activo && e.muerto < 0.8 && visible(e.x, e.y) && lista.push({ y: e.y, f: () => CB.dibujar(c, e, J.t) }));
     if (visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
+    cadaSis("objetos", lista, visible, c);
     lista.push({ y: jug.y, f: dibujarJugador, jugador: true });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((d) => d.f());
-    // chispas y números
+    // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9);
+    LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
+    c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
     J.fx.forEach((f) => DIB.alfa(c, Math.max(0, f.t / 0.35), () => DIB.R(c, f.x - f.s / 2, f.y - f.s / 2, f.s, f.s, f.c)));
     c.font = '800 18px "Eromash Text", system-ui, sans-serif';
     c.textAlign = "center";
@@ -914,6 +1003,7 @@
     HUD.objetivo(m === "fin" ? tav("mision_fin") : t("ui.mision", [m]), o ? tav(o.texto) : tav("obj_fin"), p ? dist(jug, p) / 43 : null);
     const cer = J.modo === "juego" && !jug.muerto ? cercano() : null;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
+    cadaSis("hud");
     HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : null);
   }
 
@@ -984,6 +1074,7 @@
     for (const id in npcs) npcs[id].lugar = "";
     escenario();
     ubicarGente(true);
+    cadaSis("alEmpezar", E.extra);
     HUD.cerrar();
     HUD.ocultarJuego(false);
     J.modo = "juego";
@@ -1007,7 +1098,9 @@
   function diario() {
     J.modo = "menu";
     const lista = H.E.diario.length ? H.E.diario.map((k) => `<p>${tav(k)}</p>`).join("") : `<p>${t("ui.diario_vacio")}</p>`;
-    HUD.abrir(`<h2>${tav("diario_titulo")}</h2><div class="diario-lista">${lista}</div>`, [{ texto: t("ui.cerrar"), fn: cerrarMenu }]);
+    let extra = "";
+    SIS.forEach((s0) => s0.diario && (extra += s0.diario()));
+    HUD.abrir(`<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`, [{ texto: t("ui.cerrar"), fn: cerrarMenu }]);
   }
   function mostrarFin() {
     J.modo = "menu";
@@ -1028,6 +1121,7 @@
     CONTROLES.actualizar();
     if (J.modo === "menu") {
       HUD.pasoMenu();
+      if (CONTROLES.recien("mapa") && document.getElementById("mapaLienzo")) cerrarMenu();
       if (CONTROLES.recien("pausa") && H.E && J.cam.x) {
         if (document.querySelector("#capaCaja h1") == null) cerrarMenu();
       }
@@ -1042,7 +1136,21 @@
       H.E.tiempo += dt;
       actualizarJugador(dt);
       actualizarGente(dt);
-      enemigos.forEach((e) => CB.actualizar(J, e, dt));
+      for (const e of enemigos) if (e.estado !== "quieto" || (Math.abs(e.x - jug.x) < 2600 && Math.abs(e.y - jug.y) < 2000)) CB.actualizar(J, e, dt);
+      J.timers.forEach((tm) => (tm.t -= dt));
+      J.timers.filter((tm) => tm.t <= 0).forEach((tm) => tm.fn());
+      J.timers = J.timers.filter((tm) => tm.t > 0);
+      J.zonas.forEach((z) => {
+        z.t += dt;
+        if (!jug.muerto && jug.salto <= 0 && CB.contiene(z, jug.x, jug.y)) {
+          jug.hp -= z.dps * dt;
+          jug.sinGolpe = 0;
+          if (jug.hp <= 0) morir();
+        }
+      });
+      J.zonas = J.zonas.filter((z) => z.t < z.dur);
+      cadaSis("actualizar", dt);
+      amb = LUZ.ambiente(H.E.tiempo, sombraAqui(), dt);
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));
@@ -1084,6 +1192,34 @@
   // ?ver=lugar: arranca directo en un lugar (para revisar y sacar capturas)
   const q = new URLSearchParams(location.search);
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
+  // lo que los sistemas pueden usar del motor
+  const A = {
+    J, jug, W, H, CB, P, N, enemigos, npcs, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano,
+    avisar: (k, col) => HUD.aviso(t(k), col),
+    menu: (html, botones) => {
+      J.modo = "menu";
+      HUD.abrir(html, botones);
+    },
+    cerrarMenu,
+    mouse: () => mouse,
+    hora: () => amb.h,
+    noche: () => amb.n,
+    amb: () => amb,
+    teletransportar: (x, y) => {
+      J.modo = "cine";
+      HUD.fundido(true);
+      setTimeout(() => {
+        jug.x = x;
+        jug.y = y;
+        J.cam.x = x;
+        J.cam.y = y - 30;
+        HUD.fundido(false);
+        J.modo = "juego";
+        CONTROLES.soltar();
+      }, 700);
+    },
+  };
+  cadaSis("iniciar", A);
   if (q.get("jugar")) {
     empezar(Number(q.get("jugar")) || 1, true);
     const v = q.get("ver");

@@ -96,7 +96,7 @@ window.HISTORIA = (function () {
   };
 
   // ---------- estado ----------
-  const E = { mision: 0, banderas: {}, diario: [], vistos: [], salud: 100, pos: null, tiempo: 0, ranura: 1 };
+  const E = { mision: 0, banderas: {}, diario: [], vistos: [], salud: 100, pos: null, tiempo: 0, ranura: 1, extra: {} }; // extra: lo de cada sistema (secretos, runas, grupos)
   const oyentes = [];
   const avisar = (tipo, dato) => oyentes.forEach((f) => f(tipo, dato));
 
@@ -233,7 +233,7 @@ window.HISTORIA = (function () {
       }
     }
     try {
-      localStorage.setItem(CLAVE + E.ranura, JSON.stringify({ v: 1, fecha: Date.now(), tiempo: Math.round(E.tiempo), mision: E.mision, banderas: E.banderas, diario: E.diario, vistos: E.vistos, salud: E.salud, pos: E.pos }));
+      localStorage.setItem(CLAVE + E.ranura, JSON.stringify({ v: 1, fecha: Date.now(), tiempo: Math.round(E.tiempo), mision: E.mision, banderas: E.banderas, diario: E.diario, vistos: E.vistos, salud: E.salud, pos: E.pos, extra: E.extra }));
       return true;
     } catch (e) {
       return false;
@@ -242,12 +242,12 @@ window.HISTORIA = (function () {
   function cargar(n) {
     const d = leer(n);
     if (!d) return false;
-    Object.assign(E, { ranura: n, mision: d.mision | 0, banderas: d.banderas || {}, diario: d.diario || [], vistos: d.vistos || [], salud: d.salud || 100, pos: d.pos || null, tiempo: d.tiempo || 0 });
+    Object.assign(E, { ranura: n, mision: d.mision | 0, banderas: d.banderas || {}, diario: d.diario || [], vistos: d.vistos || [], salud: d.salud || 100, pos: d.pos || null, tiempo: d.tiempo || 0, extra: d.extra || {} });
     avisar("cambio");
     return true;
   }
   function nueva(n) {
-    Object.assign(E, { ranura: n, mision: 0, banderas: {}, diario: [], vistos: [], salud: 100, pos: null, tiempo: 0 });
+    Object.assign(E, { ranura: n, mision: 0, banderas: {}, diario: [], vistos: [], salud: 100, pos: null, tiempo: 0, extra: {} });
     try {
       localStorage.removeItem(CLAVE + n);
     } catch (e) {}

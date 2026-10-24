@@ -14,17 +14,24 @@ window.CONTROLES = (function () {
     esquivar: ["KeyC", "AltLeft"],
     interactuar: ["KeyE", "KeyF"],
     lente: ["KeyR"],
+    runa: ["KeyQ"],
+    cambiarRuna: ["KeyT"],
+    mapa: ["KeyM"],
     diario: ["KeyJ", "Tab"],
     pausa: ["Escape", "KeyP"],
     seguir: ["Enter", "Space", "KeyE", "KeyF"],
   };
   // botones estándar del mando (Gamepad API): 0 ✕/A · 1 ○/B · 2 □/X · 3 △/Y · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Select · 9 Start · 10 L3
+// · 11 R3 · 16 PS · 17 panel táctil
   const BOTONES = {
     saltar: [0],
     interactuar: [1],
     atacar: [2, 7],
     lente: [3],
-    esquivar: [4, 5],
+    esquivar: [4],
+    runa: [5],
+    cambiarRuna: [11],
+    mapa: [16, 17],
     correr: [10, 6],
     diario: [8],
     pausa: [9],
@@ -34,8 +41,8 @@ window.CONTROLES = (function () {
     izquierda: [14],
     derecha: [15],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", pausa: "Start", seguir: "✕" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", pausa: "Esc", seguir: "E" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M" };
 
   const abajo = new Set();
   let antes = {},

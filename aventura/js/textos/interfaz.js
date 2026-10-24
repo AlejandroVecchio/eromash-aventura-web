@@ -6,12 +6,12 @@ I18N.textos({
   "ui.tecla.espacio": { es: "Espacio", en: "Space" },
   "ui.tecla.clic": { es: "Clic", en: "Click" },
   "ui.controles": {
-    es: "Mover WASD · Correr Shift · Saltar Espacio · Atacar Clic · Esquivar C · Interactuar E · Lente R · Diario J",
-    en: "Move WASD · Run Shift · Jump Space · Attack Click · Dodge C · Interact E · Lens R · Journal J",
+    es: "Mover WASD · Correr Shift · Saltar Espacio · Atacar Clic · Esquivar C · Interactuar E · Lente R · Runa Q (cambiar T) · Mapa M · Diario J",
+    en: "Move WASD · Run Shift · Jump Space · Attack Click · Dodge C · Interact E · Lens R · Rune Q (switch T) · Map M · Journal J",
   },
   "ui.controles_mando": {
-    es: "Mover palanca · Correr L3 · Saltar ✕ · Atacar □ · Esquivar L1 · Interactuar ○ · Lente △ · Diario Select",
-    en: "Move stick · Run L3 · Jump ✕ · Attack □ · Dodge L1 · Interact ○ · Lens △ · Journal Select",
+    es: "Mover palanca · Correr L3 · Saltar ✕ · Atacar □ · Esquivar L1 · Interactuar ○ · Lente △ · Runa R1 (cambiar R3) · Mapa panel · Diario Select",
+    en: "Move stick · Run L3 · Jump ✕ · Attack □ · Dodge L1 · Interact ○ · Lens △ · Rune R1 (switch R3) · Map touchpad · Journal Select",
   },
   "ui.lugar_descubierto": { es: "Lugar descubierto", en: "Place discovered" },
   "ui.calidad": { es: "Calidad gráfica", en: "Graphics quality" },
