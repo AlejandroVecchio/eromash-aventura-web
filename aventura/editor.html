@@ -11,7 +11,7 @@
   html, body { margin: 0; height: 100%; background: #111111; color: #F2ECEC; font-family: "Eromash Text", system-ui, sans-serif; overflow: hidden; }
   .ed { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
   #mapa { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; background: #1E2C1B; }
-  aside { background: #1C1714; border-left: 1px solid #3A2A26; display: flex; flex-direction: column; min-height: 0; }
+  aside { background: #1C1714; border-left: 1px solid #3A2A26; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
   aside header { padding: 16px 16px 8px; }
   aside h1 { font-family: "Eromash Display", system-ui, sans-serif; font-size: 20px; margin: 0 0 4px; color: #FFD98A; }
   aside .sub { margin: 0; font-size: 13px; color: #E0B2B2; line-height: 1.4; }
@@ -26,14 +26,17 @@
   input[type=search], select, input[type=number] { font: inherit; font-size: 14px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 7px 8px; }
   input[type=search], select { width: 100%; box-sizing: border-box; }
   input[type=number] { width: 64px; }
-  #lista { flex: 1; overflow: auto; padding: 6px 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; align-content: start; }
+  #lista { flex: 1 0 280px; min-height: 280px; overflow: auto; padding: 6px 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; align-content: start; }
   .obj { background: #241A17; border: 1px solid #3A2A26; padding: 4px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; }
   .obj canvas { width: 100%; height: 70px; display: block; background: #3B3222; }
   .obj span { font-size: 12px; line-height: 1.2; color: #E0B2B2; }
   .obj.elegido { border-color: #FFD98A; }
   .grupo { grid-column: 1 / -1; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #FFD98A; margin: 8px 0 0; }
   footer { border-top: 1px solid #3A2A26; padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
-  footer .botones { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  footer .botones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  footer .botones button { padding: 7px 6px; font-size: 12px; }
+  footer .botones select { font-size: 12px; padding: 6px; grid-column: span 2; }
+  footer .botones .ancho2b { grid-column: 1 / -1; }
   footer .botones .ancho { grid-column: 1 / -1; background: #9C2315; border-color: #C8402D; }
   #cuenta, #donde { font-size: 12px; color: #B5A5A0; }
   #ayuda { position: absolute; left: 12px; bottom: 10px; right: 352px; font-size: 12px; color: #E0B2B2; background: rgba(17,17,17,0.75); padding: 6px 10px; pointer-events: none; }
@@ -100,6 +103,7 @@
   #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
   .herr .ancho3 { grid-column: 1 / -1; }
+  .herr .ancho2 { grid-column: span 2; }
   #selInterior { margin: 4px 16px; background: #2A3A3C; border-color: #73D5DB; }
   /* los interiores: el cuarto de frente a la izquierda, su panel a la derecha */
   #cuartos { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 1fr) 320px; background: #0A0606; }
@@ -144,7 +148,8 @@
       <button id="hMedir" data-i18n="ed.medir"></button>
       <button id="hIA" data-i18n="ed.ia"></button>
       <button id="hComandos" data-i18n="ed.comandos"></button>
-      <button id="hInteriores" class="ancho3" data-i18n="ed.interiores"></button>
+      <button id="hRegion" data-i18n="ed.region"></button>
+      <button id="hInteriores" class="ancho2" data-i18n="ed.interiores"></button>
     </div>
     <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
     <div class="fila">
@@ -162,6 +167,7 @@
       <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
       <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
     </div>
+    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label></div>
     <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
     <div class="fila">
       <label><input id="original" type="checkbox" /><span data-i18n="ed.original"></span></label>
@@ -220,13 +226,16 @@
         <button id="bDeshacer" data-i18n="ed.deshacer"></button>
         <button id="bRehacer" data-i18n="ed.rehacer"></button>
         <button id="bRevisar" data-i18n="ed.revisar"></button>
+        <button id="bProbar" data-i18n="ed.probar"></button>
+        <button id="bCopiar" data-i18n="ed.copiar"></button>
         <button id="bAtajos" data-i18n="ed.atajos_b"></button>
         <button id="bBorrador" data-i18n="ed.borrador_guardar"></button>
         <select id="borradores"></select>
-        <button id="bProbar" data-i18n="ed.probar"></button>
-        <button id="bCopiar" data-i18n="ed.copiar"></button>
+        <button id="bPieza" data-i18n="ed.pieza_guardar"></button>
+        <select id="piezas"></select>
         <button id="bCargar" data-i18n="ed.cargar"></button>
         <button id="bLimpiar" data-i18n="ed.limpiar"></button>
+        <button id="bExportar" data-i18n="ed.exportar_corto" title=""></button>
         <input id="archivo" type="file" accept=".js,.json,text/javascript,application/json" hidden />
         <button id="bDescargar" class="ancho" data-i18n="ed.descargar"></button>
       </div>
@@ -245,6 +254,7 @@
     <div class="fila soloCuarto"><span data-i18n="ed.cu_estandarte"></span><input id="cuEstandarte" type="range" min="0" max="1450" step="10" /></div>
     <div class="fila"><label class="soloCuarto"><input id="cuRepisa" type="checkbox" /><span data-i18n="ed.cu_repisa"></span></label><label><input id="cuLuz" type="checkbox" checked /><span data-i18n="ed.cu_luz"></span></label></div>
     <div class="fila"><small id="cuCuenta"></small><button id="cuComoEra" data-i18n="ed.cu_como_era"></button></div>
+    <div class="fila"><button id="cuProbar" style="flex: 1" data-i18n="ed.cu_probar"></button></div>
     <div id="cuSel" class="oculto">
       <b id="cuSelNombre"></b><small id="cuSelTipo"></small>
       <div class="fila"><span data-i18n="ed.sel_tam"></span><input id="cuSelEsc" type="range" min="0.3" max="2.5" step="0.05" value="1" /><b id="cuSelEscV">1.00</b></div>
@@ -319,5 +329,6 @@
 <script src="js/editor/ia.js"></script>
 <script src="js/motor/interiores.js"></script>
 <script src="js/editor/cuartos.js"></script>
+<script src="js/editor/mundo.js"></script>
 </body>
 </html>

@@ -886,6 +886,9 @@ window.INTERIORES = (function () {
       st = extra.dentro;
       dentro = null;
       J.dentro = null;
+      // ?cuarto=plantilla (el botón «Probar» del editor de interiores): arranca adentro de ese cuarto
+      const m = location.search.match(/[?&]cuarto=([a-z_0-9]+)/);
+      if (m) setTimeout(() => probar(m[1]), 400);
     },
     cercanos(dar) {
       for (const p of puertas) {
@@ -895,6 +898,22 @@ window.INTERIORES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
+  function probar(pl) {
+    const sot = pl.startsWith("sot_"),
+      clase = pl.slice(4);
+    const p =
+      puertas.find((q) => !sot && plantillaDe(q.cosa.id, q.cosa.o) === pl) ||
+      puertas.find((q) => sot && CLASE_SOTANO[q.tipo] === clase) ||
+      puertas.find((q) => q.tipo === "casa") ||
+      puertas[0];
+    if (!p) return;
+    entrar(p);
+    if (!sot) return;
+    const arriba = dentro;
+    arriba.vuelta = { x: 800, y: 780 };
+    const s0 = armarSotano(p.tipo, p.cosa, p.clave, clase);
+    dentro = Object.assign(s0, { tipo: p.tipo, puerta: p, arriba, ix: 380, iy: FONDO + 110, fundido: 1, saliendo: 0 });
+  }
   // salir del cuarto directo a otro lugar (la escalera del sótano de la hospedería)
   function salirA(x, y) {
     if (!dentro) return;

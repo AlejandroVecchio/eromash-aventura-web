@@ -59,6 +59,10 @@ window.EDITOR_CUARTOS = (function () {
   $("cuRepisa").addEventListener("change", () => cambiar((p) => (p.repisa = $("cuRepisa").checked)));
   $("cuLuz").addEventListener("change", () => (luz = $("cuLuz").checked));
   $("cuCerrar").onclick = () => cerrar();
+  $("cuProbar").onclick = () => {
+    const lang = new URLSearchParams(location.search).get("lang");
+    open("index.html?borrador=1&jugar=1&cuarto=" + pl + (lang ? "&lang=" + lang : ""), "_blank");
+  };
   $("cuComoEra").onclick = () => {
     if (cf() && confirm(t("ed.cu_como_era_seguro"))) cambiar((p) => Object.keys(p).forEach((x) => delete p[x]));
   };

@@ -33,6 +33,8 @@
   const completar = (e) => {
     ["rios", "lagos", "quitarRios", "quitarLagos", "estiloRios", "estiloLagos"].forEach((k) => !e[k] && (e[k] = []));
     if (!e.cuartos || typeof e.cuartos !== "object") e.cuartos = {};
+    if (!Array.isArray(e.regiones)) e.regiones = [];
+    if (!e.piezas || typeof e.piezas !== "object") e.piezas = {};
   };
   completar(est);
   const historial = [],
@@ -61,6 +63,7 @@
     const h = new Date();
     $("guardadoV").textContent = t("ed.guardado_a", [String(h.getHours()).padStart(2, "0") + ":" + String(h.getMinutes()).padStart(2, "0"), historial.length]);
     armarIr();
+    if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
   };
   const r1 = (v) => Math.round(v);
 
@@ -609,6 +612,7 @@
       c.restore();
     }
     if (window.EDITOR_IA) EDITOR_IA.dibujar(c, cam, V, enVista, tt);
+    if (window.EDITOR_MUNDO) EDITOR_MUNDO.dibujar(c, cam, V, cursor, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -1749,8 +1753,9 @@
     $("hBorrar").classList.toggle("activo", h === "borrar");
     $("hNota").classList.toggle("activo", h === "nota");
     $("hMedir").classList.toggle("activo", h === "medir");
+    $("hRegion").classList.toggle("activo", h === "region");
     $("hIA").classList.toggle("activo", !!window.EDITOR_IA && EDITOR_IA.abierta());
-    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" ? "cell" : "not-allowed";
+    cv.style.cursor = h === "poner" ? "crosshair" : h === "mover" ? "grab" : h === "nota" ? "copy" : h === "camino" || h === "agua" || h === "medir" || h === "region" ? "cell" : "not-allowed";
   }
   $("hPoner").onclick = () => ponerHerr("poner");
   $("hMover").onclick = () => ponerHerr("mover");
@@ -1911,6 +1916,7 @@
       medida = arrastre = { medir: true, x, y, x2: x, y2: y };
       return;
     }
+    if (window.EDITOR_MUNDO && EDITOR_MUNDO.clic(x, y, e)) return;
     // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
     const ni = herr !== "borrar" ? notaEn(x, y) : -1;
     if (ni >= 0) {
@@ -2503,6 +2509,7 @@
       if (ctrl && e.key.toLowerCase() === "y") return e.preventDefault(), rehacer();
       return EDITOR_CUARTOS.tecla(e);
     }
+    if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida()) : null);
     // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
     if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
@@ -2723,7 +2730,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -2819,6 +2826,13 @@
   // lo que usan la paleta de comandos (comandos.js) y la IA (ia.js)
   window.EDITOR = {
     est: () => est,
+    herr: () => herr,
+    enVista: (d) => enVista(d),
+    copiarElegido: () => (copiar() ? copia : null),
+    pegarEn: (items, x, y) => {
+      copia = items;
+      pegar(x, y);
+    },
     // un cambio con su paso de Deshacer (lo usan los módulos, como el de interiores)
     cambiar: (fn) => {
       recordar();
