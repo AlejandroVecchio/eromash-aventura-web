@@ -1086,17 +1086,24 @@ window.ASSETS = (function () {
     santuario: { f: santuario, alto: 180, choque: { w: 300, h: 40 }, grupo: "este", luz: true },
     zarzas: { f: zarzas, alto: 80, choque: null, grupo: "este" },
   };
-  // o.esc (tamaño), o.ex / o.ey (ancho y alto), o.esp (espejado) y o.rot (giro en grados, sobre el pie) valen para cualquier asset: los pone el editor
+  // o.esc (tamaño), o.ex / o.ey (ancho y alto), o.esp (espejado), o.rot (inclinado, en grados, sobre el pie) y o.giro (girado sobre el piso, en grados) valen para cualquier asset: los pone el editor
   function dibujar(c, id, x, y, t, o = {}) {
     const a = LISTA[id];
     if (!a) return;
     const k = o.esc || 1,
       ex = (o.ex || 1) * k * (o.esp ? -1 : 1),
       ey = (o.ey || 1) * k;
-    if (ex === 1 && ey === 1 && !o.rot) return a.f(c, x, y, t, o);
+    if (ex === 1 && ey === 1 && !o.rot && !o.giro) return a.f(c, x, y, t, o);
     c.save();
     c.translate(x, y);
     if (o.rot) c.rotate((o.rot * Math.PI) / 180);
+    // o.giro: girado sobre el piso (de frente, en diagonal, de costado o de espaldas): se angosta y el lado de atrás
+    // sube un poco, como visto desde arriba
+    if (o.giro) {
+      const g = (o.giro * Math.PI) / 180,
+        co = Math.cos(g);
+      c.transform(Math.sign(co || 1) * Math.max(0.18, Math.abs(co)), Math.sin(g) * 0.45, 0, 1, 0, 0);
+    }
     c.scale(ex, ey);
     c.translate(-x, -y);
     a.f(c, x, y, t, o);
@@ -1109,7 +1116,14 @@ window.ASSETS = (function () {
     const k = (o.s || 1) * (o.esc || 1),
       ex = o.ex || 1,
       ey = o.ey || 1;
-    const ch = a.choque ? (a.choque.r ? { r: a.choque.r * k * Math.max(ex, ey) } : { w: a.choque.w * k * ex, h: a.choque.h * k * ey }) : null;
+    let ch = a.choque ? (a.choque.r ? { r: a.choque.r * k * Math.max(ex, ey) } : { w: a.choque.w * k * ex, h: a.choque.h * k * ey }) : null;
+    if (ch && ch.w && o.giro) {
+      // girado sobre el piso: de costado ocupa menos de ancho y más de fondo
+      const g = (o.giro * Math.PI) / 180,
+        co = Math.abs(Math.cos(g)),
+        si = Math.abs(Math.sin(g));
+      ch = { w: Math.max(ch.w * co + ch.h * si, ch.h), h: ch.h + ch.w * si * 0.45 };
+    }
     return { choque: o.sinChoque ? null : ch, alto: a.alto * k * ey };
   }
   // para la página de revisión: cada asset con su nombre traducido y un ejemplo de opciones para mostrarlo

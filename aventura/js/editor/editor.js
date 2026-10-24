@@ -576,6 +576,7 @@
     ["selEx", "ex", 1],
     ["selEy", "ey", 1],
     ["selRot", "rot", 0],
+    ["selGiro", "giro", 0],
   ];
   function pintarElegida() {
     const panel = $("selPanel");
@@ -590,9 +591,9 @@
     const dos = o.x2 !== undefined;
     deslizadores.forEach(([el, k, base]) => {
       $(el).value = dos ? (k === "rot" ? anguloDos() : base) : o[k] || base;
-      $(el + "V").textContent = k === "rot" ? Math.round(+$(el).value) + "°" : (+$(el).value).toFixed(2);
+      $(el + "V").textContent = k === "rot" || k === "giro" ? Math.round(+$(el).value) + "°" : (+$(el).value).toFixed(2);
       // lo que va de punta a punta: el tamaño es su largo y el giro lo da vuelta sobre su centro
-      $(el).disabled = dos && (k === "ex" || k === "ey");
+      $(el).disabled = dos && (k === "ex" || k === "ey" || k === "giro");
     });
     escPrevio = 1;
     $("selEsp").checked = !!o.esp;
@@ -603,7 +604,7 @@
     $(el).addEventListener("keydown", () => recordar());
     $(el).addEventListener("input", () => {
       const v = +$(el).value;
-      $(el + "V").textContent = k === "rot" ? Math.round(v) + "°" : v.toFixed(2);
+      $(el + "V").textContent = k === "rot" || k === "giro" ? Math.round(v) + "°" : v.toFixed(2);
       if (esDos() && k === "rot") return girarDos(v);
       if (esDos() && k === "esc") {
         estirarDos(v / escPrevio);
@@ -667,7 +668,7 @@
   $("selComo").onclick = () => {
     if (!elegida) return;
     recordar();
-    ["esc", "ex", "ey", "esp", "rot"].forEach((k) => cambiarElegida(k, 0, true));
+    ["esc", "ex", "ey", "esp", "rot", "giro"].forEach((k) => cambiarElegida(k, 0, true));
     const m = elegida.cosa && entrada(false);
     if (m && m.o) delete m.o.x2, delete m.o.y2;
     guardar();
@@ -1762,6 +1763,15 @@
     if (elegida && (e.key === "f" || e.key === "F")) {
       recordar();
       cambiarElegida("esp", true, !!opcionesElegida().esp);
+      guardar();
+      pintarElegida();
+    }
+    // R y T: girarlo sobre el piso
+    if (elegida && !esDos() && (e.key === "r" || e.key === "t" || e.key === "R" || e.key === "T")) {
+      recordar();
+      let g = (opcionesElegida().giro || 0) + (e.key.toLowerCase() === "t" ? 15 : -15);
+      g = ((((g + 180) % 360) + 360) % 360) - 180;
+      cambiarElegida("giro", g, g === 0);
       guardar();
       pintarElegida();
     }
