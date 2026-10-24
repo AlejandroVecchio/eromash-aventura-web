@@ -611,12 +611,44 @@ window.ELDERVALD = (function () {
       sop.push(poner("soporteAtadura", [c[0] + Math.cos(a) * 15 * M, c[1] + Math.sin(a) * 15 * M * 0.85], { sem: i, hacia: c, visto: false, roto: false }, "soporte" + i));
     }
     NOMBRADAS.soportes = sop;
-    // el anillo de árboles viejos que cierra el claro (con la entrada al este)
-    for (let i = 0; i < 26; i++) {
-      const a = (i / 26) * TAU;
-      if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a)) - 0.25) < 0.42) continue;
-      poner(i % 3 ? "pino" : "roble", [c[0] + Math.cos(a) * 30 * M, c[1] + Math.sin(a) * 26 * M], { s: 1.5 + (i % 4) * 0.12, sem: i, pisos: 5 });
+    // la cuenca épica (Alejandro, 23/10/2026): paredes de roca y árboles gigantes afuera, la columnata de astas
+    // adentro (viejas y altas, crecidas con raíces, alternadas con nuevas a ras del suelo), la entrada al este con la
+    // escalera de raíces. Las manchas enfermas rodean cada menhir; la cama de musgo queda al fondo.
+    const entra = Math.atan2(LUGARES.claro_entrada.p[1] - c[1], LUGARES.claro_entrada.p[0] - c[0]);
+    const fueraEntrada = (a, ancho) => Math.abs(Math.atan2(Math.sin(a - entra), Math.cos(a - entra))) > ancho;
+    for (let i = 0; i < 22; i++) {
+      const a = (i / 22) * TAU;
+      if (!fueraEntrada(a, 0.38)) continue;
+      poner("paredRoca", [c[0] + Math.cos(a) * 37 * M, c[1] + Math.sin(a) * 32 * M], { sem: i, s: 1.15 });
     }
+    for (let i = 0; i < 26; i++) {
+      const a = (i / 26) * TAU + 0.12;
+      if (!fueraEntrada(a, 0.42)) continue;
+      poner(i % 3 ? "abetoAnciano" : "robleAnciano", [c[0] + Math.cos(a) * 33 * M, c[1] + Math.sin(a) * 28.5 * M], { s: 1.6, h: 900, sem: i });
+    }
+    const arcos = [];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * TAU + 0.2;
+      if (!fueraEntrada(a, 0.3)) continue;
+      arcos.push(poner("arcoAstas", [c[0] + Math.cos(a) * 26.5 * M, c[1] + Math.sin(a) * 22.5 * M], { viejo: i % 2 === 0, sem: i, s: i % 2 ? 1 : 1.25, cinta: i === 9 }, i === 9 ? "arco_cinta" : undefined));
+    }
+    NOMBRADAS.arcos = arcos;
+    punto("cinta", [arcos.find((x) => x.o.cinta).x, arcos.find((x) => x.o.cinta).y + 30]);
+    NOMBRADAS.manchas = sop.map((sp, i) => poner("manchaEnferma", [sp.x, sp.y + 20], { sem: i + 3, piso: true, sinChoque: true }));
+    const cama = [c[0] - 20 * M, c[1] + 6 * M];
+    poner("camaMusgo", cama, { piso: true, sinChoque: true }, "cama_musgo");
+    punto("cama_musgo", cama);
+    const ent = LUGARES.claro_entrada.p;
+    poner("escaleraRaices", mas(ent, -6, 1), { s: 1.2 }, "escalera_raices");
+    // la loma de los observadores: un desvío que sube al norte de la entrada, con el apostadero y su cofre
+    const loma = mas(ent, -2, -10);
+    poner("apostadero", loma, {}, "apostadero");
+    punto("apostadero", mas(loma, 1.5, 0.8));
+    RECINTOS.push([loma[0] - 5 * M, loma[1] - 4 * M, loma[0] + 5 * M, loma[1] + 3 * M]);
+    // la fisura del norte, donde se pierde el filamento
+    const fis = [c[0] + 4 * M, c[1] - 27 * M];
+    poner("fisura", fis, {}, "fisura");
+    punto("hilo", [sop[0].x, sop[0].y + 40]);
   })();
   // El aserradero de Orm
   (function () {

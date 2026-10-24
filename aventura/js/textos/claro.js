@@ -1,0 +1,22 @@
+// Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
+I18N.textos({
+  "as.arcoAstas": { es: "Arco de astas mudadas", en: "Arch of shed antlers" },
+  "as.paredRoca": { es: "Pared de roca de la cuenca", en: "Basin rock wall" },
+  "as.manchaEnferma": { es: "Vegetación enferma", en: "Sick vegetation" },
+  "as.camaMusgo": { es: "Cama de musgo del Ciervo", en: "The Stag's moss bed" },
+  "as.escaleraRaices": { es: "Escalera de raíces", en: "Root stairway" },
+  "as.apostadero": { es: "Apostadero de la loma", en: "Hilltop lookout" },
+  "as.fisura": { es: "Fisura del norte", en: "Northern fissure" },
+  "cl.accion_cinta": { es: "Mirar la cinta", en: "Look at the ribbon" },
+  "cl.cinta": { es: "Una cinta descolorida, casi un hilo, con un nudo y dos cuentas de madera. Alguien la ató hace mucho.", en: "A faded ribbon, almost a thread, with a knot and two wooden beads. Someone tied it long ago." },
+  "cl.cinta_1": { es: "Eydis. Hay una cinta acá, bajo el arco.", en: "Eydis. There's a ribbon here, under the arch." },
+  "cl.cinta_2": { es: "La atamos aquella noche. Mi madre y yo.", en: "We tied it that night. My mother and I." },
+  "cl.accion_cama": { es: "Mirar la cama de musgo", en: "Look at the moss bed" },
+  "cl.cama": { es: "Una hondonada ancha, el musgo aplastado y pelos atrapados en las raíces. Acá descansaba entre una ronda y otra, desde hace siglos.", en: "A wide hollow, flattened moss and hairs caught in the roots. This is where it rested between rounds, for centuries." },
+  "cl.accion_cofre": { es: "Levantar las tablas", en: "Lift the planks" },
+  "cl.accion_mirar": { es: "Mirar el Claro desde la loma", en: "Look at the Glade from the hill" },
+  "cl.cofre": { es: "Bajo las tablas, un cofrecito con unas monedas. Lo dejaron los cazadores que esperaban acá.", en: "Under the planks, a little chest with a few coins. Left by the hunters who waited here." },
+  "cl.loma": { es: "Desde acá se ve el Claro entero: los tres menhires y los hilos que suben hasta el Ciervo, tensos como la jarcia de un barco.", en: "From here you can see the whole Glade: the three standing stones and the threads rising to the Stag, taut as a ship's rigging." },
+  "cl.hilo": { es: "Un filamento distinto sale de la atadura, corre por el suelo hacia el norte y se pierde bajo una fisura de la roca.", en: "A different filament leaves the binding, runs along the ground to the north and disappears under a crack in the rock." },
+  "av.diario_hilo": { es: "En el Claro, un hilo violeta distinto de los otros se pierde bajo una fisura del norte. Lo mismo que vi en el Paso.", en: "In the Glade, a violet thread unlike the others disappears under a fissure to the north. The same thing I saw at the Pass." },
+});
