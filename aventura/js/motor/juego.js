@@ -1155,7 +1155,7 @@
     if (pe) {
       HUD.bolsillo(pe.plata, pe.frag, pe.nivel);
       HUD.barra([
-        { id: "atacar", icono: "espada", accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
+        { id: "atacar", icono: "espada", nivel: pe.espada, accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
         { id: "esquivar", icono: "esquivar", accion: "esquivar", nombre: t("inv.b_esquivar"), listo: jug.sta >= 20 && !jug.cansado },
         { id: "saltar", icono: "saltar", accion: "saltar", nombre: t("inv.b_saltar"), listo: true },
         { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },

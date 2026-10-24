@@ -10,10 +10,80 @@ window.INVENTARIO = (function () {
   const t = (k, v) => I18N.t(k, v);
   const { P, E, R, L, halo } = DIB;
 
-  // ---------- los íconos (dibujados, mismo estilo plano que los assets) ----------
-  // icono(c, tipo, x, y, s): centrado en (x, y), unos 64 × s de alto
-  function icono(c, tipo, x, y, s) {
+  // ---------- las piezas de verdad, las mismas de la arena ----------
+  // El casco de la E y el vikingo con su equipo salen de pecheras-lib.js (vikingo()), las espadas de
+  // eromash-espadas.js y la cota y la pechera de pecheras-lib.js (pecheraItem): nada de dibujos inventados.
+  // Las mejoras de Ása suben la pieza de rareza (común → legendaria).
+  const ARTE = new Map();
+  let version = 0;
+  function arte(clave, hacerSvg) {
+    let im = ARTE.get(clave);
+    if (!im) {
+      im = new Image();
+      im.onload = () => version++;
+      let svg = "";
+      try {
+        svg = hacerSvg();
+      } catch (e) {}
+      if (svg) im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      ARTE.set(clave, im);
+    }
+    return im.complete && im.naturalWidth ? im : null;
+  }
+  const conMedidas = (svg, w, h) => {
+    const abre = svg.slice(0, svg.indexOf(">"));
+    return /\bwidth=/.test(abre) ? svg : svg.replace("<svg ", '<svg width="' + w + '" height="' + h + '" ');
+  };
+  const PE = () => window.EromashPecheras,
+    ES = () => window.EromashEspadas;
+  const espadaId = (n) => "bastarda-" + Math.min(5, 1 + (n || 0));
+  const pecheraDe = (cota, pechera) => {
+    if (!PE()) return null;
+    const id = pechera ? "costa-aleta-4" : "arena-placa-" + Math.min(5, 1 + (cota || 0));
+    return PE().PECHERAS.find((p) => p.id === id) || null;
+  };
+  // la espada en la mano del vikingo, como la pone la mochila de la arena (eromash-armadura.js, dibujoEspada)
+  function manoEspada(n) {
+    if (!ES()) return "";
+    const s = ES().svg(espadaId(n), { vista: "vertical", sinEstilo: true }),
+      m = s.match(/viewBox="([^"]+)"/);
+    if (!m) return "";
+    const [x, y, w, h] = m[1].split(/\s+/);
+    return '<g transform="translate(495 331) rotate(14.3) scale(.786) translate(0 75)">' + s.replace("<svg ", '<svg x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" overflow="visible" ') + "</g>";
+  }
+  function piezaReal(tipo, n) {
+    if (tipo === "casco" && PE())
+      return arte("casco", () =>
+        PE()
+          .vikingo(null, "rojo", "tranquilo")
+          .replace(/viewBox="[^"]+"/, 'viewBox="50 88 380 450"')
+          .replace(/width="\d+" height="\d+"/, 'width="380" height="450"'),
+      );
+    if (tipo === "espada" && ES()) return arte("espada" + espadaId(n), () => conMedidas(ES().svg(espadaId(n)), 400, 400));
+    if ((tipo === "cota" || tipo === "pechera") && PE()) {
+      const p = pecheraDe(n, tipo === "pechera");
+      return p ? arte("pechera" + p.id, () => conMedidas(PE().pecheraItem(p), 424, 430)) : null;
+    }
+    return null;
+  }
+  // el vikingo entero con la cota o la pechera y la espada que lleva
+  function vikingoEquipado(pe) {
+    if (!PE()) return null;
+    const p = pecheraDe(pe.cota, pe.pechera);
+    return arte("vik" + (p ? p.id : "") + espadaId(pe.espada), () => PE().vikingo(p, "rojo", "tranquilo", "", "", manoEspada(pe.espada)));
+  }
+
+  // ---------- los íconos (los de la aventura, dibujados con el mismo estilo plano que los assets) ----------
+  // icono(c, tipo, x, y, s, n): centrado en (x, y), unos 64 × s de alto; n es el nivel de la pieza (espada, cota)
+  function icono(c, tipo, x, y, s, n) {
     s = s || 1;
+    const real = piezaReal(tipo, n);
+    if (real) {
+      const lado = 70 * s,
+        k = Math.min(lado / real.naturalWidth, lado / real.naturalHeight);
+      c.drawImage(real, x - (real.naturalWidth * k) / 2, y - (real.naturalHeight * k) / 2, real.naturalWidth * k, real.naturalHeight * k);
+      return;
+    }
     c.save();
     c.translate(x, y);
     c.scale(s, s);
@@ -241,7 +311,14 @@ window.INVENTARIO = (function () {
       c.closePath();
       c.fill();
       FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : COL_RUNA[item.runa], 7);
-    } else icono(c, item.icono, 64, 64, 1.5);
+    } else {
+      icono(c, item.icono, 64, 64, 1.5, item.nivel);
+      // si la pieza real todavía no cargó, se vuelve a pintar cuando esté
+      if (piezaReal(item.icono, item.nivel) === null && ["casco", "espada", "cota", "pechera"].includes(item.icono)) {
+        const v = version;
+        setTimeout(() => version !== v && abierta && pintar(), 150);
+      }
+    }
     if (item.cant != null && item.cant !== "") el.insertAdjacentHTML("beforeend", `<span class="cant">${item.cant}</span>`);
     if (item.nivel) el.insertAdjacentHTML("beforeend", `<span class="niv">${t("inv.nivel", [item.nivel])}</span>`);
     const i = celdas.length;
@@ -289,8 +366,7 @@ window.INVENTARIO = (function () {
       cv.width = 300;
       cv.height = 360;
       centro.appendChild(cv);
-      const img = VIKINGO.imagen("R", "S", "calm"),
-        cx = cv.getContext("2d");
+      const cx = cv.getContext("2d");
       const dib = () => {
         cx.clearRect(0, 0, 300, 360);
         const g = cx.createRadialGradient(150, 200, 10, 150, 200, 170);
@@ -302,10 +378,17 @@ window.INVENTARIO = (function () {
         cx.beginPath();
         cx.ellipse(150, 332, 90, 18, 0, 0, Math.PI * 2);
         cx.fill();
-        cx.drawImage(img, 40, 40, 220, 264);
+        const v = vikingoEquipado(pe);
+        if (v) {
+          const k = Math.min(280 / v.naturalWidth, 330 / v.naturalHeight);
+          cx.drawImage(v, 150 - (v.naturalWidth * k) / 2, 345 - v.naturalHeight * k, v.naturalWidth * k, v.naturalHeight * k);
+        } else {
+          const img = VIKINGO.imagen("R", "S", "calm");
+          if (img.complete) cx.drawImage(img, 40, 40, 220, 264);
+        }
       };
-      if (img.complete) dib();
-      else img.onload = dib;
+      dib();
+      if (!vikingoEquipado(pe)) setTimeout(dib, 200);
       lados.der.forEach((it, k) => der.appendChild(celda(it, k, 2)));
       fig.append(izq, centro, der);
       const rr = document.createElement("div");
@@ -437,5 +520,5 @@ window.INVENTARIO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { icono, abrir, cerrar, paso, abierta: () => abierta };
+  return { icono, abrir, cerrar, paso, abierta: () => abierta, version: () => version };
 })();

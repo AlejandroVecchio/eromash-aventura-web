@@ -104,7 +104,7 @@ window.HUD = (function () {
   let barraClave = "";
   function barra(casillas) {
     const el = $("hudBarra");
-    const clave = casillas.map((q) => q.id + ":" + (q.runa || q.icono) + ":" + CONTROLES.glifo(q.accion)).join("|") + I18N.lang;
+    const clave = casillas.map((q) => q.id + ":" + (q.runa || q.icono) + ":" + (q.nivel || 0) + ":" + CONTROLES.glifo(q.accion)).join("|") + I18N.lang + (window.INVENTARIO ? INVENTARIO.version() : 0);
     if (clave !== barraClave) {
       barraClave = clave;
       el.innerHTML = casillas
@@ -124,7 +124,7 @@ window.HUD = (function () {
           c.closePath();
           c.fill();
           if (q.runa) FUTHARK.dibujar(c, q.runa, 48 * k, 70 * k, 46 * k, q.col, 5 * k);
-        } else if (window.INVENTARIO) INVENTARIO.icono(c, q.icono, 48 * k, 48 * k, 1.2 * k);
+        } else if (window.INVENTARIO) INVENTARIO.icono(c, q.icono, 48 * k, 48 * k, 1.2 * k, q.nivel);
         if (q.id === "mochila") {
           const d = el.querySelector("#c_mochila");
           d.style.pointerEvents = "auto";
