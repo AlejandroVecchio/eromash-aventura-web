@@ -122,6 +122,20 @@ window.ELDERVALD = (function () {
   // la empalizada: un anillo cerrado salvo en las puertas (y donde pasa agua)
   const enPuerta = (a) => CIUDAD.puertas.some((pa) => Math.abs(Math.atan2(Math.sin(a - pa), Math.cos(a - pa))) < CIUDAD.hueco / CIUDAD.rx);
   const MURO = [];
+  // la muralla doble mide 2 × MEDIO_MURO de ancho: la cara de afuera, el adarve y la cara de adentro (alturas.js)
+  const MEDIO_MURO = 75,
+    ALTO_MURO = 170;
+  const normalMuro = (a) => {
+    const nx = Math.cos(a) / CIUDAD.rx,
+      ny = Math.sin(a) / CIUDAD.ry,
+      l = Math.hypot(nx, ny);
+    return [nx / l, ny / l];
+  };
+  const enMuro = (a, d) => {
+    const n = normalMuro(a);
+    return [CIUDAD.c[0] + Math.cos(a) * CIUDAD.rx + n[0] * d, CIUDAD.c[1] + Math.sin(a) * CIUDAD.ry + n[1] * d];
+  };
+  const NIVELES = [];
   {
     const n = 112;
     for (let i = 0; i < n; i++) {
@@ -134,8 +148,8 @@ window.ELDERVALD = (function () {
       if (suelo[Math.floor(amy / CELDA) * GW + Math.floor(amx / CELDA)] === 1) continue;
       const p0 = [CIUDAD.c[0] + Math.cos(a0) * CIUDAD.rx, CIUDAD.c[1] + Math.sin(a0) * CIUDAD.ry],
         p1 = [CIUDAD.c[0] + Math.cos(a1) * CIUDAD.rx, CIUDAD.c[1] + Math.sin(a1) * CIUDAD.ry];
-      MURO.push([p0, p1, am, i]);
-      pintarLinea([p0, p1], 64, 3);
+      MURO.push([p0, p1, am, i, a0, a1]);
+      pintarLinea([p0, p1], 2 * MEDIO_MURO + 6, 3);
     }
   }
   for (let gy = 0; gy < GH; gy++)
@@ -328,22 +342,57 @@ window.ELDERVALD = (function () {
   (function () {
     const c = CIUDAD.c,
       px = (dx, dy) => [c[0] + dx * U, c[1] + dy * U];
-    // la empalizada, las atalayas
-    MURO.forEach(([p0, p1, am, i]) => {
-      const mx = (p0[0] + p1[0]) / 2,
-        my = (p0[1] + p1[1]) / 2,
-        hx = (p1[0] - p0[0]) / 2,
-        hy = (p1[1] - p0[1]) / 2;
-      poner("empalizadaDoble", [mx, my], { dx: hx, dy: hy, dentro: Math.sin(am) < -0.05, sem: i, sinChoque: true, ancho: Math.hypot(hx, hy) + 30 });
-      if (i % 10 === 5) poner("torreVigia", [mx, my + 8], { sem: i, s: 1.35 });
+    // la muralla doble con el adarve (un nivel de alturas.js) y las atalayas por fuera
+    const muralla = { id: "muralla", h: ALTO_MURO, quads: [], escaleras: [] };
+    const hay = new Set(MURO.map((m0) => m0[3]));
+    const nM = 112;
+    MURO.forEach(([p0, p1, am, i, a0, a1]) => {
+      const A0 = enMuro(a0, MEDIO_MURO),
+        A1 = enMuro(a1, MEDIO_MURO),
+        D1 = enMuro(a1, -MEDIO_MURO),
+        D0 = enMuro(a0, -MEDIO_MURO);
+      const pts = [...A0, ...A1, ...D1, ...D0];
+      const fy = Math.max(A0[1], A1[1], D0[1], D1[1]),
+        fx = (A0[0] + A1[0] + D0[0] + D1[0]) / 4;
+      const q = pts.map((v, k) => (k % 2 ? v - fy : v - fx));
+      poner("murallaDoble", [fx, fy], { q, H: ALTO_MURO, sem: i, sinChoque: true, cabo0: !hay.has((i + nM - 1) % nM), cabo1: !hay.has((i + 1) % nM) });
+      muralla.quads.push({ pts, clave: fy });
+      if (i % 10 === 5) poner("torreVigia", enMuro(am, MEDIO_MURO + 80), { sem: i, s: 1.35 });
     });
+    // las escaleras de tablas, por dentro, a los dos lados de las puertas oeste y este: suben alejándose de la
+    // puerta (cada tramo del anillo entre dos puertas tiene la suya)
+    [Math.PI, 0].forEach((pa) => {
+      [-1, 1].forEach((lado) => {
+        let borde = null;
+        MURO.forEach(([, , am, , a0, a1]) => {
+          const d = Math.atan2(Math.sin(am - pa), Math.cos(am - pa));
+          if (Math.sign(d) !== lado || Math.abs(d) > 0.5) return;
+          const b = lado > 0 ? a0 : a1;
+          const db = Math.abs(Math.atan2(Math.sin(b - pa), Math.cos(b - pa)));
+          if (!borde || db < borde.db) borde = { a: b, db };
+        });
+        if (!borde) return;
+        const largo = ALTO_MURO * 2.1,
+          w = 96,
+          as = borde.a + lado * 0.012,
+          ae = as + (lado * largo) / CIUDAD.ry;
+        const A = enMuro(as, -MEDIO_MURO - w / 2 + 6),
+          B = enMuro(ae, -MEDIO_MURO - w / 2 + 6);
+        const fy = Math.max(A[1], B[1]) + w / 2,
+          fx = (A[0] + B[0]) / 2;
+        poner("escaleraMuralla", [fx, fy], { a: [A[0] - fx, A[1] - fy], b: [B[0] - fx, B[1] - fy], w, H: ALTO_MURO, abierto: pa === 0 ? -1 : 1, sinChoque: true });
+        muralla.escaleras.push({ ax: A[0], ay: A[1], bx: B[0], by: B[1], w, clave: fy });
+        RECINTOS.push([Math.min(A[0], B[0]) - w, Math.min(A[1], B[1]) - 40, Math.max(A[0], B[0]) + w, Math.max(A[1], B[1]) + 60]);
+      });
+    });
+    NIVELES.push(muralla);
     // atalayas y estandartes a los lados de las puertas oeste y este
     [Math.PI, 0].forEach((pa) => {
       [-1, 1].forEach((lado) => {
         const a = pa + (lado * (CIUDAD.hueco + 60)) / CIUDAD.ry;
-        const p = [c[0] + Math.cos(a) * CIUDAD.rx, c[1] + Math.sin(a) * CIUDAD.ry + 8];
+        const p = enMuro(a, MEDIO_MURO + 80);
         poner("torreVigia", p, { sem: lado + 3, s: 1.35 });
-        poner("estandarteCiervo", [p[0] + (pa ? 60 : -60), p[1] + 30], { sem: lado + (pa ? 7 : 9) });
+        poner("estandarteCiervo", [p[0] + (pa ? -70 : 70), p[1] + 30], { sem: lado + (pa ? 7 : 9) });
       });
     });
     // Puerta del Sur (llegada de EL-02) con la casa de guardia y el gran tablero de tablillas
@@ -374,7 +423,7 @@ window.ELDERVALD = (function () {
     // (24/10/2026, como en la lámina: metidas en la línea de la empalizada, un poco más altas que los troncos)
     const anclas = [];
     ANCLAS.forEach(([a, runa, fuerza], i) => {
-      const p = [c[0] + Math.cos(a) * CIUDAD.rx, c[1] + Math.sin(a) * CIUDAD.ry + 26];
+      const p = enMuro(a, MEDIO_MURO + 46);
       anclas.push(poner("piedraAncla", p, { runa, fuerza, sem: i, s: 1.45 }, "ancla" + i));
     });
     NOMBRADAS.anclas = anclas;
@@ -1212,6 +1261,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, hayMuro, NIVELES, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();

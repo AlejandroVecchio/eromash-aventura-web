@@ -99,6 +99,7 @@
   J.sacudir = (f) => (J.cam.sac = Math.max(J.cam.sac, f));
   J.herir = (dano, ox, oy, tipo) => {
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
+    if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
     if (tipo === "helado") jug.lento = 2;
     if (dano <= 0) {
@@ -556,6 +557,7 @@
     if (CONTROLES.recien("lente")) usarLente();
   }
   function moverJugador(dx, dy) {
+    if (window.ALTURAS && ALTURAS.mover(dx, dy)) return; // escaleras y adarves
     if (W.libre(jug.x + dx, jug.y, R)) jug.x += dx;
     if (W.libre(jug.x, jug.y + dy, R)) jug.y += dy;
   }
@@ -704,7 +706,7 @@
   // ---------- cámara ----------
   function actualizarCamara(dt) {
     let fx = jug.x,
-      fy = jug.y - 30;
+      fy = jug.y - (jug.z || 0) - 30;
     if (ciervo.activo) {
       fx = (jug.x * 2 + ciervo.x) / 3;
       fy = (jug.y * 2 + ciervo.y) / 3 - 30;
@@ -741,6 +743,7 @@
     const p = jug;
     if (p.muerto && Math.floor(J.t * 8) % 2) return;
     c.save();
+    if (p.z) c.translate(0, -p.z); // arriba de la muralla o en la escalera
     c.translate(p.x, p.y);
     c.scale(CUERPO, CUERPO);
     c.translate(-p.x, -p.y);
@@ -1010,10 +1013,11 @@
     enemigos.forEach((e) => e.activo && e.muerto < 0.8 && visible(e.x, e.y) && lista.push({ y: e.y, f: () => CB.dibujar(c, e, J.t) }));
     if (visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
     cadaSis("objetos", lista, visible, c);
-    lista.push({ y: jug.y, f: dibujarJugador, jugador: true });
+    lista.push({ y: window.ALTURAS ? ALTURAS.orden() : jug.y, f: dibujarJugador, jugador: true });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((d) => d.f());
     siluetaJugador(lista);
+    if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
     LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9);
     LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
@@ -1050,9 +1054,11 @@
   function dibujarJugadorEn(ctx, x, y, k) {
     const px = jug.x,
       py = jug.y,
+      pz = jug.z,
       c0 = c;
     jug.x = x;
     jug.y = y;
+    jug.z = 0;
     c = ctx;
     c.save();
     c.translate(x, y);
@@ -1065,6 +1071,7 @@
       c = c0;
       jug.x = px;
       jug.y = py;
+      jug.z = pz;
     }
   }
   // ---------- la silueta de Eromash detrás de las cosas ----------
@@ -1077,11 +1084,13 @@
     tapaC = tapaCv.getContext("2d");
   function siluetaJugador(lista) {
     if (jug.muerto) return;
+    const zj = jug.z || 0,
+      clave = window.ALTURAS ? ALTURAS.orden() : jug.y;
     const bx = jug.x - 100,
-      by = jug.y - 150,
+      by = jug.y - zj - 150,
       bw = 200,
       bh = 170;
-    const tapan = lista.filter((d) => d.cosa && d.y > jug.y && !d.cosa.o.piso && d.cosa.y - d.cosa.alto * 1.3 < jug.y && Math.abs(d.cosa.x - jug.x) < 420);
+    const tapan = lista.filter((d) => d.cosa && d.y > clave && !d.cosa.o.piso && d.cosa.y - d.cosa.alto * 1.3 < jug.y - zj && Math.abs(d.cosa.x - jug.x) < 420);
     if (!tapan.length) return;
     const w = Math.ceil(bw * esc),
       h = Math.ceil(bh * esc);

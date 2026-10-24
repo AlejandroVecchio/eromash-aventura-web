@@ -760,11 +760,139 @@
     casaNordica(c, x, y, t, { s: (o.s || 1) * 0.8, v: 4, pared: 2, techo: 0, postigo: 1, sem: 11, estandarte: true });
   }
 
+
+  // La muralla doble de Eikholt (24/10/2026, Alejandro: «una muralla doble con un piso donde se puede patrullar»):
+  // dos empalizadas de troncos con el adarve de tablas en el medio, a o.H de alto. Un tramo es el cuadrilátero
+  // o.q = [afuera0, afuera1, adentro1, adentro0] (x, y relativos al punto); se ve la cara que mira al sur (la de afuera
+  // en la mitad sur del anillo, la de adentro en la mitad norte), el adarve arriba y el parapeto de troncos con punta
+  // del lado de afuera. o.cabo0 / o.cabo1: el tramo termina ahí (una puerta) y se ve la punta del muro.
+  function murallaDoble(c, x, y, t, o) {
+    const q = o.q || [-100, 40, 100, 40, 100, -40, -100, -40],
+      H = o.H || 170,
+      r = azar((o.sem || 1) * 733);
+    const A0 = [x + q[0], y + q[1]],
+      A1 = [x + q[2], y + q[3]],
+      D1 = [x + q[4], y + q[5]],
+      D0 = [x + q[6], y + q[7]];
+    const arriba = (p, dz) => [p[0], p[1] - H - (dz || 0)];
+    const afueraAlFrente = A0[1] + A1[1] > D0[1] + D1[1];
+    const [F0, F1] = afueraAlFrente ? [A0, A1] : [D0, D1];
+    const largo = Math.hypot(F1[0] - F0[0], F1[1] - F0[1]),
+      n = Math.max(3, Math.round(largo / 22));
+    const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    // el terraplén y la sombra al pie de la cara
+    P(c, [F0[0], F0[1] + 16, F1[0], F1[1] + 16, F1[0], F1[1] - 4, F0[0], F0[1] - 4], "rgba(0,0,0,0.3)");
+    // el parapeto de afuera cuando queda atrás (mitad norte): asoma por detrás del adarve
+    const parapeto = (frente) => {
+      for (let k = 0; k < n; k++) {
+        const u0 = k / n,
+          u1 = (k + 1) / n,
+          a = arriba(lerp(A0, A1, u0)),
+          b = arriba(lerp(A0, A1, u1)),
+          h = 40 + r() * 10;
+        P(c, [a[0], a[1] + 2, b[0], b[1] + 2, b[0], b[1] - h, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - h - 12, a[0], a[1] - h], k % 2 ? C.madera : C.maderaVieja);
+        if (frente) P(c, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - h - 12, b[0], b[1] - h, b[0], b[1] + 2, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 2], k % 2 ? C.maderaLuz : C.madera);
+      }
+      L(c, arriba(A0, 20)[0], arriba(A0, 20)[1], arriba(A1, 20)[0], arriba(A1, 20)[1], C.hierro, 4);
+    };
+    if (!afueraAlFrente) parapeto(false);
+    // el adarve: tablas de punta a punta, con la junta oscura cada tanto
+    P(c, [...arriba(A0), ...arriba(A1), ...arriba(D1), ...arriba(D0)], "#6A4C2E");
+    for (let k = 0; k <= n; k++) {
+      const a = arriba(lerp(A0, A1, k / n)),
+        b = arriba(lerp(D0, D1, k / n));
+      L(c, a[0], a[1], b[0], b[1], k % 3 ? "#5A3E24" : "#4A3220", 2);
+    }
+    const m0 = arriba(lerp(A0, D0, 0.5)),
+      m1 = arriba(lerp(A1, D1, 0.5));
+    alfa(c, 0.25, () => L(c, m0[0], m0[1], m1[0], m1[1], "#9A7448", 3));
+    // la cara del frente, de troncos parados hasta el adarve
+    for (let k = 0; k < n; k++) {
+      const a = lerp(F0, F1, k / n),
+        b = lerp(F0, F1, (k + 1) / n),
+        h = H + (afueraAlFrente ? 0 : 2);
+      P(c, [a[0], a[1] + 4, b[0], b[1] + 4, b[0], b[1] - h, a[0], a[1] - h], k % 2 ? C.madera : C.maderaVieja);
+      const mx = (a[0] + b[0]) / 2,
+        my = (a[1] + b[1]) / 2;
+      P(c, [mx, my + 4, b[0], b[1] + 4, b[0], b[1] - h, mx, my - h], k % 2 ? C.maderaLuz : C.madera);
+    }
+    // fajas de hierro y el borde del adarve
+    [46, H * 0.62].forEach((hh, i) => L(c, F0[0], F0[1] - hh, F1[0], F1[1] - hh, i ? C.hierro : "#8A7A5A", 5));
+    L(c, arriba(F0)[0], arriba(F0)[1] + 2, arriba(F1)[0], arriba(F1)[1] + 2, C.maderaSombra, 6);
+    // la baranda de adentro cuando la cara de adentro es la del frente (mitad norte)
+    if (!afueraAlFrente) {
+      const b0 = arriba(D0, 32),
+        b1 = arriba(D1, 32);
+      L(c, b0[0], b0[1], b1[0], b1[1], C.maderaSombra, 5);
+      for (let k = 0; k <= n; k += 2) {
+        const p = arriba(lerp(D0, D1, k / n));
+        L(c, p[0], p[1], p[0], p[1] - 32, C.maderaSombra, 4);
+      }
+    } else parapeto(true);
+    // la punta del muro junto a una puerta: el corte de los dos muros y el adarve
+    [["cabo0", A0, D0], ["cabo1", A1, D1]].forEach(([k, a, d]) => {
+      if (!o[k]) return;
+      const [p0, p1] = a[1] > d[1] ? [d, a] : [a, d];
+      P(c, [p0[0], p0[1], p1[0], p1[1], p1[0], p1[1] - H, p0[0], p0[1] - H], C.maderaSombra);
+      P(c, [p0[0] - 8, p0[1] - H - 4, p1[0] + 8, p1[1] - H - 4, p1[0] + 8, p1[1] - H - 64, p0[0] - 8, p0[1] - H - 64], C.maderaVieja);
+      P(c, [(p0[0] + p1[0]) / 2 - 10, (p0[1] + p1[1]) / 2 - H - 64, (p0[0] + p1[0]) / 2 + 10, (p0[1] + p1[1]) / 2 - H - 64, (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 - H - 90], C.madera);
+    });
+  }
+
+  // La escalera de tablas que sube al adarve, pegada a la cara de adentro: de o.a (abajo) a o.b (arriba), o.w de
+  // ancho, o.H de alto. Se ve el costado abierto con su larguero y la baranda.
+  function escaleraMuralla(c, x, y, t, o) {
+    const a = o.a || [0, 0],
+      b = o.b || [0, -340],
+      w = o.w || 96,
+      H = o.H || 170;
+    const ax = x + a[0],
+      ay = y + a[1],
+      bx = x + b[0],
+      by = y + b[1],
+      l = Math.hypot(bx - ax, by - ay),
+      ux = (bx - ax) / l,
+      uy = (by - ay) / l;
+    const px = -uy,
+      py = ux;
+    // el costado abierto es el que mira al jugador (o.abierto: 1 o -1 elige el lado)
+    const lado = o.abierto || (px > 0 ? 1 : -1);
+    const n = Math.max(6, Math.round(l / 24));
+    const pt = (u, s, z) => [ax + (bx - ax) * u + px * s * w * 0.5, ay + (by - ay) * u + py * s * w * 0.5 - z];
+    const pasos = [];
+    for (let k = 0; k < n; k++) pasos.push(k);
+    // de atrás para adelante: primero los peldaños más al norte
+    pasos.sort((i, j) => (by - ay) * (i - j));
+    sombra(c, (ax + bx) / 2 + 10, (ay + by) / 2 + 6, l * 0.5, w * 0.4, 0.35);
+    pasos.forEach((k) => {
+      const u0 = k / n,
+        u1 = (k + 1) / n,
+        z0 = H * u0,
+        z1 = H * u1;
+      // contrahuella y huella
+      P(c, [...pt(u0, -1, z0), ...pt(u0, 1, z0), ...pt(u0, 1, z1), ...pt(u0, -1, z1)], C.maderaSombra);
+      P(c, [...pt(u0, -1, z1), ...pt(u0, 1, z1), ...pt(u1, 1, z1), ...pt(u1, -1, z1)], k % 2 ? C.madera : C.maderaLuz);
+      L(c, ...pt(u0, -1, z1), ...pt(u0, 1, z1), "#3A2614", 2);
+    });
+    // larguero del lado abierto: el triángulo de tablas que llega al piso, con postes y baranda
+    P(c, [...pt(0, lado, 0), ...pt(1, lado, H), ...pt(1, lado, 0)], C.maderaVieja);
+    for (let k = 1; k <= 4; k++) {
+      const u = k / 4,
+        p0 = pt(u, lado, 0),
+        p1 = pt(u, lado, H * u + 40);
+      L(c, p0[0], p0[1], p1[0], p1[1], C.maderaSombra, 6);
+    }
+    L(c, ...pt(0, lado, 40), ...pt(1, lado, H + 40), C.madera, 5);
+    L(c, ...pt(0, lado, 0), ...pt(1, lado, H), C.maderaSombra, 4);
+  }
+
   const L2 = ASSETS.LISTA;
   Object.assign(L2, {
     casaNordica: { f: casaNordica, alto: 260, choque: { w: 300, h: 50 }, grupo: "capital" },
     robleGigante: { f: robleGigante, alto: 1150, choque: { r: 120 }, grupo: "capital", luz: true },
     empalizadaDoble: { f: empalizadaDoble, alto: 280, choque: null, grupo: "capital" },
+    murallaDoble: { f: murallaDoble, alto: 270, choque: null, grupo: "capital" },
+    escaleraMuralla: { f: escaleraMuralla, alto: 260, choque: null, grupo: "capital" },
     piedraAncla: { f: piedraAncla, alto: 230, choque: { r: 34 }, grupo: "capital", luz: true },
     runaCupula: { f: runaCupula, alto: 160, choque: null, grupo: "capital", luz: true },
     puertaNorte: { f: puertaNorte, alto: 290, choque: null, grupo: "capital", luz: true },
@@ -784,6 +912,8 @@
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     casaNordica: { v: 2, entra: true },
     empalizadaDoble: { dx: 100, dy: -6 },
+    murallaDoble: { q: [-110, 60, 110, 60, 110, -60, -110, -60], cabo1: true },
+    escaleraMuralla: { a: [0, 0], b: [0, -320] },
     piedraAncla: { runa: "algiz", fuerza: 1 },
     runaCupula: { runa: "othala", fuerza: 1 },
     cerca: { x2: 180, y2: 0 },

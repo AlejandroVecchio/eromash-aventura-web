@@ -3,6 +3,8 @@ I18N.textos({
   // piezas de la capital
   "as.casaNordica": { es: "Casa de Eikholt (seis diseños)", en: "Eikholt house (six designs)" },
   "as.robleGigante": { es: "El Roble de Eikholt", en: "The Eikholt Oak" },
+  "as.murallaDoble": { es: "Muralla doble con adarve", en: "Double wall with wall-walk" },
+  "as.escaleraMuralla": { es: "Escalera de la muralla", en: "Wall stairs" },
   "as.empalizadaDoble": { es: "Empalizada doble con pasarela", en: "Double palisade with walkway" },
   "as.piedraAncla": { es: "Piedra de la cúpula", en: "Dome stone" },
   "as.runaCupula": { es: "Runa de la cúpula", en: "Dome rune" },
