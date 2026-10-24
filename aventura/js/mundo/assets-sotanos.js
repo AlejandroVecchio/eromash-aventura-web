@@ -293,6 +293,80 @@
     L(c, x + 20 * s, y - 52 * s, x - 4 * s, y - 34 * s, "#4A3A2A", 6 * s);
   }
 
+  // ---------- Cesto de la despensa ----------
+  // Canasto de mimbre con papas, zanahorias y un repollo, como en la despensa de la lámina.
+  function cesto(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.round((o.sem || 0) * 1000) + 7);
+    sombra(c, x + 6 * s, y + 4 * s, 80 * s, 12 * s, 0.45);
+    P(c, [x - 70 * s, y - 70 * s, x + 70 * s, y - 70 * s, x + 56 * s, y, x - 56 * s, y], "#8A6A3E");
+    P(c, [x - 70 * s, y - 70 * s, x, y - 70 * s, x, y, x - 56 * s, y], "#6E5230");
+    for (let k = 1; k < 4; k++) L(c, x - 70 * s + k * 3 * s, y - 70 * s + k * 17 * s, x + 70 * s - k * 3 * s, y - 70 * s + k * 17 * s, "#5A4224", 3 * s);
+    for (let k = 0; k < 9; k++) {
+      const px = x - 54 * s + r() * 108 * s,
+        py = y - 74 * s - r() * 22 * s,
+        tipo = Math.floor(r() * 3);
+      if (tipo === 0) E(c, px, py, 13 * s, 10 * s, "#B8905A");
+      else if (tipo === 1) P(c, [px - 14 * s, py - 4 * s, px + 14 * s, py - 6 * s, px + 2 * s, py + 6 * s], "#D8702A");
+      else E(c, px, py - 4 * s, 16 * s, 14 * s, "#6F8F4E");
+    }
+    P(c, [x - 72 * s, y - 74 * s, x + 72 * s, y - 74 * s, x + 70 * s, y - 66 * s, x - 70 * s, y - 66 * s], "#9A7A4A");
+  }
+
+  // ---------- El muro falso del escondite ----------
+  // Un panel de tablas que se abre como una puerta y deja ver el túnel de tierra oscura que sigue adentro.
+  function muroFalso(c, x, y, t, o) {
+    const s = o.s || 1;
+    // el hueco y el túnel
+    P(c, [x - 90 * s, y, x + 90 * s, y, x + 90 * s, y - 300 * s, x - 90 * s, y - 300 * s], "#0C0A0A");
+    P(c, [x - 60 * s, y - 20 * s, x + 70 * s, y - 20 * s, x + 50 * s, y - 230 * s, x - 40 * s, y - 230 * s], "#1A1A22");
+    P(c, [x - 30 * s, y - 60 * s, x + 40 * s, y - 60 * s, x + 26 * s, y - 180 * s, x - 18 * s, y - 180 * s], "#232836");
+    alfa(c, 0.4, () => E(c, x + 6 * s, y - 120 * s, 30 * s, 50 * s, "#3A4A6A"));
+    for (let k = 0; k < 4; k++) P(c, [x - 70 * s + k * 10 * s, y - 40 * s - k * 46 * s, x - 50 * s + k * 10 * s, y - 60 * s - k * 46 * s, x - 56 * s + k * 10 * s, y - 30 * s - k * 46 * s], "#2A2420");
+    // el marco
+    R(c, x - 100 * s, y - 310 * s, 20 * s, 310 * s, "#3E2818");
+    R(c, x + 80 * s, y - 310 * s, 20 * s, 310 * s, "#3E2818");
+    R(c, x - 100 * s, y - 320 * s, 200 * s, 20 * s, "#5C3E2C");
+    // el panel abierto, de canto hacia nosotros
+    P(c, [x + 100 * s, y, x + 170 * s, y + 30 * s, x + 170 * s, y - 280 * s, x + 100 * s, y - 310 * s], "#55382A");
+    P(c, [x + 100 * s, y, x + 120 * s, y + 9 * s, x + 120 * s, y - 302 * s, x + 100 * s, y - 310 * s], "#40281A");
+    for (let k = 1; k < 4; k++) L(c, x + 100 * s, y - k * 78 * s, x + 170 * s, y + 30 * s - k * 78 * s, "#2A1A10", 3 * s);
+    R(c, x + 150 * s, y - 150 * s, 8 * s, 18 * s, HIERRO2);
+  }
+
+  // ---------- Sacos ----------
+  function sacos(c, x, y, t, o) {
+    const s = o.s || 1;
+    sombra(c, x, y + 4 * s, 90 * s, 12 * s, 0.45);
+    [[-36, 0, 1], [30, 4, 0.9], [-4, -36, 0.85]].forEach(([dx, dy, k]) => {
+      const px = x + dx * s,
+        py = y + dy * s,
+        w = 44 * s * k,
+        h = 70 * s * k;
+      P(c, [px - w, py, px - w * 1.1, py - h * 0.6, px - w * 0.5, py - h, px + w * 0.5, py - h, px + w * 1.1, py - h * 0.6, px + w, py], "#8A7A5A");
+      P(c, [px - w, py, px - w * 1.1, py - h * 0.6, px - w * 0.5, py - h, px, py - h, px, py], "#6E6044");
+      P(c, [px - w * 0.3, py - h, px + w * 0.3, py - h, px + w * 0.2, py - h - 14 * s, px - w * 0.2, py - h - 14 * s], "#5A4E36");
+      L(c, px - w * 0.4, py - h + 4 * s, px + w * 0.4, py - h + 4 * s, "#3A2E1E", 3 * s);
+    });
+    // una manta roja tirada encima
+    P(c, [x - 40 * s, y - 60 * s, x + 20 * s, y - 70 * s, x + 30 * s, y - 20 * s, x - 30 * s, y - 10 * s], "#9C2315");
+    P(c, [x - 40 * s, y - 60 * s, x - 10 * s, y - 65 * s, x - 4 * s, y - 14 * s, x - 30 * s, y - 10 * s], "#7A1A10");
+  }
+
+  // ---------- Cántaros del sótano viejo ----------
+  function cantaros(c, x, y, t, o) {
+    const s = o.s || 1;
+    sombra(c, x, y + 4 * s, 80 * s, 12 * s, 0.45);
+    [[-40, 1], [10, 1.25], [52, 0.85]].forEach(([dx, k]) => {
+      const px = x + dx * s,
+        w = 26 * s * k,
+        h = 90 * s * k;
+      P(c, [px - w * 0.7, y, px - w, y - h * 0.4, px - w * 0.6, y - h * 0.85, px - w * 0.3, y - h, px + w * 0.3, y - h, px + w * 0.6, y - h * 0.85, px + w, y - h * 0.4, px + w * 0.7, y], "#7A5A44");
+      P(c, [px - w * 0.7, y, px - w, y - h * 0.4, px - w * 0.6, y - h * 0.85, px - w * 0.3, y - h, px, y - h, px, y], "#5E4434");
+      R(c, px - w * 0.4, y - h - 6 * s, w * 0.8, 8 * s, "#4A3628");
+    });
+  }
+
   Object.assign(ASSETS.LISTA, {
     alfombra: { f: alfombra, alto: 90, choque: null, grupo: "interiores", piso: true },
     trampilla: { f: trampilla, alto: 190, choque: null, grupo: "interiores", piso: true },
@@ -304,6 +378,10 @@
     tablaSuelta: { f: tablaSuelta, alto: 200, choque: null, grupo: "interiores" },
     cofreSotano: { f: cofreSotano, alto: 180, choque: null, grupo: "interiores" },
     huesos: { f: huesos, alto: 160, choque: null, grupo: "interiores" },
+    cesto: { f: cesto, alto: 110, choque: null, grupo: "interiores" },
+    muroFalso: { f: muroFalso, alto: 330, choque: null, grupo: "interiores" },
+    sacos: { f: sacos, alto: 110, choque: null, grupo: "interiores" },
+    cantaros: { f: cantaros, alto: 120, choque: null, grupo: "interiores" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { alfombra: { pista: true }, tablaSuelta: { brillo: true } });
 })();

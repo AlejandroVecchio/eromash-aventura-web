@@ -113,23 +113,56 @@ window.PODERES = (function () {
   }
 
   // ---------- recompensas (las usan los secretos y los grupos) ----------
-  function soltar(x, y, tipo, cant) {
+  // iman: el botín vuela solo hasta Eromash apenas cae (el de los cofres: no hace falta ir a juntarlo)
+  function soltar(x, y, tipo, cant, iman) {
     const n = tipo === "plata" ? Math.min(8, Math.max(1, Math.round(cant / 6))) : 1;
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI * 2,
         v = 60 + Math.random() * 120;
-      botin.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, z: 0, vz: 220 + Math.random() * 120, tipo, cant: tipo === "plata" ? Math.round(cant / n) : cant, t: 0 });
+      botin.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, z: 0, vz: 220 + Math.random() * 120, tipo, cant: tipo === "plata" ? Math.round(cant / n) : cant, t: 0, iman: !!iman });
     }
   }
+  // un cofre que se abre: crujido, un estallido dorado, el botín que vuela a Eromash y un solo cartel con lo que trajo
+  function botinCofre(x, y, nombre, b, importante) {
+    if (window.VIDA) VIDA.evento("cofre", x, y, { importante });
+    if (window.SONIDO) {
+      SONIDO.tocar("crujido", { vol: 0.7, x, y });
+      SONIDO.tono("triangle", 523, 784, 0.6, 0.05, { x, y, filtro: 2600, retraso: 0.1 });
+    }
+    const n = window.CALIDAD && CALIDAD.nivel === "baja" ? 6 : 16;
+    for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 40, y: y - 30, vx: (Math.random() - 0.5) * 160, vy: -200 - Math.random() * 260, t: 0.45 + Math.random() * 0.3, c: i % 3 ? "#FFD98A" : "#FFF4D0", s: 3 + Math.random() * 4, g: 0.5 });
+    J.marcas.push({ tipo: "anillo", x, y: y - 10, s: 1, col: "#FFD98A", t: 0 });
+    if (b.plata) soltar(x, y, "plata", b.plata, true);
+    if (b.vida) soltar(x, y, "vida", 30, true);
+    if (b.frag) J.retrasar(0.5, () => darFragmento());
+    if (b.manzana) J.retrasar(1, () => darManzana());
+    const partes = [nombre];
+    if (b.plata) partes.push(t("sx.botin_plata", [b.plata]));
+    if (b.vida) partes.push(t("sx.botin_vida"));
+    HUD.aviso(partes.join(" · "), "#FFD98A");
+    if (window.ANIMA) ANIMA.gesto("feliz");
+  }
+  // la plata que entra seguida se suma en un solo número (no una lluvia de «+9»)
   function darPlata(n) {
     pj.plata += n;
-    A.numero(jug.x, jug.y - 90, "+" + n);
+    const junto = J.textos.find((o) => o.plata && o.t < 0.6);
+    if (junto) {
+      junto.suma += n;
+      junto.n = "+" + junto.suma;
+      junto.t = Math.min(junto.t, 0.2);
+      return;
+    }
+    const antes = J.textos.length;
+    A.numero(jug.x, jug.y - 90, "+" + n, "#FFD98A");
+    if (J.textos.length > antes) Object.assign(J.textos[J.textos.length - 1], { plata: true, suma: n });
   }
   function darFragmento() {
     pj.frag++;
     if (pj.frag % 3 === 0) {
       pj.nivel++;
       aplicar();
+      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.VIDA) VIDA.evento("nivel", jug.x, jug.y);
       HUD.aviso(t("pj.nivel_runico", [pj.nivel]), "#73D5DB");
     } else HUD.aviso(t("pj.fragmento", [pj.frag % 3]), "#73D5DB");
   }
@@ -264,13 +297,16 @@ window.PODERES = (function () {
           if (b.z === 0) b.vz = 0;
         }
         const d = Math.hypot(jug.x - b.x, jug.y - b.y);
-        if (b.t > 0.5 && d < 140 && !jug.muerto) {
-          b.x += ((jug.x - b.x) / d) * 520 * dt;
-          b.y += ((jug.y - b.y) / d) * 520 * dt;
+        const listo = b.t > (b.iman ? 0.32 : 0.5);
+        if (listo && (d < 140 || (b.iman && d < 2500)) && !jug.muerto) {
+          const v = b.iman ? 900 : 520;
+          b.x += ((jug.x - b.x) / d) * v * dt;
+          b.y += ((jug.y - b.y) / d) * v * dt;
         }
-        if (b.t > 0.5 && d < 26) {
+        if (listo && d < 26) {
           if (b.tipo === "plata") darPlata(b.cant);
           else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+          if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           botin.splice(i, 1);
         } else if (b.t > 90) botin.splice(i, 1);
       }
@@ -393,5 +429,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { estado, elegirRuna, hablarCon, soltar, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();

@@ -270,6 +270,7 @@ window.ELDERVALD = (function () {
     poner("casaNordica", q(-80, -430), { v: 4, s: 1.15, pared: 1, techo: 1, postigo: 0, sem: 2, estandarte: true }, "casa_puesto");
     poner("tableroTablillas", q(10, -429), { oscuras: 5, s: 1.1 }, "tablillas");
     poner("mesaRutas", q(-170, -372), {}, "mesa_rutas");
+    poner("tablonCaza", q(300, 330), {}, "tablon_caza");
     punto("eydis_puesto", q(-90, -350));
     // la atalaya de Tove
     poner("torreVigia", q(-420, -500), { sem: 8 });
@@ -1090,6 +1091,170 @@ window.ELDERVALD = (function () {
   });
   const barroEn = (x, y) => BARROS.some((b) => Math.abs(x - b.x) < 66 * b.s && Math.hypot((x - b.x) / (66 * b.s), (y - b.y) / (30 * b.s)) < 1);
 
+  // ---------- orillas vivas, bordes de los claros y postes en los cruces ----------
+  // Juncos y alguna piedra en las orillas de ríos y lagunas, enebros y brezo alrededor de cada claro, y un poste con
+  // tablas hacia cada camino donde uno se junta con otro. Cada cosa sale de su propia semilla por lugar, así el resto
+  // del bosque no se corre (y lo sacado con el editor se sigue encontrando).
+  {
+    const AG0 = window.AGREGADOS || {},
+      secos = new Set(AG0.quitarRios || []),
+      estilo = {};
+    (AG0.estiloRios || []).forEach((e) => (estilo[e.i] = e));
+    const cercaCamino = (x, y, m) => CAMINOS.some((c) => distLinea(x, y, c.p) < c.w / 2 + m),
+      cercaPuente = (x, y) => PUENTES.some((p) => distSeg(x, y, p.a[0], p.a[1], p.b[0], p.b[1]) < 220);
+    // los árboles por celda, para no poner un arbusto pegado a un tronco
+    const celdas = new Map(),
+      ck = (x, y) => Math.floor(x / 120) + "," + Math.floor(y / 120);
+    COSAS.forEach((c) => {
+      if (!c.choque) return;
+      const k = ck(c.x, c.y);
+      if (!celdas.has(k)) celdas.set(k, []);
+      celdas.get(k).push(c);
+    });
+    const ocupado = (x, y, r) => {
+      const cx = Math.floor(x / 120),
+        cy = Math.floor(y / 120);
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++)
+          for (const c of celdas.get(cx + dx + "," + (cy + dy)) || []) if (Math.hypot(c.x - x, c.y - y) < r + (c.choque.r || (c.choque.w || 0) / 2)) return true;
+      return false;
+    };
+    const suelto = (id, x, y, o) => {
+      const c = poner(id, [Math.round(x), Math.round(y)], o);
+      c.natural = true;
+      return c;
+    };
+    // las orillas de los ríos: a los dos lados, cada tanto
+    RIOS.forEach((rio, ri) => {
+      if (secos.has(ri) || rio.seco) return;
+      const p = (estilo[ri] && estilo[ri].p) || rio.p,
+        w = (estilo[ri] && estilo[ri].w) || rio.w;
+      for (let i = 1; i < p.length; i++) {
+        const [ax, ay] = p[i - 1],
+          [bx, by] = p[i],
+          l = Math.hypot(bx - ax, by - ay),
+          nx = -(by - ay) / l,
+          ny = (bx - ax) / l,
+          n = Math.floor(l / 120);
+        for (let k = 0; k < n; k++)
+          for (const lado of [-1, 1]) {
+            const r2 = azar(ri * 7717 + i * 131 + k * 17 + (lado > 0 ? 5 : 9));
+            if (r2() > 0.4) continue;
+            const u = (k + r2()) / n,
+              d = w / 2 - 6 + r2() * 24,
+              x = ax + (bx - ax) * u + nx * d * lado,
+              y = ay + (by - ay) * u + ny * d * lado;
+            if (cercaCamino(x, y, 60) || cercaPuente(x, y)) continue;
+            if (r2() < 0.82) suelto("juncos", x, y, { s: 1.4 + r2() * 0.8, sem: Math.floor(r2() * 100) });
+            else if (!ocupado(x + nx * lado * 30, y + ny * lado * 30, 30)) suelto("roca", x + nx * lado * 30, y + ny * lado * 30, { s: 0.8 + r2() * 0.6, sem: r2() * 10 });
+          }
+      }
+    });
+    // las orillas de las lagunas
+    LAGOS.forEach((lg, li) => {
+      if (lg.seco || (AG0.quitarLagos || []).indexOf(li) >= 0) return;
+      const n = Math.floor((Math.PI * (lg.rx + lg.ry)) / 110);
+      for (let k = 0; k < n; k++) {
+        const r2 = azar(li * 4241 + k * 29 + 3);
+        if (r2() > 0.45) continue;
+        const a = ((k + r2()) / n) * Math.PI * 2,
+          f = 0.97 + r2() * 0.08,
+          x = lg.p[0] + Math.cos(a) * lg.rx * f,
+          y = lg.p[1] + Math.sin(a) * lg.ry * f;
+        if (cercaCamino(x, y, 60) || cercaPuente(x, y)) continue;
+        suelto("juncos", x, y, { s: 1.4 + r2() * 0.8, sem: Math.floor(r2() * 100) });
+      }
+    });
+    // el borde de cada claro: enebros, brezo y alguna piedra, en el anillo justo afuera
+    for (const key in LUGARES) {
+      if (key === "eikholt" || key === "entrada_sur") continue;
+      const L = LUGARES[key],
+        n = Math.floor((Math.PI * 2 * (L.r + 60)) / 80);
+      for (let k = 0; k < n; k++) {
+        const r2 = azar(key.length * 7919 + Math.round(L.p[0]) * 3 + k * 31);
+        const q = r2();
+        if (q > 0.5) continue;
+        const a = ((k + r2()) / n) * Math.PI * 2,
+          d = L.r + 30 + r2() * 90,
+          x = L.p[0] + Math.cos(a) * d,
+          y = L.p[1] + (Math.sin(a) * d) / 1.15;
+        if (sueloEnInicial(x, y) !== 0 || cercaCamino(x, y, 30) || cercaPuente(x, y)) continue;
+        if (q < 0.2) {
+          if (!ocupado(x, y, 24)) suelto("enebro", x, y, { s: 1.6 + r2() * 0.8, sem: Math.floor(r2() * 100) });
+        } else if (q < 0.42) DECO.push({ id: "brezo", x, y, s: 1.2 + r2() * 0.8, sem: Math.floor(r2() * 100) });
+        else if (!ocupado(x, y, 26)) suelto("roca", x, y, { s: 0.7 + r2() * 0.5, sem: r2() * 10 });
+      }
+    }
+    // los postes de los cruces: donde la punta de un camino cae sobre otro o dos caminos se cruzan, fuera de Eikholt
+    // y de los lugares; una tabla por cada camino que sale
+    const cruces = [],
+      tramo = (o, x, y) => {
+        let mejor = 1,
+          dm = Infinity;
+        for (let i = 1; i < o.p.length; i++) {
+          const d = distSeg(x, y, o.p[i - 1][0], o.p[i - 1][1], o.p[i][0], o.p[i][1]);
+          if (d < dm) (dm = d), (mejor = i);
+        }
+        return Math.atan2(o.p[mejor][1] - o.p[mejor - 1][1], o.p[mejor][0] - o.p[mejor - 1][0]);
+      };
+    const fuera = (x, y) => {
+      if (Math.hypot((x - CIUDAD.c[0]) / (CIUDAD.rx + 250), (y - CIUDAD.c[1]) / (CIUDAD.ry + 250)) < 1) return false;
+      for (const k in LUGARES) if (Math.hypot(x - LUGARES[k].p[0], y - LUGARES[k].p[1]) < LUGARES[k].r + 60) return false;
+      return !cruces.some((q) => Math.hypot(q.x - x, q.y - y) < 500);
+    };
+    CAMINOS.forEach((c, ci) =>
+      CAMINOS.forEach((o, oi) => {
+        if (oi === ci) return;
+        // la punta de c sobre o: una T
+        [0, c.p.length - 1].forEach((e) => {
+          const [x, y] = c.p[e],
+            q = c.p[e === 0 ? 1 : c.p.length - 2];
+          if (distLinea(x, y, o.p) > o.w / 2 + 12 || !fuera(x, y)) return;
+          const ao = tramo(o, x, y);
+          cruces.push({ x, y, dirs: [Math.atan2(q[1] - y, q[0] - x), ao, ao + Math.PI], ao, w: Math.max(c.w, o.w) });
+        });
+        // dos tramos que se cortan en el medio: una cruz (cada par una sola vez)
+        if (oi < ci) return;
+        for (let i = 1; i < c.p.length; i++)
+          for (let k = 1; k < o.p.length; k++) {
+            const [ax, ay] = c.p[i - 1],
+              [bx, by] = c.p[i],
+              [cx2, cy2] = o.p[k - 1],
+              [dx2, dy2] = o.p[k],
+              den = (bx - ax) * (dy2 - cy2) - (by - ay) * (dx2 - cx2);
+            if (Math.abs(den) < 1e-6) continue;
+            const u = ((cx2 - ax) * (dy2 - cy2) - (cy2 - ay) * (dx2 - cx2)) / den,
+              v = ((cx2 - ax) * (by - ay) - (cy2 - ay) * (bx - ax)) / den;
+            if (u <= 0.02 || u >= 0.98 || v <= 0.02 || v >= 0.98) continue;
+            const x = ax + (bx - ax) * u,
+              y = ay + (by - ay) * u;
+            if (!fuera(x, y)) continue;
+            const a1 = Math.atan2(by - ay, bx - ax),
+              a2 = Math.atan2(dy2 - cy2, dx2 - cx2);
+            cruces.push({ x, y, dirs: [a1, a1 + Math.PI, a2, a2 + Math.PI], ao: a2, w: Math.max(c.w, o.w) });
+          }
+      }),
+    );
+    cruces.forEach((J) => {
+      // el poste en una esquina libre, del lado de adelante si se puede (que se vea)
+      const ux = Math.cos(J.ao),
+        uy = Math.sin(J.ao),
+        d = J.w / 2 + 40;
+      const lugar = [[1, 1], [-1, 1], [1, -1], [-1, -1]]
+        .map(([s1, s2]) => [J.x + (ux - uy * s2) * d * s1, J.y + (uy + ux * s2) * d * s1])
+        .sort((a, b) => b[1] - a[1])
+        .find(([x, y]) => !cercaCamino(x, y, 14) && sueloEnInicial(x, y) === 0 && !cercaPuente(x, y));
+      if (!lugar) return;
+      const poste = suelto("posteCruce", lugar[0], lugar[1], { s: 1.4, dirs: J.dirs });
+      poste.natural = false;
+      // aparta los árboles que lo taparían (los de adelante tapan más)
+      for (let i = COSAS.length - 1; i >= 0; i--) {
+        const t = COSAS[i];
+        if (t.arbol && Math.abs(t.x - poste.x) < 130 && t.y > poste.y - 80 && t.y < poste.y + 260) COSAS.splice(i, 1);
+      }
+    });
+  }
+
   // ---------- lo que se agregó o se sacó en el editor (editor.html → js/mundo/agregados.js) ----------
   // Se aplica con el bosque ya armado, así el resto del mundo no cambia: lo sacado se busca por asset y lugar, y lo
   // agregado aparta los árboles que le quedan encima.
@@ -1396,8 +1561,8 @@ window.ELDERVALD = (function () {
       for (let k = 0; k < 30; k++) E(c, cx + (rl() - 0.5) * 1700, cy + 260 + (rl() - 0.5) * 1000, 30 + rl() * 40, 10 + rl() * 12, "#465030");
     }
     // caminos: tierra pisada, adoquín o ladrillo, con sus bordes y puntas (mundo/caminos.js)
-    // de a capas (bases, cuerpos, bordes) para que se unan cuando se cruzan o se tocan
-    ["base", "cuerpo", "borde"].forEach((capa) => CAMINOS.forEach((cm) => SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1, capa, CAMINOS)));
+    // de a capas (bases, tierra, empedrado, piedras, bordes) para que se unan sin costura cuando se cruzan o se tocan
+    SENDAS.pintarTodos(c, CAMINOS, x0, y0, x1, y1);
     // las montañas del borde
     c.fillStyle = "#1A1C16";
     if (x0 < BORDE + mg || y0 < BORDE + mg || x1 > ANCHO - BORDE - mg || y1 > ALTO - BORDE - mg) {
@@ -1417,7 +1582,7 @@ window.ELDERVALD = (function () {
     });
     // primero musgo y barro (planos), después los helechos encima
     DECO.forEach((d) => {
-      if ((d.id !== "alfombraMusgo" && d.id !== "barro") || d.x < x0 - 140 || d.x > x1 + 140 || d.y < y0 - 70 || d.y > y1 + 70) return;
+      if ((d.id !== "alfombraMusgo" && d.id !== "barro" && d.id !== "brezo") || d.x < x0 - 140 || d.x > x1 + 140 || d.y < y0 - 70 || d.y > y1 + 70) return;
       derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, { s: d.s, sem: d.sem, huellas: d.huellas }));
     });
     DECO.forEach((d) => {

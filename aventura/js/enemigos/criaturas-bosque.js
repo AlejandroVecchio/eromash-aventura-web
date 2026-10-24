@@ -6,6 +6,7 @@
 //  · Jabalí de musgo: jabalí viejo con un manto de musgo y dos piedras en el lomo; embiste en línea recta.
 //  · Cuervo de Hel: cuervo enorme que vuela bajo y cae en picada; ojos de brasa.
 //  · Fuego fatuo: llama fría con una cara de niebla; flota lejos y hace caer luz del cielo donde estás.
+//  · Oso de zarzal: oso pardo con un manto de zarzas, ataduras violetas y un ojo nublado; se para para golpear.
 //  · Trol de musgo: piedra con liquen, brazos largos y un pino arrancado de garrote; golpea el piso.
 (function () {
   "use strict";
@@ -306,9 +307,162 @@
     }
   }
 
+  // ---------- Oso de zarzal ----------
+  // Como en su hoja: oso pardo enorme en bloques de pelaje, calvas claras, un manto de zarzas que le sale del lomo,
+  // ataduras violetas en las patas delanteras y la quijada, un ojo nublado de blanco y zarpas negras. Para golpear se
+  // para en dos patas (o.golpe sube mientras avisa).
+  const PAL_OSO = [
+    { pelo: "#6A4428", peloS: "#4E3020", peloL: "#7E5434", calva: "#9A8670" }, // pardo
+    { pelo: "#4A3424", peloS: "#34241A", peloL: "#5E4430", calva: "#8A7A66" }, // oscuro
+    { pelo: "#7A4A2A", peloS: "#5A341E", peloL: "#8E5A36", calva: "#A89276" }, // rojizo
+  ];
+  const ZARZA = "#3E3A26",
+    ZARZA_L = "#56503A",
+    ESPINA = "#24200F",
+    ATA = "#9A6BD8",
+    ATA_S = "#6E4AA8",
+    ZARPA = "#161412";
+  // una rama de zarza con espinas, de (x0,y0) a (x1,y1)
+  function zarza(c, x0, y0, x1, y1, n, sem) {
+    L(c, x0, y0, x1, y1, ZARZA, 5);
+    L(c, x0, y0 - 1, (x0 + x1) / 2, (y0 + y1) / 2 - 1, ZARZA_L, 2);
+    for (let k = 1; k <= n; k++) {
+      const u = k / (n + 1),
+        x = x0 + (x1 - x0) * u,
+        y = y0 + (y1 - y0) * u,
+        lado = (k + sem) % 2 ? 1 : -1,
+        dx = y1 - y0,
+        dy = -(x1 - x0),
+        l = Math.hypot(dx, dy) || 1;
+      P(c, [x - 2, y, x + 2, y, x + (dx / l) * 7 * lado, y + (dy / l) * 7 * lado], ESPINA);
+    }
+  }
+  // ataduras: vueltas violetas alrededor de una pata
+  function atadura(c, x, y0, y1, w) {
+    for (let k = 0; k < 3; k++) {
+      const y = y0 + ((y1 - y0) * (k + 0.5)) / 3;
+      L(c, x - w, y + 4, x + w, y - 4, ATA, 3);
+      L(c, x - w, y + 5, x - w * 0.2, y + 2, ATA_S, 2);
+      P(c, [x + w * 0.3, y - 2, x + w * 0.4, y - 7, x + w * 0.5, y - 2], ESPINA);
+    }
+  }
+  function oso(c, t, o) {
+    const v = o.vista || "E",
+      m = o.mov || 0,
+      pal = PAL_OSO[o.pal || 0],
+      paso = Math.sin(t * (m > 1 ? 14 : 8)) * 5 * Math.min(1, m),
+      erg = Math.min(1, (o.golpe || 0) * 1.4),
+      resp = Math.sin(t * 2) * 1.5;
+    sombra(c, 0, 0, 62, 14, 0.45);
+    if (v === "E") {
+      // patas de atrás
+      P(c, [-46, -30, -30, -30, -30 + paso * 0.3, 0, -46 + paso * 0.3, 0], pal.peloS);
+      P(c, [-34, -30, -20, -30, -20 - paso * 0.3, 0, -34 - paso * 0.3, 0], pal.pelo);
+      [-44, -32].forEach((x) => P(c, [x, 0, x + 3, 5, x + 6, 0], ZARPA));
+      c.save();
+      // se para en dos patas: gira sobre la cadera
+      c.translate(-30, -26);
+      c.rotate(-erg * 0.7);
+      c.translate(30, 26);
+      // patas de adelante con sus ataduras
+      const fp = erg > 0.3 ? 0 : paso;
+      P(c, [22, -34, 36, -34, 36 - fp * 0.3, 0, 22 - fp * 0.3, 0], pal.peloS);
+      P(c, [34, -34, 48, -34, 48 + fp * 0.3, 0, 34 + fp * 0.3, 0], pal.pelo);
+      atadura(c, 41, -30, -4, 8);
+      [34, 39, 44].forEach((x) => P(c, [x, 0, x + 3, 7, x + 5, 0], ZARPA));
+      // el cuerpo en bloques: mitad de abajo y de la izquierda en sombra, la joroba de los hombros
+      P(c, [-58, -28, -54, -70 + resp, -22, -86 + resp, 18, -88 + resp, 46, -72, 54, -36, 42, -26, -50, -22], pal.pelo);
+      P(c, [-58, -28, -54, -70 + resp, -30, -80 + resp, -36, -24, -50, -22], pal.peloS);
+      P(c, [-10, -84 + resp, 18, -96 + resp, 40, -80, 18, -76], pal.peloL);
+      P(c, [-40, -26, 40, -28, 52, -38, 30, -34, -30, -32], pal.peloS);
+      // las calvas
+      P(c, [-30, -62, -18, -70, -8, -60, -16, -50, -28, -52], pal.calva);
+      P(c, [10, -48, 22, -56, 30, -46, 20, -40], pal.calva);
+      // la cabeza: hocico largo, oreja redonda, el ojo nublado y la atadura en la quijada
+      P(c, [42, -76, 62, -84, 80, -76, 92, -62, 92, -52, 72, -46, 48, -52], pal.pelo);
+      P(c, [42, -76, 58, -82, 60, -50, 48, -52], pal.peloS);
+      P(c, [82, -66, 98, -62, 98, -52, 86, -50], pal.peloL);
+      E(c, 98, -58, 4, 3, "#111111");
+      P(c, [52, -82, 56, -94, 64, -84], pal.peloS);
+      E(c, 74, -68, 3.5, 3.5, "#F2ECEC");
+      alfa(c, 0.5, () => E(c, 74, -68, 6, 6, "#F2ECEC"));
+      L(c, 64, -50, 90, -50, ATA, 3);
+      L(c, 66, -46, 80, -54, ATA_S, 2);
+      // si ruge, la boca abierta
+      if (erg > 0.4) {
+        P(c, [84, -50, 98, -48, 94, -40, 84, -44], "#5E130D");
+        P(c, [88, -49, 90, -44, 92, -49], "#F2ECEC");
+      }
+      // el manto de zarzas del lomo, con hilos violetas entre las ramas
+      const lomo = [[-46, -72], [-30, -82], [-12, -88], [6, -92], [22, -94], [34, -86]];
+      lomo.forEach(([x, y], k) => {
+        zarza(c, x, y + resp, x + (k % 2 ? 22 : -18), y - 26 - (k % 3) * 6 + resp, 3, k);
+        zarza(c, x + 6, y + 2 + resp, x + 30, y - 10 + resp, 2, k + 1);
+      });
+      L(c, -40, -70 + resp, 30, -88 + resp, ATA, 2);
+      c.restore();
+    } else {
+      const atras = v === "N";
+      c.save();
+      c.translate(0, -erg * 26);
+      c.scale(1, 1 + erg * 0.3);
+      // patas
+      P(c, [-46, -30, -20, -30, -20 + paso * 0.2, 0, -46 + paso * 0.2, 0], pal.peloS);
+      P(c, [20, -30, 46, -30, 46 - paso * 0.2, 0, 20 - paso * 0.2, 0], pal.pelo);
+      if (!atras) {
+        atadura(c, -33, -24, -2, 13);
+        atadura(c, 33, -24, -2, 13);
+        [-42, -34, -26, 26, 34, 42].forEach((x) => P(c, [x - 3, 0, x, 7, x + 3, 0], ZARPA));
+      }
+      // el cuerpo ancho
+      P(c, [-52, -24, -62, -60 + resp, -50, -92 + resp, -24, -104 + resp, 24, -104 + resp, 50, -92 + resp, 62, -60 + resp, 52, -24], pal.pelo);
+      P(c, [-52, -24, -62, -60 + resp, -50, -92 + resp, -24, -104 + resp, 0, -104 + resp, 0, -24], pal.peloS);
+      P(c, [-30, -24, -20, -60, 20, -60, 30, -24], pal.peloS);
+      P(c, [0, -24, 0, -60, 20, -60, 30, -24], pal.pelo);
+      P(c, [-20, -40, -8, -50, 6, -40, -6, -32], pal.calva);
+      P(c, [24, -66, 36, -72, 44, -62, 32, -58], pal.calva);
+      // el manto de zarzas sobre los hombros
+      for (let k = 0; k < 9; k++) {
+        const a = Math.PI * (1.05 + (k / 8) * 0.9),
+          x = Math.cos(a) * 50,
+          y = -64 + Math.sin(a) * 26 + resp;
+        zarza(c, x, y, x * 1.3 + (k % 2 ? 8 : -8), y - 22 - (k % 3) * 6, 2, k);
+      }
+      L(c, -46, -72 + resp, 40, -84 + resp, ATA, 2);
+      if (!atras) {
+        // la cabeza de frente: un ojo oscuro y el otro nublado
+        const hy = -78 + resp;
+        P(c, [-26, hy + 14, -24, hy - 14, 0, hy - 22, 24, hy - 14, 26, hy + 14, 14, hy + 28, -14, hy + 28], pal.pelo);
+        P(c, [-26, hy + 14, -24, hy - 14, 0, hy - 22, 0, hy + 28, -14, hy + 28], pal.peloS);
+        E(c, -20, hy - 18, 7, 7, pal.peloS);
+        E(c, 20, hy - 18, 7, 7, pal.pelo);
+        P(c, [-10, hy + 6, 10, hy + 6, 12, hy + 24, -12, hy + 24], pal.peloL);
+        E(c, 0, hy + 10, 5, 4, "#111111");
+        R(c, -13, hy - 4, 5, 4, "#111111");
+        E(c, 11, hy - 2, 3.5, 3.5, "#F2ECEC");
+        alfa(c, 0.5, () => E(c, 11, hy - 2, 6, 6, "#F2ECEC"));
+        L(c, -14, hy + 20, 14, hy + 16, ATA, 3);
+        if (erg > 0.4) P(c, [-8, hy + 18, 8, hy + 18, 6, hy + 28, -6, hy + 28], "#5E130D");
+        // al pararse, los brazos arriba con las zarpas
+        if (erg > 0.3) {
+          P(c, [-54, -70, -66, -96, -58, -104, -44, -78], pal.peloS);
+          P(c, [54, -70, 66, -96, 58, -104, 44, -78], pal.pelo);
+          [-64, -59, -54].forEach((x) => P(c, [x, -102, x - 1, -112, x + 2, -103], ZARPA));
+          [54, 59, 64].forEach((x) => P(c, [x, -102, x + 1, -112, x + 2, -103], ZARPA));
+        }
+      } else {
+        E(c, -20, -98 + resp, 7, 7, pal.peloS);
+        E(c, 20, -98 + resp, 7, 7, pal.pelo);
+        P(c, [-22, -84 + resp, -18, -102 + resp, 18, -102 + resp, 22, -84 + resp], pal.peloS);
+      }
+      c.restore();
+    }
+  }
+
   CRIATURAS.registrar("draugr", draugr);
   CRIATURAS.registrar("jabali", jabali);
   CRIATURAS.registrar("cuervo", cuervo);
   CRIATURAS.registrar("fatuo", fatuo);
   CRIATURAS.registrar("trol", trol);
+  CRIATURAS.registrar("oso", oso);
 })();

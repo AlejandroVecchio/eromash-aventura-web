@@ -9,35 +9,64 @@
   const COL_RUNA = { kenaz: "#FF8D71", isa: "#C8F2F4", algiz: "#FFD98A", sowilo: "#F5A524" };
 
   // ---------- Arcón del leñador ----------
-  // Roble con dos zunchos de hierro, tapa redonda y la runa Fehu (riqueza) en la cerradura.
-  // o.abierto: la tapa cae hacia atrás y se ve el fondo vacío.
+  // Roble con zunchos y esquineros de hierro, tapa abombada con su cara de arriba al sol, asa de soga al costado y la
+  // runa Fehu (riqueza) en la cerradura. o.abierto: la tapa queda parada contra la bisagra, se ve su cara de adentro y
+  // en el fondo la paja vieja.
   function arconLenador(c, x, y, t, o) {
-    const s = o.s || 1;
-    sombra(c, x + 4 * s, y + 2, 34 * s, 8 * s);
-    // cuerpo: cara de frente y cara derecha
-    P(c, [x - 28 * s, y, x - 28 * s, y - 26 * s, x + 20 * s, y - 26 * s, x + 20 * s, y], C.madera);
-    P(c, [x + 20 * s, y, x + 20 * s, y - 26 * s, x + 30 * s, y - 32 * s, x + 30 * s, y - 6 * s], C.maderaLuz);
-    P(c, [x - 28 * s, y, x - 28 * s, y - 26 * s, x - 18 * s, y - 26 * s, x - 18 * s, y], C.maderaSombra);
-    L(c, x - 28 * s, y - 13 * s, x + 20 * s, y - 13 * s, C.maderaSombra, 1.5 * s);
+    const s = o.s || 1,
+      X = (v) => x + v * s,
+      Y = (v) => y - v * s,
+      pp = (a, col) => P(c, a.map((v, i) => (i % 2 ? Y(v) : X(v))), col);
+    sombra(c, X(4), y + 2, 36 * s, 8 * s);
+    // cuerpo: frente (mitad izquierda en sombra) y costado derecho al sol
+    pp([-28, 0, -28, 24, 20, 24, 20, 0], C.madera);
+    pp([-28, 0, -28, 24, -6, 24, -6, 0], "#6A4A2C");
+    pp([20, 0, 20, 24, 32, 31, 32, 7], C.maderaLuz);
+    // tablas
+    L(c, X(-28), Y(12), X(20), Y(12), C.maderaSombra, 1.4 * s);
+    L(c, X(20), Y(12), X(32), Y(19), "#7E5C38", 1.2 * s);
+    // asa de soga en el costado
+    c.save();
+    c.strokeStyle = "#B08A58";
+    c.lineWidth = 2.4 * s;
+    c.beginPath();
+    c.moveTo(X(23), Y(17));
+    c.quadraticCurveTo(X(26), Y(8), X(29), Y(21));
+    c.stroke();
+    c.restore();
     if (o.abierto) {
-      P(c, [x - 28 * s, y - 26 * s, x + 20 * s, y - 26 * s, x + 30 * s, y - 32 * s, x - 18 * s, y - 32 * s], "#1E140C");
-      // la tapa abierta, de canto, hacia atrás
-      P(c, [x - 18 * s, y - 32 * s, x + 30 * s, y - 32 * s, x + 26 * s, y - 52 * s, x - 22 * s, y - 52 * s], C.maderaSombra);
-      P(c, [x - 18 * s, y - 34 * s, x + 30 * s, y - 34 * s, x + 30 * s, y - 38 * s, x - 18 * s, y - 38 * s], C.hierro);
+      // la boca y la paja del fondo
+      pp([-28, 24, 20, 24, 32, 31, -16, 31], "#1E140C");
+      pp([-22, 25, 14, 25, 22, 29, -14, 29], "#6E5A30");
+      [-14, -4, 6].forEach((dx, k) => L(c, X(dx), Y(26 + (k % 2)), X(dx + 7), Y(28 - (k % 2)), "#B08A58", 1.2 * s));
+      // la tapa parada: se ve la cara de adentro, con sus zunchos
+      pp([-16, 31, 32, 31, 34, 56, -14, 56], C.maderaSombra);
+      pp([32, 31, 36, 33, 38, 58, 34, 56], C.madera);
+      pp([-14, 56, 34, 56, 38, 58, -10, 58], C.maderaLuz);
+      [-8, 22].forEach((dx) => pp([dx, 31, dx + 4, 31, dx + 4.4, 56, dx + 0.4, 56], C.hierro));
+      L(c, X(-16), Y(43), X(32), Y(43), "#3E2A18", 1.2 * s);
     } else {
-      // tapa curva
-      P(c, [x - 28 * s, y - 26 * s, x - 26 * s, y - 36 * s, x - 18 * s, y - 42 * s, x + 30 * s, y - 46 * s, x + 30 * s, y - 32 * s, x + 20 * s, y - 26 * s], C.madera);
-      P(c, [x + 20 * s, y - 26 * s, x + 22 * s, y - 40 * s, x + 30 * s, y - 46 * s, x + 30 * s, y - 32 * s], C.maderaLuz);
-      P(c, [x - 28 * s, y - 26 * s, x - 26 * s, y - 36 * s, x - 18 * s, y - 42 * s, x - 18 * s, y - 26 * s], C.maderaSombra);
+      // tapa abombada: frente, cara de arriba (la que más luz recibe) y costado
+      pp([-28, 24, -28, 31, -25, 35, -20, 37, 15, 37, 18, 35, 20, 31, 20, 24], C.madera);
+      pp([-28, 24, -28, 31, -25, 35, -20, 37, -6, 37, -6, 24], "#6A4A2C");
+      pp([-20, 37, 15, 37, 27, 44, -8, 44], "#B08A58");
+      pp([20, 24, 20, 31, 18, 35, 15, 37, 27, 44, 30, 42, 32, 38, 32, 31], C.maderaLuz);
+      L(c, X(-28), Y(24), X(20), Y(24), C.maderaSombra, 1.6 * s);
       // cerradura con Fehu
-      R(c, x - 9 * s, y - 32 * s, 12 * s, 14 * s, C.hierro);
-      F.dibujar(c, "fehu", x - 3 * s, y - 20 * s, 10 * s, C.ambar, 1.6 * s);
+      R(c, X(-10), Y(30), 12 * s, 13 * s, C.hierro);
+      R(c, X(-10), Y(30), 12 * s, 2 * s, C.hierroLuz);
+      F.dibujar(c, "fehu", X(-4), Y(19), 9 * s, C.ambar, 1.5 * s);
     }
-    // zunchos
+    // zunchos (siguen la tapa cuando está cerrada) y esquineros
+    const alto = o.abierto ? 24 : 37;
     [-20, 10].forEach((dx) => {
-      R(c, x + dx * s, y - (o.abierto ? 26 : 42) * s, 4 * s, (o.abierto ? 26 : 42) * s, C.hierro);
-      R(c, x + (dx + 3) * s, y - (o.abierto ? 26 : 42) * s, 1 * s, (o.abierto ? 26 : 42) * s, C.hierroLuz);
+      pp([dx, 0, dx, alto, dx + 4, alto, dx + 4, 0], C.hierro);
+      pp([dx + 3, 0, dx + 3, alto, dx + 4, alto, dx + 4, 0], C.hierroLuz);
+      if (!o.abierto) pp([dx, 37, dx + 4, 37, dx + 16, 44, dx + 12, 44], C.hierroLuz);
     });
+    pp([-28, 0, -28, 6, -22, 6, -22, 0], C.hierro);
+    pp([14, 0, 14, 6, 20, 6, 20, 0], C.hierro);
+    pp([20, 0, 20, 6, 26, 9.5, 26, 3.5], C.hierroLuz);
   }
 
   // ---------- Cofre rúnico sellado ----------
@@ -130,9 +159,14 @@
   }
 
   // ---------- Arca enterrada ----------
-  // Medio hundida entre raíces y musgo; nadie la ve hasta que la Lente del Eco o Sowilo la revelan.
+  // Medio hundida en un montículo de tierra, torcida, con una argolla de hierro, raíces que la abrazan y musgo; nadie
+  // la ve hasta que la Lente del Eco o Sowilo la revelan. Abierta: la tapa tirada al costado, el pozo cavado y la tierra
+  // amontonada.
   function arcaEnterrada(c, x, y, t, o) {
-    const s = o.s || 1;
+    const s = o.s || 1,
+      X = (v) => x + v * s,
+      Y = (v) => y - v * s,
+      pp = (a, col) => P(c, a.map((v, i) => (i % 2 ? Y(v) : X(v))), col);
     if (o.oculto) {
       // apenas un destello sobre el musgo, para el que mira bien
       const g = Math.max(0, Math.sin(t * 1.3 + (o.sem || 0) * 3)) ** 8;
@@ -142,28 +176,51 @@
       return;
     }
     if (!o.abierto) halo(c, x, y - 16 * s, 46 * s, C.ambar, 0.5 + Math.sin(t * 3) * 0.2);
-    E(c, x, y, 40 * s, 10 * s, C.humus);
-    P(c, [x - 26 * s, y, x - 24 * s, y - 16 * s, x + 22 * s, y - 18 * s, x + 26 * s, y - 2 * s], C.maderaVieja);
-    P(c, [x + 10 * s, y - 2 * s, x + 12 * s, y - 18 * s, x + 22 * s, y - 18 * s, x + 26 * s, y - 2 * s], "#6E5A44");
-    if (o.abierto) E(c, x, y - 17 * s, 22 * s, 4 * s, "#140E08");
-    else {
-      P(c, [x - 24 * s, y - 16 * s, x - 18 * s, y - 26 * s, x + 26 * s, y - 28 * s, x + 22 * s, y - 18 * s], "#6E5A44");
-      R(c, x - 4 * s, y - 20 * s, 7 * s, 8 * s, C.hierroLuz);
+    // el montículo: tierra oscura con la cara de arriba más clara
+    E(c, x, y, 44 * s, 12 * s, C.humus);
+    if (o.abierto) {
+      // el pozo cavado y la tierra sacada a la derecha
+      E(c, x, Y(4), 26 * s, 7 * s, "#140E08");
+      pp([-26, 4, -24, 10, 24, 10, 26, 4], C.maderaVieja);
+      E(c, X(34), Y(4), 16 * s, 8 * s, "#4A3A26");
+      E(c, X(36), Y(8), 10 * s, 5 * s, "#5E4A32");
+      // la tapa tirada a la izquierda, boca abajo
+      pp([-56, -4, -48, 8, -24, 6, -30, -6], "#8E7858");
+      pp([-30, -6, -24, 6, -22, 3, -28, -8], "#6E5A44");
+      pp([-40, 0, -38, 6, -35, 5.6, -37, -0.4], C.hierro);
+    } else {
+      // el arca torcida que asoma: frente, tapa al sol y costado
+      pp([-28, 2, -28, 18, 22, 21, 24, 5], C.maderaVieja);
+      pp([-28, 2, -28, 18, -4, 19.5, -3, 3.5], "#4E3C2A");
+      pp([-28, 18, -18, 28, 32, 31, 22, 21], "#8E7858");
+      pp([22, 21, 32, 31, 34, 15, 24, 5], "#6E5A44");
+      L(c, X(-28), Y(10), X(23), Y(13), "#3E2E20", 1.2 * s);
+      // zuncho y argolla
+      pp([-2, 3.4, -2, 19.5, 3, 19.8, 3, 3.8], C.hierro);
+      pp([3, 19.8, 13, 29.6, 17, 29.8, 7, 20], C.hierroLuz);
+      c.save();
+      c.strokeStyle = C.hierroLuz;
+      c.lineWidth = 2 * s;
+      c.beginPath();
+      c.arc(X(0.5), Y(10), 3.6 * s, 0, Math.PI * 2);
+      c.stroke();
+      c.restore();
     }
     // raíces encima
     c.save();
     c.strokeStyle = C.troncoSombra;
-    c.lineWidth = 4 * s;
+    c.lineWidth = 3 * s;
     c.lineCap = "round";
     c.beginPath();
-    c.moveTo(x - 40 * s, y + 4 * s);
-    c.quadraticCurveTo(x - 20 * s, y - 34 * s, x + 6 * s, y - 14 * s);
-    c.moveTo(x + 36 * s, y + 2 * s);
-    c.quadraticCurveTo(x + 24 * s, y - 24 * s, x + 12 * s, y - 8 * s);
+    c.moveTo(X(-46), Y(-4));
+    c.quadraticCurveTo(X(-30), Y(26), X(-14), Y(16));
+    c.moveTo(X(44), Y(-2));
+    c.quadraticCurveTo(X(40), Y(12), X(30), Y(10));
     c.stroke();
     c.restore();
-    E(c, x - 16 * s, y - 20 * s, 10 * s, 4 * s, C.musgoClaro);
-    E(c, x + 18 * s, y - 2 * s, 9 * s, 3 * s, C.musgo2);
+    E(c, X(-18), Y(20), 9 * s, 3.5 * s, C.musgoClaro);
+    E(c, X(22), Y(2), 9 * s, 3 * s, C.musgo2);
+    E(c, X(-34), Y(-4), 7 * s, 2.5 * s, C.musgo2);
   }
 
   // ---------- Piedra del susurro ----------

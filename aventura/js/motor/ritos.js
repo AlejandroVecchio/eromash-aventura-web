@@ -156,22 +156,23 @@ window.RITOS = (function () {
     });
     r.cofre.o.sellado = false;
     J.sacudir(0.2);
+    if (window.VIDA) r.piedras.forEach((q) => VIDA.evento("rito", q.x, q.y - 70, { col: ASSETS.RITO[r.tipo].col, runa: ASSETS.RITO[r.tipo].runa }));
     const n = Object.keys(st.ritos).length;
     HUD.aviso(t("pr.rito_hecho", [t("pr.tipo_" + r.tipo), n, ritos.length]), ASSETS.RITO[r.tipo].col);
   }
   function abrirCofre(r) {
-    if (r.cofre.o.sellado) return A.avisar("pr.cofre_sellado_" + r.tipo, ASSETS.RITO[r.tipo].col);
-    jug.interactuando = 0.55;
-    J.retrasar(0.4, () => {
+    if (r.cofre.o.sellado) {
+      // se sacude y la luz corre hasta sus piedras
+      SECRETOS.sacudir(r.cofre);
+      if (window.ANIMA) ANIMA.gesto("duda");
+      r.piedras.forEach((q) => A.ondaPor([[r.cofre.x, r.cofre.y], [q.x, q.y]], 0.9));
+      return A.avisar("pr.cofre_sellado_" + r.tipo, ASSETS.RITO[r.tipo].col);
+    }
+    jug.interactuando = 0.3;
+    J.retrasar(0.18, () => {
       st.cofres[r.id] = true;
       r.cofre.o.abierto = true;
-      const x = r.cofre.x,
-        y = r.cofre.y + 10;
-      PODERES.soltar(x, y, "plata", r.botin.plata);
-      if (r.botin.vida) PODERES.soltar(x, y, "vida", 30);
-      PODERES.darFragmento();
-      if (r.botin.manzana) J.retrasar(0.8, () => PODERES.darManzana());
-      A.chispa(x, y - 30);
+      PODERES.botinCofre(r.cofre.x, r.cofre.y + 10, t("pr.cofre_rito"), Object.assign({}, r.botin, { frag: 1 }), true);
     });
   }
   function cancelar(avisar, clave) {

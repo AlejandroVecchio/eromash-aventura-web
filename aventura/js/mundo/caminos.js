@@ -4,8 +4,9 @@
 //         "ladrillo" (ladrillos rojos a soga entre dos cordones de piedra)
 //   borde: con qué se funde a los costados: "pasto", "musgo", "agua" (barro mojado y charquitos), "tierra" (piedras
 //          sueltas y tierra que se come el borde) o "" (corte limpio)
-//   fundir: las puntas se deshacen de a poco en vez de cortar redondo (para que se junte con otro camino, con el
-//           pasto o con el agua)
+//   fundir: las puntas se deshacen de a poco en vez de cortar redondo (para que se junte con el pasto o con el agua).
+//           La tierra se deshace sola en las puntas sueltas; una punta que cae sobre otro camino nunca se deshace,
+//           así el cruce queda lleno.
 // Todo sale de la posición a lo largo del camino, así un mismo camino se pinta igual en cada trozo del piso.
 window.SENDAS = (function () {
   "use strict";
@@ -20,7 +21,7 @@ window.SENDAS = (function () {
     h ^= h >>> 12;
     return (h >>> 0) / 4294967296;
   }
-  function trazo(c, pts, w, col) {
+  function trazo(c, pts, w, col, cap) {
     if (pts.length < 2 || w <= 0) return;
     c.beginPath();
     c.moveTo(pts[0][0], pts[0][1]);
@@ -28,7 +29,7 @@ window.SENDAS = (function () {
     c.strokeStyle = col;
     c.lineWidth = w;
     c.lineJoin = "round";
-    c.lineCap = "round";
+    c.lineCap = cap || "round";
     c.stroke();
   }
   function distLinea(x, y, p) {
@@ -100,9 +101,13 @@ window.SENDAS = (function () {
   const FUNDE = 150; // cuánto se deshace cada punta
 
   // pinta un camino en c, solo lo que cae en [x0, y0, x1, y1]; sem distingue un camino de otro.
-  // capa: "base" (contornos y cordones), "cuerpo" (la superficie) o "borde" (con qué se funde a los costados); sin capa
-  // pinta todo junto. Para que los caminos se unan (del mismo material o de otro) se pintan todos de a capas: primero
-  // las bases de todos, después los cuerpos y al final los bordes, que no se pintan sobre otro camino (otros).
+  // capa: "base" (contornos y cordones), "cuerpo" (la tierra lisa), "centro" (la franja gastada del medio de la
+  // tierra), "losa" (el fondo de adoquines y ladrillos), "detalle" (huellas, piedras, adoquines y ladrillos) o "borde"
+  // (con qué se funde a los costados); sin capa pinta todo junto. Para que los caminos se unan sin costura (del mismo
+  // material o de otro) se pintan todos de a capas, en ese orden: así la superficie de uno nunca tapa el medio o las
+  // piedras del otro en un cruce, el cordón de piedra de un empedrado queda debajo de la tierra que lo cruza, las
+  // huellas no siguen adentro de otro camino y los bordes no se pintan sobre otro camino (otros).
+  const CAPAS = ["base", "cuerpo", "centro", "losa", "detalle", "borde"];
   // tramos: [tipo | null, …], uno por tramo (de p[k] a p[k + 1]); null es el tipo del camino. Los tramos seguidos del
   // mismo tipo se pintan juntos como un camino aparte, y como van de a capas se unen con los de al lado.
   function pintar(c, cm, sem, x0, y0, x1, y1, capa, otros) {
@@ -113,9 +118,8 @@ window.SENDAS = (function () {
     const tipoDe = (k) => tr[k] || cm.tipo || "tierra";
     for (let k = 1; k <= cm.p.length - 1; k++) {
       if (k < cm.p.length - 1 && tipoDe(k) === tipoDe(ini)) continue;
-      const tramo = Object.assign({}, cm, { p: cm.p.slice(ini, k + 1), tipo: tipoDe(ini), tramos: null, fundir: false, deTramos: cm });
       // las puntas fundidas, solo en las puntas de verdad
-      if (cm.fundir && ini === 0 && k === cm.p.length - 1) tramo.fundir = true;
+      const tramo = Object.assign({}, cm, { p: cm.p.slice(ini, k + 1), tipo: tipoDe(ini), tramos: null, puntas: [ini === 0, k === cm.p.length - 1], deTramos: cm });
       pintarUno(c, tramo, sem + n++ * 17, x0, y0, x1, y1, capa, otros);
       ini = k;
     }
@@ -135,31 +139,142 @@ window.SENDAS = (function () {
     const mg = w + 120;
     if (maxx + mg < x0 || minx - mg > x1 || maxy + mg < y0 || miny - mg > y1) return;
     const dentro = (x, y) => x > x0 - mg && x < x1 + mg && y > y0 - mg && y < y1 + mg;
-    const fundir = !!cm.fundir && L > FUNDE * 2.5;
+    // los otros caminos que pasan cerca: ahí no va borde ni huellas (es donde se une con ellos)
+    const lista = otros || [],
+      cerca = lista.filter((o) => o !== cm && o !== cm.deTramos && o.p.some(([x, y]) => x > minx - 2000 && x < maxx + 2000 && y > miny - 2000 && y < maxy + 2000));
+    const sobreOtro = (x, y, m = 4, fn) => cerca.some((o) => (!fn || fn(o)) && distLinea(x, y, o.p) < (o.w || 110) / 2 + m);
+    // en cada punta: ¿se deshace? Solo si es una punta de verdad (no el cambio entre dos tramos), no cae sobre otro
+    // camino y el camino pide fundirse (la tierra lo hace siempre)
+    const suelta = (k) => !(cm.puntas && !cm.puntas[k]) && !sobreOtro(p[k ? p.length - 1 : 0][0], p[k ? p.length - 1 : 0][1], w * 0.3);
+    const quiere = !!cm.fundir || tipo === "tierra";
+    let fa = quiere && suelta(0),
+      fb = quiere && suelta(1);
+    if (L < FUNDE * (fa && fb ? 2.5 : 1.5)) fa = fb = false;
+    const fundir = fa || fb;
     // cuánto queda de camino en ese punto (1 entero, 0 deshecho) cerca de las puntas
-    const queda = (d) => (fundir ? Math.min(1, Math.min(d, L - d) / FUNDE) : 1);
-    const cuerpo = fundir ? recortar(p, FUNDE * 0.75, L - FUNDE * 0.75) : p;
+    const queda = (d) => Math.min(1, fa ? d / FUNDE : 1, fb ? (L - d) / FUNDE : 1);
+    // lo entero (la tierra recién donde termina su cinta, así la punta redonda del trazo no asoma)
+    const corte = tipo === "tierra" ? FUNDE : FUNDE * 0.75,
+      cuerpo = fundir ? recortar(p, fa ? corte : 0, fb ? L - corte : L) : p;
+    // las huellas y piedras no siguen adentro de otro camino: la tierra se corta sobre cualquiera, el empedrado solo
+    // sobre otro empedrado que se pintó antes (el primero de la lista gana el cruce)
+    const yo = lista.indexOf(cm.deTramos || cm);
+    const tapado = (x, y) =>
+      cerca.length > 0 && (tipo === "tierra" ? sobreOtro(x, y, -4) : sobreOtro(x, y, -4, (o) => (o.tipo || "tierra") !== "tierra" && lista.indexOf(o) < yo));
+    // un empedrado que termina adentro de otro camino (de tierra, o de un empedrado que gana el cruce) no cierra con
+    // una punta redonda: el cordón y el fondo se cortan derechos en el borde del otro, y de ahí para adentro las piedras
+    // o ladrillos se van soltando hasta perderse en la tierra o en las piedras del otro
+    const cede = (o) => (o.tipo || "tierra") === "tierra" || lista.indexOf(o) < yo;
+    const metido = (x, y, m = 0) => cerca.some((o) => cede(o) && distLinea(x, y, o.p) < (o.w || 110) / 2 + m);
+    const entra = (k) => {
+      if (tipo === "tierra" || !cerca.length || (cm.puntas && !cm.puntas[k])) return 0;
+      const q = p[k ? p.length - 1 : 0];
+      if (!metido(q[0], q[1])) return 0;
+      // el corte va donde las dos esquinas del cordón siguen adentro del otro camino (si el cruce es en diagonal, una
+      // esquina sale antes que el centro y asomaría al pasto)
+      const m = (w + 28) / 2,
+        adentro = (d) => {
+          const q2 = recortar(p, Math.max(0, d - 3), Math.min(L, d + 3)),
+            [ax, ay] = q2[0],
+            [bx, by] = q2[q2.length - 1],
+            l = Math.hypot(bx - ax, by - ay) || 1,
+            nx = -(by - ay) / l,
+            ny = (bx - ax) / l,
+            x = (ax + bx) / 2,
+            y = (ay + by) / 2;
+          // (hasta el contorno oscuro del otro, que también tapa)
+          return metido(x, y) && metido(x + nx * m, y + ny * m, 12) && metido(x - nx * m, y - ny * m, 12);
+        };
+      let d = 0;
+      while (d < L / 2 && metido(...recortar(p, k ? L - d : d, k ? L - d : d)[0])) d += 6;
+      // del borde para atrás, hasta que las dos esquinas entren
+      let c0 = Math.max(0, d - 6);
+      while (c0 > 0 && !adentro(k ? L - c0 : c0)) c0 -= 6;
+      return { d, c: Math.max(0, c0) };
+    };
+    const za = entra(0) || { d: 0, c: 0 },
+      zb = entra(1) || { d: 0, c: 0 },
+      ea = za.d,
+      eb = zb.d;
+    // cuánto queda del empedrado en ese punto por estar metido en otro camino (1 entero, 0 nada)
+    const suelto = (d) => Math.min(1, ea ? 1 - (ea - d) / Math.min(w * 1.2, ea + 12) : 1, eb ? 1 - (d - (L - eb)) / Math.min(w * 1.2, eb + 12) : 1);
+    // el empedrado entero: con punta redonda en las puntas libres y cortado derecho donde entra en otro
+    const losa = (pts, ancho, col) => {
+      if (!(ea || eb)) return trazo(c, pts, ancho, col);
+      // el cuerpo (pts ≠ p) ya viene recortado por las puntas que se funden
+      const a = Math.max(za.c, pts !== p && fa ? FUNDE * 0.75 : 0),
+        b = Math.min(L - zb.c, pts !== p && fb ? L - FUNDE * 0.75 : L);
+      losaEntre(a, b, ancho, col);
+    };
+    const losaEntre = (a, b, ancho, col) => {
+      if (b - a < 2) return;
+      const pts = recortar(p, ea ? a - w * 0.1 : a, eb ? b + w * 0.1 : b);
+      trazo(c, pts, ancho, col, "butt");
+      // la punta libre sigue redonda; la que entra en otro camino se deshace en un borde mordido, más largo en el medio
+      // que en las esquinas (las esquinas no salen del otro camino)
+      // la punta que entra en otro camino no tiene forma: se deshace en manchones sueltos de distinto tamaño, más
+      // chicos y más separados cuanto más adentro (cada capa usa los mismos, agrandados por lo que es más ancha)
+      const mordida = (q, r, k) => {
+        const l = Math.hypot(q[0] - r[0], q[1] - r[1]) || 1,
+          dx = (q[0] - r[0]) / l,
+          dy = (q[1] - r[1]) / l,
+          h = w / 2,
+          extra = (ancho - w) / 2;
+        for (let j = 0; j < 15; j++) {
+          const z = (n) => hash(sem + 307, k * 50 + j, n),
+            t = z(1) * 2 - 1,
+            hondo = z(2),
+            e = -w * 0.12 + hondo * w * 0.5 * Math.sqrt(1 - t * t),
+            rr = (w * (0.09 + z(3) * 0.1) * (1 - hondo * 0.5)) + extra * 0.6;
+          P(c, poli(q[0] - dy * t * h * 0.9 + dx * e, q[1] + dx * t * h * 0.9 + dy * e, rr, rr * (0.6 + z(4) * 0.3), 7, z(5) * 6), col);
+        }
+      };
+      if (!ea) E(c, pts[0][0], pts[0][1], ancho / 2, ancho / 2, col);
+      else mordida(pts[0], pts[1], 0);
+      if (!eb) E(c, pts[pts.length - 1][0], pts[pts.length - 1][1], ancho / 2, ancho / 2, col);
+      else mordida(pts[pts.length - 1], pts[pts.length - 2], 1);
+    };
 
     if (tipo === "tierra") {
       if (fundir) {
-        // la tierra se angosta hacia las puntas
-        recorrer(p, 24, (x, y, dx, dy, d) => {
-          const q = queda(d);
-          if (q < 1 && dentro(x, y)) {
-            if (en("base")) E(c, x, y, (w / 2 + 6) * (0.35 + q * 0.65), (w / 2 + 6) * (0.3 + q * 0.6), "#4A3C28");
-            if (en("cuerpo")) E(c, x, y, (w / 2) * (0.3 + q * 0.7) - 6, (w / 2) * (0.25 + q * 0.65) - 6, "#5C4A32");
-          }
+        // la tierra se angosta hacia las puntas: una cinta que se afina, con el borde apenas mordido
+        const cinta = (d0, d1, ancho, col, k) => {
+          const izq = [],
+            der = [];
+          recorrer(recortar(p, d0, d1), 10, (x, y, dx, dy, d, i) => {
+            const q = queda(d0 + d),
+              h = ancho(q) + (hash(sem + k, i, 3) - 0.5) * 4 * (1 - q);
+            izq.push(x - dy * h, y + dx * h);
+            der.push(x + dy * h, y - dx * h);
+          });
+          if (izq.length < 4) return;
+          const pts = izq.slice();
+          for (let i = der.length - 2; i >= 0; i -= 2) pts.push(der[i], der[i + 1]);
+          P(c, pts, col);
+          // la punta, redonda
+          [0, izq.length - 2].forEach((i) => {
+            const h = Math.hypot(izq[i] - der[i], izq[i + 1] - der[i + 1]) / 2;
+            E(c, (izq[i] + der[i]) / 2, (izq[i + 1] + der[i + 1]) / 2, h, h, col);
+          });
+        };
+        const capas = [
+          ["base", (q) => (w / 2 + 13) * (0.5 + Math.sqrt(q) * 0.5), "#3A3022"],
+          ["cuerpo", (q) => (w / 2) * (0.42 + Math.sqrt(q) * 0.58), "#5C4A32"],
+          ["centro", (q) => (w / 4) * (0.3 + Math.sqrt(q) * 0.7), "#6A563A"],
+        ];
+        capas.forEach(([k, ancho, col], j) => {
+          if (!en(k)) return;
+          if (fa && dentro(p[0][0], p[0][1])) cinta(0, FUNDE + 10, ancho, col, j);
+          if (fb && dentro(p[p.length - 1][0], p[p.length - 1][1])) cinta(L - FUNDE - 10, L, ancho, col, j + 5);
         });
       }
       if (en("base")) trazo(c, cuerpo, w + 26, "#3A3022");
-      if (en("cuerpo")) {
-        trazo(c, cuerpo, w, "#5C4A32");
-        trazo(c, cuerpo, w * 0.5, "#6A563A");
-      }
+      if (en("cuerpo")) trazo(c, cuerpo, w, "#5C4A32");
+      if (en("centro")) trazo(c, cuerpo, w * 0.5, "#6A563A");
       // huellas de carro y piedritas
-      if (en("cuerpo"))
+      if (en("detalle"))
         recorrer(p, 20, (x, y, dx, dy, d, i) => {
-          if (!dentro(x, y) || queda(d) < 0.6) return;
+          if (!dentro(x, y) || queda(d) < 0.6 || tapado(x, y)) return;
           const nx = -dy,
             ny = dx;
           [-0.24, 0.24].forEach((k, j) => {
@@ -173,63 +288,74 @@ window.SENDAS = (function () {
     } else if (tipo === "adoquin") {
       // abajo un poco de tierra (lo que se ve donde faltan piedras), el cordón y la junta
       if (en("base")) {
-        trazo(c, p, w + 18, "#4A3C28");
-        trazo(c, cuerpo, w + 26, "#3E3A36");
+        losa(p, w + 18, "#4A3C28");
+        losa(cuerpo, w + 26, "#3E3A36");
       }
-      if (en("cuerpo")) trazo(c, cuerpo, w + 4, "#4A4640");
-      if (en("cuerpo"))
+      if (en("losa")) losa(cuerpo, w + 4, "#4A4640");
+      if (en("detalle"))
         recorrer(p, 22, (x, y, dx, dy, d, i) => {
-          if (!dentro(x, y)) return;
+          if (!dentro(x, y) || tapado(x, y) || suelto(d) <= 0) return;
           const nx = -dy,
             ny = dx,
-            q = queda(d),
+            q = Math.min(queda(d), suelto(d)),
             off = i % 2 ? 11 : 0;
           for (let o = -w / 2 + 12 + off, j = 0; o <= w / 2 - 10; o += 22, j++) {
             if (q < 1 && hash(sem, i, j) > q) continue;
-            const cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * 4,
-              cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * 4;
-            P(c, poli(cx, cy, 10.5, 7.5, 6, hash(sem, i, j + 60) * 2), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
-            P(c, poli(cx + 2, cy - 2, 5, 3, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
+            // las sueltas (en una punta) se corren, se achican y se giran
+            const fl = 1 - q,
+              cx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * (4 + fl * 30) + nx * (hash(sem, i, j + 80) - 0.5) * fl * 24,
+              cy = y + ny * o + dy * (hash(sem, i, j + 50) - 0.5) * (4 + fl * 30) + ny * (hash(sem, i, j + 80) - 0.5) * fl * 24,
+              t = 1 - fl * hash(sem, i, j + 90) * 0.45;
+            P(c, poli(cx, cy, 10.5 * t, 7.5 * t, 6, hash(sem, i, j + 60) * (2 + fl * 4)), PIEDRAS[Math.floor(hash(sem, i, j + 70) * PIEDRAS.length)]);
+            P(c, poli(cx + 2, cy - 2, 5 * t, 3 * t, 5, 0.4), "rgba(242,236,236,0.08)"); // la luz de arriba a la derecha
           }
         });
     } else if (tipo === "ladrillo") {
       if (en("base")) {
-        trazo(c, p, w + 18, "#4A3C28");
-        trazo(c, cuerpo, w + 28, "#4E4A44");
-        trazo(c, cuerpo, w + 10, "#5E5850");
+        losa(p, w + 18, "#4A3C28");
+        losa(cuerpo, w + 28, "#4E4A44");
+        losa(cuerpo, w + 10, "#5E5850");
       }
-      if (en("cuerpo")) trazo(c, cuerpo, w, "#4A2E22");
+      if (en("losa")) losa(cuerpo, w, "#4A2E22");
       // ladrillos a soga: carriles a lo ancho, cada uno corrido medio ladrillo del de al lado
-      if (en("cuerpo"))
+      if (en("detalle"))
         recorrer(p, 16, (x, y, dx, dy, d, i) => {
-          if (!dentro(x, y)) return;
+          if (!dentro(x, y) || tapado(x, y) || suelto(d) <= 0) return;
           const nx = -dy,
             ny = dx,
-            q = queda(d),
+            q = Math.min(queda(d), suelto(d)),
             carriles = Math.max(2, Math.floor(w / 15));
           for (let j = 0; j < carriles; j++) {
             if ((i + j) % 2) continue; // cada ladrillo mide dos pasos de largo
             if (q < 1 && hash(sem, i, j) > q) continue;
             const o = -w / 2 + (j + 0.5) * (w / carriles);
-            ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
+            if (q < 1) {
+              // suelto: corrido, más chico y torcido
+              const fl = 1 - q,
+                g = (hash(sem, i, j + 90) - 0.5) * fl * 1.6,
+                ux = dx * Math.cos(g) - dy * Math.sin(g),
+                uy = dx * Math.sin(g) + dy * Math.cos(g),
+                sx = x + nx * o + dx * (hash(sem, i, j + 40) - 0.5) * fl * 30 + nx * (hash(sem, i, j + 50) - 0.5) * fl * 20,
+                sy = y + ny * o + dy * (hash(sem, i, j + 40) - 0.5) * fl * 30 + ny * (hash(sem, i, j + 50) - 0.5) * fl * 20;
+              ladrillo(c, sx, sy, ux, uy, 29 * (1 - fl * 0.3), (w / carriles - 3) * (1 - fl * 0.2), LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
+            } else ladrillo(c, x + nx * o, y + ny * o, dx, dy, 29, w / carriles - 3, LADRILLOS[Math.floor(hash(sem, i, j + 30) * LADRILLOS.length)]);
           }
         });
     }
 
     // los costados: con qué se funde
     const borde = cm.borde || "";
-    // los otros caminos que pasan cerca: ahí no va borde (es donde se une con ellos)
-    const cerca = (otros || []).filter((o) => o !== cm && o !== cm.deTramos && o.p.some(([x, y]) => x > minx - 2000 && x < maxx + 2000 && y > miny - 2000 && y < maxy + 2000));
-    const sobreOtro = (x, y) => cerca.some((o) => distLinea(x, y, o.p) < (o.w || 110) / 2 + 4);
     if (borde && en("borde")) {
       recorrer(p, 26, (x, y, dx, dy, d, i) => {
         if (!dentro(x, y) || queda(d) < 0.3) return;
         const nx = -dy,
-          ny = dx;
+          ny = dx,
+          // en una punta de tierra que se afina el borde la sigue
+          a = (w / 2) * (tipo === "tierra" && fundir ? 0.42 + Math.sqrt(queda(d)) * 0.58 : 1) + (tipo === "tierra" ? 6 : 12);
         [-1, 1].forEach((lado, j) => {
           const r = (k) => hash(sem + 101, i * 2 + j, k);
-          const bx = x + nx * lado * (w / 2 + (tipo === "tierra" ? 6 : 12)),
-            by = y + ny * lado * (w / 2 + (tipo === "tierra" ? 6 : 12)),
+          const bx = x + nx * lado * a,
+            by = y + ny * lado * a,
             adentro = (r(1) - 0.35) * 26; // + hacia adentro del camino
           const px = bx - nx * lado * adentro,
             py = by - ny * lado * adentro;
@@ -268,12 +394,12 @@ window.SENDAS = (function () {
       });
     }
     // las puntas fundidas: piedras o ladrillos sueltos que siguen un poco más allá
-    if (fundir && tipo !== "tierra" && en("cuerpo")) {
+    if (fundir && tipo !== "tierra" && en("detalle")) {
       [
-        [p[0], p[1], -1],
-        [p[p.length - 1], p[p.length - 2], 1],
-      ].forEach(([a, b, s], e) => {
-        if (!dentro(a[0], a[1])) return;
+        [p[0], p[1], fa],
+        [p[p.length - 1], p[p.length - 2], fb],
+      ].forEach(([a, b, f], e) => {
+        if (!f || !dentro(a[0], a[1])) return;
         const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1,
           dx = (a[0] - b[0]) / l,
           dy = (a[1] - b[1]) / l;
@@ -289,5 +415,13 @@ window.SENDAS = (function () {
       });
     }
   }
-  return { TIPOS, BORDES, pintar, largo };
+  // todos los caminos de una lista, de a capas. El empedrado (losa y piedras) va al revés: así, donde se cruzan dos,
+  // el primero de la lista queda arriba entero y gana el cruce.
+  function pintarTodos(c, lista, x0, y0, x1, y1) {
+    CAPAS.forEach((capa) => {
+      const orden = capa === "losa" || capa === "detalle" ? lista.slice().reverse() : lista;
+      orden.forEach((cm) => pintar(c, cm, cm.sem || 0, x0, y0, x1, y1, capa, lista));
+    });
+  }
+  return { TIPOS, BORDES, CAPAS, pintar, pintarTodos, largo };
 })();

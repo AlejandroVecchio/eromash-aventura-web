@@ -18,12 +18,6 @@ window.SECUNDARIAS = (function () {
   const tieneLente = () => H.tiene("lente") || H.tiene("lente_prestada");
   const sub = (k) => (ex && ex[k]) || {};
 
-  Object.assign(GENTE.FICHAS, {
-    // la huldra: mujer del bosque, alta y pálida, pelo largo de paja y corona de flores; la cola de vaca va aparte
-    huldra: { nombre: "huldra", alto: 1.04, ancho: 0.9, piel: "#E8D4C4", pielSombra: "#C8B4A4", pelo: "#D8C080", ropa: "#5E6A3E", ropaSombra: "#46522E", falda: true, pantalon: "#46522E", botas: "#C8B4A4", cinto: "#C8402D", trenza: true, gorro: "#E0B2B2" },
-    // el nøkk: espíritu de agua, verdoso, el pelo mojado y el violín
-    nokk: { nombre: "nokk", alto: 0.98, ancho: 0.92, piel: "#9CB8A8", pielSombra: "#7A9888", pelo: "#3A5A4A", barba: "#3A5A4A", ropa: "#3E5A56", ropaSombra: "#2C4440", pantalon: "#2C4440", botas: "#2C4440", cinto: "#5E4A36" },
-  });
   const huldra = { x: 0, y: 0, mira: { vista: "S", espejo: false } };
   const nokk = { x: 0, y: 0, mira: { vista: "S", espejo: false } };
 
@@ -32,6 +26,7 @@ window.SECUNDARIAS = (function () {
     lobo_viejo: { tipo: "lobo", pal: 2, s: 1.7, vida: 380, af: ["piedra"], patron: ["abanico", "abanico", "circulo", "abanico", "franja", "circulo"], esbirro: "lobo", llama: [0.5], cuando: () => tieneLente() },
     primero: { tipo: "errante", pal: 1, s: 1.45, vida: 420, af: ["piedra"], patron: ["abanico", "franja", "abanico", "circulo"], esbirro: "errante", llama: [0.6, 0.3], cuando: () => H.completa("EL-02") && A.noche() > 0.5 },
     loba: { tipo: "lobo", pal: 1, s: 1.55, vida: 340, af: ["veloz"], patron: ["abanico", "franja", "abanico", "circulo", "franja"], esbirro: "lobo", chico: true, llama: [0.7, 0.4], cuando: () => H.completa("EL-06") },
+    oso: { tipo: "oso", pal: 0, s: 1.15, vida: 560, af: ["piedra"], patron: ["abanico", "franja", "abanico", "circulo", "franja"], esbirro: "lobo", llama: [0.6, 0.3], cuando: () => true },
     vigia: { tipo: "errante", pal: 2, s: 1.5, vida: 400, af: ["runico"], patron: ["franja", "abanico", "circulo", "abanico"], esbirro: "errante", llama: [0.75, 0.45], cuando: () => true },
   };
   const jefes = {}; // id → { e, esbirros[], llamo }
@@ -137,7 +132,7 @@ window.SECUNDARIAS = (function () {
     () => !!st.semi.primero,
     () => !!st.semi.loba,
     () => !!st.semi.vigia,
-    () => false, // el oso de zarzal (caravana de Skeld)
+    () => !!st.semi.oso, // el oso de zarzal (caravana de Skeld)
     () => false, // el último vecino (Skarnholt)
     () => false, // el ahogado de la cisterna (Brunvik)
     () => false, // el haugbúi (túmulo)
@@ -176,6 +171,7 @@ window.SECUNDARIAS = (function () {
       crearSemi("primero", libre(mas(L.refugio.p, 4, 7)));
       crearSemi("loba", libre(W.PUNTOS.semi_loba));
       crearSemi("vigia", libre(mas(L.torre.p, -3, 8)));
+      crearSemi("oso", libre(mas(L.caravana.p, 7, 5)));
       // la huldra al borde del bosque, al oeste del Puesto; los tres lobos con la campana, más adentro
       const ph = libre(W.PUNTOS.huldra);
       huldra.x = ph[0];
@@ -411,15 +407,6 @@ window.SECUNDARIAS = (function () {
         lista.push({
           y: huldra.y,
           f: () => {
-            const sx = huldra.mira.espejo ? -1 : 1,
-              mv = Math.sin(J.t * 1.8) * 6;
-            c.beginPath();
-            c.moveTo(huldra.x - 6 * sx, huldra.y - 26);
-            c.quadraticCurveTo(huldra.x - 30 * sx, huldra.y - 10 + mv, huldra.x - 26 * sx, huldra.y + 4);
-            c.strokeStyle = "#C8B4A4";
-            c.lineWidth = 4;
-            c.stroke();
-            DIB.E(c, huldra.x - 26 * sx, huldra.y + 6, 5, 7, "#8A6A3A");
             GENTE.dibujar(c, "huldra", huldra.x, huldra.y, J.t, huldra.mira);
           },
         });

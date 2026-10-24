@@ -84,6 +84,7 @@ I18N.textos({
   "pr.guardian_empieza": { es: "Los guardianes de la piedra se levantan.", en: "The stone's guardians rise." },
   "pr.guardian_huiste": { es: "Te alejaste: los guardianes vuelven a la tierra.", en: "You walked away: the guardians return to the earth." },
   "pr.rito_hecho": { es: "Despertaste {0} · ritos {1}/{2}", en: "You woke {0} · rites {1}/{2}" },
+  "pr.cofre_rito": { es: "Cofre del rito", en: "Rite chest" },
   "pr.cofre_sellado_brasa": { es: "Lo sella la piedra de brasa de al lado.", en: "Sealed by the ember stone beside it." },
   "pr.cofre_sellado_escarcha": { es: "Lo sella la piedra de escarcha de al lado.", en: "Sealed by the frost stone beside it." },
   "pr.cofre_sellado_luna": { es: "Lo sella la piedra de la luna de al lado.", en: "Sealed by the moon stone beside it." },

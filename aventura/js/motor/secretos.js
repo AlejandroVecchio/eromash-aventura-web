@@ -206,28 +206,68 @@ window.SECRETOS = (function () {
 
   // ---------- acciones ----------
   function abrir(c) {
-    if (c.cosa.o.sellado) return A.avisar(c.sello === "fuego" ? "sx.sellado_fuego" : "sx.sellado_piedra", "#9A6BD8");
-    jug.interactuando = 0.55;
-    J.retrasar(0.4, () => {
+    if (c.cosa.o.sellado) return sellado(c);
+    jug.interactuando = 0.3;
+    J.retrasar(0.18, () => {
       st.cofres[c.id] = true;
       c.cosa.o.abierto = true;
-      const b = c.botin,
-        x = c.cosa.x,
-        y = c.cosa.y + 10;
-      if (b.plata) PODERES.soltar(x, y, "plata", b.plata);
-      if (b.vida) PODERES.soltar(x, y, "vida", 30);
-      if (b.frag) PODERES.darFragmento();
-      if (b.manzana) PODERES.darManzana();
-      A.chispa(x, y - 30);
-      const total = cofres.filter((q) => st.cofres[q.id]).length;
-      if (!b.frag && !b.manzana) HUD.aviso(t("sx.cofre_abierto", [total, cofres.length]), "#FFD98A");
+      const x = c.cosa.x,
+        y = c.cosa.y + 10,
+        total = cofres.filter((q) => st.cofres[q.id]).length;
+      PODERES.botinCofre(x, y, t("as." + c.tipo) + " " + t("sx.cofre_n", [total, cofres.length]), c.botin, c.tipo !== "arconLenador");
+      // uno de cada tres arcones guarda un mapa del tesoro: marca la zona de un arca enterrada que falta encontrar
+      if (c.tipo === "arconLenador" && c.id % 3 === 0) J.retrasar(0.9, () => mapaTesoro(x, y));
     });
+  }
+  // un cofre sellado se sacude y la luz violeta corre hasta lo que lo suelta (su piedra o los braseros apagados)
+  function sellado(c) {
+    sacudir(c.cosa);
+    if (window.ANIMA) ANIMA.gesto("duda");
+    if (window.SONIDO) SONIDO.tocar("clic", { vol: 0.6, tono: 0.7 });
+    const desde = [c.cosa.x, c.cosa.y];
+    if (c.sello === "fuego")
+      braseros.forEach((b, i) => !st.braseros[i] && A.ondaPor([desde, [b.cosa.x, b.cosa.y]], 0.9));
+    else if (c.sello != null && piedras[c.sello]) {
+      const p = piedras[c.sello].cosa;
+      A.ondaPor([desde, [p.x, p.y]], 1.1);
+      if (window.MAPA) MAPA.descubrir(p.x, p.y, 700);
+    }
+    A.avisar(c.sello === "fuego" ? "sx.sellado_fuego" : "sx.sellado_piedra", "#9A6BD8");
+  }
+  // sacudón corto de un objeto (cofre cerrado): se mueve unos píxeles y vuelve a su lugar
+  const sacudidos = [];
+  function sacudir(cosa) {
+    if (!sacudidos.some((q) => q.cosa === cosa)) sacudidos.push({ cosa, x: cosa.x, t: 0 });
+  }
+  function mapaTesoro(x, y) {
+    let mejor = null,
+      dm = Infinity;
+    cofres.forEach((q) => {
+      if (q.tipo !== "arcaEnterrada" || st.cofres[q.id] || st.vistos[q.id] || st.pistas[q.id]) return;
+      const d = Math.hypot(q.cosa.x - x, q.cosa.y - y);
+      if (d < dm) (dm = d), (mejor = q);
+    });
+    if (!mejor) return;
+    st.pistas[mejor.id] = true;
+    if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.8 });
+    HUD.aviso(t("ex.mapa_tesoro_sub", [Math.round(dm / W.M)]), "lugar", t("ex.mapa_tesoro"));
+  }
+  // las zonas de los mapas del tesoro que siguen sin cavar: el centro corrido un poco para no regalar el lugar exacto
+  const RADIO_PISTA = 520;
+  function pistas() {
+    if (!st) return [];
+    return cofres
+      .filter((q) => st.pistas[q.id] && !st.cofres[q.id] && q.cosa.o.oculto)
+      .map((q) => ({ x: q.cosa.x + (((q.id * 137) % 400) - 200), y: q.cosa.y + (((q.id * 71) % 300) - 150), r: RADIO_PISTA, id: q.id }));
   }
   function despertar(p) {
     jug.interactuando = 0.7;
     st.piedras[p.id] = true;
     p.cosa.o.viva = true;
     A.ondaPor([[jug.x, jug.y], [p.cosa.x, p.cosa.y]], 1.4);
+    // la piedra despierta levanta la niebla de alrededor en el mapa
+    if (window.MAPA) MAPA.descubrir(p.cosa.x, p.cosa.y, 2400);
+    if (window.VIDA) VIDA.evento("piedra", p.cosa.x, p.cosa.y - 60);
     const n = Object.keys(st.piedras).length;
     // el pedazo de historia que guarda cada piedra
     A.dialogoLibre([["piedra", "sx.susurro_" + (p.id % 20)]], () => {
@@ -243,21 +283,61 @@ window.SECRETOS = (function () {
       });
     });
   }
-  // viajar por la red de piedras despiertas (y siempre a Eikholt y al Puesto de Eydis)
-  function viajar(desde) {
+  // viajar por la red de piedras despiertas: siempre a Eikholt y al Puesto de Eydis, a los pueblos y refugios ya
+  // descubiertos y a donde estabas antes del último viaje (por un rato). Se ordena por distancia y lo más cerca de la
+  // marca del mapa va primero. Desde el mapa (sin piedra) hace falta no estar peleando y concentrarse un instante.
+  const PUEBLOS = ["refugio", "casa_lindes", "aserradero", "brunvik", "skarnholt", "santuario", "caravana"];
+  let antesDelViaje = null; // { p, t }
+  function destinos(desde) {
     const dest = [];
-    dest.push({ texto: t("av.lugar_eikholt"), p: [W.CIUDAD.c[0], W.CIUDAD.c[1] + W.CIUDAD.ry + 220] });
-    dest.push({ texto: t("av.lugar_puesto"), p: A.P.puesto });
+    dest.push({ texto: t("av.lugar_eikholt"), p: [W.CIUDAD.c[0], W.CIUDAD.c[1] + W.CIUDAD.ry + 220], lugar: "eikholt" });
+    dest.push({ texto: t("av.lugar_puesto"), p: A.P.puesto, lugar: "puesto" });
+    PUEBLOS.forEach((k) => {
+      const L = W.LUGARES[k];
+      if (!L || !A.H.E.vistos.includes(k)) return;
+      const q = libreCerca([L.p[0], L.p[1] + 80], 22);
+      if (q) dest.push({ texto: t("av.lugar_" + k), p: q, lugar: k });
+    });
     piedras.forEach((p) => {
       if (p === desde || !st.piedras[p.id]) return;
-      dest.push({ texto: t("sx.piedra_de", [t("av.lugar_" + p.cerca)]), p: [p.cosa.x, p.cosa.y + 70], d: Math.hypot(p.cosa.x - jug.x, p.cosa.y - jug.y) });
+      dest.push({ texto: t("sx.piedra_de", [t("av.lugar_" + p.cerca)]), p: [p.cosa.x, p.cosa.y + 70], lugar: p.cerca });
     });
-    const botones = dest.map((d) => ({ texto: d.texto, sub: d.d ? t("sx.metros", [Math.round(d.d / W.M)]) : "", fn: () => {
+    dest.forEach((d) => (d.d = Math.hypot(d.p[0] - jug.x, d.p[1] - jug.y)));
+    // lo que queda a un paso no vale la pena
+    const lejos = dest.filter((d) => d.d > 25 * W.M);
+    lejos.sort((a, b) => a.d - b.d);
+    const mk = window.MAPA && MAPA.marca();
+    if (mk) {
+      let mejor = null;
+      lejos.forEach((d) => (!mejor || Math.hypot(d.p[0] - mk[0], d.p[1] - mk[1]) < Math.hypot(mejor.p[0] - mk[0], mejor.p[1] - mk[1])) && (mejor = d));
+      if (mejor) {
+        lejos.splice(lejos.indexOf(mejor), 1);
+        lejos.unshift(Object.assign(mejor, { marca: true }));
+      }
+    }
+    if (antesDelViaje && J.t - antesDelViaje.t < 300 && Math.hypot(antesDelViaje.p[0] - jug.x, antesDelViaje.p[1] - jug.y) > 25 * W.M)
+      lejos.unshift({ texto: t("sx.viaje_volver"), p: antesDelViaje.p, d: Math.hypot(antesDelViaje.p[0] - jug.x, antesDelViaje.p[1] - jug.y), volver: true });
+    return lejos;
+  }
+  function viajar(desde, desdeMapa) {
+    if (desdeMapa && A.enPelea()) return A.avisar("sx.viaje_pelea", "#C8402D");
+    const botones = destinos(desde).map((d) => ({ texto: (d.marca ? "◆ " : "") + d.texto, sub: d.marca ? t("sx.viaje_marca", [Math.round(d.d / W.M)]) : t("sx.metros", [Math.round(d.d / W.M)]), fn: () => {
       A.cerrarMenu();
-      A.teletransportar(d.p[0], d.p[1]);
+      const ir = () => {
+        if (!d.volver) antesDelViaje = { p: [jug.x, jug.y], t: J.t };
+        else antesDelViaje = null;
+        A.teletransportar(d.p[0], d.p[1], d.lugar);
+      };
+      if (!desdeMapa) return ir();
+      // desde el mapa: un instante quieto mientras la runa junta luz; un golpe lo corta
+      jug.interactuando = 1.4;
+      J.marcas.push({ tipo: "anillo", x: jug.x, y: jug.y, s: 1.4, col: "#73D5DB", t: 0 });
+      HUD.aviso(t("sx.viaje_juntando"), "#73D5DB");
+      J.retrasar(1.4, () => (jug.sinGolpe < 1.35 || jug.muerto ? A.avisar("sx.viaje_cortado", "#C8402D") : ir()));
     } }));
+    if (botones.length === 0) return A.avisar("sx.viaje_nada", "#73D5DB");
     botones.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
-    A.menu(`<h2>${t("sx.viaje_titulo")}</h2><div class="sub">${t("sx.viaje_sub")}</div>`, botones);
+    A.menu(`<h2>${t("sx.viaje_titulo")}</h2><div class="sub">${t(desdeMapa ? "sx.viaje_sub_mapa" : "sx.viaje_sub")}</div>`, botones);
   }
   function revelar(x, y, radio) {
     let algo = false;
@@ -274,17 +354,28 @@ window.SECRETOS = (function () {
   }
 
   const sistema = {
+    actualizar(dt) {
+      for (let i = sacudidos.length - 1; i >= 0; i--) {
+        const q = sacudidos[i];
+        q.t += dt;
+        q.cosa.x = q.x + Math.sin(q.t * 70) * 3 * Math.max(0, 1 - q.t / 0.35);
+        if (q.t > 0.35) {
+          q.cosa.x = q.x;
+          sacudidos.splice(i, 1);
+        }
+      }
+    },
     iniciar(api) {
       A = api;
       J = A.J;
       jug = A.jug;
       W = A.W;
       armar();
-      st = { cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {} };
+      st = { cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {}, pistas: {} };
       aplicar();
     },
     alEmpezar(extra) {
-      extra.sec = Object.assign({ cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {} }, extra.sec || {});
+      extra.sec = Object.assign({ cofres: {}, piedras: {}, braseros: {}, manzanos: {}, vistos: {}, pistas: {} }, extra.sec || {});
       st = extra.sec;
       aplicar();
     },
@@ -397,5 +488,8 @@ window.SECRETOS = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     lista: () => ({ cofres, piedras, altares, manzanos, st }),
+    viajar: () => viajar(null, true),
+    pistas,
+    sacudir,
   };
 })();

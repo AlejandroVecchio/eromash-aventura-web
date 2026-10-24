@@ -101,6 +101,46 @@
     }
   }
 
+  // El tablón de cacería del Puesto: dos postes con un alerito de tablas, los pedidos clavados (cada uno con la
+  // huella de la criatura que se busca), la lanza cruzada de Tove y una tira roja. o.pedido: hay una cacería tomada
+  // (su hoja falta y queda el clavo); o.cobrar: la cacería está cumplida y la hoja tomada vuelve con el sello rojo.
+  function tablonCaza(c, x, y, t, o) {
+    const s = o.s || 1;
+    sombra(c, x + 6 * s, y + 3 * s, 64 * s, 11 * s);
+    // los postes: el izquierdo en sombra
+    R(c, x - 50 * s, y - 120 * s, 9 * s, 120 * s, C.maderaSombra);
+    R(c, x + 41 * s, y - 120 * s, 9 * s, 120 * s, C.madera);
+    // el tablero
+    P(c, [x - 46 * s, y - 34 * s, x, y - 34 * s, x, y - 108 * s, x - 46 * s, y - 108 * s], "#6A4A2C");
+    P(c, [x, y - 34 * s, x + 46 * s, y - 34 * s, x + 46 * s, y - 108 * s, x, y - 108 * s], "#8A6440");
+    for (let k = 1; k < 4; k++) L(c, x - 46 * s, y - 34 * s - k * 18.5 * s, x + 46 * s, y - 34 * s - k * 18.5 * s, C.maderaSombra, 1.2 * s);
+    // el alerito
+    P(c, [x - 62 * s, y - 112 * s, x, y - 136 * s, x, y - 128 * s, x - 58 * s, y - 106 * s], "#4A3A2A");
+    P(c, [x, y - 136 * s, x + 62 * s, y - 112 * s, x + 58 * s, y - 106 * s, x, y - 128 * s], "#6E5236");
+    // los pedidos: hojas claras con la huella de la presa
+    const hojas = [[-36, -100, -0.06], [-6, -98, 0.05], [22, -102, -0.03], [-30, -66, 0.04], [6, -64, -0.05]];
+    hojas.forEach(([dx, dy, a], i) => {
+      const hx = x + dx * s,
+        hy = y + dy * s;
+      if (i === 1 && o.pedido && !o.cobrar) return E(c, hx + 8 * s, hy + 2 * s, 1.6 * s, 1.6 * s, C.hierro); // la hoja que se llevaron
+      c.save();
+      c.translate(hx + 8 * s, hy + 12 * s);
+      c.rotate(a);
+      R(c, -9 * s, -12 * s, 18 * s, 24 * s, i % 2 ? "#E6DCC8" : "#D8C8A4");
+      // la huella: almohadilla y cuatro dedos
+      E(c, 0, 3 * s, 3.4 * s, 2.8 * s, "#5E4A36");
+      [-4, -1.4, 1.4, 4].forEach((d, k) => E(c, d * s, (-3 - (k === 1 || k === 2 ? 1.5 : 0)) * s, 1.3 * s, 1.6 * s, "#5E4A36"));
+      if (i === 1 && o.cobrar) E(c, 5 * s, 8 * s, 3.4 * s, 3.4 * s, C.rojoEromash); // el sello de cumplida
+      c.restore();
+      E(c, hx + 8 * s, hy + 1 * s, 1.4 * s, 1.4 * s, C.hierro);
+    });
+    // la lanza cruzada y la tira roja
+    L(c, x - 58 * s, y - 20 * s, x + 30 * s, y - 128 * s, C.maderaVieja, 3 * s);
+    P(c, [x + 30 * s, y - 128 * s, x + 36 * s, y - 142 * s, x + 26 * s, y - 132 * s], C.hierroLuz);
+    const ond = Math.sin(t * 2.2 + x) * 2 * s;
+    P(c, [x + 46 * s, y - 104 * s, x + 54 * s, y - 104 * s, x + 56 * s + ond, y - 70 * s, x + 50 * s + ond, y - 64 * s, x + 46 * s + ond, y - 72 * s], C.rojoEromash);
+  }
+
   // El fuego de Halvard: anillo de piedras, el fuego vivo, el trípode con la olla para todos y un banco.
   function fogonOlla(c, x, y, t, o) {
     const s = o.s || 1;
@@ -260,6 +300,7 @@
     portonPuesto: { f: portonPuesto, alto: 190, choque: null, grupo: "puesto", luz: true },
     mesaRutas: { f: mesaRutas, alto: 64, choque: { w: 116, h: 16 }, grupo: "puesto" },
     tableroTablillas: { f: tableroTablillas, alto: 120, choque: null, grupo: "puesto" },
+    tablonCaza: { f: tablonCaza, alto: 140, choque: { w: 100, h: 14 }, grupo: "puesto" },
     fogonOlla: { f: fogonOlla, alto: 80, choque: { r: 40 }, grupo: "puesto", luz: true },
     mostradorManta: { f: mostradorManta, alto: 56, choque: { w: 110, h: 14 }, grupo: "puesto" },
     ahumadero: { f: ahumadero, alto: 150, choque: { w: 280, h: 30 }, grupo: "puesto" },

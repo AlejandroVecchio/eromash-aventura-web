@@ -1,6 +1,7 @@
 // Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 I18N.textos({
   "in.accion_puerta_piedra": { es: "Mirar la puerta de piedra", en: "Look at the stone door" },
+  "as.puertaPiedra": { es: "La puerta de piedra de los doce huecos", en: "The stone door of twelve hollows" },
   "gn.nombre": { es: "Góinn, el que roe", en: "Góinn, the Gnawer" },
   // la puerta
   "gn.puerta_1": { es: "Detrás de los barriles hay una puerta de piedra, más vieja que la hospedería. Sobre el arco, doce huecos en fila.", en: "Behind the barrels there's a stone door, older than the inn. Above the arch, twelve hollows in a row." },

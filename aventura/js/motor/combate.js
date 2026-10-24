@@ -17,6 +17,7 @@ window.COMBATE = (function () {
     jabali: { vida: 80, dano: 20, vel: 2.6 * M, alcance: 7 * M, aviso: 0.9, forma: "carga", largo: 8 * M, ancho: 1.7 * M, radio: 22, espera: 2.2, barra: 76, plata: 4 },
     cuervo: { vida: 28, dano: 8, vel: 5.6 * M, alcance: 1.7 * M, aviso: 0.6, forma: "abanico", radioGolpe: 2 * M, angulo: 0.6, radio: 12, espera: 1.4, barra: 82, plata: 2, vuela: true },
     fatuo: { vida: 45, dano: 16, vel: 2.4 * M, alcance: 9 * M, aviso: 1.15, forma: "lejos", radioGolpe: 1.6 * M, radio: 12, espera: 2.4, barra: 100, plata: 5, vuela: true, muerto: true, luz: true },
+    oso: { vida: 300, dano: 26, vel: 2.1 * M, alcance: 2.8 * M, aviso: 1.1, forma: "abanico", radioGolpe: 3.1 * M, angulo: 1.0, largo: 4.4 * M, ancho: 2 * M, radio: 34, espera: 2.2, barra: 150, plata: 30, pesado: true },
     trol: { vida: 420, dano: 30, vel: 1.4 * M, alcance: 3.4 * M, aviso: 1.4, forma: "circulo", radioGolpe: 3.8 * M, largo: 7 * M, ancho: 2.2 * M, radio: 40, espera: 2.6, barra: 196, plata: 40, pesado: true },
   };
   // los modificadores de los líderes (como los campeones de Diablo 2): cada uno con su color de aura
@@ -142,6 +143,21 @@ window.COMBATE = (function () {
     if (k === "franja") return aviso("franja", e.x, e.y, d.aviso, { largo: d.largo || d.radioGolpe * 2.2, ancho: d.ancho || 1.6 * M, dir, rgb });
     return aviso("abanico", e.x, e.y, d.aviso, { radio: d.radioGolpe, ang: d.angulo || 0.8, dir, rgb });
   }
+  // lo que se oye cuando una criatura prepara el golpe: las bestias gruñen, los muertos y los fuegos zumban grave
+  const GRUNEN = { lobo: 1.25, jabali: 0.95, oso: 0.7, trol: 0.6, cuervo: 1.7 };
+  function sonarAviso(e) {
+    if (!window.SONIDO) return;
+    const g = GRUNEN[e.tipo];
+    if (g) SONIDO.tocar(e.patron || e.lider ? "rugido" : "grunido", { vol: e.patron || e.lider ? 0.5 : 0.4, tono: g / (e.s || 1), x: e.x, y: e.y });
+    else SONIDO.zumbido(e.x, e.y, e.d.pesado ? 1.4 : 1);
+  }
+  // los pueblos son refugio: una criatura de afuera no sigue a Eromash adentro del Puesto, el Refugio o Brunvik
+  const REFUGIOS = ["puesto", "refugio", "casa_lindes", "brunvik", "aserradero"];
+  function enRefugio(x, y) {
+    const L = ELDERVALD.LUGARES;
+    return REFUGIOS.some((k) => L[k] && Math.hypot(x - L[k].p[0], y - L[k].p[1]) < L[k].r);
+  }
+  const HUYEN = { lobo: 1, jabali: 1, cuervo: 1 };
   const tiene = (e, af) => !!(e.lider && e.lider.afijos && e.lider.afijos.includes(af));
   function mover(e, dx, dy, r) {
     if (ELDERVALD.libre(e.x + dx, e.y, r)) e.x += dx;
@@ -150,10 +166,17 @@ window.COMBATE = (function () {
     else if (e.d.vuela && ELDERVALD.sueloEn(e.x, e.y + dy) !== 3) e.y += dy;
   }
   function alertar(e) {
-    if (e.grupo) e.grupo.forEach((o) => o !== e && !o.muerto && o.activo && (o.estado === "quieto" || o.estado === "vuelve") && (o.estado = "persigue"));
+    if (e.grupo) e.grupo.forEach((o) => o !== e && !o.muerto && o.activo && (o.estado === "quieto" || o.estado === "vuelve") && ((o.estado = "persigue"), (o.vio = 1.1)));
   }
   function morir(J, e) {
     e.muerto = 0.001;
+    // al caer el líder el grupo duda: se frena un instante
+    if (e.lider && e.grupo) e.grupo.forEach((o) => o !== e && !o.muerto && o.activo && (o.aturdido = Math.max(o.aturdido || 0, 1.2)));
+    // al morir se deshace en polvo (los muertos en huesos, los fatuos en luz)
+    if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
+      const col = e.d.muerto ? (e.tipo === "fatuo" ? "#73D5DB" : "#D8D0C0") : "#5E4A36";
+      for (let k = 0; k < 14; k++) J.fx.push({ x: e.x + (Math.random() - 0.5) * e.d.radio * 1.6, y: e.y - Math.random() * e.d.barra * 0.6, vx: (Math.random() - 0.5) * 160, vy: -60 - Math.random() * 160, t: 0.4 + Math.random() * 0.3, c: col, s: 4 + Math.random() * 5, g: e.tipo === "fatuo" ? -0.3 : 0.8 });
+    }
     if (e.aviso) J.quitarAviso(e.aviso);
     e.aviso = null;
     // el líder rúnico estalla al morir: el círculo violeta avisa antes
@@ -197,6 +220,18 @@ window.COMBATE = (function () {
       dist = Math.hypot(dx, dy);
     e.t += dt;
     e.herido = Math.max(0, e.herido - dt * 4);
+    e.vio = Math.max(0, (e.vio || 0) - dt);
+    e.duda = Math.max(0, (e.duda || 0) - dt);
+    // aturdido por un remate: no hace nada un instante (las estrellitas lo avisan)
+    if (e.aturdido > 0) {
+      e.aturdido -= dt;
+      if (Math.abs(e.vx) + Math.abs(e.vy) > 1) {
+        mover(e, e.vx * dt, e.vy * dt, e.d.radio);
+        e.vx *= Math.pow(0.002, dt);
+        e.vy *= Math.pow(0.002, dt);
+      }
+      return;
+    }
     // estados que le dejan las runas
     if (e.quema > 0) {
       e.quema -= dt;
@@ -232,14 +267,28 @@ window.COMBATE = (function () {
     const aCasa = Math.hypot(e.x - e.casa[0], e.y - e.casa[1]);
     switch (e.estado) {
       case "quieto":
-        if (!p.muerto && dist < DETECTA * (J.sigilo || 1)) {
+        // el ruido cuenta: corriendo te oyen de más lejos, caminando despacio de más cerca
+        const ruido = p.paso === 3 ? 1.3 : p.paso === 1 ? 0.6 : p.paso === 0 ? 0.8 : 1;
+        if (!p.muerto && dist < DETECTA * (J.sigilo || 1) * ruido && !enRefugio(p.x, p.y)) {
           e.estado = "persigue";
+          e.vio = 1.1;
           alertar(e);
+          if (window.SONIDO && (e.lider || e.patron)) SONIDO.tocar("rugido", { vol: 0.55, tono: 0.85, x: e.x, y: e.y });
+          // el rugido de un líder sobresalta a Eromash
+          if ((e.lider || e.patron) && window.ANIMA) ANIMA.gesto("susto");
         }
         break;
       case "persigue": {
-        if (p.muerto || aCasa > SUELTA) {
+        if (p.muerto || aCasa > SUELTA || (enRefugio(p.x, p.y) && !enRefugio(e.casa[0], e.casa[1]))) {
           e.estado = "vuelve";
+          e.duda = 1.6;
+          break;
+        }
+        // las bestias heridas de muerte huyen un rato (los líderes no)
+        if (HUYEN[e.tipo] && !e.lider && !e.patron && e.vida < d.vida * 0.2 && !e.huyo) {
+          e.huyo = true;
+          e.estado = "huye";
+          e.t = 0;
           break;
         }
         const lejos = d.forma === "lejos";
@@ -260,10 +309,22 @@ window.COMBATE = (function () {
           if (tiene(e, "veloz")) a.dur = Math.max(0.6, a.dur * 0.85);
           e.aviso = a;
           J.avisos.push(a);
+          sonarAviso(e);
           break;
         }
         let mx = dx / dist,
           my = dy / dist;
+        // en grupo se abren y rodean: cada uno busca su lado alrededor de Eromash en vez de ir en fila
+        if (e.grupo && e.grupo.length > 1 && dist < 9 * M && d.forma !== "lejos" && d.forma !== "carga") {
+          if (e.flanco == null) e.flanco = (e.grupo.indexOf(e) / e.grupo.length) * TAU;
+          const r = d.alcance * 0.85,
+            tx = p.x + Math.cos(e.flanco) * r - e.x,
+            ty = p.y + Math.sin(e.flanco) * r * 0.8 - e.y,
+            tl = Math.hypot(tx, ty) || 1;
+          const k = Math.min(1, (dist - d.alcance) / (6 * M));
+          mx = mx * (1 - k * 0.6) + (tx / tl) * k * 0.6;
+          my = my * (1 - k * 0.6) + (ty / tl) * k * 0.6;
+        }
         // el fatuo y el jabalí buscan distancia; el resto se acerca
         if ((lejos && dist < 5 * M) || (d.forma === "carga" && dist < 3 * M)) {
           mx = -mx;
@@ -282,7 +343,10 @@ window.COMBATE = (function () {
             }
           }
         const ml = Math.hypot(mx, my) || 1;
-        mover(e, (mx / ml) * d.vel * dt, (my / ml) * d.vel * dt, d.radio);
+        // cerca de su líder vivo el grupo va más rápido
+        const lid = e.grupo && !e.lider && e.grupo.find((o) => o.lider && !o.muerto && o.activo && Math.hypot(o.x - e.x, o.y - e.y) < 8 * M);
+        const vel = d.vel * (lid ? 1.15 : 1);
+        mover(e, (mx / ml) * vel * dt, (my / ml) * vel * dt, d.radio);
         e.mira = VIKINGO.vista(dx, dy, e.mira);
         e.mov = 1;
         break;
@@ -298,6 +362,18 @@ window.COMBATE = (function () {
           e.t = 0;
         }
         break;
+      case "huye": {
+        // escapa tres segundos y vuelve a la pelea
+        if (e.t > 3 || dist > 16 * M) {
+          e.estado = "persigue";
+          e.t = 0;
+          break;
+        }
+        mover(e, (-dx / dist) * d.vel * 1.1 * dt, (-dy / dist) * d.vel * 1.1 * dt, d.radio);
+        e.mira = VIKINGO.vista(-dx, -dy, e.mira);
+        e.mov = 2;
+        break;
+      }
       case "espera":
         e.golpe = Math.max(0, e.golpe - dt * 4);
         if (e.t >= d.espera) {
@@ -325,6 +401,21 @@ window.COMBATE = (function () {
   // recibe un golpe de Eromash: devuelve true si murió
   function golpear(J, e, dano, ox, oy, empuje = 1) {
     if (e.muerto || !e.activo) return false;
+    // un remate fuerte aturde a las criaturas chicas; las pesadas y los líderes juntan aguante y caen al tercero
+    if (empuje >= 1.3) {
+      e.aguante = (e.aguante || 0) + 1;
+      if (!(e.d.pesado || e.lider || e.patron) || e.aguante >= 3) {
+        e.aguante = 0;
+        e.aturdido = e.d.pesado || e.lider ? 0.9 : 0.7;
+        if (e.aviso) {
+          J.quitarAviso(e.aviso);
+          e.aviso = null;
+        }
+        e.estado = "espera";
+        e.t = 0;
+        e.golpe = 0;
+      }
+    }
     if (tiene(e, "piedra")) dano *= 0.7;
     e.vida -= dano;
     e.herido = 1;
@@ -345,7 +436,39 @@ window.COMBATE = (function () {
     return false;
   }
   function reiniciar(e) {
-    Object.assign(e, { x: e.casa[0], y: e.casa[1], vida: e.d.vida, estado: "quieto", t: 0, vx: 0, vy: 0, golpe: 0, herido: 0, muerto: 0, aviso: null, quema: 0, helado: 0, carga: null });
+    Object.assign(e, { x: e.casa[0], y: e.casa[1], vida: e.d.vida, estado: "quieto", t: 0, vx: 0, vy: 0, golpe: 0, herido: 0, muerto: 0, aviso: null, quema: 0, helado: 0, carga: null, aturdido: 0, huyo: false, vio: 0, duda: 0, aguante: 0 });
+  }
+  // lo que cuenta la criatura sobre la cabeza: «!» al verte, «?» al perderte, estrellas si está aturdida y un destello
+  // blanco justo antes de que pegue (para leer el momento de esquivar)
+  function senales(c, e, y, t) {
+    const yy = y - (e.lider ? 34 : 14);
+    const texto = (s, col, k) => {
+      c.font = '900 ' + Math.round(26 * k) + 'px "Eromash Text", system-ui, sans-serif';
+      c.textAlign = "center";
+      c.lineWidth = 4;
+      c.strokeStyle = "#0A0707";
+      c.strokeText(s, e.x, yy);
+      c.fillStyle = col;
+      c.fillText(s, e.x, yy);
+    };
+    if (e.vio > 0) texto("!", "#FF8D71", 1 + Math.max(0, e.vio - 0.9) * 2);
+    else if (e.duda > 0 && e.estado === "vuelve") alfa(c, Math.min(1, e.duda), () => texto("?", "#E0B2B2", 0.9));
+    if (e.aturdido > 0)
+      for (let k = 0; k < 3; k++) {
+        const a = t * 5 + (k * TAU) / 3,
+          sx = e.x + Math.cos(a) * e.d.radio,
+          sy = yy + 6 + Math.sin(a) * 6;
+        DIB.P(c, [sx, sy - 6, sx + 2, sy - 2, sx + 6, sy, sx + 2, sy + 2, sx, sy + 6, sx - 2, sy + 2, sx - 6, sy, sx - 2, sy - 2], "#FFD98A");
+      }
+    if (e.estado === "aviso" && e.golpe > 0.82)
+      alfa(c, (e.golpe - 0.82) / 0.18, () => {
+        DIB.halo(c, e.x, e.y - e.d.barra * 0.45, e.d.barra * 0.6, "#F2ECEC", 1);
+        c.strokeStyle = "#F2ECEC";
+        c.lineWidth = 3;
+        c.beginPath();
+        c.ellipse(e.x, e.y, e.d.radio * 1.5, e.d.radio * 0.6, 0, 0, TAU);
+        c.stroke();
+      });
   }
   function dibujar(c, e, t) {
     if (!e.activo || e.muerto > 0.8) return;
@@ -372,6 +495,7 @@ window.COMBATE = (function () {
           alfa(c, 1 - u, () => DIB.R(c, e.x + Math.sin(k * 3 + t * 5) * e.d.radio, e.y - e.d.barra * 0.3 - u * 40, 4, 6, k % 2 ? "#FF8D71" : "#FFD98A"));
         }
       const y = e.y - e.d.barra;
+      if (e.muerto === 0) senales(c, e, y, t);
       if ((e.vida < e.d.vida || e.lider) && e.muerto === 0) {
         const w = e.lider ? 64 : 40;
         c.fillStyle = "#0A0707";

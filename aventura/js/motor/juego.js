@@ -55,6 +55,21 @@
   const cadaSis = (fn, ...a) => SIS.forEach((s0) => s0[fn] && s0[fn](...a));
   J.retrasar = (seg, fn) => J.timers.push({ t: seg, fn });
   J.alejarA = (v) => (alejarMeta = Math.max(alejarMeta, v));
+  // el acercamiento que elige el jugador (rueda del mouse o las acciones acercar / alejar), recordado en este navegador
+  let zoomJug = 1;
+  try {
+    zoomJug = Math.max(0.9, Math.min(1.35, +localStorage.getItem("eromash.aventura.zoom") || 1));
+  } catch (e) {}
+  function cambiarZoom(d) {
+    zoomJug = Math.max(0.9, Math.min(1.35, zoomJug + d));
+    try {
+      localStorage.setItem("eromash.aventura.zoom", zoomJug);
+    } catch (e) {}
+  }
+  addEventListener("wheel", (e) => {
+    if (J.modo !== "juego" || J.dentro || (e.target && e.target.closest && e.target.closest(".ui, #capaCaja, #mapaLienzo"))) return;
+    cambiarZoom(e.deltaY > 0 ? 0.05 : -0.05);
+  }, { passive: true });
   const jug = (J.jugador = {
     x: 0, y: 0, vx: 0, vy: 0, hp: 100, hpMax: 100, sta: 100, staMax: 100,
     mira: { vista: "S", espejo: false }, dir: [0, 1], salto: 0, esq: 0, esqDir: [0, 1], atk: null, combo: 0, comboT: 0,
@@ -96,8 +111,16 @@
     const i = J.avisos.indexOf(a);
     if (i >= 0) J.avisos.splice(i, 1);
   };
-  J.sacudir = (f) => (J.cam.sac = Math.max(J.cam.sac, f));
+  J.sacudir = (f) => window.OPCIONES && !OPCIONES.v("temblor") ? 0 : (J.cam.sac = Math.max(J.cam.sac, f));
   J.herir = (dano, ox, oy, tipo) => {
+    // esquivar o saltar justo cuando el golpe llega: el mundo va lento un instante, vuelve estamina y el próximo golpe pega doble
+    if (!jug.muerto && (jug.salto > 0 || jug.esq > 0) && J.t - (jug.justaT || -9) > 0.8) {
+      jug.justaT = J.t;
+      J.camLenta = 0.32;
+      jug.sta = Math.min(jug.staMax, jug.sta + 15);
+      jug.contra = 1.6;
+      textoFlotante(jug.x, jug.y - 130, t("mj.justa"), "#73D5DB");
+    }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
@@ -108,14 +131,21 @@
     }
     jug.hp -= dano;
     jug.herido = 0.5;
+    ANIMA.golpe(jug, ox);
+    HUD.herido();
+    // de qué lado vino: una cuña roja en ese borde de la pantalla
+    golpesDir.push({ a: Math.atan2(oy - jug.y, ox - jug.x), t0: J.t });
+    if (golpesDir.length > 4) golpesDir.shift();
     jug.inv = 0.6;
     jug.sinGolpe = 0;
+    if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.75 });
     const l = Math.hypot(jug.x - ox, jug.y - oy) || 1;
     jug.vx = ((jug.x - ox) / l) * 380;
     jug.vy = ((jug.y - oy) / l) * 380;
     J.sacudir(0.35);
     if (jug.hp <= 0) morir();
   };
+  const golpesDir = [];
   let jefeAtaque = "",
     jefeAccion = "";
   J.anunciarJefe = (a, b) => {
@@ -199,10 +229,82 @@
     if (tipo === "cambio") {
       escenario();
       ubicarGente(false);
-    } else if (tipo === "mensaje") avisar(dato, dato === "mision_nueva" ? "#FFD98A" : null);
-    else if (tipo === "lugar") HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
+      seguirObjetivo();
+    } else if (tipo === "mensaje" && dato === "mision_nueva") misionNueva();
+    else if (tipo === "mensaje") avisar(dato);
+    else if (tipo === "lugar") {
+      HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
+      // descubrir un lugar paga un poco de plata (los vecinos le pagan al que trae noticias del camino)
+      if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_LUGAR);
+      // el lugar entero queda a la vista en el mapa
+      const L = W.LUGARES[dato];
+      if (L && window.MAPA) MAPA.descubrir(L.p[0], L.p[1], L.r + 1200);
+      if (window.VIDA) VIDA.evento("lugar", jug.x, jug.y);
+    }
     else if (tipo === "fin") setTimeout(mostrarFin, 1000);
   });
+  // ---------- misiones: recompensas, avisos y pistas ----------
+  const PLATA_LUGAR = 8;
+  let etapaVista = "",
+    etapaDesde = 0,
+    pistaDada = 0;
+  // cada misión de la historia cumplida paga plata (más cuanto más adentro de la historia); la nueva se anuncia grande
+  function misionNueva() {
+    const n = H.E.mision,
+      plata = 25 + n * 15;
+    if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
+    HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
+    if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
+    ANIMA.gesto("feliz");
+    if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
+    J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
+    etapaVista = H.etapa();
+    etapaDesde = J.t;
+  }
+  // un objetivo cumplido sin cambiar de misión se anuncia en verde
+  function seguirObjetivo() {
+    const e = H.etapa();
+    if (e === etapaVista) return;
+    if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) {
+      HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
+      if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
+    }
+    etapaVista = e;
+    etapaDesde = J.t;
+  }
+  function textoObjetivo(ob) {
+    return tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
+  }
+  // si pasan cuatro minutos sin avanzar, un recordatorio de qué hacer y por dónde
+  function pistaSiHaceFalta() {
+    if (J.modo !== "juego" || J.dentro || jug.pelea || J.t - etapaDesde < 240 || J.t - pistaDada < 240) return;
+    const o = H.objetivo();
+    if (!o) return;
+    pistaDada = J.t;
+    HUD.aviso(t(dondeObjetivo() ? "mj.pista_haz" : "mj.pista", [textoObjetivo(o)]), "#73D5DB");
+  }
+  // lo que la gente tiene para decir: «!» dorado sobre a quien manda el objetivo, «…» sobre quien tiene algo nuevo
+  const oidos = () => (H.E.extra.oidos = H.E.extra.oidos || {});
+  function senalDe(n) {
+    const o = H.objetivo();
+    if (o && o.donde === n.id) return "!";
+    const k = H.dialogoDe(n.id);
+    return k && !oidos()[k] ? "…" : null;
+  }
+  function dibujarSenal(n) {
+    const sg = senalDe(n);
+    if (!sg) return;
+    const x = n.x,
+      y = n.y - 150 + Math.sin(J.t * 3 + n.x) * 4;
+    if (sg === "!") {
+      DIB.halo(c, x, y - 12, 34, "#FFD98A", 0.8);
+      DIB.P(c, [x - 6, y - 36, x + 6, y - 36, x + 3.5, y - 8, x - 3.5, y - 8], "#FFD98A");
+      DIB.R(c, x - 4, y - 3, 8, 7, "#FFD98A");
+    } else {
+      DIB.P(c, [x - 18, y - 22, x + 18, y - 22, x + 18, y - 4, x + 4, y - 4, x - 2, y + 4, x - 4, y - 4, x - 18, y - 4], "#F2ECEC");
+      for (let k = -1; k <= 1; k++) DIB.E(c, x + k * 8, y - 13, 2.6, 2.6, "#111111");
+    }
+  }
   H.alGuardar(() => (J.modo === "titulo" ? null : { pos: [Math.round(jug.x), Math.round(jug.y)], salud: Math.max(1, Math.round(jug.hp)) }));
 
   // ---------- interacciones de las misiones ----------
@@ -307,7 +409,7 @@
         setTimeout(r.al, 450);
       }
     SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
-    if (!algo) setTimeout(() => avisar("lente_nada"), 500);
+    if (!algo) setTimeout(() => (avisar("lente_nada"), ANIMA.gesto("duda")), 500);
   }
 
   // ---------- diálogos ----------
@@ -327,7 +429,10 @@
   }
   function mostrarLinea() {
     const [quien, clave, vars] = dlg.d.lineas[dlg.i];
-    HUD.dialogo(quien, dlg.d.libre ? t(clave, vars) : tav(clave), CONTROLES.glifo("seguir"));
+    const texto = dlg.d.libre ? t(clave, vars) : tav(clave);
+    HUD.dialogo(quien, texto, CONTROLES.glifo("seguir"));
+    // en Opciones, «diálogos: solos» pasa a la línea siguiente después del tiempo de leerla
+    dlg.solo = window.OPCIONES && OPCIONES.v("dialogos") === "solos" ? 1.6 + texto.length * 0.045 : 0;
     for (const id in npcs) npcs[id].hablando = id === quien ? 1 : 0;
   }
   function seguirDialogo() {
@@ -410,25 +515,43 @@
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
-    setTimeout(() => HUD.fundido(true), 700);
+    const caida = [jug.x, jug.y];
+    setTimeout(() => HUD.fundido(true), 550);
     setTimeout(() => {
       enemigos.forEach((e) => e.activo && !e.muerto && CB.reiniciar(e));
       J.avisos.length = 0;
       J.zonas.length = 0;
       J.timers.length = 0;
       if (ciervo.activo) CB.reiniciarCiervo(J, ciervo);
-      const p = P[H.REAPARECER[H.idMision()] || "puesto"];
+      const p = dondeReaparecer(caida);
       jug.x = p[0];
       jug.y = p[1];
       jug.hp = jug.hpMax;
       jug.sta = jug.staMax;
       jug.muerto = false;
+      jug.inv = 2.5; // unos segundos sin que nada lo toque al volver
+      jug.vuelve = 2.5;
       jug.atk = null;
       J.cam.x = jug.x;
       J.cam.y = jug.y;
       HUD.fundido(false);
       avisar("reapareciste");
-    }, 2200);
+    }, 1600);
+  }
+  // reaparece donde dice la misión o, si queda más cerca de donde cayó, en el refugio descubierto más próximo
+  function dondeReaparecer(caida) {
+    let mejor = P[H.REAPARECER[H.idMision()] || "puesto"],
+      dm = Math.hypot(mejor[0] - caida[0], mejor[1] - caida[1]);
+    for (const k of ["puesto", "refugio", "casa_lindes", "aserradero", "brunvik", "skarnholt"]) {
+      const L = W.LUGARES[k];
+      if (!L || !H.E.vistos.includes(k)) continue;
+      const d = Math.hypot(L.p[0] - caida[0], L.p[1] - caida[1]);
+      if (d < dm && W.libre(L.p[0], L.p[1] + 60, R)) {
+        dm = d;
+        mejor = [L.p[0], L.p[1] + 60];
+      }
+    }
+    return mejor;
   }
 
   // ---------- Eromash ----------
@@ -437,9 +560,109 @@
   const VEL_PASO = [0, 100, 175, 295],
     VEL_ESQ = 520;
   const GOLPES = [
-    { wind: 0.08, swing: 0.14, rec: 0.2, arc: 2.3, reach: 78, dano: 16 },
-    { wind: 0.08, swing: 0.16, rec: 0.28, arc: 2.5, reach: 84, dano: 22 },
+    { wind: 0.08, swing: 0.14, rec: 0.2, arc: 2.3, reach: 78, dano: 16, empuje: 0.4 },
+    { wind: 0.08, swing: 0.16, rec: 0.24, arc: 2.5, reach: 84, dano: 20, empuje: 0.45 },
+    { wind: 0.13, swing: 0.18, rec: 0.34, arc: 3.0, reach: 96, dano: 32, empuje: 1.9, remate: true },
   ];
+  const GOLPE_GIRO = { wind: 0.05, swing: 0.34, rec: 0.26, arc: Math.PI * 2, reach: 100, dano: 28, empuje: 1.5, giro: true },
+    GOLPE_CARRERA = { wind: 0.04, swing: 0.16, rec: 0.26, arc: 1.1, reach: 112, dano: 24, avanza: 420, empuje: 1.4 },
+    GOLPE_CAIDA = { wind: 0, swing: 0.1, rec: 0.24, arc: Math.PI * 2, reach: 92, dano: 22, empuje: 1.3, giro: true, caida: true },
+    CARGA_GIRO = 0.6;
+  function atacarCon(d, dir, side = 1) {
+    jug.atk = { t: 0, d, dir, side, pego: false };
+    if (window.SONIDO) SONIDO.tocar(d.caida ? "caida" : "tajo", { vol: d.giro || d.remate ? 0.55 : 0.4, tono: d.giro ? 0.8 : d.remate ? 0.88 : 1.05 });
+    if (!d.giro) jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
+    if (d.caida) {
+      polvareda(jug.x, jug.y, 14);
+      J.sacudir(0.22);
+    }
+  }
+  // con mando (o sin mouse) el golpe se corre solo hacia la criatura más cercana delante, si la hay
+  function apuntar(dir) {
+    if (window.OPCIONES && !OPCIONES.v("apuntar")) return dir;
+    const o = objetivoCerca(dir);
+    return o ? Math.atan2((o.y - jug.y) * 1.25, o.x - jug.x) : dir;
+  }
+  function objetivoCerca(dir) {
+    let mejor = null,
+      dm = 170;
+    for (const e of enemigos) {
+      if (!e.activo || e.muerto) continue;
+      const dx = e.x - jug.x,
+        dy = (e.y - jug.y) * 1.25,
+        l = Math.hypot(dx, dy);
+      if (l > dm) continue;
+      let da = Math.atan2(dy, dx) - dir;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) > 1.05) continue;
+      dm = l;
+      mejor = e;
+    }
+    return mejor;
+  }
+  // ¿hay pelea cerca? (criaturas que persiguen o golpean, el ciervo o un jefe)
+  function enPelea() {
+    if (ciervo.activo || J.jefeHud) return true;
+    return enemigos.some((e) => e.activo && !e.muerto && e.estado !== "quieto" && e.estado !== "vuelve" && Math.abs(e.x - jug.x) < 1100 && Math.abs(e.y - jug.y) < 800);
+  }
+  function columnaRunica(x, y) {
+    if (window.SONIDO) SONIDO.runa(x, y);
+    J.ondas.push({ tipo: "pulso", x, y, t: 0 });
+    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0 });
+    if (window.CALIDAD && CALIDAD.nivel === "baja") return;
+    for (let i = 0; i < 26; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 50, y: y - Math.random() * 30, vx: (Math.random() - 0.5) * 30, vy: -260 - Math.random() * 320, t: 0.5 + Math.random() * 0.4, c: Math.random() < 0.5 ? "#73D5DB" : "#C8F2F4", s: 4 + Math.random() * 5, g: -0.1 });
+  }
+  // ---------- lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca ----------
+  let pasoAcum = 0,
+    cuervosT = 20,
+    grilloT = 0,
+    latidoT = 0;
+  let fogatas = null;
+  function sonidoDelMundo(dt) {
+    if (!window.SONIDO || !SONIDO.listo()) return;
+    SONIDO.oyente(jug.x, jug.y);
+    // pasos: uno cada tanto según lo rápido que va; en los puentes suenan a madera y en el adoquín a piedra
+    if (jug.paso && jug.salto <= 0 && jug.esq <= 0 && !jug.muerto) {
+      pasoAcum += VEL_PASO[jug.paso] * dt;
+      const largo = [0, 62, 74, 88][jug.paso];
+      if (pasoAcum > largo) {
+        pasoAcum = 0;
+        const puente = W.PUENTES.some((p) => W.distLinea(jug.x, jug.y, [p.a, p.b]) < 50);
+        const cam = !puente && W.CAMINOS.find((c0) => W.distLinea(jug.x, jug.y, c0.p) < c0.w / 2);
+        const tipo = puente ? "pasoMadera" : cam && (cam.tipo === "adoquin" || cam.tipo === "ladrillo") ? "pasoPiedra" : "paso";
+        SONIDO.tocar(tipo, { vol: [0, 0.18, 0.25, 0.34][jug.paso], var: 0.1, filtro: tipo === "paso" && !cam ? 2200 : null });
+      }
+    } else pasoAcum = 40;
+    // el viento: más fuerte de noche y en lo alto
+    SONIDO.bucle("viento", "viento", 0.16 + amb.n * 0.08 + (jug.z ? 0.12 : 0) + (window.VIDA ? VIDA.viento() : 0), { filtro: 380 + Math.sin(J.t * 0.13) * 160 });
+    // de noche, grillos; de día, de vez en cuando los cuervos
+    if (amb.n > 0.5 && (grilloT -= dt) <= 0) {
+      grilloT = 0.25 + Math.random() * 0.9;
+      for (let k = 0; k < 3; k++) SONIDO.tono("sine", 4200 + Math.random() * 600, 4100, 0.05, 0.012, { ambiente: true, retraso: k * 0.07 });
+    }
+    if (amb.n < 0.4 && (cuervosT -= dt) <= 0) {
+      cuervosT = 30 + Math.random() * 50;
+      SONIDO.tocar("cuervos", { ambiente: true, vol: 0.35, desde: Math.random() * 8, dur: 4, var: 0.04 });
+    }
+    // las fogatas que arden cerca
+    if (!fogatas) fogatas = W.COSAS.filter((o) => o.id === "fogonOlla" || o.id === "brasero");
+    let f = 0;
+    for (const o of fogatas) {
+      if (o.o.apagado || (o.id === "brasero" && !o.o.encendido)) continue;
+      const d = Math.hypot(o.x - jug.x, (o.y - jug.y) * 1.3);
+      if (d < 700) f = Math.max(f, 1 - d / 700);
+    }
+    SONIDO.bucle("fogata", "fogata", f * 0.7);
+    // con poca vida se oye el corazón
+    if (jug.hp < jug.hpMax * 0.25 && !jug.muerto && (latidoT -= dt) <= 0) {
+      latidoT = 0.9;
+      SONIDO.latido();
+    }
+  }
+  function polvareda(x, y, n) {
+    if (window.CALIDAD && CALIDAD.nivel === "baja") return;
+    for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
+  }
   let mouse = { x: 0, y: 0, usado: false };
   lienzo.addEventListener("pointermove", (e) => {
     const k = cw / innerWidth;
@@ -453,11 +676,16 @@
   function actualizarJugador(dt) {
     jug.herido = Math.max(0, jug.herido - dt);
     jug.inv = Math.max(0, jug.inv - dt);
+    jug.vuelve = Math.max(0, (jug.vuelve || 0) - dt);
     jug.sinGolpe += dt;
+    // lo que dura más de medio segundo (despertar, juntar luz para viajar) muestra su barrita
+    if (jug.interactuando > (jug.canalAntes || 0) + 0.05) jug.canalTotal = jug.interactuando;
     jug.interactuando = Math.max(0, jug.interactuando - dt);
+    jug.canalAntes = jug.interactuando;
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
-    if (jug.sinGolpe > 6 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 4 * dt);
+    // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
+    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + (jug.pelea ? 3 : 12) * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);
@@ -473,12 +701,20 @@
     jug.staEspera = Math.max(0, (jug.staEspera || 0) - dt);
     // con mando se toca L3 (o L2) una vez y sigue corriendo hasta que frenás o te cansás
     if (CONTROLES.mando() && libre && CONTROLES.recien("correr")) jug.sprintFijo = !jug.sprintFijo;
-    if (!mov || jug.cansado || !CONTROLES.mando()) jug.sprintFijo = false;
-    jug.correr = libre && mov && (CONTROLES.pulsado("correr") || jug.sprintFijo) && !jug.cansado && !jug.atk;
-    if (jug.correr) {
+    // con teclado, dos toques de Shift lo dejan corriendo solo hasta que frenás
+    if (!CONTROLES.mando() && libre && CONTROLES.recien("correr")) {
+      // en Opciones, «correr: alternar» hace que un toque de Shift deje corriendo y otro lo pare
+      if (window.OPCIONES && OPCIONES.v("correr") === "alternar") jug.sprintFijo = !jug.sprintFijo;
+      else if (J.t - (jug.shiftT || -9) < 0.3) jug.sprintFijo = true;
+      jug.shiftT = J.t;
+    }
+    const alterna = !CONTROLES.mando() && window.OPCIONES && OPCIONES.v("correr") === "alternar";
+    if ((!mov && !alterna) || jug.cansado) jug.sprintFijo = false;
+    jug.correr = libre && mov && ((CONTROLES.pulsado("correr") && !alterna) || jug.sprintFijo) && !jug.cansado && !jug.atk;
+    if (jug.correr && jug.pelea) {
       jug.sta -= 20 * dt;
       jug.staEspera = 0.6;
-    } else if (jug.esq <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * dt;
+    } else if (jug.esq <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * (jug.pelea ? 1 : 1.6) * dt;
     if (jug.sta <= 0) {
       jug.sta = 0;
       jug.cansado = true;
@@ -487,10 +723,10 @@
     if (jug.cansado && jug.sta > jug.staMax * 0.35) jug.cansado = false;
     jug.sta = Math.min(jug.staMax, jug.sta);
     jug.paso = !mov ? 0 : jug.correr ? 3 : jug.cansado || mag < 0.6 ? 1 : 2;
-    // esquiva
+    // esquiva (atraviesa a la gente y a las criaturas: dura poco y es para salir de un golpe)
     if (jug.esq > 0) {
       jug.esq -= dt;
-      moverJugador(jug.esqDir[0] * VEL_ESQ * dt, jug.esqDir[1] * VEL_ESQ * dt);
+      moverJugador(jug.esqDir[0] * VEL_ESQ * dt, jug.esqDir[1] * VEL_ESQ * dt, true);
       return;
     }
     if (!libre) return;
@@ -498,36 +734,89 @@
       const l = Math.hypot(e.x, e.y);
       jug.dir = [e.x / l, e.y / l];
     }
-    if (CONTROLES.recien("esquivar") && jug.sta >= 20 && jug.salto <= 0) {
+    // lo que se aprieta un instante antes de poder hacerlo queda guardado y sale apenas se puede
+    for (const k of ["atacar", "esquivar", "saltar"]) if (CONTROLES.recien(k)) jug.pedido = { k, t: 0.18 };
+    if (jug.pedido && (jug.pedido.t -= dt) <= 0) jug.pedido = null;
+    const pide = (k) => jug.pedido && jug.pedido.k === k;
+    // la esquiva corta el final de un golpe; quieto, es un paso atrás
+    const enRec = !jug.atk || jug.atk.t >= jug.atk.d.wind + jug.atk.d.swing;
+    if (pide("esquivar") && enRec && jug.sta >= 20 && jug.salto <= 0) {
+      jug.pedido = null;
       jug.sta -= 20;
       jug.staEspera = 0.6;
       jug.esq = 0.3;
       jug.inv = Math.max(jug.inv, 0.26);
-      jug.esqDir = jug.dir.slice();
+      jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
       jug.atk = null;
+      jug.carga = 0;
+      polvareda(jug.x, jug.y, 5);
+      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.25 });
       return;
     }
-    if (CONTROLES.recien("saltar") && jug.salto <= 0) jug.salto = 0.42;
-    // ataque: combo de dos golpes, hacia el mouse si se usa, si no hacia donde mira
+    if (pide("saltar") && jug.salto <= 0 && !jug.atk) {
+      jug.pedido = null;
+      jug.salto = 0.42;
+      jug.saltoLargo = jug.correr;
+      jug.golpeAire = false;
+      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.35, tono: 0.9 });
+    }
+    // al caer del salto: polvo, y si se atacó en el aire, el golpe contra el piso
+    if (jug.saltoAntes > 0 && jug.salto <= 0) {
+      polvareda(jug.x, jug.y, 6);
+      if (window.SONIDO && !jug.golpeAire) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
+      if (jug.golpeAire) atacarCon(GOLPE_CAIDA, Math.atan2(jug.dir[1], jug.dir[0]));
+      jug.golpeAire = false;
+    }
+    jug.saltoAntes = jug.salto;
+    // ataque: tres golpes seguidos (el tercero remata y empuja); corriendo es una estocada; en el aire, golpe al caer;
+    // mantener apretado carga el giro
     jug.comboT = Math.max(0, jug.comboT - dt);
+    jug.contra = Math.max(0, (jug.contra || 0) - dt);
     if (jug.atk) {
       const a = jug.atk,
         d = a.d;
       a.t += dt;
+      if (d.avanza && a.t < d.wind + d.swing) moverJugador(Math.cos(a.dir) * d.avanza * dt, (Math.sin(a.dir) * d.avanza * dt) / 1.25);
       if (a.t >= d.wind && a.t <= d.wind + d.swing && !a.pego) golpear(a);
       if (a.t >= d.wind + d.swing + d.rec) {
         jug.atk = null;
-        jug.comboT = 0.35;
+        jug.comboT = d.giro || d.remate ? 0 : 0.35;
       }
-    } else if (CONTROLES.recien("atacar")) {
-      const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
-      jug.combo = n;
+    }
+    if (CONTROLES.pulsado("atacar") && !jug.salto) jug.carga = (jug.carga || 0) + dt;
+    else if (jug.carga) {
+      const listo = jug.carga >= CARGA_GIRO && jug.sta >= 15;
+      jug.carga = 0;
+      if (listo) {
+        jug.sta -= 15;
+        jug.staEspera = 0.6;
+        atacarCon(GOLPE_GIRO, 0);
+        jug.pedido = null;
+      }
+    }
+    if (pide("atacar") && jug.salto > 0) {
+      jug.pedido = null;
+      jug.golpeAire = true;
+    } else if (pide("atacar") && !jug.atk) {
+      jug.pedido = null;
       let dir = Math.atan2(jug.dir[1], jug.dir[0]);
       if (mouse.usado && !CONTROLES.mando()) dir = Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-      jug.atk = { t: 0, d: GOLPES[n], dir, side: n % 2 ? -1 : 1, pego: false };
-      jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
+      else dir = apuntar(dir);
+      if (jug.correr) atacarCon(GOLPE_CARRERA, dir);
+      else {
+        const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
+        jug.combo = n;
+        atacarCon(GOLPES[n], dir, n % 2 ? -1 : 1);
+      }
     }
-    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1);
+    // los caminos son más rápidos; fuera de pelea correr no cansa
+    jug.caminoT = (jug.caminoT || 0) - dt;
+    if (jug.caminoT <= 0) {
+      jug.caminoT = 0.25;
+      jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
+      jug.pelea = enPelea();
+    }
+    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -556,11 +845,11 @@
     if (CONTROLES.recien("interactuar")) interactuar();
     if (CONTROLES.recien("lente")) usarLente();
   }
-  function moverJugador(dx, dy) {
+  function moverJugador(dx, dy, atraviesa) {
     if (window.ALTURAS && ALTURAS.mover(dx, dy)) return; // escaleras y adarves
     // las cercas frenan, salvo saltando
     const valla = (nx, ny) => jug.salto <= 0 && !(jug.z > 0) && W.vallaEntre(jug.x, jug.y, nx, ny, R);
-    const cuerpos = cuerposCerca();
+    const cuerpos = atraviesa ? [] : cuerposCerca();
     if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y) && !choca(cuerpos, jug.x + dx, jug.y)) jug.x += dx;
     if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy) && !choca(cuerpos, jug.x, jug.y + dy)) jug.y += dy;
   }
@@ -597,18 +886,42 @@
       da = Math.atan2(Math.sin(da), Math.cos(da));
       return Math.abs(da) <= d.arc / 2 || l < r;
     };
+    // el contraataque después de una esquiva justa pega doble; a quien no te vio, golpe por sorpresa; a veces, crítico
+    const contra = jug.contra > 0;
+    let pego = 0;
     for (const e of enemigos) {
       if (!e.activo || e.muerto || Math.abs(e.x - jug.x) > 300 || !enArco(e.x, e.y, e.d.radio)) continue;
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
+      const sorpresa = e.estado === "quieto",
+        critico = Math.random() < 0.1;
+      const dano = Math.round(d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? 1.6 : 1));
       chispa(e.x, e.y - 30);
-      numero(e.x, e.y - 60, Math.round(d.dano * J.mulDano));
-      CB.golpear(J, e, Math.round(d.dano * J.mulDano), jug.x, jug.y);
+      numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
+      if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
+      const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      if (window.SONIDO) {
+        SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });
+        if (murio) SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
+        else if (!e.d.muerto && Math.random() < 0.35) SONIDO.tocar("herida", { vol: 0.35, tono: e.d.pesado ? 0.7 : 1.15, x: e.x, y: e.y });
+      }
+      pego++;
     }
     if (ciervo.activo && enArco(ciervo.x, ciervo.y, 60)) {
       const antes = ciervo.vida;
-      CB.golpearCiervo(J, ciervo, d.dano * J.mulDano);
+      CB.golpearCiervo(J, ciervo, d.dano * J.mulDano * (contra ? 2 : 1));
+      if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.7, x: ciervo.x, y: ciervo.y });
       chispa(ciervo.x, ciervo.y - 80);
-      numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)));
+      numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)), contra ? "#FFD98A" : null, contra);
+      pego++;
+    }
+    if (pego) {
+      // una pausa mínima al conectar: el golpe se siente
+      J.hitstop = Math.max(J.hitstop || 0, d.remate || d.giro || contra ? 0.07 : 0.045);
+      if (d.remate || contra) J.sacudir(0.25);
+      if (contra) {
+        jug.contra = 0;
+        textoFlotante(jug.x, jug.y - 120, t("mj.contra"), "#FFD98A");
+      }
     }
     cadaSis("alGolpear", jug.x, jug.y, a.dir, d.reach);
   }
@@ -623,8 +936,14 @@
   function chispa(x, y) {
     for (let i = 0; i < 7; i++) J.fx.push({ x, y, vx: (Math.random() - 0.5) * 300, vy: -Math.random() * 260, t: 0.35, c: i % 2 ? "#F2ECEC" : "#FF8D71", s: 3 + Math.random() * 3 });
   }
-  function numero(x, y, n) {
-    if (n > 0) J.textos.push({ x, y, n, t: 0 });
+  function numero(x, y, n, col, grande) {
+    if (!(n > 0) || (window.OPCIONES && !OPCIONES.v("numeros"))) return;
+    // los números que caen juntos se abren un poco para no taparse
+    const cerca = J.textos.filter((o) => o.t < 0.3 && Math.abs(o.x - x) < 40 && Math.abs(o.y - y) < 30).length;
+    J.textos.push({ x: x + (cerca % 2 ? 1 : -1) * Math.ceil(cerca / 2) * 26, y: y - cerca * 8, n, t: 0, col, grande });
+  }
+  function textoFlotante(x, y, n, col) {
+    J.textos.push({ x, y, n, t: 0, col, grande: false, palabra: true });
   }
 
   // ---------- con qué se puede interactuar ahora ----------
@@ -636,20 +955,20 @@
       const d = Math.hypot(n.x - jug.x, n.y - jug.y);
       if (d < 110 && d < dm) {
         dm = d;
-        mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_" + id), fn: () => hablar(id) };
+        mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_" + id), fn: () => hablar(id), x: n.x, y: n.y - 125 };
       }
     }
     for (const tr of trabajadores) {
       const d = Math.hypot(tr.x - jug.x, tr.y - jug.y);
       if (d < 100 && d < dm) {
         dm = d;
-        mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr) };
+        mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr), x: tr.x, y: tr.y - 125 };
       }
     }
-    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn) => {
+    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn, x, y) => {
       if (d < dm) {
         dm = d;
-        mejor = { texto, fn };
+        mejor = { texto, fn, x, y };
       }
     }));
     for (const it of INTER) {
@@ -657,7 +976,7 @@
       const d = dist(jug, it.p);
       if (d < it.radio && d < dm) {
         dm = d;
-        mejor = { texto: tav(it.texto), fn: it.accion };
+        mejor = { texto: tav(it.texto), fn: it.accion, x: it.p[0], y: it.p[1] - 90 };
       }
     }
     return mejor;
@@ -666,7 +985,9 @@
     const n = npcs[id];
     n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
     jug.mira = VIKINGO.vista(n.x - jug.x, n.y - jug.y, jug.mira);
-    dialogo(H.dialogoDe(id));
+    const k = H.dialogoDe(id);
+    oidos()[k] = true;
+    dialogo(k);
   }
   function interactuar() {
     const c0 = cercano();
@@ -735,6 +1056,12 @@
       fx = (jug.x * 2 + ciervo.x) / 3;
       fy = (jug.y * 2 + ciervo.y) / 3 - 30;
     }
+    // la cámara se adelanta un poco hacia donde va Eromash (más si corre), así se ve lo que viene
+    const adel = jug.muerto || J.modo !== "juego" ? 0 : [0, 40, 70, 120][jug.paso || 0];
+    J.cam.ax = (J.cam.ax || 0) + (jug.dir[0] * adel - (J.cam.ax || 0)) * Math.min(1, dt * 2.2);
+    J.cam.ay = (J.cam.ay || 0) + (jug.dir[1] * adel * 0.8 - (J.cam.ay || 0)) * Math.min(1, dt * 2.2);
+    fx += J.cam.ax;
+    fy += J.cam.ay;
     const k = 1 - Math.exp(-6 * dt);
     J.cam.x += (fx - J.cam.x) * k;
     J.cam.y += (fy - J.cam.y) * k;
@@ -743,7 +1070,8 @@
 
   // ---------- dibujo ----------
   const VK = {};
-  ["calm", "fierce", "hurt", "happy"].forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
+  VIKINGO.OJOS.forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
+  let animaT = 0;
   function dibujarEspada(x, y, ang, s, brillo) {
     c.save();
     c.translate(x, y);
@@ -765,19 +1093,28 @@
   // Eromash dibujado igual que en la arena: el sprite a 125 × 150 escalado por CUERPO, la espada, el tajo
   function dibujarJugador() {
     const p = jug;
-    if (p.muerto && Math.floor(J.t * 8) % 2) return;
+    // la pose de este cuadro (ANIMA): estirarse, aplastarse, inclinarse, la cara y el destello
+    const dtA = Math.max(0, Math.min(0.05, J.t - animaT));
+    animaT = J.t;
+    const malherido = !p.muerto && p.hp < p.hpMax * 0.3;
+    ANIMA.actualizar(p, dtA, (p.paso || 0) > 0);
+    const po = ANIMA.pose(p, { paso: p.paso || 0, malherido, cansado: p.cansado && !malherido, canal: p.interactuando > 0 && p.canalTotal >= 0.6 });
+    if (po.alfa <= 0) return;
+    if (p.vuelve > 0 && p.vuelve < 2.1 && Math.floor(J.t * 10) % 3 === 0) return; // parpadea mientras dura la gracia de volver
     c.save();
     if (p.z) c.translate(0, -p.z); // arriba de la muralla o en la escalera
     c.translate(p.x, p.y);
     c.scale(CUERPO, CUERPO);
     c.translate(-p.x, -p.y);
     const jp = p.salto > 0 ? Math.sin((1 - p.salto / 0.42) * Math.PI) : 0;
-    const paso = p.paso != null ? p.paso : p.anda ? p.anda + 1 : 0,
-      bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * [2.5, 7, 11, 16][paso])) * [2, 4, 8, 10][paso];
-    if (!enSilueta) DIB.E(c, p.x, p.y, 58 * (1 - jp * 0.35), 16 * (1 - jp * 0.35), "rgba(0,0,0,0.45)");
+    const paso = p.paso != null ? p.paso : p.anda ? p.anda + 1 : 0;
+    // malherido renguea: un paso más alto que el otro
+    let bob = p.salto > 0 ? 0 : Math.abs(Math.sin(J.t * [2.5, 7, 11, 16][paso])) * [2, 4, 8, 10][paso];
+    if (malherido && paso > 0) bob *= Math.sin(J.t * [2.5, 7, 11, 16][paso] * 0.5) > 0 ? 1.5 : 0.45;
+    if (!enSilueta) DIB.E(c, p.x + po.dx * 0.5, p.y, 58 * (1 - jp * 0.35) * po.sx, 16 * (1 - jp * 0.35), `rgba(0,0,0,${(0.45 * po.alfa).toFixed(3)})`);
     const h = 150,
       w = 125,
-      yy = p.y - h + 8 - bob - jp * 70,
+      yy = p.y - h + 8 - bob - jp * 70 + po.dy,
       face = p.mira.vista === "E" ? (p.mira.espejo ? -1 : 1) : p.dir[0] < 0 ? -1 : 1;
     // espada: en guardia al costado, o en el arco del golpe
     let sp;
@@ -792,8 +1129,11 @@
       sp = { x: p.x + lado * 78, y: p.y - 70 - bob - jp * 70 + Math.sin(J.t * 2.4) * 6, ang: -Math.PI / 2 + lado * 0.25, s: 0.3 };
     }
     // de espaldas la espada en guardia queda detrás del cuerpo
+    sp.x += po.dx;
+    sp.y += po.dy + (1 - po.sy) * 40;
+    if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
     const detras = sp.y < p.y - 95 || (!p.atk && p.mira.vista === "N");
-    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, false);
+    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
         d = a.d,
@@ -811,21 +1151,47 @@
       c.stroke();
       c.restore();
     }
-    const ojos = p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm";
-    const img = VK[p.mira.vista + ojos];
+    const ojos = po.ojos || (p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm");
+    const vista = po.vista || p.mira.vista,
+      espejo = po.vista ? po.espejo : p.mira.espejo;
+    const img = VK[vista + ojos] || VK[vista + "calm"];
+    // la estela de la esquiva: copias claras que quedan atrás
+    if (!enSilueta && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
+      const bl = ANIMA.blanco(img);
+      if (bl)
+        ANIMA.estela().forEach((e) => {
+          c.save();
+          c.globalAlpha = 0.28 * (1 - e.t / 0.24);
+          c.translate(e.x, e.y - 2 + (yy - p.y));
+          if (vista === "E" && espejo) c.scale(-1, 1);
+          c.drawImage(bl, -w / 2, 0, w, h);
+          c.restore();
+        });
+    }
     c.save();
-    if (p.inv > 0 && p.esq <= 0 && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
-    if (p.esq > 0) c.globalAlpha = 0.75;
-    c.translate(p.x, yy + h / 2);
-    if (p.mira.vista === "E" && p.mira.espejo) c.scale(-1, 1);
-    c.rotate(p.salto > 0 ? -0.25 * jp : paso === 3 && p.mira.vista === "E" ? 0.1 : 0);
-    if (img.complete) c.drawImage(img, -w / 2, -h / 2, w, h);
+    c.globalAlpha = po.alfa;
+    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
+    if (p.esq > 0) c.globalAlpha = 0.8;
+    // desde los pies: así aplastarse y estirarse no lo despegan del piso
+    c.translate(p.x + po.dx, yy + h - 6);
+    if (vista === "E" && espejo) c.scale(-1, 1);
+    c.rotate((p.salto > 0 ? -0.25 * jp * (vista === "E" ? 1 : 0.4) : 0) + po.rot);
+    c.scale(po.sx, po.sy);
+    if (img.complete) c.drawImage(img, -w / 2, -h + 6, w, h);
+    if (po.flash > 0) {
+      const bl = ANIMA.blanco(img);
+      if (bl) {
+        c.globalAlpha = po.flash;
+        c.drawImage(bl, -w / 2, -h + 6, w, h);
+      }
+    }
     c.restore();
-    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, false);
+    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     c.restore();
   }
   function dibujarNpc(n) {
     GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, hablando: n.hablando, camina: n.camina });
+    if (J.modo === "juego" && !n.hablando) dibujarSenal(n);
   }
   function dibujarMarca(m) {
     const a = Math.min(1, m.t * 2) * (m.t > 30 ? Math.max(0, 1 - (m.t - 30) / 3) : 1);
@@ -988,7 +1354,9 @@
       if (o.id === "soporteAtadura" && (o.o.roto || !o.o.visto)) f = 0.3;
       if (o.id === "piedraAncla" || o.id === "mojon") f = o.o.fuerza != null ? o.o.fuerza : o.o.luz;
       if ((o.id === "fogonOlla" && o.o.apagado) || (o.id === "posteFarol" && !o.o.encendido)) f = 0;
-      if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * (0.9 + Math.sin(J.t * 7 + o.x) * 0.06) });
+      // el fuego tiembla irregular (dos ondas); la luz rúnica late parejo
+      const tiembla = l[1] === "#FF8D71" ? 0.84 + Math.sin(J.t * 11 + o.x) * 0.08 + Math.sin(J.t * 23 + o.y) * 0.06 : 0.9 + Math.sin(J.t * 7 + o.x) * 0.06;
+      if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * tiembla });
     });
     if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
     for (const e of enemigos) if (e.activo && !e.muerto && e.d.luz && e.x > x0 - 300 && e.x < x1 + 300 && e.y > y0 - 300 && e.y < y1 + 300) L0.push({ x: e.x, y: e.y - 60, r: 240, col: ["#8CF0B4", "#73D5DB", "#9A6BD8"][e.pal || 0], f: 0.9 });
@@ -1019,6 +1387,17 @@
     J.marcas.forEach(dibujarMarca);
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
     J.avisos.forEach((a) => CB.dibujarAviso(c, a));
+    // con mando, el anillo bajo la criatura a la que va el próximo golpe
+    if (J.modo === "juego" && (CONTROLES.mando() || !mouse.usado) && (!window.OPCIONES || OPCIONES.v("apuntar"))) {
+      const o = objetivoCerca(Math.atan2(jug.dir[1], jug.dir[0]));
+      if (o) DIB.alfa(c, 0.55 + Math.sin(J.t * 6) * 0.15, () => {
+        c.beginPath();
+        c.ellipse(o.x, o.y, o.d.radio * o.s + 14, (o.d.radio * o.s + 14) * 0.4, 0, 0, DIB.TAU);
+        c.strokeStyle = "#F2ECEC";
+        c.lineWidth = 3;
+        c.stroke();
+      });
+    }
     cadaSis("piso", c, x0, y0, x1, y1);
     J.ondas.forEach(dibujarOnda);
     if (nucleoSuelo) ASSETS.dibujar(c, "nucleo", nucleoSuelo.x, nucleoSuelo.y, J.t, {});
@@ -1042,22 +1421,42 @@
     lista.forEach((d) => d.f());
     siluetaJugador(lista);
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
+    cadaSis("aire", c, x0, y0, x1, y1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
-    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9);
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
     LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
     c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
+    cadaSis("sobreLuz", c, x0, y0, x1, y1); // lo que brilla en la oscuridad: luciérnagas, brasas, motas rúnicas
     J.fx.forEach((f) => DIB.alfa(c, Math.max(0, f.t / 0.35), () => DIB.R(c, f.x - f.s / 2, f.y - f.s / 2, f.s, f.s, f.c)));
     c.font = '800 18px "Eromash Text", system-ui, sans-serif';
     c.textAlign = "center";
     J.textos.forEach((n) => {
       c.globalAlpha = Math.max(0, 1 - n.t / 0.9);
+      c.font = n.grande ? '800 26px "Eromash Text", system-ui, sans-serif' : n.palabra ? '800 15px "Eromash Text", system-ui, sans-serif' : '800 18px "Eromash Text", system-ui, sans-serif';
       c.lineWidth = 4;
       c.strokeStyle = "#0A0707";
       c.strokeText(n.n, n.x, n.y - n.t * 40);
-      c.fillStyle = "#F2ECEC";
+      c.fillStyle = n.col || "#F2ECEC";
       c.fillText(n.n, n.x, n.y - n.t * 40);
     });
     c.globalAlpha = 1;
+    // el rombo rúnico sobre lo que se usa con E ahora (la persona, la cosa)
+    if (J.cerca && J.cerca.x != null) {
+      const bx = J.cerca.x,
+        by = J.cerca.y + Math.sin(J.t * 4) * 5;
+      DIB.halo(c, bx, by, 26, "#73D5DB", 1);
+      c.beginPath();
+      c.moveTo(bx, by - 11);
+      c.lineTo(bx + 8, by);
+      c.lineTo(bx, by + 11);
+      c.lineTo(bx - 8, by);
+      c.closePath();
+      c.fillStyle = "#73D5DB";
+      c.fill();
+      c.strokeStyle = "#0A0707";
+      c.lineWidth = 2;
+      c.stroke();
+    }
     dibujarHaz(dondeObjetivo(), x0, y0, x1, y1);
     if (window.MAPA) dibujarHaz(MAPA.marca(), x0, y0, x1, y1, "255,217,138", "#FFD98A");
     // el aire del bosque: viñeta suave (se apaga en calidad baja)
@@ -1071,6 +1470,83 @@
       }
       c.fillStyle = vineta.g;
       c.fillRect(0, 0, cw, ch);
+    }
+    // con poca vida el borde late en rojo
+    if (J.modo === "juego" && !jug.muerto && jug.hp < jug.hpMax * 0.3) {
+      const f = (0.3 + 0.5 * (1 - jug.hp / (jug.hpMax * 0.3))) * (0.75 + Math.sin(J.t * 6) * 0.25);
+      const g = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.max(cw, ch) * 0.6);
+      g.addColorStop(0, "rgba(156,35,21,0)");
+      g.addColorStop(1, `rgba(156,35,21,${Math.min(0.6, f).toFixed(3)})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, cw, ch);
+    }
+    cunasGolpe(cw, ch);
+    flechasAmenaza(x0, y0, x1, y1);
+  }
+  // las cuñas rojas de los golpes recibidos, en el borde del lado de donde vinieron (se van en medio segundo)
+  function cunasGolpe(cw, ch) {
+    for (let i = golpesDir.length - 1; i >= 0; i--) {
+      const g = golpesDir[i],
+        e = J.t - g.t0;
+      if (e > 0.7 || e < 0) {
+        golpesDir.splice(i, 1);
+        continue;
+      }
+      const k = 1 - e / 0.7,
+        r = Math.max(cw, ch) / 2,
+        cx = cw / 2,
+        cy = ch / 2;
+      c.save();
+      c.globalAlpha = k;
+      const gr = c.createRadialGradient(cx, cy, r * 0.5, cx, cy, r);
+      gr.addColorStop(0, "rgba(200,64,45,0)");
+      gr.addColorStop(1, "rgba(200,64,45,0.9)");
+      c.fillStyle = gr;
+      c.beginPath();
+      c.moveTo(cx, cy);
+      c.arc(cx, cy, r * 1.5, g.a - 0.4, g.a + 0.4);
+      c.closePath();
+      c.fill();
+      c.restore();
+    }
+  }
+  // una flecha roja en el borde por cada criatura que viene a pegarle desde fuera de la pantalla
+  function flechasAmenaza(x0, y0, x1, y1) {
+    if (J.modo !== "juego" || jug.muerto || (window.OPCIONES && !OPCIONES.v("flechas"))) return;
+    const m = 46;
+    for (const e of enemigos) {
+      if (!e.activo || e.muerto || (e.estado !== "persigue" && e.estado !== "aviso" && e.estado !== "golpe")) continue;
+      if (e.x > x0 && e.x < x1 && e.y - 60 > y0 && e.y < y1) continue;
+      if (Math.hypot(e.x - jug.x, e.y - jug.y) > 1600) continue;
+      const sx = (jug.x - x0) * esc,
+        sy = (jug.y - 40 - y0) * esc,
+        a = Math.atan2(e.y - jug.y, e.x - jug.x),
+        ux = Math.cos(a),
+        uy = Math.sin(a);
+      // hasta dónde llega el rayo desde Eromash antes de salir del margen
+      const tx = ux > 0 ? (cw - m - sx) / ux : ux < 0 ? (m - sx) / ux : Infinity,
+        ty = uy > 0 ? (ch - m - sy) / uy : uy < 0 ? (m - sy) / uy : Infinity,
+        tt = Math.min(tx, ty),
+        px = sx + ux * tt,
+        py = sy + uy * tt;
+      const k = e.estado === "aviso" || e.estado === "golpe" ? 1 : 0.7;
+      c.save();
+      c.translate(px, py);
+      c.rotate(a);
+      c.scale(1.3, 1.3);
+      c.globalAlpha = k * (0.75 + Math.sin(J.t * 9) * 0.2);
+      c.beginPath();
+      c.moveTo(18, 0);
+      c.lineTo(-10, -13);
+      c.lineTo(-4, 0);
+      c.lineTo(-10, 13);
+      c.closePath();
+      c.fillStyle = e.estado === "aviso" ? "#FF8D71" : "#C8402D";
+      c.fill();
+      c.strokeStyle = "#0A0707";
+      c.lineWidth = 3;
+      c.stroke();
+      c.restore();
     }
   }
   let vineta = null;
@@ -1209,7 +1685,11 @@
     });
     HUD.misiones(lista);
     const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
+    J.cerca = J.dentro ? null : cer;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
+    HUD.canal(J.modo === "juego" && jug.interactuando > 0 && jug.canalTotal >= 0.6 ? 1 - jug.interactuando / jug.canalTotal : null);
+    // en pelea el rastreador se aparta (queda tenue) para que se vea lo que importa
+    document.getElementById("hudMisiones").classList.toggle("atenuado", J.modo === "juego" && enPelea());
     cadaSis("hud");
     HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : J.jefeHud || null);
   }
@@ -1235,6 +1715,7 @@
       CALIDAD.nivel = n[(n.indexOf(CALIDAD.nivel) + 1) % n.length];
       titulo();
     } });
+    botones.push({ texto: t("op.titulo"), fn: () => OPCIONES.abrir(titulo) });
     HUD.abrir(`<h1>Eromash</h1><div class="sub">${tav("juego_subtitulo")}</div>`, botones, { clase: "titulo" });
     // de fondo, el mago escribe en su escritorio
     if (window.PROLOGO) PROLOGO.mostrar();
@@ -1295,16 +1776,30 @@
     HUD.ocultarJuego(false);
     J.modo = "juego";
     CONTROLES.soltar();
+    etapaVista = H.etapa();
+    etapaDesde = J.t;
+    // al seguir una partida guardada, un recordatorio de en qué andaba
+    if (!nueva && H.mision()) J.retrasar(1.5, () => HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.tu_mision")));
+  }
+  // la tarjeta de la pausa: misión, dónde está, cuánto exploró, plata y tiempo de juego
+  function tarjetaPausa() {
+    const fila = (k, v) => `<div><small>${t(k)}</small><b>${v}</b></div>`;
+    let h = "";
+    if (H.mision()) h += fila("ui.pausa_mision", tav("mision_" + H.idMision()));
+    if (window.MAPA) h += fila("ui.pausa_lugar", MAPA.lugarAqui()) + fila("ui.pausa_explorado", Math.floor(MAPA.explorado() * 100) + " %");
+    h += fila("ui.pausa_jugado", tiempoTxt(H.E.tiempo || 0));
+    return `<div class="tarjeta-pausa">${h}</div>`;
   }
   function pausa() {
     J.modo = "menu";
-    HUD.abrir(`<h2>${tav("pausa_titulo")}</h2>`, [
+    HUD.abrir(`<h2>${tav("pausa_titulo")}</h2>${tarjetaPausa()}`, [
       { texto: tav("pausa_seguir"), fn: cerrarMenu },
       { texto: tav("pausa_guardar"), fn: () => {
         if (H.guardar()) HUD.aviso(tav("partida_guardada"));
         cerrarMenu();
       } },
       { texto: tav("diario_titulo"), fn: diario },
+      { texto: t("op.titulo"), fn: () => OPCIONES.abrir(pausa) },
       { texto: tav("pausa_titulo_menu"), fn: () => {
         H.guardar();
         titulo();
@@ -1317,6 +1812,8 @@
     let extra = "";
     const pr = H.E.extra.prologo;
     if (pr && pr.nombre) extra += `<div class="diario-resumen"><p>${t("pl.diario", [pr.nombre, t("pl.signo_corto_" + pr.signo)])}</p></div>`;
+    const ob = H.objetivo();
+    if (H.mision() && ob) extra = `<div class="diario-resumen"><p><b>${tav("mision_" + H.idMision())}</b> ${t("mj.diario_ahora", [textoObjetivo(ob)])}</p></div>` + extra;
     SIS.forEach((s0) => s0.diario && (extra += s0.diario()));
     return `<h2>${tav("diario_titulo")}</h2>${extra}<div class="diario-lista">${lista}</div>`;
   }
@@ -1336,7 +1833,7 @@
   let antes = performance.now(),
     autoguardado = 0;
   function cuadro(ahora) {
-    const dt = Math.min(0.05, (ahora - antes) / 1000);
+    let dt = Math.min(0.05, (ahora - antes) / 1000);
     antes = ahora;
     CONTROLES.actualizar();
     if (J.modo === "menu") {
@@ -1347,8 +1844,11 @@
       }
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
+      else if (dlg && dlg.solo && (dlg.solo -= dt) <= 0) seguirDialogo();
     } else if (J.modo === "juego") {
       if (CONTROLES.recien("misiones")) HUD.plegarTodo();
+      if (!J.dentro && CONTROLES.pulsado("acercar")) cambiarZoom(-dt * 0.6);
+      if (!J.dentro && CONTROLES.pulsado("alejar")) cambiarZoom(dt * 0.6);
       if (CONTROLES.recien("pausa")) pausa();
       else if (CONTROLES.recien("diario")) diario();
     }
@@ -1361,6 +1861,14 @@
       J.timers = J.timers.filter((tm) => tm.t > 0);
       J.dentro.paso(dt);
     } else if (J.modo === "juego" || J.modo === "dialogo" || J.modo === "cine") {
+      // la pausa del golpe y la cámara lenta de la esquiva justa
+      if (J.hitstop > 0) {
+        J.hitstop -= dt;
+        dt *= 0.05;
+      } else if (J.camLenta > 0) {
+        J.camLenta -= dt;
+        dt *= 0.35;
+      }
       J.t += dt;
       H.E.tiempo += dt;
       actualizarJugador(dt);
@@ -1378,12 +1886,13 @@
         }
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
-      alejarMeta = 1;
+      alejarMeta = zoomJug;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
       esc = escBase / alejar;
-      amb = LUZ.ambiente(H.E.tiempo, sombraAqui(), dt);
+      amb = LUZ.ambiente(H.E.tiempo, sombraAqui() + (window.VIDA ? VIDA.nubes() : 0), dt);
+      if (window.VIDA) VIDA.clima(amb);
       if (J.oscuro) amb = Object.assign({}, amb, { n: Math.max(amb.n, 0.8), o: 0 });
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
@@ -1401,6 +1910,8 @@
       J.textos.forEach((n) => (n.t += dt));
       J.textos = J.textos.filter((n) => n.t < 0.9);
       zonas();
+      pistaSiHaceFalta();
+      sonidoDelMundo(dt);
       actualizarCamara(dt);
       autoguardado += dt;
       if (autoguardado > 30) {
@@ -1416,6 +1927,15 @@
   // ---------- arranque ----------
   HUD.armar();
   addEventListener("beforeunload", () => J.modo !== "titulo" && H.guardar());
+  // si se va a otra ventana o pestaña en plena partida, el juego se pausa solo (y guarda)
+  const alIrse = () => {
+    if (J.modo === "juego" && !jug.muerto && !J.dentro) {
+      H.guardar();
+      pausa();
+    }
+  };
+  document.addEventListener("visibilitychange", () => document.hidden && alIrse());
+  addEventListener("blur", alIrse);
   // fondo del título: el Puesto de Eydis
   const fondo = W.LUGARES.puesto.p;
   J.cam.x = fondo[0];
@@ -1441,19 +1961,35 @@
     hora: () => amb.h,
     noche: () => amb.n,
     amb: () => amb,
-    teletransportar: (x, y) => {
+    enPelea,
+    dondeObjetivo,
+    // el viaje: columna de luz rúnica al irse y al llegar, el nombre del lugar y un instante sin que nada lo toque
+    teletransportar: (x, y, lugar) => {
       J.modo = "cine";
-      HUD.fundido(true);
+      columnaRunica(jug.x, jug.y);
+      setTimeout(() => HUD.fundido(true), 180);
       setTimeout(() => {
         jug.x = x;
         jug.y = y;
+        jug.atk = null;
         J.cam.x = x;
         J.cam.y = y - 30;
+        J.cam.ax = J.cam.ay = 0;
+        jug.inv = Math.max(jug.inv, 2);
         HUD.fundido(false);
+        columnaRunica(x, y);
         J.modo = "juego";
         CONTROLES.soltar();
-      }, 700);
+        if (lugar) HUD.aviso(t("av.lugar_" + lugar), "lugar", t("sx.viaje_llegaste"));
+      }, 620);
     },
+  };
+  // cada guardado se ve un instante abajo a la derecha
+  const guardarHistoria = H.guardar;
+  H.guardar = (...a) => {
+    const ok = guardarHistoria.apply(H, a);
+    if (ok && J.modo !== "titulo") HUD.guardado();
+    return ok;
   };
   cadaSis("iniciar", A);
   if (q.get("jugar")) {
@@ -1466,6 +2002,15 @@
       J.cam.x = jug.x;
       J.cam.y = jug.y;
     }
+    // ?mision=EL-03: arranca con las misiones anteriores hechas; ?hora=22: a esa hora (Probar del editor)
+    const mi = H.MISIONES.findIndex((m) => m.id === q.get("mision"));
+    if (mi > 0) {
+      for (let i = 0; i < mi; i++) H.MISIONES[i].objetivos.forEach((o) => (H.E.banderas[o.hecho] = true));
+      H.E.mision = mi;
+      H.avisar("cambio");
+    }
+    const hr = Number(q.get("hora"));
+    if (q.get("hora") && isFinite(hr)) H.E.tiempo = (((hr - 9 + 24) % 24) / 24) * LUZ.DIA;
     // ?en=x,y: aparece ahí (lo elige el editor con Probar en el juego); si cae en algo que choca, al lado libre más cerca
     const en = (q.get("en") || "").split(",").map(Number);
     if (en.length === 2 && en.every(isFinite)) {

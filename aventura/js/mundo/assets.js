@@ -290,6 +290,85 @@ window.ASSETS = (function () {
     }
   }
 
+  // Los juncos de la orilla: matas de hojas finas que se mecen al borde del agua, con alguna espiga parda arriba.
+  function juncos(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.floor((o.sem || 1) * 97) + 3),
+      n = 8 + Math.floor(r() * 5);
+    sombra(c, x + 3 * s, y + 1 * s, 22 * s, 5 * s, 0.25);
+    for (let k = 0; k < n; k++) {
+      const u = k / (n - 1) - 0.5,
+        bx = x + u * 26 * s + (r() - 0.5) * 4 * s,
+        h = (34 + r() * 30 - Math.abs(u) * 18) * s,
+        v = Math.sin(t * 1.3 + (o.sem || 0) + k * 0.7) * 2.2 * s,
+        tx = bx + u * 10 * s + v,
+        col = u > 0.1 ? "#6E7E34" : u < -0.15 ? "#3E4A2A" : "#556530";
+      P(c, [bx - 1.6 * s, y, tx, y - h, bx + 1.6 * s, y], col);
+      // la espiga: un huso pardo en algunas, del lado de la luz más claro
+      if (r() < 0.3) {
+        const ey = y - h * 0.82,
+          ex = bx + (tx - bx) * 0.82;
+        P(c, [ex - 2.4 * s, ey + 7 * s, ex, ey - 2 * s, ex + 2.4 * s, ey + 7 * s, ex, ey + 12 * s], "#5C3E2C");
+        P(c, [ex, ey - 2 * s, ex + 2.4 * s, ey + 7 * s, ex, ey + 12 * s], "#7A5634");
+      }
+    }
+  }
+
+  // La mata de enebro: un arbusto bajo de agujas oscuras, facetado, con bayas azules del lado de la luz.
+  function enebro(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.floor((o.sem || 1) * 131) + 7),
+      w = (22 + r() * 8) * s,
+      h = (26 + r() * 10) * s;
+    sombra(c, x + 5 * s, y + 2 * s, w + 6 * s, 7 * s, 0.32);
+    P(c, [x - w, y, x - w * 0.7, y - h * 0.6, x - w * 0.15, y - h, x + w * 0.1, y - h * 0.45, x, y], "#1F3322");
+    P(c, [x - w * 0.15, y - h, x + w * 0.55, y - h * 0.75, x + w, y - h * 0.2, x + w * 0.9, y, x, y, x + w * 0.1, y - h * 0.45], "#2E4A2A");
+    P(c, [x - w * 0.15, y - h, x + w * 0.55, y - h * 0.75, x + w * 0.1, y - h * 0.45], "#3E5E34");
+    P(c, [x + w * 0.55, y - h * 0.75, x + w, y - h * 0.2, x + w * 0.45, y - h * 0.3], "#4E6E3A");
+    for (let k = 0; k < 4; k++) E(c, x + (0.1 + r() * 0.7) * w, y - (0.25 + r() * 0.5) * h, 2.2 * s, 2.2 * s, k % 2 ? "#4A78D0" : "#3A5E9E");
+  }
+
+  // El brezal en flor: una mancha baja de brezo en el piso, verde oscuro con puntas rosadas (se pinta en el piso).
+  function brezo(c, x, y, t, o) {
+    const s = o.s || 1,
+      r = azar(Math.floor((o.sem || 1) * 211) + 11);
+    alfa(c, 0.85, () => E(c, x, y, 46 * s, 16 * s, "#3E4A2A"));
+    for (let k = 0; k < 26; k++) {
+      const a = r() * TAU,
+        d = Math.sqrt(r()),
+        px = x + Math.cos(a) * d * 42 * s,
+        py = y + Math.sin(a) * d * 14 * s;
+      P(c, [px - 2.5 * s, py, px, py - (4 + r() * 3) * s, px + 2.5 * s, py], r() < 0.6 ? "#B07A8E" : "#E0B2B2");
+    }
+  }
+
+  // El poste del cruce: un palo con tablas en flecha hacia cada camino que sale (o.dirs: ángulos en el piso, 0 = este)
+  // y una runa tallada arriba. Lo pone el mundo donde un camino se junta con otro.
+  function posteCruce(c, x, y, t, o) {
+    const s = o.s || 1,
+      dirs = o.dirs && o.dirs.length ? o.dirs : [0, Math.PI];
+    sombra(c, x + 6 * s, y + 2 * s, 14 * s, 5 * s, 0.32);
+    R(c, x - 4 * s, y - 104 * s, 8 * s, 104 * s, C.madera);
+    R(c, x - 4 * s, y - 104 * s, 3.5 * s, 104 * s, C.maderaSombra);
+    P(c, [x - 5 * s, y - 104 * s, x, y - 112 * s, x + 5 * s, y - 104 * s], C.maderaLuz);
+    // las tablas: las que van hacia la cámara o hacia atrás se ven cortas; cada una a su altura
+    dirs.slice(0, 4).forEach((a, i) => {
+      const dx = Math.cos(a),
+        largo = (16 + 22 * Math.abs(dx)) * s,
+        lado = dx >= 0 ? 1 : -1,
+        by = y - (90 - i * 17) * s,
+        alto = 11 * s,
+        punta = 8 * s * Math.max(0.3, Math.abs(dx));
+      const x0 = x + lado * 3 * s,
+        x1 = x + lado * (3 * s + largo);
+      P(c, [x0, by, x1, by, x1 + lado * punta, by + alto / 2, x1, by + alto, x0, by + alto], lado > 0 ? C.maderaLuz : C.madera);
+      P(c, [x0, by + alto * 0.7, x1, by + alto * 0.7, x1 + lado * punta * 0.3, by + alto * 0.85, x1, by + alto, x0, by + alto], C.maderaSombra);
+      // muescas talladas en la tabla
+      for (let k = 1; k <= 3; k++) R(c, x0 + lado * k * (largo / 4.2) - 0.8 * s, by + 3 * s, 1.6 * s, 4.5 * s, "#2E2016");
+    });
+    E(c, x, y - 106 * s, 3 * s, 3 * s, RUNICO);
+  }
+
   // Los hongos de rocío: sombreritos azul verdosos que brillan apenas sobre la madera húmeda (luz del bosque sano).
   function hongosRocio(c, x, y, t, o) {
     const s = o.s || 1,
@@ -1161,6 +1240,10 @@ window.ASSETS = (function () {
 
   const LISTA = {
     pino: { f: pino, alto: 150, choque: { r: 14 }, grupo: "naturaleza" },
+    juncos: { f: juncos, alto: 70, choque: null, grupo: "naturaleza" },
+    enebro: { f: enebro, alto: 40, choque: { r: 16 }, grupo: "naturaleza" },
+    brezo: { f: brezo, alto: 10, choque: null, grupo: "naturaleza", piso: true },
+    posteCruce: { f: posteCruce, alto: 115, choque: { r: 10 }, grupo: "caminos" },
     roble: { f: roble, alto: 170, choque: { r: 18 }, grupo: "naturaleza" },
     abetoAnciano: { f: abetoAnciano, alto: 600, choque: { r: 22 }, grupo: "naturaleza" },
     robleAnciano: { f: robleAnciano, alto: 380, choque: { r: 34 }, grupo: "naturaleza" },
