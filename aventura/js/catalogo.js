@@ -44,10 +44,11 @@
   Object.keys(porGrupo).forEach((g) => {
     const el = grupo("as.grupo." + g);
     porGrupo[g].forEach((a) => {
-      const grande = a.alto > 120 || ["carroVolcado", "puentePaso", "puenteTablas", "aserradero", "santuario", "casaLindes", "empalizada"].includes(a.id);
-      const w = grande ? (a.id === "casaLindes" || a.id === "aserradero" || a.id === "santuario" ? 560 : 400) : 240,
+      const ancho = ["casaLindes", "aserradero", "santuario", "puertaSur", "casaSanacion", "hongoDorado", "huerta", "tingCirculo", "herreriaAsa", "cordeleriaFolke", "muralla"].includes(a.id);
+      const grande = ancho || a.alto > 120 || ["carroVolcado", "puentePaso", "puenteTablas", "empalizada"].includes(a.id);
+      const w = grande ? (ancho ? 560 : 400) : 240,
         h = grande ? 400 : 260,
-        esc = Math.min(2.2, (h - 80) / a.alto, a.id === "casaLindes" || a.id === "aserradero" || a.id === "santuario" ? 1.3 : 9);
+        esc = Math.min(2.2, (h - 80) / a.alto, ancho ? (a.id === "puertaSur" ? 1.1 : 1.3) : 9);
       ficha(el, I18N.t("as." + a.id), w, h, (c, t) => {
         piso(c, w, h);
         const o = Object.assign({ s: esc, sem: 3 }, a.ejemplo);
@@ -60,6 +61,12 @@
           o.x2 = x + o.x2;
           o.y2 = y + o.y2;
         }
+        if (a.id === "muralla") {
+          x = 120;
+          o.x2 = x + o.x2;
+          o.y2 = y + o.y2;
+        }
+        if (a.id === "tingCirculo") y = h / 2 + 30;
         if (a.id === "soporteAtadura") o.hacia = [x + o.hacia[0], y + o.hacia[1]];
         if (a.id === "empalizada") x = 50;
         if (a.id === "aserradero") x = w / 2 - 30;

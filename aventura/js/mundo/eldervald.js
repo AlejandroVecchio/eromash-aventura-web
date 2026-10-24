@@ -1,6 +1,7 @@
 // ---------- el Bosque de Eldervald (módulo ELDERVALD) ----------
-// La misma geografía que la aventura de Godot (mapa v2 de Eldervald, 1557 × 1010 px): cada píxel del mapa son
-// 10 unidades del mundo (unos 0,33 m), así que un metro son ~30 unidades. El norte del mapa es arriba.
+// La misma geografía que la aventura de Godot (mapa v2 de Eldervald, 1557 × 1010 px), pero el doble de grande:
+// cada píxel del mapa son 20 unidades del mundo (Eromash mide 77). Cruzar el bosque caminando lleva varios minutos.
+// Eikholt es la capital amurallada del compendio (docs del 23/10/2026 en la aventura de Godot). El norte es arriba.
 // Arma todo lo fijo del mundo: lugares, caminos, ríos, la quebrada, los puentes, el bosque y los objetos de cada
 // lugar; y responde dónde se puede caminar. El piso se pinta por trozos (chunks) y se guarda ya dibujado.
 window.ELDERVALD = (function () {
@@ -8,8 +9,8 @@ window.ELDERVALD = (function () {
   const { P, E, R, L, alfa, poli, azar, TAU } = DIB;
   const C = ASSETS.C;
 
-  const U = 10; // unidades por píxel del mapa
-  const M = U / 0.33; // unidades por metro (para los desplazamientos medidos en metros)
+  const U = 20; // unidades por píxel del mapa
+  const M = U / 0.33; // unidades por metro del mapa (los desplazamientos de Godot, medidos en metros)
   const ANCHO = 1557 * U,
     ALTO = 1010 * U,
     BORDE = 26 * M; // montañas del borde: no se puede salir
@@ -23,8 +24,8 @@ window.ELDERVALD = (function () {
     puesto: { p: m(350, 795), r: 14 },
     carro: { p: m(612, 400), r: 7 },
     refugio: { p: m(470, 318), r: 14 },
-    casa_lindes: { p: m(668, 540), r: 13 },
-    eikholt: { p: m(830, 560), r: 24 },
+    casa_lindes: { p: m(702, 548), r: 9 },
+    eikholt: { p: m(810, 565), r: 46 },
     paso_sur: { p: m(532, 222), r: 12 },
     paso: { p: m(515, 172), r: 6 },
     paso_norte: { p: m(500, 120), r: 8 },
@@ -42,19 +43,29 @@ window.ELDERVALD = (function () {
   };
   for (const k in LUGARES) LUGARES[k].r *= M;
 
+  // los caminos llegan a las tres puertas de Eikholt: sur (Hrafngard), oeste (el Paso) y este (aserradero, Brunvik)
   const CAMINOS = [
-    { p: lista([[95, 960], [200, 880], [350, 795], [470, 745], [560, 690], [625, 600], [668, 560], [740, 560], [830, 560]]), w: 4 * M },
-    { p: lista([[668, 560], [655, 480], [612, 400], [575, 300], [540, 230], [515, 172], [500, 110], [490, 30]]), w: 3.6 * M },
-    { p: lista([[590, 345], [530, 330], [470, 318]]), w: 2.8 * M },
-    { p: lista([[540, 232], [470, 240], [410, 238], [360, 222], [318, 210], [262, 205], [205, 190]]), w: 2.4 * M },
-    { p: lista([[830, 560], [900, 540], [960, 488], [1010, 420], [1060, 360], [1085, 330], [1150, 345], [1205, 345], [1265, 300], [1330, 250], [1415, 215]]), w: 3.4 * M },
-    { p: lista([[830, 560], [960, 585], [1080, 600]]), w: 3 * M },
+    { p: lista([[95, 960], [200, 880], [350, 795], [470, 745], [560, 700], [680, 690], [810, 672], [810, 600]]), w: 4 * 34 },
+    { p: lista([[760, 562], [672, 563], [655, 480], [612, 400], [575, 300], [540, 230], [515, 172], [500, 110], [490, 30]]), w: 3.6 * 34 },
+    { p: lista([[590, 345], [530, 330], [470, 318]]), w: 2.8 * 34 },
+    { p: lista([[540, 232], [470, 240], [410, 238], [360, 222], [318, 210], [262, 205], [205, 190]]), w: 2.4 * 34 },
+    { p: lista([[860, 560], [945, 556], [958, 520], [960, 488], [1010, 420], [1060, 360], [1085, 330], [1150, 345], [1205, 345], [1265, 300], [1330, 250], [1415, 215]]), w: 3.4 * 34 },
+    { p: lista([[945, 572], [970, 585], [1080, 600], [1240, 590]]), w: 3 * 34 },
+    { p: lista([[668, 590], [702, 556]]), w: 2.2 * 34 },
+  ];
+  // la muralla de Eikholt: una elipse de troncos con tres puertas
+  const CIUDAD = { c: m(810, 565), rx: 130 * U, ry: 95 * U, puertas: [Math.PI / 2, Math.PI, 0], hueco: 150 };
+  // lagunas del mapa
+  const LAGOS = [
+    { p: m(48, 600), rx: 30 * U, ry: 18 * U },
+    { p: m(292, 597), rx: 26 * U, ry: 16 * U },
+    { p: m(680, 735), rx: 20 * U, ry: 18 * U },
   ];
   const RIOS = [
     { p: lista([[1100, -20], [1150, 120], [1190, 250], [1205, 345], [1185, 430], [1150, 520], [1130, 600], [1110, 700], [1150, 800], [1230, 900], [1280, 1040]]), w: 9 * M },
     { p: lista([[850, 425], [900, 445], [960, 488], [1030, 522], [1090, 560], [1140, 590]]), w: 6 * M },
   ];
-  const QUEBRADA = { p: lista([[-40, 70], [150, 70], [300, 92], [420, 130], [515, 160], [600, 188], [700, 168], [850, 140], [1000, 118], [1152, 120]]), w: 400 };
+  const QUEBRADA = { p: lista([[-40, 70], [150, 70], [300, 92], [420, 130], [515, 160], [600, 188], [700, 168], [850, 140], [1000, 118], [1152, 120]]), w: 40 * U };
   const PUENTES = [
     { id: "paso", a: m(515, 190), b: m(510, 132), ancho: 3.2 * M },
     { id: "central", a: m(942, 503), b: m(979, 473), ancho: 3.2 * M },
@@ -98,6 +109,30 @@ window.ELDERVALD = (function () {
   }
   RIOS.forEach((r) => pintarLinea(r.p, r.w, 1));
   pintarLinea(QUEBRADA.p, QUEBRADA.w, 2);
+  LAGOS.forEach((l) => {
+    for (let gy = Math.floor((l.p[1] - l.ry) / CELDA); gy <= (l.p[1] + l.ry) / CELDA; gy++)
+      for (let gx = Math.floor((l.p[0] - l.rx) / CELDA); gx <= (l.p[0] + l.rx) / CELDA; gx++) {
+        const dx = ((gx + 0.5) * CELDA - l.p[0]) / l.rx,
+          dy = ((gy + 0.5) * CELDA - l.p[1]) / l.ry;
+        if (dx * dx + dy * dy < 1 && gx >= 0 && gy >= 0 && gx < GW && gy < GH) suelo[gy * GW + gx] = 1;
+      }
+  });
+  // la muralla: un anillo cerrado salvo en las puertas
+  const enPuerta = (a) => CIUDAD.puertas.some((pa) => Math.abs(Math.atan2(Math.sin(a - pa), Math.cos(a - pa))) < CIUDAD.hueco / CIUDAD.rx);
+  const MURO = [];
+  {
+    const n = 88;
+    for (let i = 0; i < n; i++) {
+      const a0 = (i / n) * TAU,
+        a1 = ((i + 1) / n) * TAU,
+        am = (a0 + a1) / 2;
+      if (enPuerta(am)) continue;
+      const p0 = [CIUDAD.c[0] + Math.cos(a0) * CIUDAD.rx, CIUDAD.c[1] + Math.sin(a0) * CIUDAD.ry],
+        p1 = [CIUDAD.c[0] + Math.cos(a1) * CIUDAD.rx, CIUDAD.c[1] + Math.sin(a1) * CIUDAD.ry];
+      MURO.push([p0, p1, am, i]);
+      pintarLinea([p0, p1], 36, 3);
+    }
+  }
   for (let gy = 0; gy < GH; gy++)
     for (let gx = 0; gx < GW; gx++) {
       const x = (gx + 0.5) * CELDA,
@@ -128,7 +163,9 @@ window.ELDERVALD = (function () {
   const PUNTOS = {}; // dónde se paran los NPC, dónde está cada objetivo
   function poner(id, p, o = {}, nombre) {
     const a = ASSETS.LISTA[id];
-    const cosa = { id, x: p[0], y: p[1], o, choque: a ? a.choque : null, alto: a ? a.alto * (o.s || 1) : 40 };
+    const k = o.s || 1,
+      ch = a && a.choque ? (a.choque.r ? { r: a.choque.r * k } : { w: a.choque.w * k, h: a.choque.h * k }) : null;
+    const cosa = { id, x: p[0], y: p[1], o, choque: ch, alto: a ? a.alto * k : 40 };
     if (o.sinChoque) cosa.choque = null;
     COSAS.push(cosa);
     if (nombre) NOMBRADAS[nombre] = cosa;
@@ -178,34 +215,78 @@ window.ELDERVALD = (function () {
     punto("orm_refugio", mas(c, -1, -1));
     punto("trab_refugio", mas(c, -5, 0));
   })();
-  // Eikholt
+  // Eikholt, la capital: muralla de troncos con torres y piedras rúnicas, el Roble en el centro con el Mercado de
+  // los Toldos, el Círculo del Ting al norte del tronco, los oficios al oeste y sudoeste, la Casa de Sanación al
+  // noroeste, la Casa de las Lindes en el borde oeste, el Hongo Dorado al sudeste de la plaza y las huertas al este.
   (function () {
-    const c = LUGARES.eikholt.p;
-    punto("eikholt", mas(c, -6, 8));
-    poner("casaEikholt", mas(c, -16, -16), { v: 0 });
-    poner("casaEikholt", mas(c, 4, -22), { v: 1 });
-    poner("casaEikholt", mas(c, 22, -12), { v: 2 });
-    poner("casaEikholt", mas(c, 20, 16), { v: 1 });
-    poner("casaEikholt", mas(c, -10, 22), { v: 0 });
-    poner("robleEikholt", mas(c, -2, -6));
-    poner("pozoEikholt", mas(c, 9, 5));
-    poner("puestoMercado", mas(c, 15, -2));
-    poner("farol", mas(c, -12, 2));
-    poner("farol", mas(c, 10, -6));
-    poner("piedraLinde", mas(c, -3, -10), { sem: 7 });
-    punto("eydis_eikholt", mas(c, -7, 5));
-    punto("orm_eikholt", mas(c, 4, 7));
-    punto("trab_eikholt", mas(c, 6, 9));
+    const c = CIUDAD.c,
+      px = (dx, dy) => [c[0] + dx * U, c[1] + dy * U];
+    // la muralla, las torres y las piedras rúnicas
+    MURO.forEach(([p0, p1, am, i]) => {
+      poner("muralla", p0, { x2: p1[0], y2: p1[1], sem: i, sinChoque: true });
+      if (i % 9 === 4) poner("torreVigia", [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2 + 6], { sem: i });
+      if (i % 11 === 7) poner("piedraMuralla", [(p0[0] + p1[0]) / 2 + Math.cos(am) * 90, (p0[1] + p1[1]) / 2 + Math.sin(am) * 70], { sem: i });
+    });
+    // torres a los lados de las puertas oeste y este
+    [Math.PI, 0].forEach((pa) => {
+      [-1, 1].forEach((lado) => {
+        const a = pa + (lado * (CIUDAD.hueco + 40)) / CIUDAD.rx;
+        poner("torreVigia", [c[0] + Math.cos(a) * CIUDAD.rx, c[1] + Math.sin(a) * CIUDAD.ry + 6], { sem: lado + 3 });
+      });
+    });
+    const sur = [c[0], c[1] + CIUDAD.ry];
+    poner("puertaSur", sur, {}, "puerta_sur");
+    poner("granTablero", [sur[0] + 230, sur[1] - 120], {}, "gran_tablero");
+    // el Roble y su plaza
+    poner("robleEikholt", px(0, 0), { s: 3.4 }, "roble");
+    poner("tingCirculo", px(0, -42), {}, "ting");
+    [[-26, 22, 0], [-10, 30, 1], [8, 31, 2], [24, 24, 3], [34, 10, 4], [-34, 8, 5]].forEach(([dx, dy, v]) => poner("toldo", px(dx, dy), { v }));
+    poner("pozoEikholt", px(18, 48));
+    // Barrio de los Oficios (oeste y sudoeste)
+    poner("herreriaAsa", px(-70, 18), {}, "herreria");
+    poner("cordeleriaFolke", px(-52, 46), {}, "cordeleria");
+    poner("casaEikholt", px(-86, 40), { v: 2 });
+    poner("casaEikholt", px(-62, -12), { v: 1 });
+    // Casa de Sanación (noroeste)
+    poner("casaSanacion", px(-48, -50), {}, "sanacion");
+    // Hongo Dorado (sudeste de la plaza)
+    poner("hongoDorado", px(48, 42), {}, "hongo_dorado");
+    // casas del norte y del este
+    [[-18, -72, 0], [16, -76, 1], [46, -62, 2], [70, -38, 0], [-80, -40, 2], [60, 70, 1], [-30, 74, 0], [30, 76, 2]].forEach(([dx, dy, v]) => poner("casaEikholt", px(dx, dy), { v }));
+    // el resto de la ciudad: casas apretadas entre las calles, como en la vista de la capital
+    {
+      const r = azar(4471),
+        hechas = COSAS.filter((o) => Math.abs(o.x - c[0]) < CIUDAD.rx && Math.abs(o.y - c[1]) < CIUDAD.ry && o.choque);
+      for (let k = 0; k < 400 && hechas.length < 90; k++) {
+        const a = r() * TAU,
+          d = 0.42 + r() * 0.46,
+          x = c[0] + Math.cos(a) * CIUDAD.rx * d,
+          y = c[1] + Math.sin(a) * CIUDAD.ry * d;
+        if (Math.abs(x - c[0]) < 200 || Math.abs(y - c[1]) < 170) continue; // las calles a las puertas
+        if (x > c[0] + 1500 && Math.abs(y - c[1]) < 900) continue; // las huertas
+        if (hechas.some((o) => Math.abs(o.x - x) < 300 && Math.abs(o.y - y) < 190)) continue;
+        hechas.push(poner("casaEikholt", [x, y], { v: Math.floor(r() * 3), techo: Math.floor(r() * 3), sem: k, s: 0.9 + r() * 0.2 }));
+      }
+    }
+    // huertas del este
+    poner("huerta", px(88, 6), { sem: 1 });
+    poner("huerta", px(92, 34), { sem: 2 });
+    // faroles de las calles
+    [[-14, 52], [14, 52], [-40, -20], [40, -20], [-12, 84], [-100, 10], [100, -10]].forEach(([dx, dy]) => poner("farol", px(dx, dy)));
+    punto("eikholt", px(0, 80));
+    punto("eydis_eikholt", px(-14, 40));
+    punto("orm_eikholt", px(12, 44));
+    punto("trab_eikholt", px(26, 50));
+    punto("plaza", px(0, 34));
   })();
-  // Casa de las Lindes (Svanhild)
+  // Casa de las Lindes (Svanhild), en el borde oeste de Eikholt
   (function () {
     const c = LUGARES.casa_lindes.p;
-    poner("casaLindes", mas(c, -4, -8));
-    const patio = mas(c, 6, 3);
+    poner("casaLindes", mas(c, 0, -6));
+    const patio = mas(c, 7, 4);
     poner("losaPatio", patio, { luz: 0 }, "losa");
-    const mesa = mas(c, -2, 3);
+    const mesa = mas(c, -1, 4);
     poner("mesaSvanhild", mesa, { fragmento: false }, "mesa");
-    poner("farol", mas(c, 9, -3));
     punto("losa", patio);
     punto("mesa", [mesa[0], mesa[1] + 14]);
     punto("svanhild_casa", mas(mesa, 2.2, -1));
@@ -340,7 +421,7 @@ window.ELDERVALD = (function () {
       if (!libreDeTodo(px, py, 70)) continue;
       const k = rnd(),
         tipo = dens > 0.55 ? (k < 0.75 ? "pino" : k < 0.9 ? "roble" : "abedul") : k < 0.45 ? "pino" : k < 0.75 ? "roble" : k < 0.9 ? "abedul" : "roca";
-      const s = tipo === "roca" ? 0.8 + rnd() * 0.7 : 1.15 + rnd() * 0.6 + (borde ? 0.3 : 0);
+      const s = tipo === "roca" ? 0.9 + rnd() * 0.8 : 1.7 + rnd() * 0.9 + (borde ? 0.4 : 0);
       COSAS.push({ id: tipo, x: px, y: py, o: { s, sem: rnd() * 10, pisos: 3 + Math.floor(rnd() * 3) }, choque: { r: ASSETS.LISTA[tipo].choque.r * s }, alto: ASSETS.LISTA[tipo].alto * s, arbol: tipo !== "roca" });
     }
   // helechos sueltos a los costados de los caminos
@@ -479,6 +560,36 @@ window.ELDERVALD = (function () {
       trazo(c, rio.p, rio.w * 0.55, "#30586A");
       trazo(c, rio.p, rio.w * 0.12, "#3E6E7E");
     });
+    // lagunas
+    LAGOS.forEach((l) => {
+      if (l.p[0] + l.rx + 200 < x0 || l.p[0] - l.rx - 200 > x1 || l.p[1] + l.ry + 200 < y0 || l.p[1] - l.ry - 200 > y1) return;
+      const jit = [1, 0.92, 1.05, 0.95, 1.02, 0.9, 1.04, 0.97, 1, 0.93, 1.06, 0.96];
+      P(c, poli(l.p[0], l.p[1], l.rx + 60, l.ry + 50, 12, 0.1, jit), "#2E3324");
+      P(c, poli(l.p[0], l.p[1], l.rx + 24, l.ry + 20, 12, 0.1, jit), "#4A4A3A");
+      P(c, poli(l.p[0], l.p[1], l.rx, l.ry, 12, 0.1, jit), "#2A4C56");
+      P(c, poli(l.p[0] + l.rx * 0.1, l.p[1] - l.ry * 0.1, l.rx * 0.6, l.ry * 0.55, 10, 0.3), "#30586A");
+    });
+    // Eikholt por dentro: tierra apisonada en la plaza del Roble y las calles hacia las puertas
+    if (CIUDAD.c[0] + CIUDAD.rx + mg > x0 && CIUDAD.c[0] - CIUDAD.rx - mg < x1 && CIUDAD.c[1] + CIUDAD.ry + mg > y0 && CIUDAD.c[1] - CIUDAD.ry - mg < y1) {
+      const [cx, cy] = CIUDAD.c;
+      P(c, poli(cx, cy, CIUDAD.rx * 0.98, CIUDAD.ry * 0.98, 40), "#465030");
+      const calles = [[[cx, cy], [cx, cy + CIUDAD.ry + 40]], [[cx, cy], [cx - CIUDAD.rx - 40, cy]], [[cx, cy], [cx + CIUDAD.rx + 40, cy]], [[cx, cy], [cx, cy - CIUDAD.ry * 0.8]]];
+      calles.forEach((cl) => {
+        trazo(c, cl, 190, "#3A3022");
+        trazo(c, cl, 160, "#5C4A32");
+      });
+      // la plaza del Roble: tierra con losas alrededor del tronco
+      const jp = [1, 0.9, 1.06, 0.94, 1.02, 0.88, 1.05, 0.96];
+      P(c, poli(cx, cy + 260, 900, 560, 16, 0.1, jp), "#3A3022");
+      P(c, poli(cx, cy + 260, 860, 530, 16, 0.1, jp), "#5C4A32");
+      const rl = azar(91);
+      for (let k = 0; k < 70; k++) {
+        const a = rl() * TAU,
+          d = 260 + rl() * 260;
+        P(c, poli(cx + Math.cos(a) * d, cy + 40 + Math.sin(a) * d * 0.55, 26 + rl() * 14, 12 + rl() * 6, 6, rl()), rl() < 0.5 ? "#6E6458" : "#5E564C");
+      }
+      for (let k = 0; k < 30; k++) E(c, cx + (rl() - 0.5) * 1700, cy + 260 + (rl() - 0.5) * 1000, 30 + rl() * 40, 10 + rl() * 12, "#465030");
+    }
     // caminos: tierra pisada con el borde más oscuro y el centro gastado
     CAMINOS.forEach((cm) => {
       trazo(c, cm.p, cm.w + 26, "#3A3022");
@@ -554,7 +665,7 @@ window.ELDERVALD = (function () {
           cv = pintarTrozo(tx, ty, esc);
           pintados++;
           cache.set(k, cv);
-          if (cache.size > 30) cache.delete(cache.keys().next().value);
+          if (cache.size > 60) cache.delete(cache.keys().next().value);
         } else {
           cache.delete(k);
           cache.set(k, cv);
@@ -574,7 +685,7 @@ window.ELDERVALD = (function () {
   }
 
   return {
-    U, M, ANCHO, ALTO, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO,
+    U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO,
     m, mas, libre, hayMuro, cercanas, dibujarPiso, invalidar, repararPuente, distLinea,
   };
 })();

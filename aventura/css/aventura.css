@@ -6,3 +6,68 @@
 @font-face { font-family: "Eromash Display"; font-weight: 600; font-display: swap; src: url("../../juego/fuentes/EromashDisplay-SemiBold.woff2?v=04") format("woff2"); }
 @font-face { font-family: "Eromash Display"; font-weight: 700 900; font-display: swap; src: url("../../juego/fuentes/EromashDisplay-Bold.woff2?v=04") format("woff2"); }
 @font-face { font-family: "Noto Sans Runic"; font-display: swap; src: url("../../juego/fuentes/NotoSansRunic.woff2") format("woff2"); }
+
+/* ---------- el juego ---------- */
+:root { --negro: #111111; --rojo: #9C2315; --rojo2: #C8402D; --rosa: #E0B2B2; --hueso: #F2ECEC; --oro: #FFD98A; --coral: #FF8D71; --runico: #73D5DB; --violeta: #9A6BD8; }
+body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; color: var(--hueso); font-family: "Eromash Text", system-ui, sans-serif; }
+#lienzo { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+.ui { position: fixed; pointer-events: none; }
+.panel { background: rgba(17, 17, 17, 0.88); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+.rotulo { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; }
+
+/* vida y estamina, como el panel del jugador de la arena */
+#hudJugador { left: 16px; bottom: 16px; width: 280px; padding: 12px 14px; }
+#hudJugador .nombre { font-weight: 800; font-size: 14px; margin-bottom: 8px; }
+.barra { position: relative; height: 16px; background: #2A1A18; margin-top: 4px; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+.barra i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--rojo), var(--rojo2)); transition: width 0.15s; }
+.barra.est i { background: linear-gradient(90deg, #A8822E, var(--oro)); }
+.barra span { position: absolute; left: 10px; right: 10px; top: 0; line-height: 16px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; display: flex; justify-content: space-between; text-shadow: 0 1px 0 #0008; }
+.barra.est span { color: #2A1C08; text-shadow: none; }
+
+/* objetivo */
+#hudObjetivo { right: 16px; top: 16px; max-width: 340px; padding: 10px 14px 12px; }
+#hudObjetivo .rotulo { color: var(--oro); display: flex; justify-content: space-between; gap: 12px; }
+#hudObjetivo .texto { margin-top: 6px; font-size: 14px; line-height: 1.35; }
+#hudObjetivo .rotulo b { color: var(--runico); font-weight: 800; }
+
+/* cartel de interactuar: el rombo de la arena con la tecla */
+#hudAccion { left: 50%; bottom: 120px; transform: translateX(-50%); padding: 8px 14px 8px 10px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.tecla { min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background: var(--hueso); color: var(--negro); font-weight: 800; font-size: 12px; clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px); }
+
+/* avisos centrales */
+#hudAvisos { left: 50%; top: 22%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.aviso { padding: 8px 18px; font-size: 15px; animation: aviso 3.6s forwards; text-align: center; max-width: 560px; }
+.aviso.lugar { font-family: "Eromash Display", system-ui, sans-serif; font-size: 26px; letter-spacing: 0.06em; background: none; text-shadow: 0 2px 0 #000a; }
+.aviso.lugar small { display: block; font-family: "Eromash Text", system-ui, sans-serif; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--oro); }
+@keyframes aviso { 0% { opacity: 0; transform: translateY(6px); } 8%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+
+/* diálogo */
+#hudDialogo { left: 50%; bottom: 28px; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); padding: 14px 20px 16px; pointer-events: auto; }
+#hudDialogo .quien { font-weight: 800; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; }
+#hudDialogo .linea { margin-top: 6px; font-size: 17px; line-height: 1.45; min-height: 50px; }
+#hudDialogo .seguir { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: var(--rosa); display: flex; gap: 6px; align-items: center; }
+
+/* jefe */
+#hudJefe { left: 50%; top: 18px; transform: translateX(-50%); width: min(620px, calc(100vw - 32px)); text-align: center; }
+#hudJefe .nombre { font-family: "Eromash Display", system-ui, sans-serif; font-size: 20px; letter-spacing: 0.08em; text-shadow: 0 2px 0 #000a; }
+#hudJefe .nombre small { font-family: "Eromash Text", system-ui, sans-serif; font-size: 12px; color: var(--violeta); letter-spacing: 0.1em; margin-left: 8px; }
+#hudJefe .barra { height: 12px; }
+#hudJefe .ataque { margin-top: 8px; font-size: 14px; color: var(--coral); min-height: 18px; text-shadow: 0 1px 0 #000; }
+#hudJefe .ataque b { color: var(--hueso); }
+
+/* menús: título, pausa, diario, fin */
+.capa { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8, 8, 6, 0.72); pointer-events: auto; }
+.capa .caja { width: min(520px, calc(100vw - 32px)); padding: 26px 28px; }
+.capa h1 { font-family: "Eromash Display", system-ui, sans-serif; margin: 0; font-size: 44px; letter-spacing: 0.04em; }
+.capa h2 { font-family: "Eromash Display", system-ui, sans-serif; margin: 0 0 14px; font-size: 24px; }
+.capa .sub { color: var(--rosa); margin: 4px 0 22px; font-size: 14px; }
+.capa .nota { color: #8A8080; font-size: 12px; margin-top: 18px; line-height: 1.4; }
+.capa p { line-height: 1.5; }
+.boton { display: block; width: 100%; margin: 8px 0; padding: 12px 16px; border: 0; background: #1E1A18; color: var(--hueso); font: 700 15px "Eromash Text", system-ui, sans-serif; text-align: left; cursor: pointer; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.boton.foco, .boton:hover { background: var(--rojo); }
+.boton small { display: block; font-weight: 500; font-size: 12px; color: var(--rosa); margin-top: 2px; }
+.diario-lista { max-height: 50vh; overflow: auto; }
+.diario-lista p { margin: 0 0 12px; padding-left: 12px; border-left: 2px solid var(--runico); }
+#fundido { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.8s; }
+#fundido.on { opacity: 1; }
+.oculto { display: none !important; }

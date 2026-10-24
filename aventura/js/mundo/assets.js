@@ -467,13 +467,15 @@ window.ASSETS = (function () {
       R(c, x - w / 2 - 10 * s, y - h + 16 * s, 14 * s, 12 * s, C.ambar);
       R(c, x + w / 2 - 4 * s, y - h + 16 * s, 14 * s, 12 * s, C.ambar);
     });
-    // techo de pizarra, con hileras
-    P(c, [x - w - 14 * s, y - h + 2 * s, x - w * 0.7, y - h - techo, x + w * 0.7, y - h - techo, x + w + 14 * s, y - h + 2 * s], C.pizarraSombra);
-    P(c, [x - w * 0.7, y - h - techo, x + w * 0.7, y - h - techo, x + w + 14 * s, y - h + 2 * s, x - w * 0.2, y - h + 2 * s], C.pizarra);
+    // techo, con hileras: o.techo 0 pizarra (la de siempre), 1 tablas, 2 tepe con pasto (las casas más viejas)
+    const TECHOS = [[C.pizarraSombra, C.pizarra, C.pizarraLuz], [C.maderaSombra, C.maderaVieja, C.madera], ["#3A4424", C.musgo2, C.musgoClaro]];
+    const [tS, tC, tL] = TECHOS[(o.techo || 0) % 3];
+    P(c, [x - w - 14 * s, y - h + 2 * s, x - w * 0.7, y - h - techo, x + w * 0.7, y - h - techo, x + w + 14 * s, y - h + 2 * s], tS);
+    P(c, [x - w * 0.7, y - h - techo, x + w * 0.7, y - h - techo, x + w + 14 * s, y - h + 2 * s, x - w * 0.2, y - h + 2 * s], tC);
     for (let k = 1; k < 5; k++) {
       const yy = y - h - techo + (k * techo) / 5,
         f = k / 5;
-      L(c, x - w * 0.7 - f * (w * 0.3 + 14 * s), yy, x + w * 0.7 + f * (w * 0.3 + 14 * s), yy, C.pizarraLuz, 1.5 * s);
+      L(c, x - w * 0.7 - f * (w * 0.3 + 14 * s), yy, x + w * 0.7 + f * (w * 0.3 + 14 * s), yy, tL, 1.5 * s);
     }
     // cabezas de dragón talladas en el caballete
     P(c, [x - w * 0.7, y - h - techo, x - w * 0.7 - 12 * s, y - h - techo - 12 * s, x - w * 0.7 - 4 * s, y - h - techo - 2 * s], C.maderaSombra);
@@ -956,5 +958,5 @@ window.ASSETS = (function () {
   function catalogo() {
     return Object.keys(LISTA).map((id) => ({ id, grupo: LISTA[id].grupo, alto: LISTA[id].alto, ejemplo: EJEMPLO[id] || {} }));
   }
-  return { LISTA, C, dibujar, catalogo };
+  return { LISTA, C, dibujar, catalogo, EJEMPLO };
 })();
