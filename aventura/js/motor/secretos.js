@@ -206,24 +206,37 @@ window.SECRETOS = (function () {
 
   // ---------- acciones ----------
   function abrir(c) {
-    if (c.cosa.o.sellado) return A.avisar(c.sello === "fuego" ? "sx.sellado_fuego" : "sx.sellado_piedra", "#9A6BD8");
-    jug.interactuando = 0.55;
-    J.retrasar(0.4, () => {
+    if (c.cosa.o.sellado) return sellado(c);
+    jug.interactuando = 0.3;
+    J.retrasar(0.18, () => {
       st.cofres[c.id] = true;
       c.cosa.o.abierto = true;
-      const b = c.botin,
-        x = c.cosa.x,
-        y = c.cosa.y + 10;
-      if (b.plata) PODERES.soltar(x, y, "plata", b.plata);
-      if (b.vida) PODERES.soltar(x, y, "vida", 30);
-      if (b.frag) PODERES.darFragmento();
-      if (b.manzana) PODERES.darManzana();
-      A.chispa(x, y - 30);
-      const total = cofres.filter((q) => st.cofres[q.id]).length;
-      if (!b.frag && !b.manzana) HUD.aviso(t("sx.cofre_abierto", [total, cofres.length]), "#FFD98A");
+      const x = c.cosa.x,
+        y = c.cosa.y + 10,
+        total = cofres.filter((q) => st.cofres[q.id]).length;
+      PODERES.botinCofre(x, y, t("as." + c.tipo) + " " + t("sx.cofre_n", [total, cofres.length]), c.botin);
       // uno de cada tres arcones guarda un mapa del tesoro: marca la zona de un arca enterrada que falta encontrar
       if (c.tipo === "arconLenador" && c.id % 3 === 0) J.retrasar(0.9, () => mapaTesoro(x, y));
     });
+  }
+  // un cofre sellado se sacude y la luz violeta corre hasta lo que lo suelta (su piedra o los braseros apagados)
+  function sellado(c) {
+    sacudir(c.cosa);
+    if (window.SONIDO) SONIDO.tocar("clic", { vol: 0.6, tono: 0.7 });
+    const desde = [c.cosa.x, c.cosa.y];
+    if (c.sello === "fuego")
+      braseros.forEach((b, i) => !st.braseros[i] && A.ondaPor([desde, [b.cosa.x, b.cosa.y]], 0.9));
+    else if (c.sello != null && piedras[c.sello]) {
+      const p = piedras[c.sello].cosa;
+      A.ondaPor([desde, [p.x, p.y]], 1.1);
+      if (window.MAPA) MAPA.descubrir(p.x, p.y, 700);
+    }
+    A.avisar(c.sello === "fuego" ? "sx.sellado_fuego" : "sx.sellado_piedra", "#9A6BD8");
+  }
+  // sacudón corto de un objeto (cofre cerrado): se mueve unos píxeles y vuelve a su lugar
+  const sacudidos = [];
+  function sacudir(cosa) {
+    if (!sacudidos.some((q) => q.cosa === cosa)) sacudidos.push({ cosa, x: cosa.x, t: 0 });
   }
   function mapaTesoro(x, y) {
     let mejor = null,
@@ -339,6 +352,17 @@ window.SECRETOS = (function () {
   }
 
   const sistema = {
+    actualizar(dt) {
+      for (let i = sacudidos.length - 1; i >= 0; i--) {
+        const q = sacudidos[i];
+        q.t += dt;
+        q.cosa.x = q.x + Math.sin(q.t * 70) * 3 * Math.max(0, 1 - q.t / 0.35);
+        if (q.t > 0.35) {
+          q.cosa.x = q.x;
+          sacudidos.splice(i, 1);
+        }
+      }
+    },
     iniciar(api) {
       A = api;
       J = A.J;
@@ -464,5 +488,6 @@ window.SECRETOS = (function () {
     lista: () => ({ cofres, piedras, altares, manzanos, st }),
     viajar: () => viajar(null, true),
     pistas,
+    sacudir,
   };
 })();

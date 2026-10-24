@@ -302,6 +302,7 @@ window.INTERIORES = (function () {
   }
   function abrirCofre(q, k, rico) {
     if (st.cofres[k]) return;
+    if (window.SONIDO) SONIDO.tocar("crujido", { vol: 0.7 });
     st.cofres[k] = true;
     q.o.abierto = true;
     const r = DIB.azar(k.length * 613 + k.charCodeAt(k.length - 2));
@@ -312,6 +313,7 @@ window.INTERIORES = (function () {
   }
   function abrirNicho(q, k) {
     if (st.cofres[k]) return;
+    if (window.SONIDO) SONIDO.tocar("crujido", { vol: 0.7 });
     st.cofres[k] = true;
     q.o.abierta = true;
     q.o.brillo = false;
@@ -362,6 +364,7 @@ window.INTERIORES = (function () {
   // ---------- lo que se hace adentro ----------
   function abrirArcon(q, clave) {
     if (st.cofres[clave]) return;
+    if (window.SONIDO) SONIDO.tocar("crujido", { vol: 0.7 });
     st.cofres[clave] = true;
     q.o.abierto = true;
     const r = DIB.azar(clave.length * 977 + clave.charCodeAt(clave.length - 1));

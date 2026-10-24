@@ -101,6 +101,18 @@ window.EXPLORA = (function () {
       A.avisar("ex.zona_aqui", "#FFD98A");
     });
   }
+  // un lugar al que ya no le queda nada por encontrar se festeja una vez
+  const PLATA_COMPLETO = 20;
+  const completos = () => LUGARES.filter((id) => A.H.E.vistos.includes(id) && (({ h, n }) => n > 0 && h === n)(secretosDe(id)));
+  function lugaresCompletos() {
+    cacheT = -9;
+    completos().forEach((id) => {
+      if (st.completos[id]) return;
+      st.completos[id] = true;
+      HUD.aviso(t("av.lugar_" + id), "lugar", t("ex.lugar_completo"));
+      if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_COMPLETO);
+    });
+  }
   function hitos() {
     if (!window.MAPA || !window.PODERES || !PODERES.pj()) return;
     const f = MAPA.explorado();
@@ -275,6 +287,12 @@ window.EXPLORA = (function () {
       nota = null;
       rumbo = null;
       // una partida vieja no cobra de golpe lo que ya tenía explorado: arranca contando desde lo que hay
+      // lo que ya estaba completo en una partida vieja no se festeja de nuevo
+      if (!st.completos) {
+        st.completos = {};
+        cacheT = -9;
+        completos().forEach((id) => (st.completos[id] = true));
+      }
       if (st.hitos < 0) {
         const f = window.MAPA ? MAPA.explorado() : 0;
         st.hitos = HITOS.filter((h) => f >= h[0]).length;
@@ -293,6 +311,7 @@ window.EXPLORA = (function () {
       if (acumHito > 2) {
         acumHito = 0;
         hitos();
+        lugaresCompletos();
       }
       if (acumZumbido > 2.8) {
         acumZumbido = 0;

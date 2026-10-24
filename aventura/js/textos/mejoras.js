@@ -68,5 +68,6 @@ I18N.textos({
   "ex.mapa_tesoro_sub": { es: "Algo enterrado a unos {0} m: quedó marcado en el mapa", en: "Something buried about {0} m away: it's marked on the map" },
   "ex.zona_tesoro": { es: "Mapa del tesoro: algo enterrado por acá", en: "Treasure map: something buried around here" },
   "ex.zona_aqui": { es: "Acá marca el mapa: lo enterrado se ve con la Lente o con Sowilo", en: "This is where the map points: buried things show with the Lens or Sowilo" },
+  "ex.lugar_completo": { es: "No queda nada por encontrar · +20 de plata", en: "Nothing left to find · +20 silver" },
   "ex.diario_titulo": { es: "Exploración.", en: "Exploration." },
 });
