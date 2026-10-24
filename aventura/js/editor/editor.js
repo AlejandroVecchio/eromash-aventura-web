@@ -345,11 +345,11 @@
       W.dibujarPiso(c, x0, y0, x1, y1, cam.z < 0.5 ? 0.2 : 0.5);
     }
     // los caminos ya van en el piso (W.CAMINOS, ver aplicarCaminos); acá solo el que se está trazando
-    if (camino && cursor) SENDAS.pintar(c, Object.assign({}, camino, { p: camino.p.concat([[cursor.x, cursor.y]]) }), 999, x0, y0, x1, y1);
+    if (camino && cursor) SENDAS.pintar(c, Object.assign({}, camino, { p: camino.p.concat([[cursor.x, cursor.y]]) }), 999, x0, y0, x1, y1, null, W.CAMINOS);
     if (caminoElegido()) {
       const cm0 = caminoElegido(),
         cm = sel && sel.vertice != null ? Object.assign({}, cm0, { p: sel.p }) : cm0;
-      if (sel && sel.vertice != null) SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1);
+      if (sel && sel.vertice != null) SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1, null, W.CAMINOS.map((o) => (o === cm0 ? cm : o)));
       // el tramo elegido, resaltado
       if (tramoSel != null && cm.p[tramoSel + 1]) {
         c.save();

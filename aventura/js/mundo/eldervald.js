@@ -1396,8 +1396,8 @@ window.ELDERVALD = (function () {
       for (let k = 0; k < 30; k++) E(c, cx + (rl() - 0.5) * 1700, cy + 260 + (rl() - 0.5) * 1000, 30 + rl() * 40, 10 + rl() * 12, "#465030");
     }
     // caminos: tierra pisada, adoquín o ladrillo, con sus bordes y puntas (mundo/caminos.js)
-    // de a capas (bases, cuerpos, bordes) para que se unan cuando se cruzan o se tocan
-    ["base", "cuerpo", "borde"].forEach((capa) => CAMINOS.forEach((cm) => SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1, capa, CAMINOS)));
+    // de a capas (bases, tierra, empedrado, piedras, bordes) para que se unan sin costura cuando se cruzan o se tocan
+    SENDAS.pintarTodos(c, CAMINOS, x0, y0, x1, y1);
     // las montañas del borde
     c.fillStyle = "#1A1C16";
     if (x0 < BORDE + mg || y0 < BORDE + mg || x1 > ANCHO - BORDE - mg || y1 > ALTO - BORDE - mg) {
