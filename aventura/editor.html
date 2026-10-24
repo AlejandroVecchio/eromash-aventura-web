@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eromash · Editor de Eldervald</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%239C2315'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="css/aventura.css" />
+<style>
+  /* el mapa a la izquierda, el panel de objetos y herramientas a la derecha */
+  html, body { margin: 0; height: 100%; background: #111111; color: #F2ECEC; font-family: "Eromash Text", system-ui, sans-serif; overflow: hidden; }
+  .ed { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+  #mapa { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; background: #1E2C1B; }
+  aside { background: #1C1714; border-left: 1px solid #3A2A26; display: flex; flex-direction: column; min-height: 0; }
+  aside header { padding: 16px 16px 8px; }
+  aside h1 { font-family: "Eromash Display", system-ui, sans-serif; font-size: 20px; margin: 0 0 4px; color: #FFD98A; }
+  aside .sub { margin: 0; font-size: 13px; color: #E0B2B2; line-height: 1.4; }
+  .herr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 16px; }
+  button { font: inherit; font-size: 14px; color: #F2ECEC; background: #2A1E1A; border: 1px solid #4A3630; padding: 8px 10px; cursor: pointer; }
+  button:hover { border-color: #9C2315; }
+  button.activo { background: #9C2315; border-color: #C8402D; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #FFD98A; outline-offset: 1px; }
+  .fila { display: flex; gap: 8px; align-items: center; padding: 4px 16px; font-size: 13px; }
+  .fila label { display: flex; align-items: center; gap: 6px; }
+  .fila input[type=range] { flex: 1; }
+  input[type=search], select, input[type=number] { font: inherit; font-size: 14px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 7px 8px; }
+  input[type=search], select { width: 100%; box-sizing: border-box; }
+  input[type=number] { width: 64px; }
+  #lista { flex: 1; overflow: auto; padding: 6px 12px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; align-content: start; }
+  .obj { background: #241A17; border: 1px solid #3A2A26; padding: 4px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+  .obj canvas { width: 100%; height: 70px; display: block; background: #3B3222; }
+  .obj span { font-size: 12px; line-height: 1.2; color: #E0B2B2; }
+  .obj.elegido { border-color: #FFD98A; }
+  .grupo { grid-column: 1 / -1; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #FFD98A; margin: 8px 0 0; }
+  footer { border-top: 1px solid #3A2A26; padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+  footer .botones { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  footer .botones .ancho { grid-column: 1 / -1; background: #9C2315; border-color: #C8402D; }
+  #cuenta, #donde { font-size: 12px; color: #B5A5A0; }
+  #ayuda { position: absolute; left: 12px; bottom: 10px; right: 352px; font-size: 12px; color: #E0B2B2; background: rgba(17,17,17,0.75); padding: 6px 10px; pointer-events: none; }
+  #aviso { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); background: #1C1714; border: 1px solid #9C2315; padding: 8px 14px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 60%; }
+  #aviso.ver { opacity: 1; }
+  @media (max-width: 760px) {
+    .ed { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
+    aside { border-left: 0; border-top: 1px solid #3A2A26; }
+    #ayuda { right: 12px; bottom: calc(45% + 8px); }
+  }
+</style>
+</head>
+<body>
+<div class="ed">
+  <canvas id="mapa"></canvas>
+  <aside>
+    <header>
+      <h1 data-i18n="ed.titulo"></h1>
+      <p class="sub" data-i18n="ed.sub"></p>
+    </header>
+    <div class="herr">
+      <button id="hPoner" class="activo" data-i18n="ed.poner"></button>
+      <button id="hMover" data-i18n="ed.mover"></button>
+      <button id="hBorrar" data-i18n="ed.borrar"></button>
+    </div>
+    <div class="fila"><span data-i18n="ed.escala"></span><input id="escala" type="range" min="0.4" max="2.6" step="0.05" value="1" /><b id="escalaV">1.00</b></div>
+    <div class="fila">
+      <label><span data-i18n="ed.variante"></span><input id="variante" type="number" min="0" max="20" value="0" /></label>
+      <label><input id="espejo" type="checkbox" /><span data-i18n="ed.espejo"></span></label>
+      <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
+    </div>
+    <div class="fila"><select id="ir"></select></div>
+    <div class="fila"><input id="buscar" type="search" /></div>
+    <div id="lista"></div>
+    <footer>
+      <div id="cuenta"></div>
+      <div id="donde"></div>
+      <div class="botones">
+        <button id="bDeshacer" data-i18n="ed.deshacer"></button>
+        <button id="bProbar" data-i18n="ed.probar"></button>
+        <button id="bCopiar" data-i18n="ed.copiar"></button>
+        <button id="bCargar" data-i18n="ed.cargar"></button>
+        <button id="bLimpiar" data-i18n="ed.limpiar"></button>
+        <input id="archivo" type="file" accept=".js,.json,text/javascript,application/json" hidden />
+        <button id="bDescargar" class="ancho" data-i18n="ed.descargar"></button>
+      </div>
+    </footer>
+  </aside>
+</div>
+<div id="ayuda" data-i18n="ed.ayuda"></div>
+<div id="aviso"></div>
+<script src="../juego/js/comun/calidad.js"></script>
+<script src="../juego/js/comun/i18n.js"></script>
+<script src="js/textos/aventura.js"></script>
+<script src="js/textos/historia.js"></script>
+<script src="js/textos/interfaz.js"></script>
+<script src="js/textos/secretos.js"></script>
+<script src="js/textos/piedras.js"></script>
+<script src="js/textos/interiores.js"></script>
+<script src="js/textos/capital.js"></script>
+<script src="js/textos/etapas.js"></script>
+<script src="js/textos/norte.js"></script>
+<script src="js/textos/este.js"></script>
+<script src="js/textos/secundarias.js"></script>
+<script src="js/textos/goinn.js"></script>
+<script src="js/textos/claro.js"></script>
+<script src="js/textos/editor.js"></script>
+<script src="../juego/js/comun/vikingos.js"></script>
+<script src="js/comun/dibujo.js"></script>
+<script src="js/comun/futhark.js"></script>
+<script src="js/mundo/assets.js"></script>
+<script src="js/mundo/assets-eikholt.js"></script>
+<script src="js/mundo/assets-capital.js"></script>
+<script src="js/mundo/assets-puesto.js"></script>
+<script src="js/mundo/assets-senda.js"></script>
+<script src="js/mundo/assets-norte.js"></script>
+<script src="js/mundo/assets-este.js"></script>
+<script src="js/mundo/assets-guaridas.js"></script>
+<script src="js/mundo/assets-claro.js"></script>
+<script src="js/mundo/assets-secretos.js"></script>
+<script src="js/mundo/assets-piedras.js"></script>
+<script src="js/mundo/assets-interiores.js"></script>
+<script src="js/mundo/assets-sotanos.js"></script>
+<script src="js/mundo/eldervald.js"></script>
+<script src="js/mundo/agregados.js"></script>
+<script src="js/editor/editor.js"></script>
+</body>
+</html>

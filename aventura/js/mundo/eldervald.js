@@ -1018,6 +1018,33 @@ window.ELDERVALD = (function () {
   });
   const barroEn = (x, y) => BARROS.some((b) => Math.abs(x - b.x) < 66 * b.s && Math.hypot((x - b.x) / (66 * b.s), (y - b.y) / (30 * b.s)) < 1);
 
+  // ---------- lo que se agregó o se sacó en el editor (editor.html → js/mundo/agregados.js) ----------
+  // Se aplica con el bosque ya armado, así el resto del mundo no cambia: lo sacado se busca por asset y lugar, y lo
+  // agregado aparta los árboles que le quedan encima.
+  {
+    const AG = window.AGREGADOS || {};
+    (AG.quitar || []).forEach((q) => {
+      for (let i = COSAS.length - 1; i >= 0; i--) {
+        const c = COSAS[i];
+        if (c.id === q.id && Math.abs(c.x - q.x) < 6 && Math.abs(c.y - q.y) < 6) COSAS.splice(i, 1);
+      }
+    });
+    (AG.poner || []).forEach((a) => {
+      const def = ASSETS.LISTA[a.id];
+      if (!def) return;
+      const o = Object.assign({}, a.o || {});
+      if (def.piso) o.piso = true;
+      const c = poner(a.id, [a.x, a.y], o);
+      c.agregado = true;
+      const ancho = c.choque ? (c.choque.w ? c.choque.w / 2 : c.choque.r * 1.3) + 40 : 0;
+      if (!ancho) return;
+      for (let i = COSAS.length - 1; i >= 0; i--) {
+        const t = COSAS[i];
+        if (t.arbol && Math.abs(t.x - a.x) < ancho && t.y > a.y - 120 && t.y < a.y + 60) COSAS.splice(i, 1);
+      }
+    });
+  }
+
   // ---------- grilla espacial para dibujar y chocar solo lo cercano ----------
   const BALDE = 512,
     BW = Math.ceil(ANCHO / BALDE),
@@ -1261,6 +1288,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, hayMuro, NIVELES, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();
