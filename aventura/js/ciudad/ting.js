@@ -1,5 +1,5 @@
 // ---------- las piedras del Ting en volumen (módulo TING25) ----------
-// El círculo de la Asamblea: el menhir negro de la piedra dormida en el centro y los doce asientos de piedra en ronda,
+// El círculo de la Asamblea: el menhir negro de la piedra dormida en el centro y las doce piedras paradas en ronda,
 // cada uno con sus tres medidas y su lugar en el piso, así el círculo gira con la cámara como las casas (antes era un
 // dibujo de frente que quedaba igual girara como girara la vista). Caras planas, luz de arriba a la derecha.
 // En el plano de cada piedra u va a lo ancho y w de frente (w+ mira al menhir en los asientos).
@@ -96,22 +96,30 @@ window.TING25 = (function () {
     return { dibujar, alto: ALTO + 20 };
   }
 
-  // Un asiento del círculo: un bloque de piedra gris, un poco gastado arriba, con algo de musgo al pie.
+  // Una de las doce piedras del círculo: piedras paradas, más altas que una persona, de seis caras con la punta gastada
+  // y redondeada, grises con musgo al pie (como en la lámina del Ting); cada una distinta.
   function asiento(sem) {
     const r = azar(sem * 29 + 5);
-    const W2 = 40 + r() * 10,
-      D2 = 26 + r() * 6,
-      ALTO = 52 + r() * 16;
-    const base = [[-W2, -D2], [W2, -D2], [W2, D2], [-W2, D2]];
-    const TONOS = ["#5E5C58", "#6A6862", "#7C7A72", "#8E8C84"];
-    const musgo = r() < 0.6;
+    const RU = 30 + r() * 8,
+      RW = 20 + r() * 5,
+      ALTO = 150 + r() * 40;
+    const base = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.2;
+      base.push([Math.cos(a) * RU * (0.9 + r() * 0.2), Math.sin(a) * RW * (0.9 + r() * 0.2)]);
+    }
+    // la punta: más baja de los costados, como gastada
+    const punta = base.map(([u]) => 0.06 + Math.abs(u / RU) * 0.16 + r() * 0.04);
+    const TONOS = ["#55534F", "#65635D", "#7A7870", "#8C8A82"];
+    const musgo = r() < 0.7;
     function dibujar(c, x, y, giro, k, t) {
       const pr = CASAS25.proyector(x, y, giro, k);
-      sombra(c, x + 12, y + 4, 54, 16, 0.32);
-      prisma(c, pr, base, ALTO, 0.88, TONOS);
+      sombra(c, x + 14, y + 4, 44, 14, 0.34);
+      prisma(c, pr, base, ALTO, 0.62, TONOS, punta);
       if (musgo) {
-        const p = pr(-W2 * 0.4, D2, 6);
-        E(c, p[0], p[1], 20, 7, "#4A5A2E");
+        const p = pr(-RU * 0.3, RW * 0.9, 10);
+        E(c, p[0], p[1], 18, 7, "#4A5A2E");
+        E(c, p[0] + 10, p[1] - 4, 9, 4, "#56662C");
       }
       void t;
     }

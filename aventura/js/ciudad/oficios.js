@@ -18,12 +18,12 @@ window.OFICIOS25 = (function () {
     const SOGAS = [-40, 0, 40];
     function dibujar(c, x, y, giro, k, t) {
       const pr = CASAS25.proyector(x, y, giro, k);
-      DIB.sombra(c, x + 10, y + 4, (Math.abs(Math.cos(giro)) * largo) / 2 + 40, ((Math.abs(Math.sin(giro)) * largo) / 2) * k + 30, 0.25);
       const piezas = [];
       // los caballetes en T
       for (let i = 0; i <= n; i++) {
         const u = -L2 + 80 + ((largo - 120) * i) / n;
         piezas.push([pr.fondo(u, 0), () => {
+          DIB.sombra(c, ...pr(u + 10, 0, 0), 40, 16, 0.25);
           const a = pr(u, 0, 0),
             b = pr(u, 0, ZS);
           L(c, a[0], a[1], b[0], b[1], C.maderaSombra, 6);

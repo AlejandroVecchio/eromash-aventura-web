@@ -46,7 +46,7 @@ window.PLANO25 = (function () {
     herreria: [-70, 22],
     cordeleria: [-118, -32], // el taller; el paseo de las sogas corre junto a la avenida del oeste
     paseo_sogas: [-119, -12],
-    curtiembre: [-76, 116],
+    curtiembre: [-70, 106],
     // el noroeste: la Casa de Sanación con su huerta de hierbas y la hospedería junto a la Puerta del Norte
     sanacion: [-78, -86],
     hierbas: [-56, -112],
@@ -70,7 +70,7 @@ window.PLANO25 = (function () {
   reservar(-70, 22, 12, 11); // la herrería
   reservar(-118, -32, 9, 8); // la cordelería
   reservar(-119, -12, 21, 4); // el paseo de las sogas
-  reservar(-76, 116, 9, 9); // la curtiembre
+  reservar(-70, 106, 9, 9); // la curtiembre
   reservar(-78, -86, 15, 13); // la Casa de Sanación
   reservar(-56, -112, 12, 9); // la huerta de hierbas
   reservar(-26, -122, 9, 13); // la hospedería
@@ -653,8 +653,9 @@ window.PLANO25 = (function () {
               mz = fondo / 2 + 3.2;
             const [lx, lz] = aMundo(x, z, ry, 0, -2.2);
             if (libreCalle(x, z, ancho / 2 + 0.5, fondo / 2 + 0.6, ry) && libreCalle(lx, lz, mx - 2, mz - 1.5, ry) && !reservado(x, z, 4) && !solapa(lx, lz, mx, mz, ry, 0.6)) {
-              ocupado.push({ x: lx, z: lz, mx, mz, ang: ry });
-              casas.push({ x, z, ry, ancho, fondo, sem: sem++ });
+              const lote = { x: lx, z: lz, mx, mz, ang: ry };
+              ocupado.push(lote);
+              casas.push({ x, z, ry, ancho, fondo, sem: sem++, lote });
               u += ancho + 2 + rC() * 5; // casa al lado de casa: el lote ya guarda su aire
               puesta = true;
               break;
@@ -677,6 +678,11 @@ window.PLANO25 = (function () {
       const del = casas.filter((cc) => Math.sign(cc.x) === Math.sign(b.x) && Math.sign(cc.z) === Math.sign(b.z));
       del.sort((p, q) => Math.hypot(p.x - b.x, p.z - b.z) - Math.hypot(q.x - b.x, q.z - b.z));
       elegidas.push(...del.slice(0, b.n));
+    }
+    // los lotes que no se eligieron quedan libres para lo que llena la tierra (galpones, leña, montecitos)
+    {
+      const usados = new Set(elegidas.map((cc) => cc.lote));
+      for (const cc of casas) if (!usados.has(cc.lote)) ocupado.splice(ocupado.indexOf(cc.lote), 1);
     }
     elegidas.forEach((cc, i) => {
       const casa = CASAS25.crear({ W: cc.ancho * M, D: cc.fondo * M, entra: i % 4 === 1 }, cc.sem);
@@ -753,6 +759,43 @@ window.PLANO25 = (function () {
               circulo(tx2, tz2, 0.5);
             }
             ocupado.push({ x, z, mx: 6, mz: 5, ang: 0 });
+          }
+        }
+    }
+    // ---------- una segunda pasada más apretada: lo que queda vacío entre los barrios se llena de trabajo de todos los
+    // días (galpones chicos, leña con su carro, barriles y cajones, un montecito), como en la lámina de la ciudad ----------
+    {
+      const rf = azar(7373);
+      for (let gx = -145; gx <= 145; gx += 7)
+        for (let gz = -145; gz <= 145; gz += 7) {
+          const x = gx + 3.5 + (rf() - 0.5) * 3,
+            z = gz + 3.5 + (rf() - 0.5) * 3,
+            rr = Math.hypot(x, z);
+          if (rr < 56 || rr > R_MURO - 12) continue;
+          const dc = aCalle(x, z).d;
+          if (dc < 2.2 || reservado(x, z, 1.5) || solapa(x, z, 2.6, 2.6, 0, 0.2)) continue;
+          // un cobertizo solo donde entra entero; si no, algo más chico
+          const entra = dc >= 4.6 && !solapa(x, z, 4.5, 4, 0, 0.6);
+          const tira = entra ? rf() : 0.3 + rf() * 0.7;
+          if (tira < 0.3) {
+            const ry = mirando(x, z, 0, 0) + (rf() - 0.5) * 0.8;
+            especial("cobertizo" + gx + "_" + gz, x, z, ry, { W: (3.6 + rf() * 1.4) * M, D: (3 + rf() * 0.8) * M, pisos: 1, H: 140, RT: 130, tipo: "dosAguas", techo: Math.floor(rf() * 3), porche: null, galeria: false, anexo: null, escalera: false, buhardilla: 0, dragones: false, chimenea: null, entra: false, lena: true }, 9500 + gx * 37 + gz);
+            ocupado.push({ x, z, mx: 4.5, mz: 4, ang: 0 });
+          } else if (tira < 0.6) {
+            asset("lenera", x - 1.2, z, { s: 1, sem: gx + gz });
+            if (rf() < 0.6) asset("carreta", x + 2, z + 1.5, { s: 1.2, sem: gx * 3 + gz, v: 1 });
+            else asset("barriles", x + 1.8, z + 1, { s: 0.45 });
+            circulo(x, z, 1.2);
+            ocupado.push({ x, z, mx: 3, mz: 2.6, ang: 0 });
+          } else if (tira < 0.82) {
+            const n = 2 + Math.floor(rf() * 3);
+            for (let i = 0; i < n; i++) {
+              const tx2 = x + (rf() - 0.5) * 4.5,
+                tz2 = z + (rf() - 0.5) * 4;
+              asset(rf() < 0.6 ? "pino" : "abedul", tx2, tz2, { s: 1.2 + rf() * 0.6, pisos: 4 + (i % 2), sem: i + gx * 5 });
+              circulo(tx2, tz2, 0.5);
+            }
+            ocupado.push({ x, z, mx: 3, mz: 2.6, ang: 0 });
           }
         }
     }
