@@ -5,21 +5,21 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 1,
-    titulo: { es: "Niveles y experiencia", en: "Levels and experience" },
+    pr: 2,
+    titulo: { es: "Atributos", en: "Attributes" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
-    usa: [],
+    usa: [{ pr: 1, es: "niveles: los puntos salen de subir de nivel", en: "levels: points come from levelling up" }],
     mirar: [
-      { es: "El rombo con tu nivel abajo del retrato y la barra fina de experiencia abajo de todo (pasá el mouse para ver los números).", en: "Your level diamond under the portrait and the thin experience bar at the very bottom (hover to see numbers)." },
-      { es: "Cada criatura muestra su nivel en un rombo junto a la barra, del color del peligro: gris, verde, dorado, coral, rojo.", en: "Every creature shows its level in a diamond by its bar, coloured by danger: grey, green, gold, coral, red." },
-      { es: "Al vencer criaturas, abrir cofres o descubrir lugares sale «+N exp». Al subir: columna rúnica, cartel grande, vida llena.", en: "Beating creatures, opening chests or finding places shows '+N xp'. Levelling up: rune column, big banner, full life." },
-      { es: "La mochila (I) muestra nivel, crítico y armadura en «Cómo está Eromash».", en: "The backpack (I) shows level, critical and armour under 'How Eromash is doing'." },
+      { es: "Cada nivel da 3 puntos. Con puntos libres la casilla de la mochila lleva un rombo dorado.", en: "Each level gives 3 points. With free points the backpack slot shows a gold diamond." },
+      { es: "U abre la pestaña Atributos: Fuerza, Destreza, Vigor y Espíritu, con lo que da cada punto. Se arma un borrador y se confirma.", en: "U opens the Attributes tab: Strength, Dexterity, Vigour and Spirit, with what each point gives. Build a draft, then confirm." },
+      { es: "Reacomodar es gratis la primera vez; después cuesta plata y pide apretar dos veces.", en: "Respec is free the first time; after that it costs silver and needs a double press." },
+      { es: "Fijate que la vida, el daño y el crítico cambian en «Cómo está Eromash».", en: "Check that life, damage and critical change under 'How Eromash is doing'." },
     ],
     botones: [
-      { es: "Dar 300 de experiencia", en: "Give 300 xp", fn: (A) => RPG.dar(300) },
-      { es: "Subir a nivel 10", en: "Jump to level 10", fn: (A) => { while (RPG.nivel() < 10) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp); } },
-      { es: "Ir a Skarnholt (draugr de nivel 6)", en: "Go to Skarnholt (level 6 draugr)", fn: (A) => ir(A, A.W.LUGARES.skarnholt.p, 0, 360) },
-      { es: "Ir lejos, al noreste (nivel alto, rojo)", en: "Go far north-east (high level, red)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => g.centro[0] - g.centro[1] * 0.5), -260, 120) },
+      { es: "Dar un nivel (+3 puntos)", en: "Give a level (+3 points)", fn: (A) => RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp) },
+      { es: "Subir a nivel 10 y abrir Atributos", en: "Jump to level 10 and open Attributes", fn: (A) => { while (RPG.nivel() < 10) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp); INVENTARIO.abrir("atributos"); } },
+      { es: "Dar 500 de plata (para reacomodar)", en: "Give 500 silver (to respec)", fn: (A) => PODERES.darPlata(500) },
+      { es: "Ir a Skarnholt a probar el daño", en: "Go to Skarnholt to test damage", fn: (A) => ir(A, A.W.LUGARES.skarnholt.p, 0, 360) },
     ],
   };
   // ---------- ayuda para los botones ----------
