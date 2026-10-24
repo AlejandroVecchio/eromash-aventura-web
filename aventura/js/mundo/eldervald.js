@@ -1071,6 +1071,15 @@ window.ELDERVALD = (function () {
       for (let k = DECO.length - 1; k >= 0; k--) if (enCamino(DECO[k])) DECO.splice(k, 1);
       for (let k = BARROS.length - 1; k >= 0; k--) if (enCamino({ id: "barro", x: BARROS[k].x, y: BARROS[k].y })) BARROS.splice(k, 1);
     }
+    // los caminos de base a los que se les cambió el recorrido en el editor: se corren y apartan el bosque
+    (AG.estiloCaminos || []).forEach((e) => {
+      const cm = e.p && CAMINOS.find((c) => !c.agregado && c.sem === e.i);
+      if (!cm || e.p.length < 2) return;
+      cm.p = e.p;
+      const lejos = (o) => distLinea(o.x, o.y, cm.p) > cm.w / 2 + 50;
+      for (let i = COSAS.length - 1; i >= 0; i--) if (COSAS[i].arbol && !lejos(COSAS[i])) COSAS.splice(i, 1);
+      for (let i = DECO.length - 1; i >= 0; i--) if (DECO[i].id !== "barro" && !lejos(DECO[i])) DECO.splice(i, 1);
+    });
     // lo pintado en el piso que se sacó (charcos de barro, musgo, helechos, hongos)
     (AG.quitarDeco || []).forEach((q) => {
       const es = (d) => d.id === q.id && Math.abs(d.x - q.x) < 6 && Math.abs(d.y - q.y) < 6;

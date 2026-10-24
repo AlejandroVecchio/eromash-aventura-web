@@ -276,7 +276,32 @@
     // los caminos ya van en el piso (W.CAMINOS, ver aplicarCaminos); acá solo el que se está trazando
     if (camino && cursor) SENDAS.pintar(c, Object.assign({}, camino, { p: camino.p.concat([[cursor.x, cursor.y]]) }), 999, x0, y0, x1, y1);
     if (caminoElegido()) {
-      const cm = caminoElegido();
+      const cm0 = caminoElegido(),
+        cm = sel && sel.vertice != null ? Object.assign({}, cm0, { p: sel.p }) : cm0;
+      if (sel && sel.vertice != null) SENDAS.pintar(c, cm, cm.sem || 0, x0, y0, x1, y1);
+      // sus puntos, para moverlos (y entre punto y punto, dónde se le agrega uno)
+      cm.p.forEach(([x, y], k) => {
+        c.fillStyle = "#111111";
+        c.beginPath();
+        c.arc(x, y, 9 / cam.z, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = "#FFD98A";
+        c.beginPath();
+        c.arc(x, y, 6 / cam.z, 0, Math.PI * 2);
+        c.fill();
+        if (!k) return;
+        const mx = (x + cm.p[k - 1][0]) / 2,
+          my = (y + cm.p[k - 1][1]) / 2,
+          r = 5 / cam.z;
+        c.strokeStyle = "#FFD98A";
+        c.lineWidth = 2 / cam.z;
+        c.beginPath();
+        c.moveTo(mx - r, my);
+        c.lineTo(mx + r, my);
+        c.moveTo(mx, my - r);
+        c.lineTo(mx, my + r);
+        c.stroke();
+      });
       c.save();
       c.strokeStyle = "#FFD98A";
       c.lineWidth = 3 / cam.z;
@@ -687,7 +712,7 @@
     CAM0.forEach((cm, i) => {
       if (est.quitarCaminos.includes(i)) return;
       const e = est.estiloCaminos.find((q) => q.i === i);
-      lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, base: i }) : Object.assign(cm, { base: i }));
+      lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, p: e.p || cm.p, base: i }) : Object.assign(cm, { base: i }));
     });
     est.caminos.forEach((cm, i) => lista.push(Object.assign({}, cm, { sem: 1000 + i, nuevo: i })));
     const nuevas = new Map(lista.map((cm) => [(cm.base != null ? "b" + cm.base : "n" + cm.nuevo), JSON.stringify([cm.p, cm.w, cm.tipo, cm.borde, cm.fundir])]));
@@ -720,10 +745,49 @@
   function terminarCamino() {
     if (camino && camino.p.length >= 2) {
       recordar();
-      est.caminos.push(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino()));
+      // la última punta se pega a la punta de otro camino si cae encima
+      const ult = camino.p[camino.p.length - 1],
+        pt = puntaEn(ult[0], ult[1], camino.sigue && camino.sigue.cm);
+      if (pt) camino.p[camino.p.length - 1] = pt.q.slice();
+      if (camino.sigue) {
+        // seguir un camino desde una de sus puntas: los puntos nuevos se le suman (mismo ancho, tipo y borde)
+        const { cm, alInicio } = camino.sigue,
+          nuevos = camino.p.slice(1);
+        const p = puntosDe(cm);
+        if (alInicio) p.unshift(...nuevos.reverse());
+        else p.push(...nuevos);
+      } else est.caminos.push(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino()));
       guardar();
     }
     camino = null;
+  }
+  // la lista de puntos que se puede cambiar de un camino (los de base guardan su recorrido nuevo en est.estiloCaminos)
+  function puntosDe(cm) {
+    if (cm.nuevo != null) return est.caminos[cm.nuevo].p;
+    let e = est.estiloCaminos.find((q) => q.i === cm.base);
+    if (!e) est.estiloCaminos.push((e = { i: cm.base, tipo: cm.tipo || "tierra", borde: cm.borde || "", fundir: !!cm.fundir, w: cm.w }));
+    if (!e.p) e.p = cm.p.map((q) => [r1(q[0]), r1(q[1])]);
+    return e.p;
+  }
+  // la punta de un camino bajo (x, y): { cm, alInicio, q }
+  function puntaEn(x, y, salvo) {
+    let mejor = null,
+      dm = Infinity;
+    W.CAMINOS.forEach((cm) => {
+      if (cm === salvo) return;
+      [[cm.p[0], true], [cm.p[cm.p.length - 1], false]].forEach(([q, alInicio]) => {
+        const d = Math.hypot(x - q[0], y - q[1]);
+        if (d < Math.max(cm.w / 2, 14 / cam.z) && d < dm) (dm = d), (mejor = { cm, alInicio, q });
+      });
+    });
+    return mejor;
+  }
+  // el punto del camino elegido bajo (x, y), o el tramo (para meterle uno nuevo)
+  function verticeEn(cm, x, y) {
+    const r = 12 / cam.z;
+    for (let k = 0; k < cm.p.length; k++) if (Math.hypot(x - cm.p[k][0], y - cm.p[k][1]) < r) return { k };
+    for (let k = 1; k < cm.p.length; k++) if (distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], cm.p[k][0], cm.p[k][1]) < cm.w / 2) return { k, nuevo: true };
+    return null;
   }
   // el camino elegido (con Mover o con la herramienta Camino): { base } o { nuevo }
   let camElegido = null;
@@ -796,7 +860,21 @@
     }
     return null;
   }
-  cv.addEventListener("dblclick", () => herr === "camino" && terminarCamino());
+  cv.addEventListener("dblclick", (e) => {
+    const cm = !camino && caminoElegido();
+    if (cm && (herr === "camino" || herr === "mover")) {
+      // doble clic en un punto del camino elegido lo saca (si le quedan dos o más)
+      const [x, y] = aMundo(e.offsetX, e.offsetY),
+        v = verticeEn(cm, x, y);
+      if (v && !v.nuevo && cm.p.length > 2) {
+        recordar();
+        puntosDe(cm).splice(v.k, 1);
+        guardar();
+      }
+      return;
+    }
+    if (herr === "camino") terminarCamino();
+  });
 
   // ---------- el agua: ríos y lagunas ----------
   // Con Agua (6) se traza un río (clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale de su barra)
@@ -1183,6 +1261,9 @@
     if (arrastre && arrastre.pan) {
       cam.x = arrastre.cx - ((e.offsetX - arrastre.sx) * dpr) / cam.z;
       cam.y = arrastre.cy - ((e.offsetY - arrastre.sy) * dpr) / cam.z;
+    } else if (sel && sel.vertice != null) {
+      sel.p[sel.vertice] = [r1(x), r1(y)];
+      sel.movio = true;
     } else if (sel && sel.lago != null) {
       if (Math.hypot(x - sel.x0, y - sel.y0) > 6 / cam.z) sel.movio = true;
     } else if (sel && sel.nota != null) {
@@ -1248,10 +1329,27 @@
       guardar();
       return;
     }
+    // el camino elegido: arrastrar uno de sus puntos, o tocar un tramo para agregarle uno y arrastrarlo
+    if ((herr === "camino" || herr === "mover") && !camino && caminoElegido()) {
+      const cm = caminoElegido(),
+        v = verticeEn(cm, x, y),
+        punta = v && !v.nuevo && (v.k === 0 || v.k === cm.p.length - 1);
+      // con Camino, la punta no se arrastra: desde ahí se sigue el camino
+      if (v && !(punta && herr === "camino")) {
+        const p = cm.p.map((q) => q.slice());
+        if (v.nuevo) p.splice(v.k, 0, [r1(x), r1(y)]);
+        sel = { vertice: v.k, p, cm };
+        return;
+      }
+    }
     if (herr === "camino") {
       const p = [r1(x), r1(y)];
       if (!camino && camElegido) elegirCamino(null);
-      if (!camino) camino = Object.assign({ p: [p], w: r1(110 * +$("escala").value) }, opcionesCamino());
+      // tocar la punta de un camino lo sigue desde ahí, con su mismo ancho, tipo y borde
+      const pt = !camino && puntaEn(x, y);
+      if (pt)
+        camino = { p: [pt.q.slice()], w: pt.cm.w, tipo: pt.cm.tipo || "tierra", borde: pt.cm.borde || "", fundir: !!pt.cm.fundir, sigue: { cm: pt.cm, alInicio: pt.alInicio } };
+      else if (!camino) camino = Object.assign({ p: [p], w: r1(110 * +$("escala").value) }, opcionesCamino());
       else {
         const u = camino.p[camino.p.length - 1];
         if (Math.hypot(u[0] - p[0], u[1] - p[1]) > 8 / cam.z) camino.p.push(p);
@@ -1359,7 +1457,15 @@
       est.lagos.push({ x: r1(arrastre.x), y: r1(arrastre.y), rx, ry });
       guardar();
     }
-    if (sel && sel.lago != null) {
+    if (sel && sel.vertice != null) {
+      if (sel.movio) {
+        recordar();
+        const p = puntosDe(sel.cm);
+        p.length = 0;
+        sel.p.forEach((q) => p.push(q));
+        guardar();
+      }
+    } else if (sel && sel.lago != null) {
       if (sel.movio) {
         recordar();
         Object.assign(est.lagos[sel.lago], { x: r1(x - sel.dx), y: r1(y - sel.dy) });

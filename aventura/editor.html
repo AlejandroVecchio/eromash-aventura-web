@@ -46,6 +46,7 @@
   #camPanel select { flex: 1; }
   #camPanel .botones3 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px 12px 0; }
   #camPanel button { font-size: 12px; padding: 7px 6px; }
+  #camPanel .ayudita { display: block; padding: 4px 12px 0; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
   #aguaPanel { margin: 4px 12px 6px; padding: 10px 4px; border: 1px solid #73D5DB; background: #241A17; display: flex; flex-direction: column; gap: 2px; }
   #aguaPanel > b { padding: 0 12px; color: #73D5DB; font-size: 14px; }
   #aguaPanel .fila > span { width: 56px; }
@@ -103,6 +104,7 @@
       <div class="fila"><label><input id="camFundir" type="checkbox" checked /><span data-i18n="ed.cam_fundir"></span></label></div>
       <div id="camElegido" class="oculto">
         <div class="fila"><span data-i18n="ed.cam_ancho"></span><input id="camAncho" type="range" min="40" max="400" step="5" value="110" /><b id="camAnchoV">110</b></div>
+        <small class="ayudita" data-i18n="ed.cam_puntos"></small>
         <div class="botones3"><button id="camSacar" data-i18n="ed.cam_sacar"></button><button id="camSoltar" data-i18n="ed.sel_soltar"></button></div>
       </div>
     </div>
