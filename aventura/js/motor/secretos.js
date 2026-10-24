@@ -243,21 +243,61 @@ window.SECRETOS = (function () {
       });
     });
   }
-  // viajar por la red de piedras despiertas (y siempre a Eikholt y al Puesto de Eydis)
-  function viajar(desde) {
+  // viajar por la red de piedras despiertas: siempre a Eikholt y al Puesto de Eydis, a los pueblos y refugios ya
+  // descubiertos y a donde estabas antes del último viaje (por un rato). Se ordena por distancia y lo más cerca de la
+  // marca del mapa va primero. Desde el mapa (sin piedra) hace falta no estar peleando y concentrarse un instante.
+  const PUEBLOS = ["refugio", "casa_lindes", "aserradero", "brunvik", "skarnholt", "santuario", "caravana"];
+  let antesDelViaje = null; // { p, t }
+  function destinos(desde) {
     const dest = [];
-    dest.push({ texto: t("av.lugar_eikholt"), p: [W.CIUDAD.c[0], W.CIUDAD.c[1] + W.CIUDAD.ry + 220] });
-    dest.push({ texto: t("av.lugar_puesto"), p: A.P.puesto });
+    dest.push({ texto: t("av.lugar_eikholt"), p: [W.CIUDAD.c[0], W.CIUDAD.c[1] + W.CIUDAD.ry + 220], lugar: "eikholt" });
+    dest.push({ texto: t("av.lugar_puesto"), p: A.P.puesto, lugar: "puesto" });
+    PUEBLOS.forEach((k) => {
+      const L = W.LUGARES[k];
+      if (!L || !A.H.E.vistos.includes(k)) return;
+      const q = libreCerca([L.p[0], L.p[1] + 80], 22);
+      if (q) dest.push({ texto: t("av.lugar_" + k), p: q, lugar: k });
+    });
     piedras.forEach((p) => {
       if (p === desde || !st.piedras[p.id]) return;
-      dest.push({ texto: t("sx.piedra_de", [t("av.lugar_" + p.cerca)]), p: [p.cosa.x, p.cosa.y + 70], d: Math.hypot(p.cosa.x - jug.x, p.cosa.y - jug.y) });
+      dest.push({ texto: t("sx.piedra_de", [t("av.lugar_" + p.cerca)]), p: [p.cosa.x, p.cosa.y + 70], lugar: p.cerca });
     });
-    const botones = dest.map((d) => ({ texto: d.texto, sub: d.d ? t("sx.metros", [Math.round(d.d / W.M)]) : "", fn: () => {
+    dest.forEach((d) => (d.d = Math.hypot(d.p[0] - jug.x, d.p[1] - jug.y)));
+    // lo que queda a un paso no vale la pena
+    const lejos = dest.filter((d) => d.d > 25 * W.M);
+    lejos.sort((a, b) => a.d - b.d);
+    const mk = window.MAPA && MAPA.marca();
+    if (mk) {
+      let mejor = null;
+      lejos.forEach((d) => (!mejor || Math.hypot(d.p[0] - mk[0], d.p[1] - mk[1]) < Math.hypot(mejor.p[0] - mk[0], mejor.p[1] - mk[1])) && (mejor = d));
+      if (mejor) {
+        lejos.splice(lejos.indexOf(mejor), 1);
+        lejos.unshift(Object.assign(mejor, { marca: true }));
+      }
+    }
+    if (antesDelViaje && J.t - antesDelViaje.t < 300 && Math.hypot(antesDelViaje.p[0] - jug.x, antesDelViaje.p[1] - jug.y) > 25 * W.M)
+      lejos.unshift({ texto: t("sx.viaje_volver"), p: antesDelViaje.p, d: Math.hypot(antesDelViaje.p[0] - jug.x, antesDelViaje.p[1] - jug.y), volver: true });
+    return lejos;
+  }
+  function viajar(desde, desdeMapa) {
+    if (desdeMapa && A.enPelea()) return A.avisar("sx.viaje_pelea", "#C8402D");
+    const botones = destinos(desde).map((d) => ({ texto: (d.marca ? "◆ " : "") + d.texto, sub: d.marca ? t("sx.viaje_marca", [Math.round(d.d / W.M)]) : t("sx.metros", [Math.round(d.d / W.M)]), fn: () => {
       A.cerrarMenu();
-      A.teletransportar(d.p[0], d.p[1]);
+      const ir = () => {
+        if (!d.volver) antesDelViaje = { p: [jug.x, jug.y], t: J.t };
+        else antesDelViaje = null;
+        A.teletransportar(d.p[0], d.p[1], d.lugar);
+      };
+      if (!desdeMapa) return ir();
+      // desde el mapa: un instante quieto mientras la runa junta luz; un golpe lo corta
+      jug.interactuando = 1.4;
+      J.marcas.push({ tipo: "anillo", x: jug.x, y: jug.y, s: 1.4, col: "#73D5DB", t: 0 });
+      HUD.aviso(t("sx.viaje_juntando"), "#73D5DB");
+      J.retrasar(1.4, () => (jug.sinGolpe < 1.35 || jug.muerto ? A.avisar("sx.viaje_cortado", "#C8402D") : ir()));
     } }));
+    if (botones.length === 0) return A.avisar("sx.viaje_nada", "#73D5DB");
     botones.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
-    A.menu(`<h2>${t("sx.viaje_titulo")}</h2><div class="sub">${t("sx.viaje_sub")}</div>`, botones);
+    A.menu(`<h2>${t("sx.viaje_titulo")}</h2><div class="sub">${t(desdeMapa ? "sx.viaje_sub_mapa" : "sx.viaje_sub")}</div>`, botones);
   }
   function revelar(x, y, radio) {
     let algo = false;
@@ -397,5 +437,6 @@ window.SECRETOS = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     lista: () => ({ cofres, piedras, altares, manzanos, st }),
+    viajar: () => viajar(null, true),
   };
 })();

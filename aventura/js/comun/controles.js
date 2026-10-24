@@ -21,6 +21,8 @@ window.CONTROLES = (function () {
     diario: ["KeyJ", "Tab"],
     inventario: ["KeyI", "KeyB"],
     pausa: ["Escape", "KeyP"],
+    acercar: ["Equal", "NumpadAdd"],
+    alejar: ["Minus", "NumpadSubtract"],
     seguir: ["Enter", "Space", "KeyE", "KeyF"],
     // la cámara de Eikholt en 3D: girar y cambiar a la vista baja
     camaraIzq: ["KeyZ"],
@@ -49,7 +51,7 @@ window.CONTROLES = (function () {
     camara: [11],
   };
   const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", camaraIzq: "Z", camaraDer: "X", camara: "V" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   const abajo = new Set();
   let antes = {},

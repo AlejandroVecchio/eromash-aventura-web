@@ -55,6 +55,21 @@
   const cadaSis = (fn, ...a) => SIS.forEach((s0) => s0[fn] && s0[fn](...a));
   J.retrasar = (seg, fn) => J.timers.push({ t: seg, fn });
   J.alejarA = (v) => (alejarMeta = Math.max(alejarMeta, v));
+  // el acercamiento que elige el jugador (rueda del mouse o las acciones acercar / alejar), recordado en este navegador
+  let zoomJug = 1;
+  try {
+    zoomJug = Math.max(0.9, Math.min(1.35, +localStorage.getItem("eromash.aventura.zoom") || 1));
+  } catch (e) {}
+  function cambiarZoom(d) {
+    zoomJug = Math.max(0.9, Math.min(1.35, zoomJug + d));
+    try {
+      localStorage.setItem("eromash.aventura.zoom", zoomJug);
+    } catch (e) {}
+  }
+  addEventListener("wheel", (e) => {
+    if (J.modo !== "juego" || J.dentro || (e.target && e.target.closest && e.target.closest(".ui, #capaCaja, #mapaLienzo"))) return;
+    cambiarZoom(e.deltaY > 0 ? 0.05 : -0.05);
+  }, { passive: true });
   const jug = (J.jugador = {
     x: 0, y: 0, vx: 0, vy: 0, hp: 100, hpMax: 100, sta: 100, staMax: 100,
     mira: { vista: "S", espejo: false }, dir: [0, 1], salto: 0, esq: 0, esqDir: [0, 1], atk: null, combo: 0, comboT: 0,
@@ -418,25 +433,43 @@
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
-    setTimeout(() => HUD.fundido(true), 700);
+    const caida = [jug.x, jug.y];
+    setTimeout(() => HUD.fundido(true), 550);
     setTimeout(() => {
       enemigos.forEach((e) => e.activo && !e.muerto && CB.reiniciar(e));
       J.avisos.length = 0;
       J.zonas.length = 0;
       J.timers.length = 0;
       if (ciervo.activo) CB.reiniciarCiervo(J, ciervo);
-      const p = P[H.REAPARECER[H.idMision()] || "puesto"];
+      const p = dondeReaparecer(caida);
       jug.x = p[0];
       jug.y = p[1];
       jug.hp = jug.hpMax;
       jug.sta = jug.staMax;
       jug.muerto = false;
+      jug.inv = 2.5; // unos segundos sin que nada lo toque al volver
+      jug.vuelve = 2.5;
       jug.atk = null;
       J.cam.x = jug.x;
       J.cam.y = jug.y;
       HUD.fundido(false);
       avisar("reapareciste");
-    }, 2200);
+    }, 1600);
+  }
+  // reaparece donde dice la misión o, si queda más cerca de donde cayó, en el refugio descubierto más próximo
+  function dondeReaparecer(caida) {
+    let mejor = P[H.REAPARECER[H.idMision()] || "puesto"],
+      dm = Math.hypot(mejor[0] - caida[0], mejor[1] - caida[1]);
+    for (const k of ["puesto", "refugio", "casa_lindes", "aserradero", "brunvik", "skarnholt"]) {
+      const L = W.LUGARES[k];
+      if (!L || !H.E.vistos.includes(k)) continue;
+      const d = Math.hypot(L.p[0] - caida[0], L.p[1] - caida[1]);
+      if (d < dm && W.libre(L.p[0], L.p[1] + 60, R)) {
+        dm = d;
+        mejor = [L.p[0], L.p[1] + 60];
+      }
+    }
+    return mejor;
   }
 
   // ---------- Eromash ----------
@@ -488,6 +521,12 @@
     if (ciervo.activo || J.jefeHud) return true;
     return enemigos.some((e) => e.activo && !e.muerto && e.estado !== "quieto" && e.estado !== "vuelve" && Math.abs(e.x - jug.x) < 1100 && Math.abs(e.y - jug.y) < 800);
   }
+  function columnaRunica(x, y) {
+    J.ondas.push({ tipo: "pulso", x, y, t: 0 });
+    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0 });
+    if (window.CALIDAD && CALIDAD.nivel === "baja") return;
+    for (let i = 0; i < 26; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 50, y: y - Math.random() * 30, vx: (Math.random() - 0.5) * 30, vy: -260 - Math.random() * 320, t: 0.5 + Math.random() * 0.4, c: Math.random() < 0.5 ? "#73D5DB" : "#C8F2F4", s: 4 + Math.random() * 5, g: -0.1 });
+  }
   function polvareda(x, y, n) {
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
@@ -505,11 +544,13 @@
   function actualizarJugador(dt) {
     jug.herido = Math.max(0, jug.herido - dt);
     jug.inv = Math.max(0, jug.inv - dt);
+    jug.vuelve = Math.max(0, (jug.vuelve || 0) - dt);
     jug.sinGolpe += dt;
     jug.interactuando = Math.max(0, jug.interactuando - dt);
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
-    if (jug.sinGolpe > 6 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 4 * dt);
+    // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
+    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + (jug.pelea ? 3 : 12) * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);
@@ -767,20 +808,20 @@
       const d = Math.hypot(n.x - jug.x, n.y - jug.y);
       if (d < 110 && d < dm) {
         dm = d;
-        mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_" + id), fn: () => hablar(id) };
+        mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_" + id), fn: () => hablar(id), x: n.x, y: n.y - 125 };
       }
     }
     for (const tr of trabajadores) {
       const d = Math.hypot(tr.x - jug.x, tr.y - jug.y);
       if (d < 100 && d < dm) {
         dm = d;
-        mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr) };
+        mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr), x: tr.x, y: tr.y - 125 };
       }
     }
-    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn) => {
+    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn, x, y) => {
       if (d < dm) {
         dm = d;
-        mejor = { texto, fn };
+        mejor = { texto, fn, x, y };
       }
     }));
     for (const it of INTER) {
@@ -788,7 +829,7 @@
       const d = dist(jug, it.p);
       if (d < it.radio && d < dm) {
         dm = d;
-        mejor = { texto: tav(it.texto), fn: it.accion };
+        mejor = { texto: tav(it.texto), fn: it.accion, x: it.p[0], y: it.p[1] - 90 };
       }
     }
     return mejor;
@@ -866,6 +907,12 @@
       fx = (jug.x * 2 + ciervo.x) / 3;
       fy = (jug.y * 2 + ciervo.y) / 3 - 30;
     }
+    // la cámara se adelanta un poco hacia donde va Eromash (más si corre), así se ve lo que viene
+    const adel = jug.muerto || J.modo !== "juego" ? 0 : [0, 40, 70, 120][jug.paso || 0];
+    J.cam.ax = (J.cam.ax || 0) + (jug.dir[0] * adel - (J.cam.ax || 0)) * Math.min(1, dt * 2.2);
+    J.cam.ay = (J.cam.ay || 0) + (jug.dir[1] * adel * 0.8 - (J.cam.ay || 0)) * Math.min(1, dt * 2.2);
+    fx += J.cam.ax;
+    fy += J.cam.ay;
     const k = 1 - Math.exp(-6 * dt);
     J.cam.x += (fx - J.cam.x) * k;
     J.cam.y += (fy - J.cam.y) * k;
@@ -897,6 +944,7 @@
   function dibujarJugador() {
     const p = jug;
     if (p.muerto && Math.floor(J.t * 8) % 2) return;
+    if (p.vuelve > 0 && Math.floor(J.t * 10) % 3 === 0) return; // parpadea mientras dura la gracia de volver
     c.save();
     if (p.z) c.translate(0, -p.z); // arriba de la muralla o en la escalera
     c.translate(p.x, p.y);
@@ -1201,6 +1249,23 @@
       c.fillText(n.n, n.x, n.y - n.t * 40);
     });
     c.globalAlpha = 1;
+    // el rombo rúnico sobre lo que se usa con E ahora (la persona, la cosa)
+    if (J.cerca && J.cerca.x != null) {
+      const bx = J.cerca.x,
+        by = J.cerca.y + Math.sin(J.t * 4) * 5;
+      DIB.halo(c, bx, by, 26, "#73D5DB", 1);
+      c.beginPath();
+      c.moveTo(bx, by - 11);
+      c.lineTo(bx + 8, by);
+      c.lineTo(bx, by + 11);
+      c.lineTo(bx - 8, by);
+      c.closePath();
+      c.fillStyle = "#73D5DB";
+      c.fill();
+      c.strokeStyle = "#0A0707";
+      c.lineWidth = 2;
+      c.stroke();
+    }
     dibujarHaz(dondeObjetivo(), x0, y0, x1, y1);
     if (window.MAPA) dibujarHaz(MAPA.marca(), x0, y0, x1, y1, "255,217,138", "#FFD98A");
     // el aire del bosque: viñeta suave (se apaga en calidad baja)
@@ -1214,6 +1279,55 @@
       }
       c.fillStyle = vineta.g;
       c.fillRect(0, 0, cw, ch);
+    }
+    // con poca vida el borde late en rojo
+    if (J.modo === "juego" && !jug.muerto && jug.hp < jug.hpMax * 0.3) {
+      const f = (0.3 + 0.5 * (1 - jug.hp / (jug.hpMax * 0.3))) * (0.75 + Math.sin(J.t * 6) * 0.25);
+      const g = c.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.max(cw, ch) * 0.6);
+      g.addColorStop(0, "rgba(156,35,21,0)");
+      g.addColorStop(1, `rgba(156,35,21,${Math.min(0.6, f).toFixed(3)})`);
+      c.fillStyle = g;
+      c.fillRect(0, 0, cw, ch);
+    }
+    flechasAmenaza(x0, y0, x1, y1);
+  }
+  // una flecha roja en el borde por cada criatura que viene a pegarle desde fuera de la pantalla
+  function flechasAmenaza(x0, y0, x1, y1) {
+    if (J.modo !== "juego" || jug.muerto) return;
+    const m = 46;
+    for (const e of enemigos) {
+      if (!e.activo || e.muerto || (e.estado !== "persigue" && e.estado !== "aviso" && e.estado !== "golpe")) continue;
+      if (e.x > x0 && e.x < x1 && e.y - 60 > y0 && e.y < y1) continue;
+      if (Math.hypot(e.x - jug.x, e.y - jug.y) > 1600) continue;
+      const sx = (jug.x - x0) * esc,
+        sy = (jug.y - 40 - y0) * esc,
+        a = Math.atan2(e.y - jug.y, e.x - jug.x),
+        ux = Math.cos(a),
+        uy = Math.sin(a);
+      // hasta dónde llega el rayo desde Eromash antes de salir del margen
+      const tx = ux > 0 ? (cw - m - sx) / ux : ux < 0 ? (m - sx) / ux : Infinity,
+        ty = uy > 0 ? (ch - m - sy) / uy : uy < 0 ? (m - sy) / uy : Infinity,
+        tt = Math.min(tx, ty),
+        px = sx + ux * tt,
+        py = sy + uy * tt;
+      const k = e.estado === "aviso" || e.estado === "golpe" ? 1 : 0.7;
+      c.save();
+      c.translate(px, py);
+      c.rotate(a);
+      c.scale(1.3, 1.3);
+      c.globalAlpha = k * (0.75 + Math.sin(J.t * 9) * 0.2);
+      c.beginPath();
+      c.moveTo(18, 0);
+      c.lineTo(-10, -13);
+      c.lineTo(-4, 0);
+      c.lineTo(-10, 13);
+      c.closePath();
+      c.fillStyle = e.estado === "aviso" ? "#FF8D71" : "#C8402D";
+      c.fill();
+      c.strokeStyle = "#0A0707";
+      c.lineWidth = 3;
+      c.stroke();
+      c.restore();
     }
   }
   let vineta = null;
@@ -1352,6 +1466,7 @@
     });
     HUD.misiones(lista);
     const cer = J.modo === "juego" && !jug.muerto ? (J.dentro ? J.dentro.cercano() : cercano()) : null;
+    J.cerca = J.dentro ? null : cer;
     HUD.accion(cer ? cer.texto : null, CONTROLES.glifo("interactuar"));
     cadaSis("hud");
     HUD.jefe(ciervo.activo ? { nombre: tav("nombre_ciervo"), frac: ciervo.vida / CB.VIDA_C, ataduras: CB.atados(ciervo), ataque: jefeAtaque, accion: jefeAccion } : J.jefeHud || null);
@@ -1492,6 +1607,8 @@
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
     } else if (J.modo === "juego") {
       if (CONTROLES.recien("misiones")) HUD.plegarTodo();
+      if (!J.dentro && CONTROLES.pulsado("acercar")) cambiarZoom(-dt * 0.6);
+      if (!J.dentro && CONTROLES.pulsado("alejar")) cambiarZoom(dt * 0.6);
       if (CONTROLES.recien("pausa")) pausa();
       else if (CONTROLES.recien("diario")) diario();
     }
@@ -1529,7 +1646,7 @@
         }
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
-      alejarMeta = 1;
+      alejarMeta = zoomJug;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
@@ -1567,6 +1684,15 @@
   // ---------- arranque ----------
   HUD.armar();
   addEventListener("beforeunload", () => J.modo !== "titulo" && H.guardar());
+  // si se va a otra ventana o pestaña en plena partida, el juego se pausa solo (y guarda)
+  const alIrse = () => {
+    if (J.modo === "juego" && !jug.muerto && !J.dentro) {
+      H.guardar();
+      pausa();
+    }
+  };
+  document.addEventListener("visibilitychange", () => document.hidden && alIrse());
+  addEventListener("blur", alIrse);
   // fondo del título: el Puesto de Eydis
   const fondo = W.LUGARES.puesto.p;
   J.cam.x = fondo[0];
@@ -1592,18 +1718,26 @@
     hora: () => amb.h,
     noche: () => amb.n,
     amb: () => amb,
-    teletransportar: (x, y) => {
+    enPelea,
+    // el viaje: columna de luz rúnica al irse y al llegar, el nombre del lugar y un instante sin que nada lo toque
+    teletransportar: (x, y, lugar) => {
       J.modo = "cine";
-      HUD.fundido(true);
+      columnaRunica(jug.x, jug.y);
+      setTimeout(() => HUD.fundido(true), 180);
       setTimeout(() => {
         jug.x = x;
         jug.y = y;
+        jug.atk = null;
         J.cam.x = x;
         J.cam.y = y - 30;
+        J.cam.ax = J.cam.ay = 0;
+        jug.inv = Math.max(jug.inv, 2);
         HUD.fundido(false);
+        columnaRunica(x, y);
         J.modo = "juego";
         CONTROLES.soltar();
-      }, 700);
+        if (lugar) HUD.aviso(t("av.lugar_" + lugar), "lugar", t("sx.viaje_llegaste"));
+      }, 620);
     },
   };
   cadaSis("iniciar", A);

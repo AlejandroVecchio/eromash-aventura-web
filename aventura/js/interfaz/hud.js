@@ -14,7 +14,7 @@ window.HUD = (function () {
         <div class="retrato"><canvas id="hRetrato" width="112" height="112"></canvas></div>
         <div class="datos panel">
           <div class="nombre"><span id="hNombre">Eromash</span><small id="hTitulo"></small></div>
-          <div class="barra" id="bVida"><i></i><span><b>${t("ui.vida")}</b><em></em></span></div>
+          <div class="barra" id="bVida"><u></u><i></i><span><b>${t("ui.vida")}</b><em></em></span></div>
           <div class="barra est" id="bEst"><i></i><span><b>${t("ui.estamina")}</b><em></em></span></div>
           <div class="chips"><span class="chip"><canvas id="hIcPlata" width="36" height="36"></canvas><b id="hPlata">0</b></span><span class="chip frag"><canvas id="hIcFrag" width="36" height="36"></canvas><b id="hFrag">0</b><em id="hNivelR"></em></span></div>
         </div>
@@ -145,6 +145,8 @@ window.HUD = (function () {
     if (cambia("cansado", !!cansado)) $("bEst").classList.toggle("cansado", !!cansado);
     if (cambia("hp", Math.ceil(hp) + "/" + hpMax)) {
       $("bVida").querySelector("i").style.width = (100 * Math.max(0, hp)) / hpMax + "%";
+      // el pedazo perdido queda claro un instante y se va achicando detrás (sube junto con la vida)
+      $("bVida").querySelector("u").style.width = (100 * Math.max(0, hp)) / hpMax + "%";
       $("bVida").querySelector("em").textContent = Math.ceil(Math.max(0, hp)) + " / " + hpMax;
     }
     if (cambia("sta", Math.floor(sta))) {

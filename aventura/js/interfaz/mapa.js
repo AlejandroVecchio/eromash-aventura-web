@@ -187,7 +187,8 @@ window.MAPA = (function () {
     });
     const S = SECRETOS.lista();
     S.altares.forEach((a) => visto(a.cosa.x, a.cosa.y) && poner("altar", a.cosa.x, a.cosa.y, { runa: a.runa, col: ASSETS.COL_RUNA[a.runa], apagado: a.cosa.o.tomada }, 1));
-    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedra", p.cosa.x, p.cosa.y, { runa: "ansuz", col: "#73D5DB", apagado: !!S.st.piedras[p.id] }, 2));
+    // las despiertas son puntos de viaje: llevan Raidho (el camino) y brillan; las dormidas, Ansuz más tenue
+    S.piedras.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedra", p.cosa.x, p.cosa.y, S.st.piedras[p.id] ? { runa: "raidho", col: "#C8F2F4" } : { runa: "ansuz", col: "#4E8E92" }, 2));
     if (window.RITOS) {
       const R = RITOS.lista();
       R.camino.forEach((p) => visto(p.cosa.x, p.cosa.y) && poner("piedraCamino", p.cosa.x, p.cosa.y, { apagado: !!R.st.camino[p.id] }, 2));
@@ -256,6 +257,10 @@ window.MAPA = (function () {
         `<div class="mapa-zoom"><button id="mapaMas" aria-label="${t("mp.acercar")}">+</button><button id="mapaMenos" aria-label="${t("mp.alejar")}">−</button></div></div>` +
         `<div class="sub mapa-ley">${t("mp.leyenda")} ${t("mp.ayuda_marca")}</div>`,
       [
+        { texto: t("mp.viajar"), fn: () => {
+          A.cerrarMenu();
+          SECRETOS.viajar();
+        } },
         { texto: t("mp.quitar_marca"), id: "mapaQuitar", fn: () => ((st.marca = null), dibujar(), botonQuitar()) },
         { texto: t("ui.cerrar"), fn: A.cerrarMenu },
       ],
