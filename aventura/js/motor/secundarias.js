@@ -18,12 +18,6 @@ window.SECUNDARIAS = (function () {
   const tieneLente = () => H.tiene("lente") || H.tiene("lente_prestada");
   const sub = (k) => (ex && ex[k]) || {};
 
-  Object.assign(GENTE.FICHAS, {
-    // la huldra: mujer del bosque, alta y pálida, pelo largo de paja y corona de flores; la cola de vaca va aparte
-    huldra: { nombre: "huldra", alto: 1.04, ancho: 0.9, piel: "#E8D4C4", pielSombra: "#C8B4A4", pelo: "#D8C080", ropa: "#5E6A3E", ropaSombra: "#46522E", falda: true, pantalon: "#46522E", botas: "#C8B4A4", cinto: "#C8402D", trenza: true, gorro: "#E0B2B2" },
-    // el nøkk: espíritu de agua, verdoso, el pelo mojado y el violín
-    nokk: { nombre: "nokk", alto: 0.98, ancho: 0.92, piel: "#9CB8A8", pielSombra: "#7A9888", pelo: "#3A5A4A", barba: "#3A5A4A", ropa: "#3E5A56", ropaSombra: "#2C4440", pantalon: "#2C4440", botas: "#2C4440", cinto: "#5E4A36" },
-  });
   const huldra = { x: 0, y: 0, mira: { vista: "S", espejo: false } };
   const nokk = { x: 0, y: 0, mira: { vista: "S", espejo: false } };
 
@@ -413,15 +407,6 @@ window.SECUNDARIAS = (function () {
         lista.push({
           y: huldra.y,
           f: () => {
-            const sx = huldra.mira.espejo ? -1 : 1,
-              mv = Math.sin(J.t * 1.8) * 6;
-            c.beginPath();
-            c.moveTo(huldra.x - 6 * sx, huldra.y - 26);
-            c.quadraticCurveTo(huldra.x - 30 * sx, huldra.y - 10 + mv, huldra.x - 26 * sx, huldra.y + 4);
-            c.strokeStyle = "#C8B4A4";
-            c.lineWidth = 4;
-            c.stroke();
-            DIB.E(c, huldra.x - 26 * sx, huldra.y + 6, 5, 7, "#8A6A3A");
             GENTE.dibujar(c, "huldra", huldra.x, huldra.y, J.t, huldra.mira);
           },
         });

@@ -9,6 +9,9 @@ window.GENTE = (function () {
 
   // Ficha de cada persona: colores, proporciones y lo que la distingue.
   const FICHAS = {
+    // los espíritus tienen su propio dibujo (PROPIOS); la ficha queda para el nombre y el ancho de la sombra
+    huldra: { nombre: "huldra", alto: 1.06, ancho: 0.9 },
+    nokk: { nombre: "nokk", alto: 1, ancho: 0.95 },
     // Eydis, guardasendas: trenza oscura con una mecha blanca, capa verde gastada, lanza corta y tablillas de rutas.
     eydis: {
       nombre: "eydis",
@@ -323,7 +326,154 @@ window.GENTE = (function () {
     if (f.barba) P(c, [-8, cy + 3, 8, cy + 3, 6, cy + 12, -6, cy + 12], f.barba);
   }
 
+  // ---------- los espíritus, como en su hoja: la huldra y el nøkk ----------
+  // La huldra: alta, pelo de paja larguísimo con corona de flores, vestido verde musgo de mangas anchas, faja roja con
+  // borla dorada y la cola de vaca que asoma bajo el ruedo; de espaldas es hueca como un tronco podrido.
+  const HUL = { piel: "#EAD8C8", pielS: "#CDB8A6", pelo: "#E0BE6A", peloS: "#BE9A4C", ropa: "#55683E", ropaS: "#3F502C", faja: "#7A1A10", oro: "#D8A84A", bota: "#3A2A20", corteza: "#5C4430", cortezaS: "#3A2A1C", hueco: "#1A120C", cola: "#C8B4A4", borla: "#5C3A20" };
+  const FLORES = ["#F2ECEC", "#B89AD8", "#FFD98A", "#F2ECEC", "#E0B2B2", "#B89AD8", "#F2ECEC"];
+  function corona(c, cy, ancho) {
+    L(c, -ancho, cy, ancho, cy, "#4E6B3A", 2);
+    FLORES.forEach((col, k) => {
+      const x = -ancho + (k / (FLORES.length - 1)) * ancho * 2;
+      E(c, x, cy - 1, 2.6, 2.6, col);
+      E(c, x, cy - 1, 1, 1, "#D8A84A");
+    });
+  }
+  function huldra(c, t, o) {
+    const v = o.vista || "S",
+      bob = o.camina ? Math.abs(Math.sin(t * 9)) * 1.5 : Math.sin(t * 1.4) * 0.6,
+      Y = (n) => -n * 1.06 - bob,
+      cola = Math.sin(t * 1.8) * 4;
+    // la cola de vaca: sale por detrás del ruedo y termina en un mechón
+    const ladoCola = v === "E" ? -1 : 1;
+    c.beginPath();
+    c.moveTo(-4 * ladoCola, Y(14));
+    c.quadraticCurveTo(-20 * ladoCola, Y(10) + cola, -19 * ladoCola, -12);
+    c.strokeStyle = HUL.cola;
+    c.lineWidth = 3;
+    c.stroke();
+    P(c, [-19 * ladoCola - 3, -13, -19 * ladoCola + 3, -13, -19 * ladoCola + 2, -3, -19 * ladoCola - 2, -3], HUL.borla);
+    if (v === "N") {
+      // de espaldas: el pelo cae por los costados y la espalda es un hueco de corteza
+      P(c, [-15, Y(66), 15, Y(66), 18, 0, -18, 0], HUL.ropaS);
+      P(c, [0, Y(66), 15, Y(66), 18, 0, 0, 0], HUL.ropa);
+      P(c, [-10, Y(64), 10, Y(64), 11, Y(30), 6, Y(24), -6, Y(24), -11, Y(30)], HUL.corteza);
+      P(c, [-10, Y(64), 0, Y(64), 0, Y(24), -6, Y(24), -11, Y(30)], HUL.cortezaS);
+      P(c, [-6, Y(60), 6, Y(60), 7, Y(36), 0, Y(28), -7, Y(36)], HUL.hueco);
+      for (let k = 0; k < 3; k++) L(c, -8 + k * 8, Y(62), -7 + k * 7, Y(34), "#2A1E14", 1);
+      R(c, -16, Y(30), 32, 3, HUL.faja);
+      const cy = Y(80);
+      P(c, [-12, cy + 6, -11, cy - 9, -5, cy - 14, 5, cy - 14, 11, cy - 9, 12, cy + 6], HUL.pelo);
+      P(c, [-15, cy, -10, cy, -12, Y(18), -18, Y(22)], HUL.peloS);
+      P(c, [15, cy, 10, cy, 12, Y(18), 18, Y(22)], HUL.pelo);
+      corona(c, cy - 10, 11);
+      return;
+    }
+    if (v === "E") {
+      // de costado: el vestido largo, la manga ancha y el pelo que cae hasta las rodillas por la espalda
+      P(c, [-6, -6, 6, -6, 8, 0, -5, 0], HUL.bota);
+      P(c, [-18, Y(64), -8, Y(66), -10, Y(14), -20, Y(18)], HUL.peloS);
+      P(c, [-10, Y(64), 8, Y(64), 12, 0, -12, 0], HUL.ropa);
+      P(c, [-10, Y(64), -4, Y(64), -5, 0, -12, 0], HUL.ropaS);
+      R(c, -11, Y(32), 22, 3, HUL.faja);
+      R(c, 4, Y(30), 3, 16, HUL.faja);
+      P(c, [3, Y(14), 8, Y(14), 5.5, Y(10)], HUL.oro);
+      P(c, [-2, Y(60), 6, Y(60), 14, Y(34), 4, Y(32)], HUL.ropaS);
+      E(c, 10, Y(32), 3, 3, HUL.piel);
+      const cy = Y(80);
+      P(c, [-7, cy - 8, 7, cy - 8, 9, cy + 2, 7, cy + 4, 6, cy + 11, -4, cy + 11, -7, cy + 6], HUL.piel);
+      P(c, [-7, cy - 8, -2, cy - 8, -2, cy + 11, -4, cy + 11, -7, cy + 6], HUL.pielS);
+      P(c, [-12, cy + 8, -11, cy - 9, -4, cy - 14, 6, cy - 13, 8, cy - 6, 0, cy - 6, -3, cy + 6, -8, Y(40)], HUL.pelo);
+      R(c, 4, cy - 1, 2.5, 2, "#3A2A20");
+      corona(c, cy - 11, 9);
+      return;
+    }
+    // de frente: vestido verde hasta el piso, mangas anchas, faja roja con la borla dorada, pelo a los dos lados
+    P(c, [-10, -6, -3, -6, -3, 0, -11, 0], HUL.bota);
+    P(c, [3, -6, 10, -6, 11, 0, 3, 0], HUL.bota);
+    const cy = Y(80);
+    P(c, [-13, cy, -9, cy, -12, Y(16), -18, Y(18)], HUL.peloS);
+    P(c, [13, cy, 9, cy, 12, Y(16), 18, Y(18)], HUL.pelo);
+    P(c, [-13, Y(64), 13, Y(64), 18, 0, -18, 0], HUL.ropa);
+    P(c, [-13, Y(64), 0, Y(64), 0, 0, -18, 0], HUL.ropaS);
+    P(c, [-4, Y(66), 4, Y(66), 3, Y(60), -3, Y(60)], HUL.ropaS);
+    R(c, -14, Y(34), 28, 4, HUL.faja);
+    R(c, -1.5, Y(30), 3, 18, HUL.faja);
+    P(c, [-3, Y(12), 3, Y(12), 0, Y(7)], HUL.oro);
+    R(c, -2, Y(34), 4, 4, HUL.oro);
+    // las mangas anchas, que se abren hacia la mano
+    P(c, [-13, Y(62), -19, Y(58), -24, Y(32), -14, Y(34)], HUL.ropaS);
+    P(c, [13, Y(62), 19, Y(58), 24, Y(32), 14, Y(34)], HUL.ropa);
+    E(c, -19, Y(31), 2.6, 2.6, HUL.pielS);
+    E(c, 19, Y(31), 2.6, 2.6, HUL.piel);
+    R(c, -2.5, Y(70), 5, 5, HUL.pielS);
+    P(c, [-8, cy - 8, 8, cy - 8, 8, cy + 7, 3, cy + 11, -3, cy + 11, -8, cy + 7], HUL.piel);
+    P(c, [-8, cy - 8, 0, cy - 8, 0, cy + 11, -3, cy + 11, -8, cy + 7], HUL.pielS);
+    P(c, [-10, cy + 6, -10, cy - 8, -5, cy - 13, 5, cy - 13, 10, cy - 8, 10, cy + 6, 6, cy - 5, 0, cy - 7, -6, cy - 5], HUL.pelo);
+    R(c, -5, cy - 1, 3, 1.6, "#3A2A20");
+    R(c, 2, cy - 1, 3, 1.6, "#3A2A20");
+    if (o.hablando && Math.sin(t * 6) > 0) R(c, -1.5, cy + 6, 3, 1.4, "#8A4A3A");
+    corona(c, cy - 11, 10);
+  }
+
+  // El nøkk: metido en el agua hasta la cintura (el río tapa la parte de abajo), piel verde, pelo negro mojado, túnica
+  // oscura con algas que cuelgan, rombos dorados en el pecho y el violín bajo el mentón; el arco va y viene.
+  const NK = { piel: "#8AA88E", pielS: "#6A8A70", pelo: "#14181A", ropa: "#2E3E30", ropaS: "#202C22", alga: "#5E7A3A", algaS: "#3E5428", oro: "#D8A84A", violin: "#7A3E20", violinL: "#9A5A30", arco: "#5C3A20" };
+  function algas(c, x0, x1, y, largo, t) {
+    for (let k = 0; k < 5; k++) {
+      const x = x0 + ((x1 - x0) * k) / 4,
+        l = largo * (0.6 + ((k * 37) % 5) / 10),
+        ondea = Math.sin(t * 1.5 + k) * 1.5;
+      P(c, [x - 1.6, y, x + 1.6, y, x + 1 + ondea, y + l, x - 1 + ondea, y + l], k % 2 ? NK.alga : NK.algaS);
+    }
+  }
+  function nokk(c, t, o) {
+    const v = o.vista || "S",
+      Y = (n) => -n,
+      arco = Math.sin(t * 3.2) * 9,
+      cy = Y(80);
+    const atras = v === "N";
+    // el cuerpo con las mangas mojadas y las algas
+    P(c, [-15, Y(64), 15, Y(64), 17, Y(0), -17, Y(0)], NK.ropa);
+    P(c, [-15, Y(64), 0, Y(64), 0, Y(0), -17, Y(0)], NK.ropaS);
+    algas(c, -14, 14, Y(60), 12, t);
+    algas(c, -15, 15, Y(36), 14, t + 1);
+    if (!atras) [Y(56), Y(48)].forEach((y) => P(c, [0, y - 3, 3, y, 0, y + 3, -3, y], NK.oro));
+    // el pelo largo y negro que cae mojado
+    P(c, [-12, cy - 2, -10, cy - 12, 10, cy - 12, 12, cy - 2, 13, Y(44), 6, Y(52), -6, Y(52), -13, Y(44)], NK.pelo);
+    if (atras) {
+      P(c, [-10, cy + 8, -10, cy - 8, -5, cy - 13, 5, cy - 13, 10, cy - 8, 10, cy + 8], NK.pelo);
+      return;
+    }
+    R(c, -2.5, Y(70), 5, 5, NK.pielS);
+    P(c, [-7, cy - 8, 7, cy - 8, 7, cy + 7, 3, cy + 11, -3, cy + 11, -7, cy + 7], NK.piel);
+    P(c, [-7, cy - 8, 0, cy - 8, 0, cy + 11, -3, cy + 11, -7, cy + 7], NK.pielS);
+    P(c, [-9, cy + 4, -9, cy - 9, -4, cy - 13, 4, cy - 13, 9, cy - 9, 9, cy + 4, 5, cy - 5, -5, cy - 5], NK.pelo);
+    // los ojos entornados, tocando
+    L(c, -5, cy, -2, cy + 0.6, "#1A1412", 1.4);
+    L(c, 2, cy + 0.6, 5, cy, "#1A1412", 1.4);
+    // el violín bajo el mentón, hacia su izquierda (la derecha de la pantalla)
+    c.save();
+    c.translate(6, cy + 14);
+    c.rotate(0.35);
+    P(c, [0, -5, 8, -7, 14, -4, 16, 0, 22, -4, 28, -2, 28, 4, 22, 6, 16, 2, 14, 6, 8, 8, 0, 6], NK.violin);
+    P(c, [8, -7, 14, -4, 16, 0, 22, -4, 28, -2, 28, 0, 0, 0, 0, -5], NK.violinL);
+    R(c, 28, -1.5, 12, 3, "#2A1810");
+    R(c, 40, -3, 4, 6, NK.arco);
+    L(c, 4, 0, 40, 0, "#E0D4C0", 0.8);
+    c.restore();
+    // la mano que pisa las cuerdas y el brazo del arco, que va y viene
+    P(c, [12, Y(62), 18, Y(58), 34, Y(58), 32, Y(62)], NK.ropa);
+    algas(c, 16, 30, Y(58), 8, t);
+    E(c, 34, Y(60), 3, 3, NK.piel);
+    P(c, [-12, Y(62), -18, Y(56), -6 + arco * 0.4, Y(50), -2 + arco * 0.4, Y(54)], NK.ropaS);
+    algas(c, -18, -6, Y(54), 9, t + 2);
+    E(c, arco * 0.4, Y(52), 3, 3, NK.pielS);
+    L(c, arco * 0.4 - 18, Y(46), arco * 0.4 + 22, Y(60), NK.arco, 1.6);
+  }
+
   const VISTAS = { S: frente, E: costado, N: espaldas };
+  const PROPIOS = { huldra, nokk };
   function dibujar(c, id, x, y, t, o = {}) {
     const f = FICHAS[id] || FICHAS.trabajador,
       s = o.s || 1;
@@ -332,6 +482,7 @@ window.GENTE = (function () {
     c.scale(s * (o.espejo ? -1 : 1), s);
     sombra(c, 0, 0, 22 * f.ancho, 6, 0.4);
     if (f.sentado) sentado(c, f, t);
+    else if (PROPIOS[id]) PROPIOS[id](c, t, o);
     else VISTAS[o.vista || "S"](c, f, t, o);
     c.restore();
   }
