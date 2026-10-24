@@ -1,0 +1,20 @@
+/* Estilos de los sistemas de rol de la aventura (niveles, objetos, armas, oficios): docs/rpg.md. Mismo lenguaje que
+   aventura.css: paneles oscuros con esquinas cortadas, la paleta de la arena y la tipografía Eromash. */
+
+/* ---------- niveles: el rombo del nivel en el retrato, la barra de experiencia y el cartel al subir ---------- */
+.nivel-rombo { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 30px; height: 30px; display: grid; place-items: center; z-index: 2; }
+.nivel-rombo::before { content: ""; position: absolute; inset: 4px; background: #111111; border: 2px solid var(--oro); transform: rotate(45deg); }
+.nivel-rombo b { position: relative; font-size: 12px; font-weight: 900; color: var(--oro); }
+#hudJugador .retrato { position: relative; }
+#hudXp { left: 50%; bottom: 3px; transform: translateX(-50%); width: min(560px, 60vw); height: 7px; background: rgba(17, 17, 17, 0.88); clip-path: polygon(4px 0, 100% 0, 100% 100%, 0 100%, 0 4px); }
+#hudXp i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #4A78D0, #73D5DB); transition: width 0.35s; }
+#hudXp span { position: absolute; left: 0; right: 0; bottom: 9px; text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--rosa); text-shadow: 0 1px 0 #000; opacity: 0; transition: opacity 0.2s; }
+#hudXp:hover span, #hudXp.ver span { opacity: 1; }
+#hudBarra { bottom: 18px; }
+#hudNivelSube { left: 50%; bottom: 112px; transform: translateX(-50%); text-align: center; pointer-events: none; }
+#hudNivelSube.oculto { display: none; }
+#hudNivelSube small { display: block; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--runico); font-weight: 800; }
+#hudNivelSube b { display: block; font-family: "Eromash Display", system-ui, sans-serif; font-size: 54px; letter-spacing: 0.06em; color: var(--oro); text-shadow: 0 3px 0 #000a, 0 0 24px rgba(255, 217, 138, 0.35); }
+#hudNivelSube p { margin: 4px 0 0; font-size: 14px; color: var(--hueso); text-shadow: 0 1px 0 #000; }
+#hudNivelSube.va { animation: nivelSube 4.2s forwards; }
+@keyframes nivelSube { 0% { opacity: 0; transform: translateX(-50%) scale(0.7); } 8% { opacity: 1; transform: translateX(-50%) scale(1.08); } 14%, 80% { opacity: 1; transform: translateX(-50%) scale(1); } 100% { opacity: 0; transform: translateX(-50%) translateY(-16px); } }

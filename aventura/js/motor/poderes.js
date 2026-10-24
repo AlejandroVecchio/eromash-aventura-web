@@ -27,12 +27,18 @@ window.PODERES = (function () {
 
   const base = () => ({ plata: 0, runas: [], sel: 0, frag: 0, nivel: 0, espada: 0, cota: 0, lampara: 0, manzanas: 0 });
   const poder = () => 1 + (pj ? pj.nivel : 0) * 0.15;
+  // lo que dan la forja, las manzanas y el poder rúnico: la base que después junta RPG con lo demás
+  function valores() {
+    return { vida: 100 + pj.cota * 12 + pj.manzanas * 15 + (pj.pechera ? 40 : 0), dano: 1 + pj.espada * 0.12, lampara: 1 + pj.lampara * 0.35 + (sol > 0 ? 1.6 : 0), runico: poder() };
+  }
   function aplicar() {
-    jug.hpMax = 100 + pj.cota * 12 + pj.manzanas * 15 + (pj.pechera ? 40 : 0);
+    const v = valores();
+    jug.hpMax = v.vida;
     jug.hp = Math.min(jug.hp, jug.hpMax);
-    J.mulDano = 1 + pj.espada * 0.12;
-    J.lampara = 1 + pj.lampara * 0.35 + (sol > 0 ? 1.6 : 0);
-    J.poderRunico = poder();
+    J.mulDano = v.dano;
+    J.lampara = v.lampara;
+    J.poderRunico = v.runico;
+    if (window.RPG) RPG.recalcular();
   }
 
   // ---------- la gente de Eikholt que no está en la historia ----------
@@ -193,7 +199,7 @@ window.PODERES = (function () {
       def = RUNAS[r];
     if (energia < def.coste) return A.avisar("pj.sin_energia");
     energia -= def.coste;
-    const pr = poder();
+    const pr = J.poderRunico || poder();
     const golpe = (e, dano) => {
       A.numero(e.x, e.y - 60, Math.round(dano));
       A.chispa(e.x, e.y - 30);
@@ -429,5 +435,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { valores: () => (pj ? valores() : null), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();

@@ -126,6 +126,8 @@
     }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
+    for (const s0 of SIS) if (s0.modRecibido) dano = s0.modRecibido(dano, tipo, ox, oy); // bloqueo, pociones, bendiciones
+    if (J.armadura) dano = Math.round(dano * (100 / (100 + J.armadura))); // la armadura de lo que lleva puesto
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
     if (tipo === "helado") jug.lento = 2;
     if (dano <= 0) {
@@ -779,7 +781,7 @@
     if (jug.atk) {
       const a = jug.atk,
         d = a.d;
-      a.t += dt;
+      a.t += dt * (J.velAtq || 1);
       if (d.avanza && a.t < d.wind + d.swing) moverJugador(Math.cos(a.dir) * d.avanza * dt, (Math.sin(a.dir) * d.avanza * dt) / 1.25);
       if (a.t >= d.wind && a.t <= d.wind + d.swing && !a.pego) golpear(a);
       if (a.t >= d.wind + d.swing + d.rec) {
@@ -820,7 +822,7 @@
       jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
       jug.pelea = enPelea();
     }
-    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
+    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -897,12 +899,16 @@
       if (!e.activo || e.muerto || Math.abs(e.x - jug.x) > 300 || !enArco(e.x, e.y, e.d.radio)) continue;
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
       const sorpresa = e.estado === "quieto",
-        critico = Math.random() < 0.1;
-      const dano = Math.round(d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? 1.6 : 1));
+        critico = Math.random() < (J.critProb != null ? J.critProb : 0.1);
+      let dano = d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? J.critMult || 1.6 : 1);
+      const info = { d, critico, sorpresa, contra };
+      for (const s0 of SIS) if (s0.modDano) dano = s0.modDano(dano, e, info); // debilidades, sigilo, reacciones
+      dano = Math.round(dano);
       chispa(e.x, e.y - 30);
       numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
       if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
       const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      cadaSis("alPegar", e, dano, info, murio);
       if (window.SONIDO) {
         SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });
         if (murio) SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
@@ -2057,7 +2063,7 @@
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
   // lo que los sistemas pueden usar del motor
   const A = {
-    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn,
+    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn, columnaRunica, textoFlotante, polvareda,
     avisar: (k, col) => HUD.aviso(t(k), col),
     menu: (html, botones) => {
       J.modo = "menu";
@@ -2100,6 +2106,7 @@
     if (ok && J.modo !== "titulo") HUD.guardado();
     return ok;
   };
+  window.JUEGO.A = A; // para las pruebas (aventura/pruebas)
   cadaSis("iniciar", A);
   if (q.get("jugar")) {
     empezar(Number(q.get("jugar")) || 1, true);
