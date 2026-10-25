@@ -32,6 +32,8 @@ window.COMBATE = (function () {
   const DETECTA = 13 * M,
     SUELTA = 26 * M,
     TOPE = 35; // 35 % de 100 de vida
+  // nada saca más del 35 % de la vida de Eromash (la vida sube con el nivel y lo que lleva puesto)
+  const tope = (J) => Math.max(TOPE, Math.round((J.jugador.hpMax || 100) * 0.35));
 
   // ---------- avisos en el piso ----------
   // forma: circulo {radio} · abanico {radio, ang (medio ángulo), dir} · franja {largo, ancho, dir}
@@ -185,7 +187,7 @@ window.COMBATE = (function () {
       const a = aviso("circulo", e.x, e.y, 1.3, { radio: 3.2 * M, rgb: RGB.runico });
       J.avisos.push(a);
       J.retrasar(1.3, () => {
-        if (contiene(a, J.jugador.x, J.jugador.y)) J.herir(Math.min(22, TOPE), e.x, e.y, "runico");
+        if (contiene(a, J.jugador.x, J.jugador.y)) J.herir(Math.min(22, tope(J)), e.x, e.y, "runico");
         J.quitarAviso(a);
       });
     }
@@ -194,7 +196,7 @@ window.COMBATE = (function () {
   // el golpe de la criatura llega: daño y lo que deja el líder (fuego en el piso, escarcha)
   function pega(J, e, a) {
     const p = J.jugador;
-    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, TOPE), e.x, e.y, tiene(e, "helado") ? "helado" : null);
+    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
     if (tiene(e, "igneo")) {
       const z = aviso("circulo", a.forma === "lejos" || a.forma === "circulo" ? a.x : p.x, a.forma === "circulo" ? a.y : p.y, 3, { radio: 1.6 * M, rgb: RGB.igneo, zona: true, dps: 9 });
       if (a.forma !== "circulo" && a.forma !== "lejos") {
@@ -503,7 +505,8 @@ window.COMBATE = (function () {
         c.fillRect(e.x - w / 2, y, w, 5);
         c.fillStyle = "#C8402D";
         c.fillRect(e.x - w / 2, y, (w * Math.max(0, e.vida)) / e.d.vida, 5);
-      }
+        if (window.RPG) RPG.rotulo(c, e, e.x - w / 2 - 12, y + 2);
+      } else if (window.RPG && e.muerto === 0 && e.estado !== "quieto" && e.estado !== "vuelve") RPG.rotulo(c, e, e.x - 32, y + 2);
       if (e.lider && e.muerto === 0) {
         c.font = '800 13px "Eromash Text", system-ui, sans-serif';
         c.textAlign = "center";
@@ -636,7 +639,7 @@ window.COMBATE = (function () {
           if (b.ataque !== "embestida") {
             for (const a of b.avisos)
               if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(b.x, b.y, p.x, p.y)) {
-                J.herir(Math.min(ATAQUES[b.ataque].dano, TOPE), b.x, b.y, true);
+                J.herir(Math.min(ATAQUES[b.ataque].dano, tope(J)), b.x, b.y, true);
                 break;
               }
             limpiar(J, b);
@@ -656,7 +659,7 @@ window.COMBATE = (function () {
           } else b.t = 99; // chocó con algo: frena
           b.mov = 1;
           if (!b.golpeo && Math.hypot(p.x - b.x, p.y - b.y) < 2.6 * M) {
-            J.herir(Math.min(ATAQUES.embestida.dano, TOPE), b.x, b.y);
+            J.herir(Math.min(ATAQUES.embestida.dano, tope(J)), b.x, b.y);
             b.golpeo = true;
           }
           for (const s of b.soportes)

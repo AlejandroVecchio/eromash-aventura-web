@@ -16,6 +16,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | Cómo se ve y cómo se anima | dibujo en `personajes/vikingo.js`, vida y gestos en `personajes/animacion.js` (`ANIMA.pose`), espada y sombra en `dibujarJugador` de `motor/juego.js` |
 | Morir y reaparecer | `motor/juego.js`, sección `muerte y reaparición` (`dondeReaparecer`); los refugios por misión en `historia/guion.js` (`REAPARECER`) |
 | Runas (Kenaz, Isa, Algiz, Sowilo), poder rúnico, plata y fragmentos | `motor/poderes.js` (`RUNAS`, `darPlata`, `botinCofre`) |
+| Nivel, experiencia, nivel de las criaturas y estadísticas (crítico, armadura, velocidad) | `motor/rpg.js` (`xpPara`, `nivelDe`, `recalcular`, `aporte`); reglas en `docs/rpg.md` |
 
 ### El mundo
 
@@ -212,6 +213,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **regiones.js**: regiones con nombre (sistema REGIONES)
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
+- **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
+  - el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
 - **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
   - armar el mundo de secretos · aplicar lo guardado · acciones
 - **secundarias.js**: encargos, semijefes, renombre y proezas (sistema SECUNDARIAS)
@@ -306,6 +309,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
+- **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.

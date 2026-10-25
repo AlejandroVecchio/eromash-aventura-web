@@ -357,11 +357,13 @@ window.INVENTARIO = (function () {
   function stats(pe) {
     const renombre = window.SECUNDARIAS ? SECUNDARIAS.renombre() : 0;
     return [
+      ...(window.RPG ? RPG.filas().slice(0, 1) : []),
       [t("inv.st_vida"), Math.round(jug.hpMax)],
       [t("inv.st_dano"), "×" + (J.mulDano || 1).toFixed(2)],
       [t("inv.st_poder"), "×" + (pe.poder || 1).toFixed(2)],
       [t("inv.st_estamina"), jug.staMax],
       [t("inv.st_luz"), "×" + (J.lampara || 1).toFixed(2)],
+      ...(window.RPG ? RPG.filas().slice(1) : []),
       [t("inv.st_renombre"), t("sc.renombre_" + renombre)],
       [t("inv.st_proezas"), (window.SECUNDARIAS ? SECUNDARIAS.proezas() : 0) + " / 12"],
     ];

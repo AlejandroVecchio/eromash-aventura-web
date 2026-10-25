@@ -41,7 +41,7 @@ function armar() {
   const errores = [];
   let out = [DESDE, "", "## Todos los archivos", ""];
   out.push("Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.", "");
-  for (const dir of fs.readdirSync(JS).filter((d) => fs.statSync(path.join(JS, d)).isDirectory() && d !== "vendor").sort()) {
+  for (const dir of fs.readdirSync(JS).filter((d) => fs.statSync(path.join(JS, d)).isDirectory() && d !== "vendor" && d !== "pr").sort()) {
     out.push(`### js/${dir}/ · ${CARPETAS[dir] || ""}`, "");
     for (const f of fs.readdirSync(path.join(JS, dir)).filter((f) => f.endsWith(".js")).sort()) {
       const a = archivo(path.join(dir, f));
