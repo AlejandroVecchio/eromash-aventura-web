@@ -519,7 +519,7 @@ window.INVENTARIO = (function () {
           const k = Math.min(280 / v.naturalWidth, 330 / v.naturalHeight);
           cx.drawImage(v, 150 - (v.naturalWidth * k) / 2, 345 - v.naturalHeight * k, v.naturalWidth * k, v.naturalHeight * k);
         } else {
-          const img = VIKINGO.imagen("R", "S", "calm");
+          const img = VIKINGO.imagen(VIKINGO.color || "R", "S", "calm");
           if (img.complete) cx.drawImage(img, 40, 40, 220, 264);
         }
       };
