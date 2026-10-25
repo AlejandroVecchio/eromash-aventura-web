@@ -129,10 +129,18 @@ window.INSTRUCTORES = (function () {
     }
     if (L && (st.pasada[id] || 0) <= n) {
       const enCurso = st.prueba && st.prueba.quien === id;
-      bot.push({ texto: enCurso ? t("ie.prueba_en_curso") : t("ie.pedir_prueba"), sub: t("ie.prueba_" + M.prueba, [M.meta[n], M.seg]), fn: () => A.dialogoLibre([[id, "ie." + id + "_prueba"]], () => (pedirPrueba(id), A.cerrarMenu())) });
+      bot.push({ texto: enCurso ? t("ie.prueba_en_curso") : t("ie.pedir_prueba"), sub: t("ie.prueba_" + M.prueba, [M.meta[n], M.seg]), fn: () => {
+          // el menú se cierra y Vör, Ulfar o Hallbera dicen la prueba: después queda andando en el rastreador
+          A.cerrarMenu();
+          A.dialogoLibre([[id, "ie." + id + "_prueba"]], () => pedirPrueba(id));
+        } });
     }
     window.SISTEMAS.forEach((s0) => s0.botonesInstructor && s0.botonesInstructor(id).forEach((b) => bot.push(b))); // los galdrar de Vör…
-    bot.push({ texto: t("ie.charlar"), fn: () => A.dialogoLibre([[id, "ie." + id + "_charla" + ((n % 3) + 1)]], () => menuMaestro(id)) });
+    // charlar cierra el menú, se habla y al terminar vuelve el menú del maestro
+    bot.push({ texto: t("ie.charlar"), fn: () => {
+      A.cerrarMenu();
+      A.dialogoLibre([[id, "ie." + id + "_charla" + ((n % 3) + 1)]], () => menuMaestro(id));
+    } });
     bot.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
     A.menu(`<h2>${t("av.nombre_" + id)}</h2><div class="sub">${t("ie." + id + "_sub")}</div>`, bot);
   }
