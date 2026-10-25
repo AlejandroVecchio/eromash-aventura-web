@@ -1,5 +1,6 @@
 // Textos de los nidos de arañas (motor/aranas.js, enemigos/aranas.js): prefijo ar. (y cr., bs., as., mt.seda, mp.ley_nidos).
 I18N.textos({
+  "as.grupo.aranas": { es: "Nidos de arañas", en: "Spider nests" },
   "mp.ley_nidos": { es: "Nidos de arañas", en: "Spider nests" },
   "cr.arana": { es: "Araña de musgo", en: "Moss spider" },
   "cr.aranaReina": { es: "Tejedora", en: "Weaver" },

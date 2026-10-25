@@ -592,6 +592,23 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Mejoras** (`MEJORAS`, plata + materiales de la PR 12): arcón 150 + 4 cuero (guarda 30 piezas, `ARCON`), armero 250 + 6 hierro (+4 % de daño), estantería 200 + 2 ámbar (+5 % de experiencia), fogón del patio 120 + 3 hierro (un `fogonOlla` de verdad, se cocina), huerta 100 + 2 cuero (crece durante el día; una cosecha por día: 2 hierbas y 35 % una manzana) y cama de pieles de oso 300 + 6 cuero (dormir en ella: «Bien abrigado», +10 % de experiencia 600 s, `st.abrigo`).
 - **Estado** (`E.extra.casa`): tuya, hechas, arcon, cosecha (el día de la última). Va al diario.
 
+## Las runas de los elementos y las reacciones (`motor/elementos.js`, `ELEMENTOS`; assets `robleTrueno`, `fuenteLaguz`, `piedraManantial` en `mundo/assets-elementos.js`; textos `el.`)
+
+- **Runas nuevas**: `PODERES` se abre a runas de otros sistemas (`RUNAS[r] = { coste, col }`, `ORDEN.push(r)`, `LANZAR[r] = (h) => …` con `h = { golpe, pr, apuntar, vivos, efectos, avisar }`). La mochila muestra las cuatro de los altares siempre y las demás cuando ya se tienen.
+  - **Thurisaz** (45 de energía): rayo a la criatura más cerca de hacia donde apunta (10 m), que salta a tres más a menos de 5,5 m; 26 × poder rúnico, ×0,75 por salto, ×1,25 con lluvia. Deja `e.electro` 5 s.
+  - **Laguz** (35): ola en abanico de 7 m que pega 10 × poder, empuja a las chicas y deja `e.mojado` 8 s; cierra un 5 % de la vida.
+- **Dónde se ganan**: el Roble del Trueno, en el bosque al sur del Paso (claro propio, semilla fija): E empieza la prueba del trueno, 8 rayos marcados en el piso (1 s de aviso, 14 de daño con el tope del 35 %, saltar los evita) sobre Eromash; el último cae en el roble. Alejarse más de 23 m la corta. La Fuente de Laguz, en la orilla de la laguna del camino del Puesto a Eikholt, con tres `piedraManantial` repartidas en la orilla: tocarlas (E) manda la luz del agua a la fuente; con las tres mana y beber da la runa y llena la vida. Los dos van al mapa como altares.
+- **Elementos en las criaturas**: fuego `e.quema` (Kenaz), hielo `e.helado > 1,2` (Isa), agua `e.mojado` (Laguz, estar en el agua, lluvia > 0,4) y trueno `e.electro`. Dos juntos hacen la primera reacción de `REACCIONES` y se consumen:
+  - vapor (agua + fuego): nube de 150 que pega 12 × poder y deja ciegas (`vio` 0, `duda`, aturdidas 1,4 s; las fuertes 0,6 s);
+  - congelada (agua + hielo): 4 s quieta en un bloque de hielo; el próximo golpe de arma (`modDano`) la quiebra con +60 %;
+  - descarga (agua + trueno): 22 × poder a ella y a todas las empapadas a menos de 12 m, aturdidas 1 s;
+  - deshielo (fuego + hielo): 35 × poder;
+  - estallido (fuego + trueno): 20 × poder y empuje a todo lo que esté a menos de 140;
+  - esquirlas (hielo + trueno): 12 × poder a menos de 180 y escarcha a las demás.
+- **Lluvia**: empapa a todas, el fuego dura menos y el trueno pega un 25 % más (un cartel lo explica la primera vez).
+- **Códice**: cada reacción nueva paga 20 de plata y un cartel la explica; las seis, un fragmento. Celda en la Bolsa (`el_codice`) con la ventana de las seis (las no descubiertas solo muestran sus elementos) y una línea en el diario.
+- **Estado** (`E.extra.elementos`): roble, piedras, fuente, vistas, todas, ayuda, lluvia.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

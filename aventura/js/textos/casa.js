@@ -1,5 +1,6 @@
 // Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).
 I18N.textos({
+  "as.grupo.casa": { es: "La casa de Hrolf", en: "Hrolf's house" },
   "as.letreroVenta": { es: "El letrero de la casa de Hrolf", en: "The sign at Hrolf's house" },
   "as.huertaCasa": { es: "La huerta de la casa", en: "The house garden" },
   "in.nombre_propia": { es: "Tu casa", en: "Your house" },

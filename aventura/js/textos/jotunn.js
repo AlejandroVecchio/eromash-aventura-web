@@ -1,5 +1,6 @@
 // Textos de Hrímnir, el jötunn de la escarcha (motor/jotunn.js): prefijo jt. (y hd.unico_hrimnir, cr., bs., as., mp.ley_jotunn).
 I18N.textos({
+  "as.grupo.jotunn": { es: "Hrímnir, el jötunn", en: "Hrímnir, the jötunn" },
   "mp.ley_jotunn": { es: "El jötunn", en: "The jötunn" },
   "hd.unico_hrimnir": { es: "Hrímnir", en: "Hrímnir" },
   "cr.jotunn": { es: "Jötunn de la escarcha", en: "Frost jötunn" },

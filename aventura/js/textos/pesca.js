@@ -1,5 +1,6 @@
 // Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 I18N.textos({
+  "as.grupo.pesca": { es: "La pesca", en: "Fishing" },
   "mp.ley_pesca": { es: "Pesca", en: "Fishing" },
   "as.canaSverri": { es: "El puesto de pesca de Sverri", en: "Sverri's fishing spot" },
   "co.c_pescado": { es: "pescado", en: "fish" },

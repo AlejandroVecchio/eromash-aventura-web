@@ -254,6 +254,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
+- **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
+  - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
   - aparecer · cada encuentro · el sistema
 - **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
@@ -357,6 +359,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: posteContratos, rastroContrato
 - **assets-eikholt.js**: Eikholt, la capital (se suma a ASSETS)
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
+- **assets-elementos.js**: las runas de los elementos: Thurisaz y Laguz (assets de ELEMENTOS)
+  - assets: robleTrueno, fuenteLaguz, piedraManantial
 - **assets-este.js**: el este: Aserradero de Orm y Santuario de las Raíces (se suma a ASSETS)
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
@@ -442,6 +446,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
+- **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
 - **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
