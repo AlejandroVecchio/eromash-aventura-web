@@ -625,6 +625,13 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los topes** (`RPG.TOPES`, la pasada de balance): el núcleo (`NUCLEO`: nivel, equipo puesto y sus conjuntos, atributos) cuenta entero. Lo que suman los demás juntos tiene tope, y lo que pasa vale la mitad: daño ×1,75, vida ×1,6, poder rúnico ×1,75, daño del crítico ×1,5, velocidad de ataque y al andar ×1,4, regeneraciones ×2,5, experiencia, plata y botín ×2, estamina +80, armadura +120 (frena a/(100+a) de cada golpe), crítico +25 %. El crítico nunca pasa del 60 % (`CRIT_MAX`, antes 75 %).
 - **La pestaña Hoja** (antes de la Bolsa): una casilla por estadística con su runa (Uruz vida, Ehwaz estamina, Tiwaz daño, Sowilo crítico…) y el valor; al elegirla, abajo su base, de dónde sale, el tope y lo que se comió (la casilla topada lleva un punto naranja). Más abajo, la hoja entera en una tabla.
 
+## La saga de Eromash (`motor/saga.js`, `SAGA`; textos `sg.`)
+
+- **Las entradas** (`ENTRADAS`: id, capítulo, runa, color, sistema que la necesita y `n()` → [hecho, total]): cada una lee el estado guardado de su sistema, así nada se cuenta dos veces. Hoy 19 en tres capítulos (`CAPS`): la pelea (nivel, bestiario, contratos, guaridas, nidos, hólmganga, jötunn, Cacería), los oficios (lecciones, hierbas, comidas, peces, tintes, poderes legendarios, conjuntos) y el mundo (libros, hörgar, elementos, la casa). Si el sistema no está cargado, la entrada no aparece. Una entrada nueva suma su línea y sus textos `sg.e_<id>` y `sg.e_<id>_d`.
+- **El porcentaje**: el promedio de lo hecho de cada entrada; va en el nombre de la pestaña, en la cabecera y en el diario.
+- **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
+- **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
