@@ -40,9 +40,23 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 (próximamente)
 
-## Las losas deslizantes
+## Las losas deslizantes (`mj-losas.js`)
 
-(próximamente)
+Una tabla de piedra tallada (marco con guarda, rombos, nudos de oro y una runa grande en luz rúnica) partida en losas
+con un hueco; a la izquierda se ve la tabla entera. Las flechas corren hacia el hueco la losa de ese lado; con el
+puntero se toca cualquier losa de la fila o la columna del hueco y se corre toda la tira. Cada losa lleva su número
+chico (celeste cuando está en su lugar). Se arma resuelta y se desordena caminando el hueco, así siempre se puede.
+
+| Variante | Reglas | Dónde |
+| --- | --- | --- |
+| `base` | 3 × 3 | uno de cada cuatro arcones del leñador (`id % 4 === 3`) |
+| `cuatro` | 4 × 4 | — |
+| `atadas` | 4 × 4, dos losas del medio atadas en violeta (no se mueven, hay que rodearlas) | la mitad de los cofres de las salas del tesoro de las mazmorras |
+| `reloj` | 3 × 3, 60 s | — |
+| `gran` | 4 × 4 atada, 210 s | — |
+
+Los cofres que cierran con otro minijuego que no sea los anillos dicen `"tipo:variante"` en su cerrojo
+(`"losas:atadas"`); el cartel de arriba sale de `mn.<tipo>_cerrado`.
 
 ## El hilo de las Nornas
 
