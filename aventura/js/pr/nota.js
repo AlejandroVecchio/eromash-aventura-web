@@ -5,31 +5,28 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 10,
-    titulo: { es: "Escudo: bloquear y parar", en: "Shield: block and parry" },
+    pr: 11,
+    titulo: { es: "La forja al ritmo del yunque", en: "Forging to the anvil's beat" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín y equipo: los escudos son piezas de la casilla del escudo; ahora cada uno dice cuánto bloquea", en: "loot and gear: shields are shield-slot pieces; now each one says how much it blocks" },
-      { pr: 4, es: "tipos de arma: el arco (PR 6) y el bastón (PR 9) no bloquean; las demás armas bloquean poco sin escudo", en: "weapon types: the bow (PR 6) and staff (PR 9) can't block; other weapons block a little without a shield" },
+      { pr: 3, es: "botín y equipo: lo forjado es una pieza más, con rareza y afijos, que va a la bolsa", en: "loot and gear: what you forge is one more piece, with rarity and affixes, into the bag" },
+      { pr: 4, es: "tipos de arma: Ása forja cada tipo que exista en esta rama (espadas, hachas, a dos manos, arco, lanza, martillo, bastón) y escudos (PR 10)", en: "weapon types: Ása forges every type in this branch (swords, axes, two-handed, bow, spear, hammer, staff) and shields (PR 10)" },
+      { pr: 1, es: "niveles: la pieza sale un nivel por encima del de Eromash", en: "levels: the piece comes out one level above Eromash" },
     ],
     mirar: [
-      { es: "Bloquear es G, L2 o el clic derecho (mantener). Se levanta el escudo delante del pecho, camina más lento y aparece la casilla Bloquear en la barra.", en: "Block is G, L2 or right click (hold). The shield goes up in front of the chest, he walks slower and a Block slot appears on the bar." },
-      { es: "Los golpes de adelante pierden lo que bloquea el escudo (mirá la línea «Bloquea el … %» en la mochila) a cambio de estamina. Sin estamina: «¡Guardia rota!» y tambalea.", en: "Hits from the front lose what the shield blocks (see the «Blocks …%» line in the bag) for stamina. Out of stamina: «Guard broken!» and he staggers." },
-      { es: "Levantarlo justo antes del golpe es una «¡Parada!»: no entra nada, la criatura queda aturdida, cámara lenta y el próximo golpe pega doble.", en: "Raising it right before the hit is a «Parry!»: nothing gets through, the creature is stunned, slow motion and the next hit deals double." },
-      { es: "Atacar con el escudo levantado es un empujón que aturde. El escudo se ve en el brazo: de frente, de costado o a la espalda según hacia dónde mira.", en: "Attacking with the shield up is a stunning bash. The shield shows on the arm: front, side or back depending on where he faces." },
+      { es: "Hablá con Ása (en la herrería) o tocá su yunque: «Forjar una pieza nueva». Elegís qué y cómo: con calma (más lento, a lo sumo rara) o a fuego vivo (más rápido, con acordes; la única que da legendarias).", en: "Talk to Ása (in the smithy) or use her anvil: «Forge a new piece». Pick what and how: steady (slower, rare at most) or roaring fire (faster, chords; the only way to legendaries)." },
+      { es: "Un juego de ritmo: runas que bajan por cuatro carriles hasta el yunque; se aprieta la dirección (WASD, flechas, cruceta o tocando el carril) justo cuando llegan. Música armada en el momento: tambor, bordón y una nota por carril.", en: "A rhythm game: runes fall down four lanes onto the anvil; press the direction (WASD, arrows, d-pad or tap the lane) right as they land. Music built live: drum, drone and a note per lane." },
+      { es: "Tres tramos: el fuelle (notas largas que se mantienen y calientan el hierro), el martillo (golpes cada vez más seguidos) y el temple (un golpe final con atacar cuando baja la barra dorada).", en: "Three parts: the bellows (long held notes that heat the iron), the hammer (faster and faster strikes) and the quench (one final strike with attack when the golden bar arrives)." },
+      { es: "La nota decide la rareza y qué tan altos salen los números; la pieza dice «Forjada por Ása · martillada al … %». Esc deja y Ása devuelve la plata.", en: "Your score decides rarity and how high the numbers roll; the piece says «Forged by Ása · hammered at …%». Esc leaves and Ása returns the silver." },
     ],
     botones: [
-      { es: "Darme los cuatro escudos y abrir la Bolsa", en: "Give me the four shields and open the Bag", fn: (A) => {
-        ["escudoTablas", "escudoRedondo", "escudoGuarnecido", "escudoCometa"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 16, r: i }), { silencio: true }));
-        INVENTARIO.abrir("bolsa");
+      { es: "Abrir la forja acá (con 2000 de plata)", en: "Open the forge here (with 2000 silver)", fn: (A) => {
+        PODERES.pj().plata = Math.max(PODERES.pj().plata, 2000);
+        FORJA.abrir();
       } },
-      { es: "Ponerme el escudo de tablas (la parada más fácil)", en: "Equip the plank shield (easiest parry)", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "escudoTablas", n: 4, r: 1 }), { silencio: true });
-        BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
-      } },
-      { es: "Ir con un grupo con un líder a practicar paradas", en: "Go to a group with a leader to practice parries", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -200, 120);
-        A.jug.sta = A.jug.staMax;
+      { es: "Probar una espada a fuego vivo ya", en: "Try a sword at roaring fire now", fn: (A) => FORJA.empezar(FORJA.baseDe({ tipo: "espada" }), "fuego", 0) },
+      { es: "Subir a nivel 12 (bases mejores)", en: "Go to level 12 (better bases)", fn: (A) => {
+        while (RPG.nivel() < 12) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp + 1);
       } },
     ],
   };

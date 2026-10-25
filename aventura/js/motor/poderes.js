@@ -114,6 +114,8 @@ window.PODERES = (function () {
       linea("pj.forja_lampara", pj.lampara, COSTO_LAMPARA, () => pj.lampara++),
       // la pechera de escamas, con las escamas de Góinn
       ...(window.GOINN && GOINN.vencido() ? [linea("pj.forja_pechera", pj.pechera ? 1 : 0, [200], () => ((pj.pechera = 1), (jug.hp += 40)))] : []),
+      // forjar una pieza nueva al ritmo del yunque (motor/forja.js)
+      ...(window.FORJA ? [{ texto: t("fg.desde_asa"), sub: t("fg.desde_asa_sub"), fn: FORJA.abrir }] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }

@@ -215,6 +215,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
+- **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
+  - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
@@ -316,6 +318,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
+- **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
