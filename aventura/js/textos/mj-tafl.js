@@ -1,0 +1,22 @@
+// Textos de hnefatafl (motor/mj-tafl.js) y de Fjalar en el Hongo Dorado que lo pide (motor/hongo.js): prefijo mn.tafl y ho.tafl
+I18N.textos({
+  "mn.tafl": { es: "Hnefatafl", en: "Hnefatafl" },
+  "mn.tafl_pie": { es: "Tocá una pieza y después adónde va · flechas y {0} · {1}: dejar", en: "Tap a piece, then where it goes · arrows and {0} · {1}: quit" },
+  "mn.tafl_vos": { es: "Tu jugada", en: "Your move" },
+  "mn.tafl_fjalar": { es: "Fjalar piensa…", en: "Fjalar is thinking…" },
+  "mn.tafl_defendes": { es: "Defendés al rey: llevalo a una esquina", en: "You defend the king: bring him to a corner" },
+  "mn.tafl_atacas": { es: "Atacás: rodeá al rey por los cuatro lados", en: "You attack: surround the king on all four sides" },
+  "mn.tafl_tomadas": { es: "Tomadas: {0} · perdidas: {1}", en: "Taken: {0} · lost: {1}" },
+  "mn.tafl_quedan": { es: "Quedan {0} jugadas", en: "{0} moves left" },
+  "mn.tafl_res": { es: "{0} jugadas · {1} piezas tomadas", en: "{0} moves · {1} pieces taken" },
+  "mn.tafl_v_ataque": { es: "Del otro lado: atacás vos", en: "The other side: you attack" },
+  "mn.tafl_v_borde": { es: "Al rey le alcanza cualquier borde", en: "Any edge will do for the king" },
+  "mn.tafl_v_reloj": { es: "Escapar en 24 jugadas", en: "Escape in 24 moves" },
+  "mn.tafl_v_gran": { es: "La gran tabla de nueve", en: "The great board of nine" },
+  "ho.accion_tafl": { es: "Jugar al hnefatafl con Fjalar", en: "Play hnefatafl with Fjalar" },
+  "ho.tafl_quien": { es: "Fjalar acomoda las piezas sobre su cajón", en: "Fjalar sets the pieces on his crate" },
+  "ho.tafl_bien": { es: "Fjalar gruñe y paga la apuesta", en: "Fjalar grumbles and pays the bet" },
+  "ho.tafl_bien_sub": { es: "{0} de plata", en: "{0} silver" },
+  "ho.tafl_otra": { es: "«Otra vez vos. Mañana te cobro el doble»", en: "“You again. Tomorrow I'll charge you double”" },
+  "ho.tafl_mal": { es: "Fjalar se ríe en su barba: «Los dvergar inventamos este juego»", en: "Fjalar laughs into his beard: “We dvergar invented this game”" },
+});

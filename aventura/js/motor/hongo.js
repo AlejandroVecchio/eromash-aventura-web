@@ -371,6 +371,30 @@ window.HONGO = (function () {
       HUD.aviso(t("ho.cancion_bien"), "#73D5DB");
     });
   }
+  // Fjalar juega al hnefatafl sobre su cajón (MINIJ «tafl»): cada partida ganada sube de tabla y la apuesta se cobra una
+  // vez por día
+  const TABLAS = ["borde", "base", "reloj", "ataque", "gran"];
+  function taflConFjalar() {
+    if (!window.MINIJ || !MINIJ.JUEGOS.tafl) return;
+    const hoy = Math.floor(H.E.tiempo / LUZ.DIA),
+      ganadas = st.tafl || 0;
+    MINIJ.empezar("tafl", {
+      variante: TABLAS[Math.min(TABLAS.length - 1, ganadas)],
+      quien: t("ho.tafl_quien"),
+      fin: (r) => {
+        if (r.dejo) return;
+        if (!r.gano) return HUD.aviso(t("ho.tafl_mal"), "#E0B2B2");
+        st.tafl = ganadas + 1;
+        if (st.taflDia === hoy) return HUD.aviso(t("ho.tafl_otra"), "#FFD98A");
+        st.taflDia = hoy;
+        const plata = 25 + Math.min(50, ganadas * 10);
+        if (PODERES.darPlata) PODERES.darPlata(plata);
+        if (window.RPG) RPG.dar(120, jug.x, jug.y);
+        HUD.aviso(t("ho.tafl_bien"), "lugar", t("ho.tafl_bien_sub", [plata]));
+        H.guardar && H.guardar();
+      },
+    });
+  }
   const mirar = (clave) => () => A.dialogoLibre([["eromash", clave]]);
   // ---------- los cuartos de arriba ----------
   let golpes = 0,
@@ -455,6 +479,12 @@ window.HONGO = (function () {
       if (!n.visible || n.z >= ZG !== arriba) continue;
       const d = dist(n.x, n.y) - (n.id === "bergr" ? 60 : 0);
       if (d < 200) prueba(d - 30, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablar(n));
+    }
+    // la tabla de Fjalar, del lado de su cajón al que mira
+    const fj = !arriba && gente.find((n) => n.id === "fjalar" && n.visible);
+    if (fj && window.MINIJ) {
+      const d = dist(fj.x + 180, fj.y);
+      if (d < 120) prueba(d - 40, t("ho.accion_tafl"), taflConFjalar);
     }
     if (arriba) {
       if (ero.modo !== "gal") return mejor;
@@ -1440,5 +1470,6 @@ window.HONGO = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return { entrar, girar: (g) => (giroObj = cam.g = g), acercar: (z) => (zoom = z), activo: () => activo, sala: { HX, HY, ZG, ZT }, gente: () => gente, cam, ero, PR: () => PR,
     // para las pruebas: en qué cuarto está, entrar a uno o volver a la galería, y lo que hay a mano
+    taflConFjalar,
     cuarto: () => en && en.id, irCuarto: (id) => (id ? entrarCuarto(CUARTOS.find((q) => q.id === id)) : en && salirCuarto()), cercanoTexto: () => (cercano() || {}).texto };
 })();
