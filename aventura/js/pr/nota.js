@@ -15,6 +15,7 @@
     ],
     mirar: [
       { es: "En el norte hay un anillo de nueve menhires con la runa Isa (en el mapa, clase El jötunn). Hrímnir duerme sentado en su trono; al acercarte se levanta, ruge, la vista se abre y aparece la barra de jefe con el nombre de cada ataque.", en: "In the north there's a ring of nine standing stones with the Isa rune (on the map, The jötunn class). Hrímnir sleeps on his throne; as you approach he rises, roars, the view widens and the boss bar appears with each attack's name." },
+      { es: "Por qué pelea: la primera vez Hrímnir te habla y te dice que no se levanta por un mortal; el mapa marca a sus tres hrímthursar guardianes, que andan a unos 80 m del anillo. Hasta vencerlos, si te acercás a su trono te tira una patada (aviso en el piso, saltar la evita, no saca vida) que te saca volando del anillo. Con los tres caídos, te espera para pelear.", en: "Why he fights: the first time Hrímnir tells you he won't rise for a mortal; the map marks his three hrímthursar guardians, roaming about 80 m from the ring. Until you beat them, getting close to his throne earns you a kick (floor warning, jumping avoids it, no damage) that sends you flying out of the ring. With all three down, he waits to fight you." },
       { es: "Rotación fija por fase: barrido, pisotón y línea de hielo; desde el 66 % suma granizo de rocas y desde el 33 % el grito de escarcha. Avisos exactos en el piso, saltar evita todo, nada saca más del 35 % y nunca repite un ataque tres veces. Al pasar de fase llama hasta tres hrímthursar.", en: "Fixed rotation per phase: sweep, stomp and ice line; from 66% he adds rock hail and from 33% the frost roar. Exact ground warnings, jumping avoids everything, nothing takes more than 35% and no attack repeats three times. On each phase change he calls up to three hrímthursar." },
       { es: "Después del pisotón y del grito queda expuesto (se agacha, runas en la cabeza): recibe un 30 % más. Si te alejás del anillo vuelve a su trono y se cura. Vencerlo paga 320 de plata, 1500 de experiencia, dos fragmentos y una pieza épica o mejor.", en: "After the stomp and the roar he's exposed (crouches, runes over his head): he takes 30% more. If you leave the ring he returns to his throne and heals. Defeating him pays 320 silver, 1500 experience, two shards and an epic or better item." },
     ],
@@ -25,12 +26,21 @@
       } },
       { es: "Llevarme y dejarlo al 40 % (fase 2)", en: "Take me there with him at 40% (phase 2)", fn: (A) => {
         const j = JOTUNN.jefe();
+        JOTUNN.estado().guardianes = [1, 1, 1];
         ir(A, j.centro, 0, 1150);
         setTimeout(() => {
           j.e.vida = j.e.d.vida * 0.4;
           j.fase = 1;
           j.llamo = 1;
         }, 400);
+      } },
+      { es: "Llevarme junto a un guardián", en: "Take me next to a guardian", fn: (A) => {
+        const j = JOTUNN.jefe(),
+          g = j.guard.find((q, k) => !JOTUNN.estado().guardianes[k]);
+        if (g) ir(A, g.lugar, 0, 500);
+      } },
+      { es: "Dar por vencidos a sus tres guardianes", en: "Count his three guardians as defeated", fn: (A) => {
+        JOTUNN.jefe().guard.forEach((g) => ((g.activo = true), A.CB.golpear(A.J, g, 999999, g.x, g.y, 1)));
       } },
       { es: "Subirme a nivel 12 para pelearlo", en: "Raise me to level 12 to fight him", fn: () => {
         while (RPG.nivel() < 12) RPG.dar(500);

@@ -273,7 +273,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interiores.js**: los interiores (sistema INTERIORES)
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (sistema JOTUNN)
-  - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el sistema
+  - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el desafío: sin sus guardianes caídos, la patada · el sistema
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
 - **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
