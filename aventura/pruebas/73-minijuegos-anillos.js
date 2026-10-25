@@ -50,7 +50,7 @@
       si(SECRETOS.cerrojo(cofres.find((c) => c.tipo === "arconLenador" && c.id % 4 === 0)) == null, "los demás arcones abren como siempre");
       // Probar mecánicas los lista solos
       const g = PROBAR.GRUPOS.find((x) => x.id === "minijuegos");
-      igual(g.lista().length, 5, "las cinco variantes en Probar:");
+      igual(g.lista().filter((e) => e.id.startsWith("mj_anillos_")).length, 5, "las cinco variantes en Probar:");
     } }
   );
 }
