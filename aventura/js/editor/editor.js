@@ -787,6 +787,7 @@
     if (window.EDITOR_HISTORIA) EDITOR_HISTORIA.dibujar(c, cam, V);
     if (window.EDITOR_ZONAS) EDITOR_ZONAS.dibujar(c, cam, V, tt);
     if (window.EDITOR_BOCETO) EDITOR_BOCETO.dibujar(c, cam, V, tt);
+    if (ctrlAbajo) dibujarCopia(c, tt);
     if (window.EDITOR_IA && EDITOR_IA.dibujarVarias) EDITOR_IA.dibujarVarias(c, cam, V, tt);
     if (window.EDITOR_NPC) EDITOR_NPC.dibujar(c, cam, V, tt);
     // la vista previa de lo que se va a poner
@@ -2029,6 +2030,7 @@
 
   // ---------- el puntero ----------
   let cursor = null,
+    ctrlAbajo = false,
     arrastre = null,
     sel = null,
     medida = null, // la última regla tirada con Medir
@@ -2424,6 +2426,8 @@
   }
   $("selIguales").onclick = elegirIguales;
   $("selDuplicar").onclick = () => duplicar();
+  $("selCopiar").onclick = () => copiar();
+  $("selPegar").onclick = () => pegarAca();
   $("selSacar").onclick = () => sacarElegidos();
   $("hComandos").onclick = () => window.EDITOR_COMANDOS && EDITOR_COMANDOS.abrir();
   $("hInteriores").onclick = () => window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir();
@@ -2490,6 +2494,20 @@
   }
 
   const pegarAca = () => (cursor ? pegar(cursor.x, cursor.y) : pegar(cam.x, cam.y));
+  // con Ctrl apretado, lo copiado se ve transparente bajo el puntero: ahí cae con Ctrl+V
+  function dibujarCopia(c, tt) {
+    if (!copia || !copia.length || !cursor) return;
+    window.EDITOR.fantasmas(
+      c,
+      copia.map((it) => {
+        const o = JSON.parse(JSON.stringify(it.o || {}));
+        if (o.x2 !== undefined) (o.x2 += cursor.x), (o.y2 += cursor.y);
+        return { id: it.id, x: cursor.x + it.dx, y: cursor.y + it.dy, o };
+      }),
+      tt,
+      0.45,
+    );
+  }
   function darVuelta() {
     if (!elegida) return;
     recordar();
@@ -2805,6 +2823,10 @@
   }
   // teclado: mover la vista, zoom, herramientas, deshacer
   const teclas = {};
+  // Ctrl (o Cmd) apretado: muestra dónde caería lo copiado
+  addEventListener("keydown", (e) => (e.key === "Control" || e.key === "Meta") && !ctrlAbajo && ((ctrlAbajo = true), pedir()));
+  addEventListener("keyup", (e) => (e.key === "Control" || e.key === "Meta") && ((ctrlAbajo = false), pedir()));
+  addEventListener("blur", () => (ctrlAbajo = false));
   addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type !== "checkbox" && e.target.type !== "range") return;
     if (e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
