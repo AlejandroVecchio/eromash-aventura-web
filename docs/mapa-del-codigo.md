@@ -91,7 +91,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 
 ## Cómo se arma un cuadro
 
-`motor/juego.js` corre el bucle (`cuadro`): actualiza a Eromash, la gente, las criaturas y cada sistema (`actualizar`), y después dibuja en este orden (`dibujar`): piso → `fondo` de los sistemas → avisos y marcas → `piso` de los sistemas → todo lo que tiene altura ordenado por su pie (objetos del mundo, gente, criaturas, lo de cada sistema en `objetos` y Eromash; lo alto que se cruza con el claro de Eromash se ve transparente ahí) → silueta de Eromash detrás de lo que lo tapa → `aire` (hojas, lluvia) → niebla → luz → `sobreLuz` (lo que brilla en la oscuridad) → números, rombo de E, haz del objetivo → viñeta y bordes. Al final, el HUD (`actualizarHud`, que solo toca la página cuando algo cambió).
+`motor/juego.js` corre el bucle (`cuadro`): actualiza a Eromash, la gente, las criaturas y cada sistema (`actualizar`), y después dibuja en este orden (`dibujar`): piso → `fondo` de los sistemas → avisos y marcas → `piso` de los sistemas → todo lo que tiene altura ordenado por su pie (objetos del mundo, gente, criaturas, lo de cada sistema en `objetos` y Eromash) → silueta de Eromash detrás de lo que lo tapa → `aire` (hojas, lluvia) → niebla → luz → `sobreLuz` (lo que brilla en la oscuridad) → números, rombo de E, haz del objetivo → viñeta y bordes. Al final, el HUD (`actualizarHud`, que solo toca la página cuando algo cambió).
 
 Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite (la lista está en `CLAUDE.md`, «Sistemas»).
 
@@ -101,7 +101,6 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 - Los objetos se buscan por baldes (`ELDERVALD.cercanas`), nunca recorriendo el mundo entero; lo pintado en el piso de un tipo se pide con `ELDERVALD.decoDe(id)`.
 - Las luces se pintan con dos dibujos hechos una sola vez (`AGUJERO` y `brillo` en `mundo/luz.js`), no con un degradado nuevo por luz.
 - La silueta de Eromash redibuja solo lo que de verdad se cruza con él (`bordes` en `motor/juego.js` mide cada asset una vez).
-- El claro de Eromash (árboles transparentes a su alrededor, `prepararAura`/`auraAntes`/`auraVolcar` en `motor/juego.js`) no recorta cada árbol: copia el fondo del óvalo una vez por tanda, junta lo que se cruza en una capa y la pasa con una máscara hecha una sola vez; en media la capa va a media resolución y en baja no hay claro.
 - El HUD escribe en la página solo cuando un valor cambió (`cambia` en `interfaz/hud.js`); los metros del rastreador se cambian en su lugar.
 - Todo efecto caro mira `CALIDAD.nivel`.
 
@@ -241,6 +240,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
+- **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
+  - aparecer · cada encuentro · el sistema
 - **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
   - al generar una pieza (objetos.js): ¿sale con muescas? · lo que suma una pieza · encastrar, vaciar, unir · Ása abre muescas · la pestaña de la mochila · íconos · el sistema
 - **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
@@ -265,6 +266,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · el claro de Eromash: lo que lo rodea se vuelve transparente · HUD de cada cuadro · menús · bucle · arranque
+- **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
+  - empezar y terminar · cada juego · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
   - en la mano · dibujo · el sistema
 - **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
@@ -402,6 +405,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
+- **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
@@ -414,6 +418,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
+- **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
