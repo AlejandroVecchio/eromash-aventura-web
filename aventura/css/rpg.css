@@ -70,3 +70,22 @@
 .inv-celda.cm-caro .cant { color: #C8402D; }
 .inv-celda.cm-envuelta canvas { filter: brightness(0.25) sepia(1) hue-rotate(-20deg) saturate(2); }
 .inv-celda.cm-envuelta::after { content: "?"; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: var(--oro); }
+
+/* ---------- regateo: la balanza encima de la pestaña del mercader (motor/regateo.js) ---------- */
+#regateo { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 70; width: min(680px, calc(100vw - 32px)); padding: 18px 20px; border-top: 3px solid var(--oro); color: #F2ECEC; background: #161210; box-shadow: 0 0 0 100vmax rgba(17, 17, 17, 0.55), 0 18px 40px rgba(0, 0, 0, 0.6); }
+#regateo.oculto { display: none; }
+#regateo h3 { margin: 0 0 6px; color: var(--oro); font-size: 18px; }
+#regateo .rg-dice { margin: 0 0 10px; color: #E0B2B2; font-style: italic; min-height: 1.3em; }
+#regateo .rg-pedidos { display: flex; gap: 8px; margin-bottom: 8px; }
+#regateo .rg-pedidos button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px; font: inherit; color: #F2ECEC; background: #221B18; border: 1px solid #3A2A26; cursor: pointer; }
+#regateo .rg-pedidos button b { font-size: 20px; color: var(--oro); }
+#regateo .rg-pedidos button small { color: #E0B2B2; }
+#regateo .rg-pedidos button.foco, #regateo .rg-pedidos button:hover { border-color: var(--oro); background: #3A1A14; }
+#regateo canvas { width: 100%; height: auto; display: block; touch-action: none; cursor: pointer; }
+#regateo .rg-ayuda { margin: 6px 0; font-size: 12px; color: #8A8080; }
+#regateo .rg-pie { display: flex; align-items: center; gap: 12px; }
+#regateo .rg-paciencia { flex: 1; height: 8px; background: #221B18; position: relative; }
+#regateo .rg-paciencia::before { content: attr(title); position: absolute; left: 0; top: -16px; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #8A8080; }
+#regateo .rg-paciencia i { position: absolute; left: 0; top: 0; bottom: 0; background: #C8402D; transition: width 0.3s; }
+#regateo .rg-cerrar { font: inherit; font-weight: 700; color: #F2ECEC; background: #221B18; border: 1px solid #3A2A26; padding: 6px 14px; cursor: pointer; }
+#regateo .rg-cerrar:hover { border-color: var(--oro); }

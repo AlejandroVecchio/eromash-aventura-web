@@ -252,6 +252,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
+- **regateo.js**: el regateo (sistema REGATEO)
+  - el estado del día · abrir, pedir, parar · la ventana · el sistema
 - **regiones.js**: regiones con nombre (sistema REGIONES)
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
@@ -363,6 +365,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
+- **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa

@@ -212,6 +212,19 @@ tener que leer el código para balancear.
   comercia, con el nombre del mercader. Tocar lo suyo compra, tocar la bolsa vende (rara o mejor pide dos toques).
   En el mapa grande van con la miniatura `mercader` (clase «Mercaderes»).
 
+## Regateo (`motor/regateo.js`, `REGATEO`; textos `rg.` en `textos/regateo.js`)
+
+- En la pestaña del mercader, R (△) sobre una pieza (`COMERCIO.altCasilla`) abre la balanza (`#regateo`, encima de
+  la mochila; toma el teclado y el mando con `INVENTARIO.capturar`).
+- Pedidos (`PEDIDOS`): comprando −10/−20/−30 %, vendiendo +15/+30/+45 % sobre el precio sin tratos
+  (`COMERCIO.precioCompraSin`/`precioVentaSin`). Zona (`ZONA` 0,30/0,19/0,11) × carácter × (0,55 + paciencia × 0,45)
+  × (1 + 3 % por punto de Espíritu) × (1 + 8 % por nivel de renombre), tope 0,6; aguja (`VELOCIDAD` 0,75/1,05/1,4
+  idas por segundo) × carácter, más rápida con menos paciencia.
+- Acertar fija el precio de esa pieza ese día (`tratos["u:tipo"]`, aplicado con `COMERCIO.modPrecio`) y gasta 12 de
+  paciencia; el 18 % del centro es trato redondo (+5 % Ingrid, +10 % Kolbrun). Errar gasta 34 y deja volver a pedir;
+  sin paciencia, por hoy no regatea. Todo vuelve al día siguiente (`E.extra.regateo = { dia, paciencia, tratos }`).
+- Carácter (`CARACTER`): Ingrid zona ×1,1 y aguja ×0,85; Kolbrun zona ×0,85 y aguja ×1,15.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

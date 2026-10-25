@@ -41,6 +41,7 @@ window.COMERCIO = (function () {
     confirmar = null,
     kolbrun = null; // { x, y, mira }
   const mods = []; // fn(precio, { tipo: "compra" | "venta", it, mercader }) → precio
+  const alts = []; // fn({ tipo, it, mercader }) → { texto, fn } | null: la acción alternativa (R) de una casilla
 
   // ---------- precios ----------
   const descuento = () => (window.SECUNDARIAS ? SECUNDARIAS.descuento() : 0);
@@ -50,6 +51,9 @@ window.COMERCIO = (function () {
   }
   const precioCompra = (it, m) => aplicarMods(OBJETOS.valor(it) * COMPRA * (1 - descuento()), { tipo: "compra", it, mercader: m });
   const precioVenta = (it, m) => aplicarMods(OBJETOS.valor(it) * VENTA, { tipo: "venta", it, mercader: m });
+  // sin lo que cambian otros sistemas (el regateo parte de acá)
+  const precioCompraSin = (it) => Math.max(1, Math.round(OBJETOS.valor(it) * COMPRA * (1 - descuento())));
+  const precioVentaSin = (it) => Math.max(1, Math.round(OBJETOS.valor(it) * VENTA));
   const precioMat = (id, m) => aplicarMods(MERCADERES[m].mats[id][2] * (1 - descuento()), { tipo: "compra", mat: id, mercader: m });
   // la pieza envuelta: el doble del valor de una mágica de ese nivel
   const precioEnvuelta = (m) => aplicarMods((4 + nivelObjeto() * 1.6) * 2.5 * 2 * COMPRA * (1 - descuento()), { tipo: "compra", envuelta: true, mercader: m });
@@ -169,6 +173,13 @@ window.COMERCIO = (function () {
     return true;
   }
 
+  const alt = (info) => {
+    for (const f of alts) {
+      const a = f(info);
+      if (a) return a;
+    }
+    return null;
+  };
   // ---------- la pestaña del mercader ----------
   function abrir(id) {
     actual = id;
@@ -196,7 +207,7 @@ window.COMERCIO = (function () {
     s.piezas.forEach((it, k) => {
       const p = precioCompra(it, id);
       g.appendChild(
-        api.celda({ obj: it, nombre: OBJETOS.nombre(it), col: OBJETOS.COL_TEXTO[it.r], cant: p, html: BOTIN.html(it, true) + `<span class="ob-pista">${t("cm.pista_comprar", [p])}</span>`, fn: () => comprar(id, it) }, fila + Math.floor(k / 9), k % 9, plata() < p ? "cm-caro" : ""),
+        api.celda({ obj: it, nombre: OBJETOS.nombre(it), col: OBJETOS.COL_TEXTO[it.r], cant: p, html: BOTIN.html(it, true) + `<span class="ob-pista">${t("cm.pista_comprar", [p])}</span>`, fn: () => comprar(id, it), alt: alt({ tipo: "compra", it, mercader: id }) }, fila + Math.floor(k / 9), k % 9, plata() < p ? "cm-caro" : ""),
       );
     });
     if (!s.piezas.length) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("cm.sin_piezas")}</p>`);
@@ -224,7 +235,7 @@ window.COMERCIO = (function () {
     fila += 2;
     bolsa.forEach((it, k) => {
       const p = precioVenta(it, id);
-      g.appendChild(api.celda({ obj: it, nombre: OBJETOS.nombre(it), col: OBJETOS.COL_TEXTO[it.r], cant: p, html: BOTIN.html(it, true) + `<span class="ob-pista">${t("cm.pista_vender", [p])}</span>`, fn: () => vender(id, it) }, fila + Math.floor(k / 9), k % 9));
+      g.appendChild(api.celda({ obj: it, nombre: OBJETOS.nombre(it), col: OBJETOS.COL_TEXTO[it.r], cant: p, html: BOTIN.html(it, true) + `<span class="ob-pista">${t("cm.pista_vender", [p])}</span>`, fn: () => vender(id, it), alt: alt({ tipo: "venta", it, mercader: id }) }, fila + Math.floor(k / 9), k % 9));
     });
     if (!bolsa.length) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("ob.bolsa_vacia")}</p>`);
     // recomprar
@@ -316,7 +327,10 @@ window.COMERCIO = (function () {
     precioVenta,
     precioMat,
     precioEnvuelta,
+    precioCompraSin,
+    precioVentaSin,
     modPrecio: (f) => mods.push(f),
+    altCasilla: (f) => alts.push(f),
     kolbrun: () => kolbrun,
     posIngrid,
     // las marcas del mapa grande
