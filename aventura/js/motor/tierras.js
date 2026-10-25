@@ -4,7 +4,7 @@
 // vive: Las Lindes son de 1 a 4 y las Raíces del Este de 18 a 24, así salir del camino conocido se siente como un salto.
 // Cada tierra es la región más cercana a su centro (en píxeles del mapa de 1557 × 1010). Al entrar a una sale su
 // nombre con su franja y, si te supera mucho, un aviso; el mapa grande dibuja los bordes y los nombres con el color de
-// peligro de cada franja (RPG.color). Lo de fuera del mapa (mazmorras, Góinn) no tiene tierra. Textos `ti.`; estado
+// peligro de cada franja (RPG.color). Lo de fuera del mapa (mazmorras, Góinn) no tiene tierra. Textos `tr.`; estado
 // en E.extra.tierras = { vistas: { id: 1 } }.
 window.TIERRAS = (function () {
   "use strict";
@@ -46,8 +46,8 @@ window.TIERRAS = (function () {
     const r = en(x, y);
     return r ? Math.max(r.n[0], Math.min(r.n[1], n)) : n;
   }
-  const nombre = (r) => t("ti." + r.id);
-  const franja = (r) => t("ti.niveles", [r.n[0], r.n[1]]);
+  const nombre = (r) => t("tr." + r.id);
+  const franja = (r) => t("tr.niveles", [r.n[0], r.n[1]]);
   const colorDe = (r) => (window.RPG ? RPG.color(Math.round((r.n[0] + r.n[1]) / 2)) : "#FFD98A");
 
   // ---------- el mapa grande ----------
@@ -128,7 +128,7 @@ window.TIERRAS = (function () {
       HUD.aviso(nombre(r), "lugar", franja(r));
       // la primera vez que se entra a una tierra que te supera mucho, se avisa (la «?» empieza 10 arriba)
       const nv = window.RPG ? RPG.nivel() : 1;
-      if (nueva && r.n[0] >= nv + 5) HUD.aviso(t(r.n[0] >= nv + 9 ? "ti.peligro_mucho" : "ti.peligro"), "#C8402D");
+      if (nueva && r.n[0] >= nv + 5) HUD.aviso(t(r.n[0] >= nv + 9 ? "tr.peligro_mucho" : "tr.peligro"), "#C8402D");
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);

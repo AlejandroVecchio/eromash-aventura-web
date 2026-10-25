@@ -44,7 +44,7 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
-## Las tierras y sus niveles (`motor/tierras.js`, `TIERRAS`; textos `ti.` en `textos/tierras.js`)
+## Las tierras y sus niveles (`motor/tierras.js`, `TIERRAS`; textos `tr.` en `textos/tierras.js`)
 
 Como las zonas del WoW, el mapa grande se reparte en catorce tierras con nombre, cada una con su franja de niveles. Una criatura sigue tomando el nivel de su distancia al Puesto, pero queda dentro de la franja de la tierra donde vive (`TIERRAS.ajustar`, desde `RPG.nivelDe`). Las de nivel fijo de la historia no cambian.
 
