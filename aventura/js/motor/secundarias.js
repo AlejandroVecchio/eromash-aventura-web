@@ -104,17 +104,34 @@ window.SECUNDARIAS = (function () {
   // ---------- encargos ----------
   // estado(): -1 sin empezar, 0..n-1 el paso que falta, n hecho
   const CADENAS = [
-    { id: "SR-01", k: "buey", n: 3, estado: () => { const e = sub("este"); if (e.buey === 2) return 3; if (!e.arnes) return -1; return e.lobos ? (e.compuerta ? 2 : 1) : 0; } },
-    { id: "SR-02", k: "cepillo", n: 2, estado: () => { const s = sub("senda"); return s.cepillo === 2 ? 2 : s.cepillo === 1 ? 1 : -1; } },
-    { id: "SR-03", k: "geir", n: 2, estado: () => (st.grim ? 2 : sub("norte").geir ? 1 : -1) },
-    { id: "SR-04", k: "quilla", n: 5, estado: () => { if (!st.quilla) return -1; if (st.quillaHecha) return 5; if (!H.tiene("custodio_vencido")) return 0; if (!st.tronco) return 1; if (!st.arrastre) return 2; if (!st.herrajes) return 3; return 4; } },
-    { id: "SR-05", k: "cuaderno", n: 2, estado: () => { const s = sub("norte"); return s.cuaderno === 2 ? 2 : s.cuaderno === 1 ? 1 : -1; } },
-    { id: "SR-09", k: "calcos", n: 2, estado: () => (!st.torvald ? -1 : st.dados >= 6 ? 2 : (st.calcos || []).filter(Boolean).length >= 6 ? 1 : 0) },
-    { id: "SR-12", k: "cinta", n: 2, estado: () => { const c = sub("claro").cinta; return c === 2 ? 2 : c === 1 ? 1 : -1; } },
-    { id: "SZ-01", k: "huldra", n: 2, estado: () => (!st.huldra ? -1 : st.huldra >= 3 ? 2 : st.huldra === 2 ? 1 : 0) },
-    { id: "SZ-07", k: "nokk", n: 2, estado: () => (!st.nokk ? -1 : st.nokk >= 2 ? 2 : (st.troncos || 0) >= 3 ? 1 : 0) },
+    { id: "SR-01", nivel: 6, k: "buey", n: 3, estado: () => { const e = sub("este"); if (e.buey === 2) return 3; if (!e.arnes) return -1; return e.lobos ? (e.compuerta ? 2 : 1) : 0; } },
+    { id: "SR-02", nivel: 3, k: "cepillo", n: 2, estado: () => { const s = sub("senda"); return s.cepillo === 2 ? 2 : s.cepillo === 1 ? 1 : -1; } },
+    { id: "SR-03", nivel: 5, k: "geir", n: 2, estado: () => (st.grim ? 2 : sub("norte").geir ? 1 : -1) },
+    { id: "SR-04", nivel: 9, k: "quilla", n: 5, estado: () => { if (!st.quilla) return -1; if (st.quillaHecha) return 5; if (!H.tiene("custodio_vencido")) return 0; if (!st.tronco) return 1; if (!st.arrastre) return 2; if (!st.herrajes) return 3; return 4; } },
+    { id: "SR-05", nivel: 5, k: "cuaderno", n: 2, estado: () => { const s = sub("norte"); return s.cuaderno === 2 ? 2 : s.cuaderno === 1 ? 1 : -1; } },
+    { id: "SR-09", nivel: 7, k: "calcos", n: 2, estado: () => (!st.torvald ? -1 : st.dados >= 6 ? 2 : (st.calcos || []).filter(Boolean).length >= 6 ? 1 : 0) },
+    { id: "SR-12", nivel: 4, k: "cinta", n: 2, estado: () => { const c = sub("claro").cinta; return c === 2 ? 2 : c === 1 ? 1 : -1; } },
+    { id: "SZ-01", nivel: 4, k: "huldra", n: 2, estado: () => (!st.huldra ? -1 : st.huldra >= 3 ? 2 : st.huldra === 2 ? 1 : 0) },
+    { id: "SZ-07", nivel: 6, k: "nokk", n: 2, estado: () => (!st.nokk ? -1 : st.nokk >= 2 ? 2 : (st.troncos || 0) >= 3 ? 1 : 0) },
   ];
   const hechas = () => CADENAS.filter((c) => c.estado() >= c.n).length;
+  // cada encargo tiene su nivel recomendado (el de la zona donde pasa); al cumplirlo paga plata y experiencia según ese
+  // nivel: los más altos pagan más
+  const pagoEncargo = (c) => ({ plata: 20 + 8 * c.nivel, xp: window.RPG ? Math.round(RPG.xpPara(c.nivel) * 0.25) : 0 });
+  function revisarEncargos(silencio) {
+    st.pagados = st.pagados || {};
+    for (const c of CADENAS) {
+      if (st.pagados[c.id] || c.estado() < c.n) continue;
+      st.pagados[c.id] = 1;
+      if (silencio) continue;
+      const p = pagoEncargo(c);
+      J.retrasar(1.6, () => {
+        if (window.PODERES) PODERES.darPlata(p.plata);
+        if (window.RPG && p.xp) RPG.dar(p.xp, jug.x, jug.y - 90);
+        HUD.aviso(t("sc.encargo_pago", [t("sc.c_" + c.k), p.plata]), "#FFD98A");
+      });
+    }
+  }
 
   // las seis inscripciones que pide Torvald: se calcan con la Lente
   function inscripciones() {
@@ -215,6 +232,8 @@ window.SECUNDARIAS = (function () {
       campanaSuelo = null;
       if (st.renombre == null) st.renombre = nivelRenombre();
       st.proezas = st.proezas == null ? proezas() : st.proezas;
+      // una partida vieja no cobra de golpe lo que ya había hecho
+      if (!st.pagados) revisarEncargos(true);
       aplicarEste();
     },
     alMorir(e) {
@@ -251,7 +270,8 @@ window.SECUNDARIAS = (function () {
       }
       // los lobos de la campana solo andan si la huldra ya pidió ayuda y Eromash se acerca
       lobosHuldra.forEach((e) => (e.activo = st.huldra === 1 && cerca([e.casa[0], e.casa[1]], 30 * W.M)));
-      // los avisos de proeza y de renombre
+      // los avisos de proeza y de renombre, y el pago de los encargos cumplidos
+      if (J.t % 1 < dt) revisarEncargos(false);
       const pz = proezas();
       if (pz > st.proezas) {
         st.proezas = pz;
@@ -503,7 +523,8 @@ window.SECUNDARIAS = (function () {
         if (e < 0) return "";
         const hecho = e >= ch.n;
         const paso = hecho ? t("sc.hecho") : t("sc.c_" + ch.k + "_" + e);
-        return `<p>${hecho ? "✓" : "◆"} <b>${t("sc.c_" + ch.k)}</b> · ${paso}</p>`;
+        const nv = ch.nivel ? ` <span style="color:${window.RPG ? RPG.color(ch.nivel) : "#FFD98A"}">${t("sc.nivel_rec", [ch.nivel])}</span>` : "";
+        return `<p>${hecho ? "✓" : "◆"} <b>${t("sc.c_" + ch.k)}</b>${nv} · ${paso}</p>`;
       }).join("");
       const pz = PROEZAS.map((f, i) => `<span style="opacity:${f() ? 1 : 0.45}">${f() ? "✓" : "○"} ${t("sc.proeza_" + i)}</span>`).join("<br>");
       const rn = nivelRenombre();
@@ -532,6 +553,9 @@ window.SECUNDARIAS = (function () {
     proezas: () => (st && A ? proezas() : 0),
     marcarGoinn: () => st && (st.goinn = 1),
     renombre: () => (st && A ? nivelRenombre() : 0),
+    CADENAS,
+    pagoEncargo,
+    revisarEncargos,
     // lo que Eromash lleva encima por los encargos (lo muestra la mochila de inventario.js)
     llevas() {
       if (!st || !A) return [];

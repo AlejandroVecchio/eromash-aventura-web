@@ -632,6 +632,11 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
 - **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
 
+## Encargos por región (`motor/tablon.js`, `TABLON`; `motor/secundarias.js`; textos `mj.caza_*`, `sc.nivel_rec`, `sc.encargo_pago`)
+
+- **El tablón de cacería** ofrece tres pedidos a la vez, uno por banda: Tranquilo (de 4 a 1 nivel menos que Eromash), Parejo (su nivel a +2) y Peligroso (+3 a +7). Cada pedido sale de un grupo de `HORDAS` de ese rango: la presa que más se repite en el grupo, «cerca de» el lugar con nombre más cercano y un rango de ±2 niveles. **Solo cuentan las criaturas de ese rango**: hay que ir a esa zona. La paga sube con el nivel del pedido (+10 % por nivel) y con la banda (×0,75 / ×1 / ×1,6), da experiencia (10/16/28 % de lo que pide el nivel) y el Peligroso trae siempre un fragmento. La zona va a la brújula y al mapa mientras se caza. Sin `HORDAS` vuelve al pedido de siempre.
+- **Los encargos** (las cadenas SR/SZ de `SECUNDARIAS`) tienen su nivel recomendado (el de la zona donde pasan), que el diario muestra con el color de dificultad. Al cumplir uno se cobra una vez: 20 + 8 × nivel de plata y un cuarto de la experiencia de ese nivel. Una partida vieja no cobra de golpe lo que ya tenía hecho.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
