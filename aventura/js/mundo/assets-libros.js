@@ -80,7 +80,7 @@
     // el libro
     libro(c, x + 2 * s, y - 86 * s, 0.92 * s, o.col || "#5E130D", !leido);
     // un brillo leve sobre las hojas sin leer
-    if (!leido && (!window.CALIDAD || CALIDAD.nivel > 0)) {
+    if (!leido && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
       const a = 0.18 + Math.sin(t * 2 + x) * 0.08;
       c.globalAlpha = a;
       E(c, x + 2 * s, y - 90 * s, 22 * s, 7 * s, "#73D5DB");
