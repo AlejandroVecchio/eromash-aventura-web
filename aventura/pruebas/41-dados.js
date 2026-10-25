@@ -42,6 +42,16 @@
       const ofertas = [];
       DADOS.sistema.cercanos((d, txt) => ofertas.push(txt));
       si(ofertas.some((x) => x.includes(I18N.t("av.nombre_bersi"))), "se juega con E");
+      // «Cómo se juega»: la charla queda adelante (el menú se esconde) y al terminar vuelve el menú
+      DADOS.abrirMesa("bersi");
+      const reglas = [...document.querySelectorAll("#capaCaja .boton")].find((b) => b.textContent.includes(I18N.t("dd.reglas")));
+      reglas.click();
+      igual(A.J.modo, "dialogo", "charla:");
+      si(document.getElementById("capa").classList.contains("oculto"), "el menú no tapa la charla");
+      for (let i = 0; i < 5 && A.J.modo === "dialogo"; i++) A.seguirDialogo();
+      igual(A.J.modo, "menu", "vuelve el menú:");
+      si(!document.getElementById("capa").classList.contains("oculto"), "el menú a la vista");
+      A.cerrarMenu();
     } },
     { nombre: "dados: apostar, plantarse, el turno del rival, perder lo del turno y ganar la partida", fn: async (A, { igual, si }) => {
       const pj = PODERES.pj();
