@@ -313,8 +313,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **senda.js**: la senda del Refugio (sistema SENDA)
 - **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
   - el sistema
-- **signos.js**: los galdrar de Vör: magia rápida (sistema SIGNOS)
-  - cantar · Vör los enseña · dibujo · el sistema
 - **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
 - **tintes.js**: los tintes del casco (sistema TINTES)
   - la pestaña · el sistema
@@ -466,7 +464,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
 - **sigilo.js**: Textos del sigilo (motor/sigilo.js): prefijo sl.
-- **signos.js**: Textos de los galdrar de Vör (motor/signos.js): prefijo sg.
 - **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
 - **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
