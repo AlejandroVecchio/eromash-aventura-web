@@ -1,0 +1,22 @@
+// Textos de los desafíos del mundo (motor/desafios.js): la versión difícil de guaridas, piedras del rito y hörgar.
+I18N.textos({
+  "df.guarida": { es: "La guarida", en: "The lair" },
+  "df.rito": { es: "La piedra del rito", en: "The rite stone" },
+  "df.horgr": { es: "El hörgr de {0}", en: "The hörgr of {0}" },
+  "df.accion": { es: "Desafío · {0}", en: "Challenge · {0}" },
+  "df.titulo": { es: "Desafío: {0}", en: "Challenge: {0}" },
+  "df.rotulo": { es: "Desafío", en: "Challenge" },
+  "df.sub_guarida": { es: "La guarida quedó vacía, pero algo más fuerte huele la sangre.", en: "The lair lies empty, but something stronger smells the blood." },
+  "df.sub_rito": { es: "La piedra despierta todavía guarda su eco: podés llamarlo.", en: "The awakened stone still holds its echo: you can call it." },
+  "df.sub_horgr": { es: "El dios pone a prueba a quien ya le pidió una bendición.", en: "The god tests whoever has already asked for a blessing." },
+  "df.reglas": { es: "Vuelve un grupo con su líder, 4 niveles más fuerte que lo que había. Tenés {0} minutos y no te podés alejar. Una vez por día.", en: "A group returns with its leader, 4 levels stronger than before. You have {0} minutes and cannot stray. Once per day." },
+  "df.premio": { es: "Premio: plata, un fragmento de poder, una pieza rara o mejor y experiencia.", en: "Reward: silver, a power shard, a rare or better piece and experience." },
+  "df.aceptar": { es: "Aceptar el desafío", en: "Accept the challenge" },
+  "df.empieza": { es: "¡Ahí vienen! {0} minutos.", en: "Here they come! {0} minutes." },
+  "df.seg": { es: "Quedan {0} · {1} s", en: "{0} left · {1} s" },
+  "df.ganado": { es: "Desafío vencido · +{0} de plata", en: "Challenge won · +{0} silver" },
+  "df.perdido_tiempo": { es: "Se acabó el tiempo: el eco se deshace.", en: "Time is up: the echo fades." },
+  "df.perdido_lejos": { es: "Te alejaste: el eco se deshace.", en: "You strayed: the echo fades." },
+  "df.perdido_caido": { es: "Caíste: el eco se deshace.", en: "You fell: the echo fades." },
+  "df.diario": { es: "Desafíos vencidos: {0}.", en: "Challenges won: {0}." },
+});
