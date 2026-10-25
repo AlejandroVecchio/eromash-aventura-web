@@ -177,15 +177,6 @@
 #ganzua .gz-botones .gz-dejar { background: #3A3634; }
 #ganzua .gz-pie { margin: 6px 0 0; color: #E0B2B2; font-size: 13px; }
 
-/* el descanso (motor/descanso.js): el velo deja ver cómo cambia el cielo y el reloj gira */
-#descanso { position: fixed; inset: 0; z-index: 30; pointer-events: auto; touch-action: none; }
-#descanso.oculto { display: none; }
-#descanso .ds-velo { position: absolute; inset: 0; background: rgba(17, 17, 17, 0.38); }
-#descanso .ds-caja { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); padding: 14px 22px 12px; background: #161210; text-align: center; }
-#descanso canvas { width: 180px; height: 180px; display: block; margin: 0 auto; }
-#descanso h2 { margin: 6px 0 2px; color: var(--oro); }
-#descanso .ds-pie { margin: 0; color: #E0B2B2; font-size: 13px; }
-
 /* con tantas pestañas en la mochila, la fila se parte en dos y cada pestaña se achica un poco */
 .inv nav { flex-wrap: wrap; min-width: 0; }
 .inv-tab { padding: 6px 10px; letter-spacing: 0.08em; }
