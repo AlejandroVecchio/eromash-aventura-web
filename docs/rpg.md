@@ -450,7 +450,16 @@ Como los encuentros al azar del Skyrim y del Witcher.
 - Brandr vende una pieza envuelta (r ≥ 1, hallazgo × 1,6) por `ENVUELTA` = 45. Ragna toma una carga del frasco y paga
   30 de plata, 80 de experiencia y destapa en el mapa el cofre sin abrir más cercano. Hallvard destapa el
   hörgr no encontrado más cercano (40 de experiencia). Sigrun da Inspirado `INSPIRA` = 240 s: daño y experiencia × 1,1
-  (`RPG.aporte`, en `efectosHud`). Toki: al acercarse, tres lobos (marcados `e.encuentro`); si caen todos paga 40 de
+  (`RPG.aporte`, en `efectosHud`).
+- Juegos de runas (`motor/juegos-runas.js`, `JUEGOS_RUNAS`, modo `runas`, textos `jr.`; lienzo propio de 1600 × 900,
+  flechas o stick + E, o tocando las piedras; Esc lo deja): Brandr ofrece una vez las **parejas** (memotest de ocho pares
+  de runas en `VUELTAS` = 16 vueltas: si gana, la pieza envuelta es gratis). Hallvard reza la **plegaria** (Simón dice:
+  cuatro piedras en rombo, Kenaz arriba, Laguz a la derecha, Algiz abajo, Sowilo a la izquierda, que las flechas tocan;
+  una runa más por ronda hasta `META` = 8): 12 de experiencia por runa repetida, 30 de plata si llega a 8, y después
+  señala el hörgr. Sigrun esconde un **verso** (Mastermind: cuatro runas distintas entre seis, `INTENTOS` = 8; oro = en
+  su lugar, blanco = está en otro): adivinado, Inspirado dura 240 + 30 por intento que sobre; si no, 120.
+  `JUEGOS_RUNAS.empezar(tipo, { quien, x, y, fin(res) })`; un juego nuevo suma su `ARMAR`, `tocar`, `casillas` y
+  `DIBUJAR`. Toki: al acercarse, tres lobos (marcados `e.encuentro`); si caen todos paga 40 de
   plata y una pieza r ≥ 1.
 - Estado en `E.extra.encuentros = { n, hechos: { tipo: n }, inspirado }`. `aparecer(tipo)` lo fuerza (pruebas y nota).
 
