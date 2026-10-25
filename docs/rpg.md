@@ -29,8 +29,8 @@ tener que leer el código para balancear.
 
 ## Niveles y experiencia (`motor/rpg.js`, textos `rp.`, estado `E.extra.rpg`)
 
-- Nivel 1 a 30. Para pasar del nivel *n* al siguiente: `60 · n^1.45 + 40` (100, 658 en el 5, 1730 en el 10, 4660 en
-  el 20). Un recorrido entero del bosque (todos los grupos una vez, misiones, lugares, cofres, piedras) deja cerca
+- Nivel 1 a 30. Para pasar del nivel *n* al siguiente: `70 · n^1.55 + 30` (100, 878 en el 5, 2514 en el 10, 7303 en
+  el 20, 12 966 en el 29; unos 155 000 en total): los primeros niveles vuelan y los últimos se ganan. Un recorrido entero del bosque (todos los grupos una vez, misiones, lugares, cofres, piedras) deja cerca
   del nivel 17; lo demás sale de recompensas, jefes y grupos que vuelven.
 - Cada nivel: +6 de vida y +3 % de daño (los atributos y el equipo suman el resto).
 - Nivel de cada criatura: los lobos y errantes de la historia son 2 y 3, el Custodio 5. Las de los grupos: `1 +
@@ -38,7 +38,12 @@ tener que leer el código para balancear.
   cuervos −1, troles +2, líderes +1, únicos +3, semijefes +2. Al ponerle el nivel se le suma `8 %` de vida y `4,5 %`
   de daño por nivel.
 - Experiencia de una criatura: `base del tipo × (1 + 0,25 · (nivel − 1))`, líderes ×4, únicos ×10, semijefes ×6,
-  y según la diferencia de nivel: `1 + 0,1 · diferencia` (entre 0,1 y 1,3); 6 o más niveles por debajo da el 10 %.
+  y según la diferencia de nivel (`RPG.porDif`): abajo `1 + 0,1 · diferencia` (6 o más abajo da el 10 %), arriba
+  `1 + 0,15 · diferencia` hasta el doble (pelear más arriba paga, aunque se falle más).
+- **Grupo vencido**: al caer el último de un grupo, un tercio más de lo que dio el grupo entero (cartel «Grupo
+  vencido»). Vaciar el mismo grupo otra vez el mismo día da cada vez un cuarto menos, hasta un cuarto: conviene seguir
+  adelante y no quedarse cosechando.
+- La barra de experiencia tiene marcas en cada cuarto.
 - Colores del número de nivel (como el WoW): rojo 5 o más arriba, coral 3–4, dorado ±2, verde 3–5 abajo, gris.
 - Otras fuentes: misión cumplida `120 + 90 · misión`, lugar descubierto `60 + 4 · nivel`, cofre `25` (importante
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).

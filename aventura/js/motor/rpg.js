@@ -13,8 +13,9 @@ window.RPG = (function () {
   let A, J, jug, W, H;
   const t = (k, v) => I18N.t(k, v);
   const TOPE = 30;
-  // experiencia para pasar del nivel n al n + 1 (100 al principio, unos 8000 cerca del tope)
-  const xpPara = (n) => Math.round(60 * Math.pow(n, 1.45) + 40);
+  // experiencia para pasar del nivel n al n + 1 (100 al principio, unos 2500 a nivel 10 y 13 000 cerca del tope):
+  // los primeros niveles vuelan y los últimos se ganan
+  const xpPara = (n) => Math.round(70 * Math.pow(n, 1.55) + 30);
   // lo que vale cada criatura antes de su nivel
   const XP_TIPO = { lobo: 10, errante: 12, custodio: 60, draugr: 22, jabali: 18, cuervo: 7, fatuo: 15, oso: 90, dreki: 700, trol: 120 };
   // las criaturas de la historia tienen su nivel fijo (las del principio tienen que poder vencerse en nivel 1)
@@ -85,8 +86,35 @@ window.RPG = (function () {
     let x = (XP_TIPO[e.tipo] || 12) * (1 + 0.25 * (n - 1));
     if (e.lider) x *= e.lider.unico ? 10 : 4;
     if (e.semi || e.patron) x *= 6;
-    const k = d <= -6 ? 0.1 : Math.max(0.1, Math.min(1.3, 1 + d * 0.1));
-    return Math.max(1, Math.round(x * k));
+    return Math.max(1, Math.round(x * porDif(d)));
+  }
+  // según la diferencia de nivel: abajo baja un 10 % por nivel (gris, 6 abajo, da el 10 %); arriba sube un 15 % por
+  // nivel hasta el doble (pelear más arriba se paga, aunque se falle más: motor/fallos.js)
+  const porDif = (d) => (d <= -6 ? 0.1 : d < 0 ? Math.max(0.1, 1 + d * 0.1) : Math.min(2, 1 + d * 0.15));
+  // ---------- el grupo vencido ----------
+  // al caer el último de un grupo de HORDAS, un tercio más de lo que dio el grupo entero. Volver a vaciar el mismo
+  // grupo el mismo día da cada vez un cuarto menos (hasta un cuarto): conviene seguir adelante y no quedarse cosechando.
+  const dia = () => Math.floor((H.E.tiempo || 0) / (window.LUZ ? LUZ.DIA : 1440));
+  function cosecha(g) {
+    if (g.diaXp !== dia()) (g.diaXp = dia()), (g.vecesXp = 0);
+    return Math.max(0.25, Math.pow(0.75, g.vecesXp || 0));
+  }
+  function delGrupo(e, x) {
+    const g = e.hordaGrupo;
+    if (!g) return x;
+    x = Math.max(1, Math.round(x * cosecha(g)));
+    g.xpJunta = (g.xpJunta || 0) + x;
+    if (g.miembros.every((o) => o === e || o.muerto > 0)) {
+      const extra = Math.round(g.xpJunta / 3);
+      g.xpJunta = 0;
+      g.vecesXp = (g.vecesXp || 0) + 1;
+      if (extra > 0)
+        J.retrasar(0.9, () => {
+          HUD.aviso(t("rp.grupo_vencido", [extra]), "#73D5DB");
+          dar(extra, e.x, e.y - 160);
+        });
+    }
+    return x;
   }
 
   // ---------- la experiencia ----------
@@ -320,7 +348,8 @@ window.RPG = (function () {
     alMorir(e) {
       if (!st) return;
       nivelar(e);
-      J.retrasar(0.15, () => dar(xpDe(e), e.x, e.y - (e.d.barra || 80)));
+      const x = delGrupo(e, xpDe(e));
+      J.retrasar(0.15, () => dar(x, e.x, e.y - (e.d.barra || 80)));
     },
     hud() {
       pintarHud();
@@ -341,6 +370,7 @@ window.RPG = (function () {
     ];
   }
   return {
+    sistema,
     dar,
     recalcular,
     nivel: () => (st ? st.nivel : 1),
@@ -349,6 +379,7 @@ window.RPG = (function () {
     nivelar,
     color,
     xpDe,
+    porDif,
     xpPara,
     rotulo,
     filas,

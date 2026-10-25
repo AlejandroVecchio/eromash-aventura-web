@@ -310,7 +310,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
-  - los topes (la pasada de balance) · el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
+  - los topes (la pasada de balance) · el nivel de cada criatura · el grupo vencido · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
 - **saga.js**: la saga de Eromash (sistema SAGA, pestaña Saga de la mochila)
   - los hitos · la pestaña · el sistema
 - **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
