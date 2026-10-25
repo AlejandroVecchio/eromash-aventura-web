@@ -5,32 +5,42 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 25,
-    titulo: { es: "Conjuntos de equipo", en: "Gear sets" },
+    pr: 26,
+    titulo: { es: "Poderes de las legendarias", en: "Legendary powers" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: las piezas de conjunto son una rareza nueva (verde) y caen como las demás", en: "loot: set pieces are a new (green) rarity and drop like the rest" },
-      { pr: 1, es: "niveles: los afijos fijos crecen con el nivel de la pieza", en: "levels: fixed affixes grow with the piece's level" },
+      { pr: 3, es: "botín: las legendarias (naranjas) ahora traen un poder y nombre propio", en: "loot: legendaries (orange) now carry a power and their own name" },
+      { pr: 12, es: "materiales: desarmar una legendaria enseña su poder", en: "materials: dismantling a legendary teaches its power" },
     ],
     mirar: [
-      { es: "Tres juegos de cuatro piezas verdes: La guardia de Eikholt (defensa), El lobo de Fenrir (golpes y velocidad) y Los ojos de Odín (runas). Cada pieza tiene nombre propio y dos afijos fijos.", en: "Three sets of four green pieces: The Eikholt Guard (defence), Fenrir's Wolf (blows and speed) and Odin's Eyes (runes). Each piece has its own name and two fixed affixes." },
-      { es: "El detalle de una pieza dice de qué juego es, cuáles llevás puestas (◆) y qué suman 2, 3 y 4 piezas (en verde lo que ya está activo).", en: "A piece's detail says which set it belongs to, which ones you're wearing (◆) and what 2, 3 and 4 pieces add (what's active shows green)." },
-      { es: "El juego entero trae un poder: la guardia recibe un 15 % menos, el lobo se acelera un 30 % por 3 s al matar (sale en la tira de efectos) y Odín recupera energía rúnica con cada crítico. Completar uno se festeja una vez.", en: "The full set grants a power: the guard takes 15 % less, the wolf speeds up 30 % for 3 s on a kill (shown on the effects strip) and Odin regains rune energy with every critical. Completing one is celebrated once." },
-      { es: "Los juegos compiten por casillas (la guardia y el lobo quieren el casco; el lobo y Odín, el arma y el amuleto). La pestaña Conjuntos de la mochila muestra lo encontrado de cada juego.", en: "Sets compete for slots (the guard and the wolf both want the helm; the wolf and Odin, the weapon and the amulet). The Sets tab in the backpack shows what you've found of each set." },
-      { es: "Caen de los únicos, los semijefes, alguna vez de los líderes y de los cofres importantes.", en: "They drop from uniques, lesser bosses, sometimes leaders and important chests." },
+      { es: "Cada legendaria trae un poder de su casilla con nombre de los mitos: Furia de Surtr (cada 5 golpes estallás en llamas), Colmillo de Garm (los críticos sangran), Eco de Mjölnir (rayos que saltan), Égida de Svalinn (escudo cuando la vida cae), Yelmo de Hel (matar cura), Andar de Hermóðr (esquivar da estamina y prisa), Paso de Víðarr (corriendo recibís menos), Brísingamen (más daño cuanta más plata) y Andvaranaut (más plata y fragmentos).", en: "Each legendary carries a power for its slot with a mythic name: Surtr's Fury (every 5 hits you burst into flames), Garm's Fang (criticals bleed), Echo of Mjölnir (jumping lightning), Aegis of Svalinn (a shield when life drops), Helm of Hel (kills heal), Hermóðr's Stride (dodging gives stamina and haste), Víðarr's Step (take less while running), Brísingamen (more damage the more silver) and Andvaranaut (more silver and fragments)." },
+      { es: "Como el cubo de Kanai: desarmar una legendaria enseña su poder, y en la pestaña Poderes de la mochila se graba uno de arma, uno de armadura y uno de joya que valen sin llevar la pieza.", en: "Like Kanai's cube: dismantling a legendary teaches its power, and in the backpack's Powers tab you engrave one weapon, one armour and one jewellery power that work without the piece." },
+      { es: "La égida y la prisa salen en la tira de efectos. Los semijefes y los únicos tienen un 20 % de soltar una legendaria.", en: "The aegis and the haste show on the effects strip. Lesser bosses and uniques have a 20 % chance to drop a legendary." },
     ],
     botones: [
-      { es: "Darme la guardia de Eikholt entera", en: "Give me the full Eikholt Guard", fn: () => darJuego("guardia") },
-      { es: "Darme el lobo de Fenrir entero", en: "Give me the full Fenrir's Wolf", fn: () => darJuego("fenrir") },
-      { es: "Darme los ojos de Odín enteros", en: "Give me the full Odin's Eyes", fn: () => darJuego("odin") },
-      { es: "Ir a cazar (probar al lobo)", en: "Go hunting (try the wolf)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
+      { es: "Darme las tres armas legendarias (Surtr, Garm, Mjölnir)", en: "Give me the three legendary weapons (Surtr, Garm, Mjölnir)", fn: () => {
+        [["espadaAncha", "surtr"], ["hachaBarbuda", "garm"], ["martilloRunico", "mjolnir"]].forEach(([b, po]) => {
+          const it = OBJETOS.generar({ base: b, r: 3, n: Math.max(6, RPG.nivel()) });
+          it.po = po;
+          BOTIN.dar(it);
+        });
+        INVENTARIO.abrir("bolsa");
+      } },
+      { es: "Darme una legendaria de cada armadura y joya", en: "Give me one legendary of each armour and jewel", fn: () => {
+        [["coraza", "svalinn"], ["yelmo", "hel"], ["botasHerradas", "hermodr"], ["grebas", "vidarr"], ["amuleto", "brisingamen"], ["sortija", "andvaranaut"]].forEach(([b, po]) => {
+          const it = OBJETOS.generar({ base: b, r: 3, n: Math.max(6, RPG.nivel()) });
+          it.po = po;
+          BOTIN.dar(it);
+        });
+        INVENTARIO.abrir("bolsa");
+      } },
+      { es: "Aprender los nueve poderes (para la pestaña Poderes)", en: "Learn all nine powers (for the Powers tab)", fn: () => {
+        Object.keys(LEGENDARIOS.POD).forEach((id) => LEGENDARIOS.aprender(id));
+        INVENTARIO.abrir("poderes");
+      } },
+      { es: "Ir a una manada (probar Surtr y Mjölnir)", en: "Go to a pack (try Surtr and Mjölnir)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
     ],
   };
-  function darJuego(j) {
-    const n = window.RPG ? Math.max(5, RPG.nivel()) : 5;
-    Object.keys(CONJUNTOS.JUEGOS[j].piezas).forEach((cs) => BOTIN.dar(CONJUNTOS.crear(j, cs, n)));
-    INVENTARIO.abrir("bolsa");
-  }
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {
     let x = p[0] + dx,

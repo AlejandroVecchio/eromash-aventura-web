@@ -375,6 +375,21 @@ tener que leer el código para balancear.
   por segundo de lo puesto y la bolsa.
 - Estado en `E.extra.conjuntos = { vistos, completos }`.
 
+## Poderes de las legendarias (`motor/legendarios.js`, `LEGENDARIOS`; textos `lg.` en `textos/legendarios.js`)
+
+- Toda legendaria (`r` 3) sale con `it.po`, un poder de `POD` que vale para su casilla (`alGenerar`, llamado desde
+  `OBJETOS.generar`); su nombre es el del poder (`lg.n_`). Los números están en `N`.
+- Arma: Surtr (cada 5 golpes, 60 % del golpe a todo lo que está a 150), Garm (crítico → 40 % del golpe en 3 s, de a
+  medio segundo), Mjölnir (15 %: salta a 3 cercanas a 320 con el 50 %). Armadura: Svalinn (vida < 30 % → égida del 30 %
+  de la vida máxima por 8 s, cada 60 s), Hel (matar cura 4 %), Hermóðr (esquivar: +15 de estamina y +25 % de velocidad
+  1,5 s), Víðarr (corriendo × 0,75). Joya: Brísingamen (+1 % de daño cada 100 de plata, tope 30 %), Andvaranaut (+30 %
+  de plata y 3 % de fragmento al matar).
+- Los golpes de los poderes pasan por los `modDano` y avisan con `alPegar` con `info.d.poder` (los poderes no se
+  encadenan entre sí).
+- Desarmar (envuelve `MATERIALES.alDesarmar`) enseña el poder; la pestaña «Poderes» graba uno por ranura (`arma`,
+  `armadura`, `joya`). Activos = lo puesto ∪ lo grabado (`rearmar`).
+- Semijefes y únicos: 20 % de soltar una legendaria. Estado en `E.extra.legendarios = { aprendidos, grabados }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
