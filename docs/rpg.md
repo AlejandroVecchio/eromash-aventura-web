@@ -262,7 +262,7 @@ tener que leer el código para balancear.
 - «Olvidar todo»: gratis la primera vez, después `25 × nivel` de plata, se toca dos veces. Otros sistemas suman nodos
   con `ARBOL.sumar(rama, nodo)`. Estado en `E.extra.arbol = { r: { id: rango }, extra, olvidos }`.
 
-## Furia y habilidades activas (`motor/furia.js`, `FURIA`; acciones `hab1`, `hab2`, `hab3`: 1 2 3 o L2 + □ △ ○; textos `fu.` en `textos/furia.js`)
+## Furia y habilidades activas (`motor/furia.js`, `FURIA`; con teclado en casillas de la barra (1 a 6), con mando L2 + □ △ ○ (acciones `hab1`, `hab2`, `hab3`); textos `fu.` en `textos/furia.js`)
 
 - La Furia (0 a 100) arranca en 0, suma 5 por golpe (8 si es crítico, nada por los golpes de las habilidades) y 0,6 por
   punto de vida perdido; a los 5 s sin pelear se enfría 8 por segundo. No se guarda. Su barra (`#bFuria`) va debajo
@@ -273,7 +273,7 @@ tener que leer el código para balancear.
   hacia la criatura de enfrente sin cruzar muros, pega 160/200 % de 28 × `J.mulDano` a 150 al caer) y Bandada (45/40,
   10/9 s: 5/7 cuervos buscan criaturas a 440, pican 55 % y marcan 6 s, +12 %). Los golpes pasan por los `modDano` y
   `alPegar` de todos, con `info.d.habilidad`.
-- Hooks nuevos: `casillas()` de un sistema suma casillas a la barra de abajo (antes de la mochila); en `CONTROLES`,
+- Hooks nuevos: `cosasBarra()` de un sistema suma cosas que el jugador puede poner en la barra de abajo (`BARRA`: `{ id: { tipo, icono, nombre, desc, tiene, listo, espera, usar, avisa } }`); en `CONTROLES`,
   `COMBOS` son botones del mando que se aprietan juntos (mientras tanto, esos botones no hacen lo suyo).
 
 ## Instructores y muñeco de práctica (`motor/instructores.js`, `INSTRUCTORES`; muñeco en `mundo/assets-instructores.js`; textos `ie.` en `textos/instructores.js`)
