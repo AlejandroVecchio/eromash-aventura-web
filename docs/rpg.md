@@ -390,6 +390,16 @@ tener que leer el código para balancear.
   `armadura`, `joya`). Activos = lo puesto ∪ lo grabado (`rearmar`).
 - Semijefes y únicos: 20 % de soltar una legendaria. Estado en `E.extra.legendarios = { aprendidos, grabados }`.
 
+## Arcón del Puesto y filtro del botín (`motor/arcon.js`, `ARCON`; asset `arconPuesto` en `mundo/assets-arcon.js`; textos `ac.`)
+
+- El arcón va en el patio del Puesto (`ubicar`). «Abrir el arcón» levanta la tapa (`o.abierto`) y abre la pestaña
+  «Arcón» (solo visible mientras está abierto). `guardar` / `sacar` / `guardarTodo`; capacidad `CAPS` 24 → 36 → 48 por
+  `AGRANDAR` 150 y 400 de plata.
+- Filtro (`st.filtro` 0 todo, 1 mágicas+, 2 raras+): `oculta(it)` es true si la rareza no llega y la pieza no es
+  especial (muescas, conjunto, poder o legendaria). botin.js no le dibuja haz, nombre ni luz salvo a la que está más
+  cerca. Con `st.desarmar`, `alJuntar` la desarma al juntarla (50 % de su valor en plata + `MATERIALES.alDesarmar`).
+- Las dos casillas del filtro van en la Bolsa (`celdasBolsa`). Estado en `E.extra.arcon = { piezas, cap, filtro, desarmar, guardadas }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

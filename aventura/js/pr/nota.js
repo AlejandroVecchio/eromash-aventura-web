@@ -5,40 +5,32 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 26,
-    titulo: { es: "Poderes de las legendarias", en: "Legendary powers" },
+    pr: 27,
+    titulo: { es: "Arcón del Puesto y filtro del botín", en: "Outpost chest and loot filter" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: las legendarias (naranjas) ahora traen un poder y nombre propio", en: "loot: legendaries (orange) now carry a power and their own name" },
-      { pr: 12, es: "materiales: desarmar una legendaria enseña su poder", en: "materials: dismantling a legendary teaches its power" },
+      { pr: 3, es: "botín: el arcón guarda piezas y el filtro esconde las que tiran en el piso", en: "loot: the chest stores pieces and the filter hides the ones on the ground" },
+      { pr: 12, es: "materiales: lo filtrado se desarma solo al juntarlo", en: "materials: filtered items are dismantled when picked up" },
+      { pr: 24, es: "muescas, 25 conjuntos y 26 legendarias: el filtro nunca esconde esas piezas", en: "notches, 25 sets and 26 legendaries: the filter never hides those pieces" },
     ],
     mirar: [
-      { es: "Cada legendaria trae un poder de su casilla con nombre de los mitos: Furia de Surtr (cada 5 golpes estallás en llamas), Colmillo de Garm (los críticos sangran), Eco de Mjölnir (rayos que saltan), Égida de Svalinn (escudo cuando la vida cae), Yelmo de Hel (matar cura), Andar de Hermóðr (esquivar da estamina y prisa), Paso de Víðarr (corriendo recibís menos), Brísingamen (más daño cuanta más plata) y Andvaranaut (más plata y fragmentos).", en: "Each legendary carries a power for its slot with a mythic name: Surtr's Fury (every 5 hits you burst into flames), Garm's Fang (criticals bleed), Echo of Mjölnir (jumping lightning), Aegis of Svalinn (a shield when life drops), Helm of Hel (kills heal), Hermóðr's Stride (dodging gives stamina and haste), Víðarr's Step (take less while running), Brísingamen (more damage the more silver) and Andvaranaut (more silver and fragments)." },
-      { es: "Como el cubo de Kanai: desarmar una legendaria enseña su poder, y en la pestaña Poderes de la mochila se graba uno de arma, uno de armadura y uno de joya que valen sin llevar la pieza.", en: "Like Kanai's cube: dismantling a legendary teaches its power, and in the backpack's Powers tab you engrave one weapon, one armour and one jewellery power that work without the piece." },
-      { es: "La égida y la prisa salen en la tira de efectos. Los semijefes y los únicos tienen un 20 % de soltar una legendaria.", en: "The aegis and the haste show on the effects strip. Lesser bosses and uniques have a 20 % chance to drop a legendary." },
+      { es: "En el patio del Puesto está el arcón de Eromash (roble, flejes de hierro, una piel encima): «Abrir el arcón» levanta la tapa y abre la pestaña Arcón de la mochila.", en: "In the Outpost yard stands Eromash's chest (oak, iron bands, a fur on top): «Open the chest» lifts the lid and opens the backpack's Chest tab." },
+      { es: "Tocar una pieza de la bolsa la guarda; tocar una del arcón la devuelve. «Guardar todo» vacía la bolsa. Empieza con 24 lugares y se agranda a 36 y 48 por plata.", en: "Touching a bag piece stores it; touching a chest piece takes it back. «Store everything» empties the bag. It starts with 24 slots and grows to 36 and 48 for silver." },
+      { es: "En la Bolsa hay dos casillas nuevas: el filtro del botín (todo, mágicas o mejores, raras o mejores) y «Desarmar lo filtrado». Lo filtrado no lleva luz ni nombre en el piso (salvo la que tenés al lado); con desarmar en sí, se desarma solo al juntarlo.", en: "The Bag has two new cells: the loot filter (everything, magic or better, rare or better) and «Dismantle filtered». Filtered items have no light or name on the ground (except the one next to you); with dismantle on, they're dismantled when picked up." },
     ],
     botones: [
-      { es: "Darme las tres armas legendarias (Surtr, Garm, Mjölnir)", en: "Give me the three legendary weapons (Surtr, Garm, Mjölnir)", fn: () => {
-        [["espadaAncha", "surtr"], ["hachaBarbuda", "garm"], ["martilloRunico", "mjolnir"]].forEach(([b, po]) => {
-          const it = OBJETOS.generar({ base: b, r: 3, n: Math.max(6, RPG.nivel()) });
-          it.po = po;
-          BOTIN.dar(it);
-        });
-        INVENTARIO.abrir("bolsa");
+      { es: "Ir al arcón con la bolsa llena de cosas", en: "Go to the chest with a full bag", fn: (A) => {
+        const ar = ARCON.arcon();
+        ir(A, [ar.x, ar.y + 90]);
+        for (let i = 0; i < 12; i++) BOTIN.dar(OBJETOS.generar({ n: Math.max(3, RPG.nivel()) }));
+        PODERES.pj().plata += 600;
       } },
-      { es: "Darme una legendaria de cada armadura y joya", en: "Give me one legendary of each armour and jewel", fn: () => {
-        [["coraza", "svalinn"], ["yelmo", "hel"], ["botasHerradas", "hermodr"], ["grebas", "vidarr"], ["amuleto", "brisingamen"], ["sortija", "andvaranaut"]].forEach(([b, po]) => {
-          const it = OBJETOS.generar({ base: b, r: 3, n: Math.max(6, RPG.nivel()) });
-          it.po = po;
-          BOTIN.dar(it);
-        });
-        INVENTARIO.abrir("bolsa");
+      { es: "Tirar 12 piezas de todas las rarezas acá (para ver el filtro)", en: "Drop 12 pieces of every rarity here (to see the filter)", fn: (A) => {
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2;
+          BOTIN.tirar(A.jug.x + Math.cos(a) * 160, A.jug.y + Math.sin(a) * 120, OBJETOS.generar({ r: i % 4, n: 5 }));
+        }
       } },
-      { es: "Aprender los nueve poderes (para la pestaña Poderes)", en: "Learn all nine powers (for the Powers tab)", fn: () => {
-        Object.keys(LEGENDARIOS.POD).forEach((id) => LEGENDARIOS.aprender(id));
-        INVENTARIO.abrir("poderes");
-      } },
-      { es: "Ir a una manada (probar Surtr y Mjölnir)", en: "Go to a pack (try Surtr and Mjölnir)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
     ],
   };
   // ---------- ayuda para los botones ----------

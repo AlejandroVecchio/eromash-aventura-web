@@ -201,6 +201,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
 - **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
   - en la mano · dibujo · el sistema
+- **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
+  - el filtro · el arcón · la pestaña · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
@@ -284,6 +286,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
   - la mesa de alquimia
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
+- **assets-arcon.js**: el arcón de Eromash en el Puesto (asset de ARCON)
+  - assets: arconPuesto
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casas.js**: las casas de varios cuartos
@@ -356,6 +360,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alquimia.js**: Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
 - **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
+- **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
