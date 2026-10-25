@@ -174,6 +174,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas de una mano · a dos manos
 - **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
   - qué dibujo de la arena le toca · amuletos y anillos (propios) · dibujar
+- **bastones-dibujo.js**: el dibujo de los bastones rúnicos (forma "baston" de DIB_ARMAS)
 - **lanzas-dibujo.js**: el dibujo de las lanzas (forma "lanza" de DIB_ARMAS)
 - **martillos-dibujo.js**: el dibujo de los martillos y mazas (forma "martillo" de DIB_ARMAS)
 - **objetos.js**: los objetos de equipo: bases, rarezas, afijos y nombres (módulo OBJETOS)
@@ -211,6 +212,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
+- **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
+  - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
   - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
