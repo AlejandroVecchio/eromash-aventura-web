@@ -97,7 +97,7 @@ window.HONGO = (function () {
     [BARRA.x - BARRA.largo - 25, BARRA.y - 70, BARRA.x + BARRA.largo + 25, BARRA.y + 70],
     [-1500, -HY, -600, -1100],
     [-650, -HY, -110, -1010],
-    [ESCALERA.x0 - 60, -HY, HX, ESCALERA.y1],
+    [ESCALERA.x0 - 60, -HY, ESCALERA.x1, ESCALERA.y1],
     ...MESAS.map((m) => [m.x - 470, m.y - 175, m.x + 470, m.y + 175]),
   ];
   function libre(x, y, r = 40) {
@@ -107,6 +107,44 @@ window.HONGO = (function () {
     for (const n of gente) if (!n.sentado && n.visible && Math.hypot(x - n.x, y - n.y) < 45 + r && !n.z) return false;
     return true;
   }
+
+  // ---------- arriba ----------
+  // Eromash anda en tres niveles: el piso, la escalera (sube de este a oeste) y la galería (ero.modo)
+  const ESC = { u0: ESCALERA.x0, u1: ESCALERA.x1, w0: -HY + 40, w1: ESCALERA.y1 - 25 };
+  const zEsc = (x) => ZG * Math.max(0, Math.min(1, (ESC.u1 - x) / (ESC.u1 - ESC.u0)));
+  const enEsc = (x, y) => x > ESC.u0 - 40 && x < ESC.u1 + 70 && y > ESC.w0 && y < ESC.w1;
+  const enGal = (x, y) => (y > -HY + 55 && y < GN - 35 && x > -HX + 55 && x < ESC.u0 + 20) || (x > -HX + 55 && x < GO - 35 && y > -HY + 55 && y < GO_SUR - 35);
+  // las puertas de los cuartos: cinco en la pared norte y tres en la oeste, cada una con su runa (como en pintarPared)
+  const RX = 520, // el medio ancho de un cuarto
+    RY = 400, // el medio fondo
+    RZ = 420; // lo alto de sus paredes
+  const CAMA = { id: "camaPieles", x: -270, y: -RY + 130, ch: [205, 85] };
+  const CUARTOS = [
+    { id: "cerrado", pared: "n", a: -1400, cerrado: true },
+    { id: "bergr", pared: "n", a: -1000, piel: true,
+      muebles: [Object.assign({}, CAMA, { x: -240, y: -RY + 150, o: { s: 1.35 }, ch: [275, 115] }), { id: "armero", x: 260, y: -RY + 45, ch: [155, 40] }],
+      cosas: [{ x: -240, y: -RY + 330, a: "ho.accion_cama_grande", m: "ho.m_cama_bergr" }, { x: 260, y: -RY + 190, a: "ho.accion_hacha", m: "ho.m_hacha_bergr" }] },
+    { id: "signy", pared: "n", a: -600, luz: "115,213,219",
+      muebles: [CAMA, { id: "atril", x: 200, y: -60, ch: [70, 40] }, { id: "estanteRollos", x: 330, y: -RY + 45, o: { sem: 4 }, ch: [135, 40] }, { id: "cantaros", x: -380, y: 230, ch: [90, 40] }],
+      cosas: [{ x: 200, y: 60, a: "ho.accion_atril", m: "ho.m_atril" }, { x: 330, y: -RY + 190, a: "ho.accion_rollos", m: "ho.m_rollos" }] },
+    { id: "tuyo", pared: "n", a: -200, tuyo: true,
+      muebles: [CAMA, { id: "arconCasa", x: 280, y: -RY + 80, ch: [90, 40] }, { id: "cesto", x: 400, y: 230, ch: [60, 60] }],
+      cosas: [{ x: -270, y: -RY + 260, a: "ho.accion_dormir", fn: "dormir" }, { x: 280, y: -RY + 190, a: "ho.accion_arcon", m: "ho.m_arcon_tuyo" }, { x: 20, y: -RY + 110, a: "ho.accion_ventana", m: "ho.m_ventana_tuyo" }] },
+    { id: "fjalar", pared: "n", a: 250, piel: true,
+      muebles: [Object.assign({}, CAMA, { o: { s: 0.8 }, x: -310, ch: [165, 70] }), { id: "cajas", x: 300, y: -RY + 100, ch: [130, 80] }, { id: "yunque", x: 120, y: 80, ch: [55, 55] }, { id: "sacos", x: -380, y: 240, ch: [95, 50] }],
+      cosas: [{ x: 120, y: 190, a: "ho.accion_yunque", m: "ho.m_yunque" }, { x: 300, y: -RY + 240, a: "ho.accion_cajas", m: "ho.m_cajas_fjalar" }] },
+    { id: "mercader", pared: "o", a: -900, durmiente: true,
+      muebles: [CAMA, { id: "sacos", x: 280, y: -RY + 90, ch: [95, 50] }, { id: "cantaros", x: 400, y: 200, ch: [90, 40] }],
+      cosas: [{ x: -270, y: -RY + 260, a: "ho.accion_despertar", fn: "dormido" }] },
+    { id: "lysa", pared: "o", a: -500, luz: "115,213,219",
+      muebles: [CAMA, { id: "estanteHierbas", x: 280, y: -RY + 45, ch: [200, 40] }],
+      cosas: [{ x: 280, y: -RY + 190, a: "ho.accion_hierbas", m: "ho.m_hierbas_lysa" }] },
+    { id: "despensa", pared: "o", a: -100, sinCama: true,
+      muebles: [{ id: "barriles", x: -260, y: -RY + 90, ch: [130, 65] }, { id: "sacos", x: -400, y: 180, ch: [95, 50] }, { id: "cesto", x: 380, y: 220, ch: [60, 60] }, { id: "cantaros", x: 100, y: -RY + 60, ch: [90, 40] }, { id: "tablaSuelta", x: 360, y: -RY + 6, ch: null }],
+      cosas: [{ x: -260, y: -RY + 240, a: "ho.accion_barriles", m: "ho.m_barriles" }, { x: 360, y: -RY + 130, a: "ho.accion_tabla", fn: "tabla" }] },
+  ];
+  // dónde se para Eromash frente a cada puerta, en la galería
+  const frenteDe = (q) => (q.pared === "n" ? { x: q.a, y: -HY + 110 } : { x: -HX + 110, y: q.a });
 
   // ---------- la gente ----------
   // { id, x, y, z, mira: S|N|E|W, sentado (alto del asiento), jarra, rol, cuando: dia|noche|siempre, capital }
@@ -199,8 +237,9 @@ window.HONGO = (function () {
     dtUlt = 1 / 60,
     fundido = 0,
     saliendo = 0;
-  const ero = { x: PUERTA.x, y: PUERTA.y - 160 };
-  const cam = { x: 0, y: 0, g: 0.52, esc: 0.5 };
+  const ero = { x: PUERTA.x, y: PUERTA.y - 160, z: 0, modo: "piso" };
+  let en = null; // el cuarto de arriba donde está Eromash
+  const cam = { x: 0, y: 0, z: 0, g: 0.52, esc: 0.5 };
   let zoom = 0.42,
     giroObj = 0.52;
   const globos = []; // { n, texto, t }
@@ -215,6 +254,9 @@ window.HONGO = (function () {
     activo = true;
     ero.x = PUERTA.x;
     ero.y = PUERTA.y - 170;
+    ero.z = 0;
+    ero.modo = "piso";
+    en = null;
     cam.x = ero.x + 300;
     cam.y = ero.y - 500;
     if (st.g != null) giroObj = cam.g = st.g;
@@ -259,6 +301,9 @@ window.HONGO = (function () {
       activo = true;
       ero.x = TRAMPILLA.x + 150;
       ero.y = TRAMPILLA.y + 60;
+      ero.z = 0;
+      ero.modo = "piso";
+      en = null;
       fundido = 1;
       J.dentro = sistemaSala;
       jug.mira = { vista: "S", espejo: false };
@@ -293,8 +338,10 @@ window.HONGO = (function () {
           const pj = PODERES.pj();
           if (pj.plata < 8) return A.avisar("in.hidromiel_sin");
           pj.plata -= 8;
+          st.llave = true;
           HUD.aviso(t("ho.cuarto_ok"), "#E0B2B2");
-          J.retrasar(0.6, dormir);
+          const q = CUARTOS.find((k) => k.tuyo);
+          if (ero.modo === "gal" && Math.hypot(ero.x - frenteDe(q).x, ero.y - frenteDe(q).y) < 260) entrarCuarto(q);
         },
       },
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
@@ -305,6 +352,7 @@ window.HONGO = (function () {
     fundido = 1.6;
     jug.hp = jug.hpMax;
     jug.sta = jug.staMax;
+    st.llave = false;
     const falta = (((7 - h + 24) % 24) / 24) * LUZ.DIA;
     H.E.tiempo += falta;
     HUD.aviso(t("in.dormiste_noche"), "#E0B2B2");
@@ -324,6 +372,48 @@ window.HONGO = (function () {
     });
   }
   const mirar = (clave) => () => A.dialogoLibre([["eromash", clave]]);
+  // ---------- los cuartos de arriba ----------
+  let golpes = 0,
+    sueno = 0;
+  function entrarCuarto(q) {
+    en = q;
+    ero.x = 0;
+    ero.y = RY - 120;
+    ero.z = 0;
+    jug.mira = { vista: "N", espejo: false };
+    fundido = 1;
+    pegar = true;
+    if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.35 });
+    HUD.aviso(t("ho.cu_" + q.id), "#E0B2B2");
+  }
+  function salirCuarto() {
+    const f = frenteDe(en);
+    en = null;
+    ero.x = f.x;
+    ero.y = f.y + (f.y === -HY + 110 ? 30 : 0);
+    if (f.x === -HX + 110) ero.x += 30;
+    ero.z = ZG;
+    ero.modo = "gal";
+    jug.mira = { vista: "S", espejo: false };
+    fundido = 1;
+    pegar = true;
+    if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.35 });
+  }
+  function golpear() {
+    if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.25, tono: 1.4 });
+    A.dialogoLibre([["hg_voz", "ho.cerrado_" + (golpes++ % 3)]]);
+  }
+  const HACER = {
+    dormir: () => dormir(),
+    dormido: () => A.dialogoLibre([["hg_dormido", "ho.dormido_" + (sueno++ % 3)]]),
+    tabla: () => {
+      if (st.tabla) return A.dialogoLibre([["eromash", "ho.m_tabla_vacia"]]);
+      st.tabla = true;
+      PODERES.pj().plata += 12;
+      if (window.SONIDO) SONIDO.tocar("plata", { vol: 0.5 });
+      A.dialogoLibre([["eromash", "ho.m_tabla"]]);
+    },
+  };
   const charlas = {};
   function hablar(n) {
     n.mira = vistaHacia(ero.x - n.x, ero.y - n.y);
@@ -351,18 +441,41 @@ window.HONGO = (function () {
       }
     };
     const dist = (x, y) => Math.hypot(ero.x - x, ero.y - y);
+    if (en) {
+      for (const k of en.cosas || []) {
+        const d = dist(k.x, k.y);
+        if (d < 190) prueba(d, t(k.a), k.fn ? HACER[k.fn] : mirar(k.m));
+      }
+      const dp = dist(0, RY - 40);
+      if (dp < 200) prueba(dp + 20, t("in.accion_salir"), salirCuarto);
+      return mejor;
+    }
+    const arriba = ero.modo !== "piso";
     for (const n of gente) {
-      if (!n.visible) continue;
-      const d = dist(n.x, n.y) - (n.id === "bergr" ? 60 : 0) + (n.z > 200 ? 140 : 0);
+      if (!n.visible || n.z >= ZG !== arriba) continue;
+      const d = dist(n.x, n.y) - (n.id === "bergr" ? 60 : 0);
       if (d < 200) prueba(d - 30, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablar(n));
+    }
+    if (arriba) {
+      if (ero.modo !== "gal") return mejor;
+      for (const q of CUARTOS) {
+        const f = frenteDe(q),
+          d = dist(f.x, f.y);
+        if (d >= 170) continue;
+        const nom = t("ho.cu_" + q.id);
+        if (q.cerrado) prueba(d, t("ho.accion_golpear", { q: nom }), golpear);
+        else if (q.tuyo && !st.llave) prueba(d, t("ho.accion_tuyo_pagar"), cuarto);
+        else prueba(d, t("ho.accion_entrar_cuarto", { q: nom }), () => entrarCuarto(q));
+      }
+      const db = ero.y < GN ? GN - 35 - ero.y : GO - 35 - ero.x;
+      if (db < 70) prueba(db + 90, t("ho.accion_asomarse"), mirar("ho.m_baranda"));
+      return mejor;
     }
     const dp = dist(PUERTA.x, PUERTA.y - 40);
     if (dp < 220) prueba(dp, t("in.accion_salir"), salir);
     const df = dist(FOGON.x, FOGON.y) - 290;
     if (df < 140) prueba(df + 40, t("ho.accion_fogon"), calentarse);
     if (ero.y > BARRA.y + 60 && ero.y < BARRA.y + 200 && Math.abs(ero.x - BARRA.x) < BARRA.largo + 20) prueba(ero.y - BARRA.y - 60, t("ho.accion_barra"), hidromiel);
-    const de = dist(ESCALERA.x1 + 60, ESCALERA.y1 + 80);
-    if (de < 240) prueba(de, t("ho.accion_cuarto"), cuarto);
     const dt0 = dist(TARIMA.x, TARIMA.y) - 240;
     if (dt0 < 160) prueba(dt0 + 30, t("ho.accion_escuchar"), escuchar);
     const dtr = dist(TRAMPILLA.x, TRAMPILLA.y);
@@ -384,12 +497,37 @@ window.HONGO = (function () {
 
   // ---------- Eromash camina ----------
   const VEL = [0, 330, 520, 820];
+  // ¿se puede pisar (x, y)? devuelve el nivel en el que queda Eromash, o null
+  function pisa(x, y) {
+    if (en) {
+      if (x < -RX + 55 || x > RX - 55 || y < -RY + 55 || y > RY - 45) return null;
+      for (const m of en.muebles) if (m.ch && Math.abs(x - m.x) < m.ch[0] + 30 && Math.abs(y - m.y) < m.ch[1] + 30) return null;
+      return "cuarto";
+    }
+    if (ero.modo === "piso") {
+      if (enEsc(x, y) && ero.x > ESC.u1 - 10) return "esc";
+      return libre(x, y) ? "piso" : null;
+    }
+    if (ero.modo === "esc") {
+      if (x > ESC.u1 + 45 && y > ESC.w0 && y < ESC.w1) return libre(x, y) ? "piso" : null;
+      if (x < ESC.u0 + 10 && enGal(x, y)) return "gal";
+      return enEsc(x, y) ? "esc" : null;
+    }
+    if (enGal(x, y)) {
+      for (const n of gente) if (n.visible && n.z >= ZG && Math.hypot(x - n.x, y - n.y) < 70) return null;
+      return "gal";
+    }
+    if (enEsc(x, y) && x > ESC.u0 - 30) return "esc";
+    return null;
+  }
   function moverA(nx, ny) {
-    if (libre(nx, ny)) {
-      ero.x = nx;
-      ero.y = ny;
-    } else if (libre(nx, ero.y)) ero.x = nx;
-    else if (libre(ero.x, ny)) ero.y = ny;
+    let m = pisa(nx, ny);
+    if (m) (ero.x = nx), (ero.y = ny);
+    else if ((m = pisa(nx, ero.y))) ero.x = nx;
+    else if ((m = pisa(ero.x, ny))) ero.y = ny;
+    if (!m || en) return;
+    ero.modo = m;
+    ero.z = m === "piso" ? 0 : m === "gal" ? ZG : zEsc(ero.x);
   }
   function jugadorPaso(dt) {
     jug.inv = Math.max(0, (jug.inv || 0) - dt);
@@ -410,8 +548,10 @@ window.HONGO = (function () {
       jug.dir = [e.x / l, e.y / l];
       jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
       moverA(ero.x + dx * VEL[jug.paso] * dt, ero.y + dy * VEL[jug.paso] * dt);
-      // salir caminando por la puerta
-      if (ero.y > HY - 110 && Math.abs(ero.x - PUERTA.x) < 190 && dy > 0.4) salir();
+      // salir caminando por la puerta (de la sala o del cuarto)
+      if (en) {
+        if (ero.y > RY - 60 && Math.abs(ero.x) < 110 && dy > 0.4) salirCuarto();
+      } else if (ero.modo === "piso" && ero.y > HY - 110 && Math.abs(ero.x - PUERTA.x) < 190 && dy > 0.4) salir();
     }
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
     if (!libreJ) return;
@@ -547,17 +687,22 @@ window.HONGO = (function () {
     if (libreJ && CONTROLES.pulsado("acercar")) zoom = Math.min(1, zoom + dt * 0.3);
     if (libreJ && CONTROLES.pulsado("alejar")) zoom = Math.max(0.28, zoom - dt * 0.3);
     cam.g += corto(giroObj - cam.g) * Math.min(1, dt * 8);
-    const escObj = zoom * Math.sqrt((cw * ch) / (1600 * 900));
+    const escObj = (en ? Math.min(1, zoom + 0.28) : zoom) * Math.sqrt((cw * ch) / (1600 * 900));
+    // la cámara mira un poco por encima de Eromash, hacia el fondo, para que entre la galería; en un cuarto, al medio
+    const tx = en ? ero.x * 0.35 : ero.x,
+      ty = en ? ero.y * 0.35 - 110 : ero.y - (ero.modo === "piso" ? 260 : 60),
+      tz = en ? 0 : ero.z * 0.85;
     if (pegar) {
       pegar = false;
       cam.esc = escObj;
-      cam.x = ero.x;
-      cam.y = ero.y - 260;
+      cam.x = tx;
+      cam.y = ty;
+      cam.z = tz;
     }
     cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
-    // la cámara mira un poco por encima de Eromash, hacia el fondo, para que entre la galería
-    cam.x += (ero.x - cam.x) * Math.min(1, dt * 5);
-    cam.y += (ero.y - 260 - cam.y) * Math.min(1, dt * 5);
+    cam.x += (tx - cam.x) * Math.min(1, dt * 5);
+    cam.y += (ty - cam.y) * Math.min(1, dt * 5);
+    cam.z += (tz - cam.z) * Math.min(1, dt * 5);
   }
   addEventListener("wheel", (ev) => {
     if (!activo || J.modo !== "juego" || (ev.target && ev.target.closest && ev.target.closest(".ui, #capaCaja, #mapaLienzo"))) return;
@@ -596,7 +741,7 @@ window.HONGO = (function () {
       s = cam.esc,
       ox = (cam.x * co - cam.y * si) * s,
       oy = (cam.x * si + cam.y * co) * VOL.K * s;
-    PR = VOL.proyector(cw / 2 - ox, ch * 0.6 - oy, cam.g, { s });
+    PR = VOL.proyector(cw / 2 - ox, ch * 0.6 - oy + cam.z * s, cam.g, { s });
     cwU = cw;
     chU = ch;
     return PR;
@@ -792,35 +937,53 @@ window.HONGO = (function () {
       dy = (by - ay) / l;
     VOL.caja(c, PR, Math.min(ax, bx) - Math.abs(dy) * 10, Math.min(ay, by) - Math.abs(dx) * 10, ZG + 104, Math.max(ax, bx) + Math.abs(dy) * 10, Math.max(ay, by) + Math.abs(dx) * 10, ZG + 122, MG);
   }
+  // la clave de orden de cada tramo de galería (Eromash arriba va entre el tablado y la baranda)
+  const tramosN = () => [-HX, ...POSTES_N.filter((x) => x > -HX && x < GN_ESTE), GN_ESTE];
+  const tramosO = () => [GN, ...POSTES_O.filter((y) => y > GN && y < GO_SUR), GO_SUR];
+  function claveArriba() {
+    if (ero.modo === "esc") return PR.hondo((ESCALERA.x0 + ESCALERA.x1) / 2, ESCALERA.y1) + 2;
+    if (ero.y < GN || ero.x > GO) {
+      const xs = tramosN();
+      for (let i = 0; i < xs.length - 1; i++) if (ero.x <= xs[i + 1] || i === xs.length - 2) return PR.hondo((xs[i] + xs[i + 1]) / 2, GN) + 2;
+    }
+    const ys = tramosO();
+    for (let i = 0; i < ys.length - 1; i++) if (ero.y <= ys[i + 1] || i === ys.length - 2) return PR.hondo(GO, (ys[i] + ys[i + 1]) / 2) + 2;
+    return PR.hondo(ero.x, ero.y);
+  }
   function galeria(c, lista) {
-    if (paredVista.n()) {
-      const xs = [-HX, ...POSTES_N.filter((x) => x > -HX && x < GN_ESTE), GN_ESTE];
+    const arriba = ero.modo !== "piso";
+    if (paredVista.n() || arriba) {
+      const xs = tramosN();
       for (let i = 0; i < xs.length - 1; i++) {
         const x0 = xs[i],
-          x1 = xs[i + 1];
-        lista.push({ k: PR.hondo((x0 + x1) / 2, GN) + 1, f: () => tenue(ero.y < GN + 40 && ero.x > x0 - 120 && ero.x < x1 + 120, () => {
+          x1 = xs[i + 1],
+          k = PR.hondo((x0 + x1) / 2, GN),
+          bajo = () => !arriba && ero.y < GN + 40 && ero.x > x0 - 120 && ero.x < x1 + 120;
+        lista.push({ k: k + 1, f: () => tenue(bajo(), () => {
           VOL.caja(c, PR, x0, -HY, ZG - 34, x1, GN, ZG, MG);
           VOL.caja(c, PR, x0, GN - 30, ZG - 70, x1, GN, ZG - 34, MG);
-          baranda(c, x0, GN, x1, GN);
         }) });
+        lista.push({ k: k + 3, f: () => tenue(bajo(), () => baranda(c, x0, GN, x1, GN)) });
       }
       POSTES_N.forEach((x) => lista.push({ k: PR.hondo(x, GN), f: () => poste(c, x, GN) }));
       // la escalera que sube a la galería, contra la pared norte
       lista.push({ k: PR.hondo((ESCALERA.x0 + ESCALERA.x1) / 2, ESCALERA.y1), f: () => escalera(c) });
     }
-    if (paredVista.o()) {
-      const ys = [GN, ...POSTES_O.filter((y) => y > GN && y < GO_SUR), GO_SUR];
+    if (paredVista.o() || arriba) {
+      const ys = tramosO();
       for (let i = 0; i < ys.length - 1; i++) {
         const y0 = ys[i],
-          y1 = ys[i + 1];
-        lista.push({ k: PR.hondo(GO, (y0 + y1) / 2) + 1, f: () => tenue(ero.x < GO + 40 && ero.y > y0 - 120 && ero.y < y1 + 120, () => {
+          y1 = ys[i + 1],
+          k = PR.hondo(GO, (y0 + y1) / 2),
+          bajo = () => !arriba && ero.x < GO + 40 && ero.y > y0 - 120 && ero.y < y1 + 120;
+        lista.push({ k: k + 1, f: () => tenue(bajo(), () => {
           VOL.caja(c, PR, -HX, y0, ZG - 34, GO, y1, ZG, MG);
           VOL.caja(c, PR, GO - 30, y0, ZG - 70, GO, y1, ZG - 34, MG);
-          baranda(c, GO, y0, GO, y1);
         }) });
+        lista.push({ k: k + 3, f: () => tenue(bajo(), () => baranda(c, GO, y0, GO, y1)) });
       }
       // el tramo de la esquina, sobre la galería norte
-      if (!paredVista.n()) lista.push({ k: PR.hondo(GO, -1050), f: () => VOL.caja(c, PR, -HX, -HY, ZG - 34, GO, GN, ZG, MG) });
+      if (!paredVista.n() && !arriba) lista.push({ k: PR.hondo(GO, -1050), f: () => VOL.caja(c, PR, -HX, -HY, ZG - 34, GO, GN, ZG, MG) });
       POSTES_O.forEach((y) => lista.push({ k: PR.hondo(GO, y), f: () => poste(c, GO, y) }));
     }
   }
@@ -921,6 +1084,20 @@ window.HONGO = (function () {
     ctxAhora = c;
     try {
       armarProyector(cw, ch);
+      if (en) dibujarCuarto(c, cw, ch);
+      else dibujarSala(c, cw, ch);
+    } finally {
+      VOL.cam.g = g0;
+    }
+    const f = Math.max(Math.min(1, fundido), saliendo ? 1 - saliendo / 0.35 : 0);
+    if (f > 0) {
+      c.setTransform(1, 0, 0, 1, 0, 0);
+      c.fillStyle = "rgba(10,6,6," + f + ")";
+      c.fillRect(0, 0, cw, ch);
+    }
+  }
+  function dibujarSala(c, cw, ch) {
+    {
       // el piso, de una vez
       const piso = lienzoPiso();
       VOL.enPiso(c, PR, (cc) => cc.drawImage(piso, -HX, -HY, HX * 2, HY * 2));
@@ -974,10 +1151,11 @@ window.HONGO = (function () {
         persona(c, n, sx, sy);
       } });
       // Eromash
-      pon(ero.x, ero.y, (sx, sy) => {
-        const z = jug.salto > 0 ? Math.sin((1 - jug.salto / 0.42) * Math.PI) * 90 : 0;
+      lista.push({ k: ero.modo === "piso" ? PR.hondo(ero.x, ero.y) + 1e-4 : claveArriba(), f: () => {
+        const [sx, sy] = PR(ero.x, ero.y, ero.z),
+          z = jug.salto > 0 ? Math.sin((1 - jug.salto / 0.42) * Math.PI) * 90 : 0;
         A.dibujarJugadorEn(c, sx, sy - z * s, GK * s);
-      }, 1);
+      } });
       lista.sort((a, b) => a.k - b.k);
       lista.forEach((l) => l.f());
       // lo que cuelga arriba de todo: las ruedas de velas
@@ -988,15 +1166,133 @@ window.HONGO = (function () {
       particulas(c);
       luz(c, cw, ch);
       dibujarGlobos(c);
-    } finally {
-      VOL.cam.g = g0;
     }
-    const f = Math.max(Math.min(1, fundido), saliendo ? 1 - saliendo / 0.35 : 0);
-    if (f > 0) {
-      c.setTransform(1, 0, 0, 1, 0, 0);
-      c.fillStyle = "rgba(10,6,6," + f + ")";
-      c.fillRect(0, 0, cw, ch);
+  }
+
+  // ---------- un cuarto de arriba ----------
+  // Una caja chica con la misma madera de la sala: la ventana en la pared del fondo, la puerta en la de adelante (que
+  // casi siempre queda cortada), los muebles con su volumen y la vela en un banquito junto a la cama.
+  function lienzoCuarto(lado) {
+    const q = calidad() === "alta" ? 0.5 : 0.3,
+      largo = lado === "n" || lado === "s" ? RX * 2 : RY * 2,
+      cv = lienzo("cuarto_" + lado, largo, RZ, q),
+      marca = en.id + noche;
+    if (cv.listo === marca) return cv;
+    const c = cv.getContext("2d"),
+      r = DIB.azar(en.id.length * 31 + lado.charCodeAt(0));
+    c.setTransform(q, 0, 0, q, 0, RZ * q);
+    c.clearRect(0, -RZ, largo, RZ);
+    const tabla = ["#3A1A10", "#40200F", "#361810"];
+    for (let x = 0, i = 0; x < largo; x += 70, i++) R(c, x, -RZ, 70, RZ, tabla[i % 3]), R(c, x + 66, -RZ, 4, RZ, "#1E0C06");
+    R(c, 0, -RZ, largo, 34, "#2A0806");
+    R(c, 0, -50, largo, 50, "#2A0806");
+    for (let k = 0; k < 6; k++) R(c, r() * largo, -RZ + r() * RZ, 30 + r() * 50, 3, "rgba(20,8,4,0.5)");
+    if (lado === "n") {
+      // la ventana chica con su postigo
+      const x = largo / 2 + 20;
+      R(c, x - 100, -330, 200, 190, "#2A0806");
+      R(c, x - 84, -316, 168, 162, noche ? "#141C30" : "#9AB8C8");
+      if (noche) for (let k = 0; k < 4; k++) R(c, x - 80 + r() * 160, -310 + r() * 90, 3, 3, "#F2ECEC");
+      else R(c, x - 84, -316, 60, 162, "#B8D0DA");
+      R(c, x - 4, -316, 8, 162, "#2A0806");
+      R(c, x - 84, -239, 168, 8, "#2A0806");
+      // las perchas con la capa del que duerme ahí
+      R(c, 60, -300, largo * 0.18, 12, "#5A2A16");
+      if (!en.sinCama) P(c, [80, -290, 140, -290, 150, -140, 70, -150], en.luz ? "#4A78D0" : "#9C2315");
+    } else if (lado === "s") {
+      const x = largo / 2;
+      R(c, x - 100, -300, 200, 300, "#2A0806");
+      R(c, x - 84, -284, 168, 284, "#5E130D");
+      FUTHARK.dibujar(c, "othala", x, -320, 30, "#FFD98A", 3);
+    } else {
+      // una repisa con un cuerno y un candil
+      R(c, largo * 0.3, -250, 220, 14, "#5A2A16");
+      P(c, [largo * 0.3 + 30, -250, largo * 0.3 + 120, -250, largo * 0.3 + 140, -290, largo * 0.3 + 60, -268], "#E0D4C0");
     }
+    if (en.luz) FUTHARK.dibujar(c, en.id === "signy" ? "ansuz" : "wunjo", largo * 0.82, -RZ + 90, 34, "#73D5DB", 3);
+    cv.listo = marca;
+    return cv;
+  }
+  function dibujarCuarto(c, cw, ch) {
+    const s = cam.esc,
+      MZ = ["#2A0806", "#3A1A10", "#5A2A16"];
+    // el piso
+    VOL.enPiso(c, PR, (cc) => {
+      const tabla = ["#3A1A10", "#341710", "#40200F", "#381A0E"];
+      for (let i = 0, y = -RY; y < RY; y += 80, i++) cc.fillStyle = tabla[i % 4], cc.fillRect(-RX, y, RX * 2, 80), (cc.fillStyle = "#1A0A06"), cc.fillRect(-RX, y + 76, RX * 2, 4);
+      if (en.piel) P(cc, DIB.poli(40, 150, 230, 130, 9, 0.3), "#8A7A6A"), P(cc, DIB.poli(40, 150, 165, 92, 9, 0.6), "#A8946C");
+      else (cc.fillStyle = "#5E130D"), cc.fillRect(-170, 70, 340, 200), (cc.fillStyle = "#9C2315"), cc.fillRect(-150, 90, 300, 160);
+      cc.strokeStyle = "rgba(0,0,0,0.4)";
+      cc.lineWidth = 50;
+      cc.strokeRect(-RX, -RY, RX * 2, RY * 2);
+    });
+    // las paredes (las de adelante no se pintan porque miran para el otro lado)
+    const tela = (lado, largo) => VOL.medida(largo, RZ, (cc, l, h) => {
+      const cv = lienzoCuarto(lado);
+      cc.drawImage(cv, 0, 0, cv.width, cv.height, 0, -h, l, h);
+    });
+    VOL.cara(c, PR, [[-RX, -RY, 0], [RX, -RY, 0], [RX, -RY, RZ], [-RX, -RY, RZ]], "#111111", tela("n", RX * 2));
+    VOL.cara(c, PR, [[-RX, RY, 0], [-RX, -RY, 0], [-RX, -RY, RZ], [-RX, RY, RZ]], "#111111", tela("o", RY * 2));
+    VOL.cara(c, PR, [[RX, -RY, 0], [RX, RY, 0], [RX, RY, RZ], [RX, -RY, RZ]], "#111111", tela("e", RY * 2));
+    VOL.cara(c, PR, [[RX, RY, 0], [-RX, RY, 0], [-RX, RY, RZ], [RX, RY, RZ]], "#111111", tela("s", RX * 2));
+    const lista = [],
+      pon = (x, y, f, z = 0) => lista.push({ k: PR.hondo(x, y) + z * 1e-4, f: () => f(...PR(x, y, 0)) });
+    // los zócalos de las paredes cortadas
+    if (!paredVista.s()) lista.push({ k: PR.hondo(0, RY + 30), f: () => {
+      VOL.caja(c, PR, -RX - 30, RY, 0, -110, RY + 30, 60, MZ);
+      VOL.caja(c, PR, 110, RY, 0, RX + 30, RY + 30, 60, MZ);
+    } });
+    if (!paredVista.e()) lista.push({ k: PR.hondo(RX + 30, 0), f: () => VOL.caja(c, PR, RX, -RY - 30, 0, RX + 30, RY + 30, 60, MZ) });
+    if (!paredVista.o()) lista.push({ k: PR.hondo(-RX - 30, 0), f: () => VOL.caja(c, PR, -RX - 30, -RY - 30, 0, -RX, RY + 30, 60, MZ) });
+    if (!paredVista.n()) lista.push({ k: PR.hondo(0, -RY - 30), f: () => VOL.caja(c, PR, -RX - 30, -RY - 30, 0, RX + 30, -RY, 60, MZ) });
+    // los muebles
+    const camaDe = en.muebles.find((m) => m.id === "camaPieles");
+    for (const m of en.muebles) pon(m.x, m.y, (sx, sy) => ASSETS.dibujar(c, m.id, sx, sy, tiempo, Object.assign({ sem: 2 }, m.o, { s: s * ((m.o && m.o.s) || 1), giro: m.giro || 0, abierta: m.id === "tablaSuelta" && !!st.tabla })));
+    // el que duerme: un bulto bajo las pieles, la cabeza en la almohada y las zetas que suben
+    if (en.durmiente && camaDe) pon(camaDe.x, camaDe.y + 1, (sx, sy) => {
+      const pr = VOL.proyector(sx, sy, cam.g, { s }),
+        res = Math.sin(tiempo * 1.6) * 4;
+      VOL.caja(c, pr, -110, -62, 100, 170, 62, 140 + res, ["#4A3020", "#6A5038", "#8A6A48"]);
+      VOL.cilindro(c, pr, -140, 0, 30, 100, 150, ["#C8946C", "#DCA880", "#E8B890"], { n: 8 });
+      VOL.cilindro(c, pr, -150, 0, 32, 140, 160, ["#5A3A20", "#6A4A28", "#7A5A30"], { n: 8 });
+    });
+    // la vela en un banquito junto a la cabecera
+    const vx = camaDe ? camaDe.x - 230 * ((camaDe.o && camaDe.o.s) || 1) + 20 : -RX + 120,
+      vy = camaDe ? camaDe.y + 120 : -RY + 120;
+    pon(vx, vy, (sx, sy) => {
+      const pr = VOL.proyector(sx, sy, cam.g, { s });
+      VOL.cubo(c, pr, 0, 0, 60, 60, 80, MZ);
+      const [x, y] = pr(0, 0, 80);
+      ASSETS.vela(c, x, y, s * 0.8, tiempo, 1);
+    });
+    pon(ero.x, ero.y, (sx, sy) => {
+      const z = jug.salto > 0 ? Math.sin((1 - jug.salto / 0.42) * Math.PI) * 90 : 0;
+      A.dibujarJugadorEn(c, sx, sy - z * s, GK * s);
+    }, 1);
+    lista.sort((a, b) => a.k - b.k);
+    lista.forEach((l) => l.f());
+    if (en.durmiente && camaDe) {
+      c.save();
+      c.font = `700 ${Math.round(28 * s * 2)}px "DM Sans", system-ui, sans-serif`;
+      c.fillStyle = "#F2ECEC";
+      for (let k = 0; k < 3; k++) {
+        const f = (tiempo * 0.5 + k / 3) % 1,
+          [x, y] = PR(camaDe.x - 140 + f * 60, camaDe.y, 200 + f * 220);
+        c.globalAlpha = Math.sin(f * Math.PI) * 0.8;
+        c.fillText("z", x, y);
+      }
+      c.restore();
+    }
+    // la luz: la vela, la ventana de día y el brillo rúnico de los que lo tienen
+    const L0 = [],
+      lu = (x, y, z, r, col, f) => {
+        const [sx, sy] = PR(x, y, z);
+        L0.push({ x: sx, y: sy, r: r * s, col, f });
+      };
+    lu(vx, vy, 160, 900, "255,217,138", 0.9 + Math.sin(tiempo * 9) * 0.05);
+    lu(20, -RY + 40, 240, noche ? 420 : 900, noche ? "115,140,200" : "200,224,240", noche ? 0.35 : 0.75);
+    if (en.luz) lu(260, -RY + 120, 260, 700, en.luz, 0.6 + Math.sin(tiempo * 2) * 0.1);
+    luz(c, cw, ch, L0);
   }
   // las brasas que suben del fogón (rombos que giran y se achican) y las runas de la canción
   function particulas(c) {
@@ -1047,13 +1343,13 @@ window.HONGO = (function () {
     }
     return L0;
   }
-  function luz(c, cw, ch) {
+  function luz(c, cw, ch, luces = null) {
     if (calidad() === "baja") {
       c.fillStyle = "rgba(10,5,5,0.28)";
       c.fillRect(0, 0, cw, ch);
       return;
     }
-    const luces = lucesAhora();
+    luces = luces || lucesAhora();
     if (!luzCv) luzCv = document.createElement("canvas");
     const w = Math.ceil(cw / 2),
       h = Math.ceil(ch / 2);
@@ -1137,5 +1433,7 @@ window.HONGO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { entrar, girar: (g) => (giroObj = cam.g = g), acercar: (z) => (zoom = z), activo: () => activo, sala: { HX, HY, ZG, ZT }, gente: () => gente, cam, ero, PR: () => PR };
+  return { entrar, girar: (g) => (giroObj = cam.g = g), acercar: (z) => (zoom = z), activo: () => activo, sala: { HX, HY, ZG, ZT }, gente: () => gente, cam, ero, PR: () => PR,
+    // para las pruebas: en qué cuarto está, entrar a uno o volver a la galería, y lo que hay a mano
+    cuarto: () => en && en.id, irCuarto: (id) => (id ? entrarCuarto(CUARTOS.find((q) => q.id === id)) : en && salirCuarto()), cercanoTexto: () => (cercano() || {}).texto };
 })();

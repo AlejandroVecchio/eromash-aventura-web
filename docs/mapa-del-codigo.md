@@ -220,7 +220,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
 - **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
-  - la sala · lo que choca · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar
+  - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **interiores.js**: los interiores (sistema INTERIORES)
@@ -324,6 +324,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **hongo.js**: Textos del Hongo Dorado por dentro (motor/hongo.js): la sala grande, la gente que la frecuenta, los forasteros de otras
+  - arriba: la galería y los cuartos
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
