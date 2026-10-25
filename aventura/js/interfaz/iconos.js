@@ -196,6 +196,13 @@ window.ICONOS = (function () {
       linea(c, [x - 4 * u, y - 4 * u, x + 4 * u, y + 4 * u], CLARO, 1.2 * u);
       linea(c, [x + 4 * u, y - 4 * u, x - 4 * u, y + 4 * u], CLARO, 1.2 * u);
     },
+    // un hörgr de los dioses (santuarios.js): dos lajas y la estela con la marca del dios
+    horgr(c, x, y, u, col) {
+      pol(c, [x - 6 * u, y + 5 * u, x + 6 * u, y + 5 * u, x + 5 * u, y + 2.5 * u, x - 5 * u, y + 2.5 * u], "#8E8A86");
+      pol(c, [x - 2.6 * u, y + 2.5 * u, x - 2.2 * u, y - 5 * u, x, y - 6.2 * u, x + 2.2 * u, y - 5 * u, x + 2.6 * u, y + 2.5 * u], "#B4B0AA");
+      linea(c, [x, y + 1 * u, x, y - 4 * u], col, 1.2 * u);
+      linea(c, [x - 1.4 * u, y - 2.6 * u, x + 1.4 * u, y - 0.6 * u], col, 1 * u);
+    },
     manzano(c, x, y, u, col) {
       c.fillStyle = col;
       c.beginPath();
@@ -246,7 +253,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

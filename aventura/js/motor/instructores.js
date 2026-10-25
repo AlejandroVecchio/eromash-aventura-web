@@ -346,5 +346,5 @@ window.INSTRUCTORES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, menuMaestro, estado: () => st, muneco: () => muneco, gente: () => gente, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES };
+  return { sistema, estado: () => st, muneco: () => muneco, gente: () => gente, menuMaestro, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES };
 })();

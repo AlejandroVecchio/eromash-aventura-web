@@ -285,6 +285,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
   - el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
+- **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
+  - pedir · ubicar · el sistema
 - **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
   - armar el mundo de secretos · aplicar lo guardado · acciones
 - **secundarias.js**: encargos, semijefes, renombre y proezas (sistema SECUNDARIAS)
@@ -343,6 +345,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: piedraCamino, piedraRito
 - **assets-puesto.js**: El Puesto de Eydis imaginado (versión de Alejandro, 22/10/2026; se suma a ASSETS)
   - assets: palisada, portonPuesto, mesaRutas, tableroTablillas, tablonCaza, fogonOlla, mostradorManta, ahumadero, tendedero, perraGrima, piedraVioleta
+- **assets-santuarios.js**: los hörgar de los dioses (assets de SANTUARIOS)
+  - assets: horgr
 - **assets-secretos.js**: los secretos de Eldervald: cofres, piedras rúnicas, altares y ruinas
   - Arcón del leñador · Cofre rúnico sellado · Urna del túmulo · Arca enterrada · Piedra del susurro · Altar de runa · Brasero de Skarnholt · Salón quemado de Skarnholt · Entrada del túmulo · Torre del Cuervo · Carro de la caravana · Tótem de campamento · Manzano de Iðunn
   - assets: arconLenador, cofreRunico, urnaTumulo, arcaEnterrada, piedraSusurro, altarRuna, brasero, salonQuemado, tumuloEntrada, torreCuervo, carroCaravana, totemCampamento, manzanoIdunn
@@ -419,6 +423,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
+- **santuarios.js**: Textos de los hörgar de los dioses (motor/santuarios.js): prefijo sn. (y as.horgr, mp.ley_dioses)
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
