@@ -262,8 +262,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
-- **facciones.js**: las facciones y la reputación (sistema FACCIONES)
-  - grados y bonos · sumar · la ventana · los estandartes · el sistema
 - **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
   - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
 - **frasco.js**: el frasco de Thora (sistema FRASCO)
@@ -297,8 +295,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
-- **pesca.js**: la pesca (sistema PESCA, modo "pesca")
-  - el agua · tirar, picar, pelear · la capa del minijuego · el puesto de Sverri · el sistema
+- **pesca.js**: la pesca (sistema PESCA)
+  - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
@@ -359,8 +357,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
 - **assets-este.js**: el este: Aserradero de Orm y Santuario de las Raíces (se suma a ASSETS)
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
-- **assets-facciones.js**: las facciones de Eldervald (assets de FACCIONES)
-  - assets: estandarteFaccion
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
 - **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
@@ -447,7 +443,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
-- **facciones.js**: Textos de las facciones (motor/facciones.js, mundo/assets-facciones.js): prefijo fc. (y as., mp.ley_facciones).
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
 - **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
