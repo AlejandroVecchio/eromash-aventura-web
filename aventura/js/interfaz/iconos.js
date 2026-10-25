@@ -302,6 +302,16 @@ window.ICONOS = (function () {
         pol(c, [x, y - 4.6 * u, x + 1.2 * u, y - 2.6 * u, x, y - 0.6 * u, x - 1.2 * u, y - 2.6 * u], CLARO);
       }
     },
+    // el manantial rúnico (berkano.js): la pila de piedra con el agua celeste y Berkano en la estela de atrás
+    manantial(c, x, y, u, col) {
+      pol(c, [x - 2.4 * u, y - 7 * u, x + 2.4 * u, y - 7 * u, x + 2.4 * u, y + 1 * u, x - 2.4 * u, y + 1 * u], "#6A7470");
+      FUTHARK.dibujar(c, "berkano", x, y - 1.6 * u, 4.6 * u, col, 1 * u);
+      pol(c, [x - 6 * u, y + 1 * u, x + 6 * u, y + 1 * u, x + 5 * u, y + 5.5 * u, x - 5 * u, y + 5.5 * u], "#8A8478");
+      c.fillStyle = col;
+      c.beginPath();
+      c.ellipse(x, y + 1.4 * u, 4.6 * u, 1.4 * u, 0, 0, Math.PI * 2);
+      c.fill();
+    },
     puente(c, x, y, u, col) {
       pol(c, [x - 7 * u, y - 1 * u, x + 7 * u, y - 1 * u, x + 7 * u, y + 1 * u, x - 7 * u, y + 1 * u], col);
       for (let k = -6; k <= 6; k += 3) linea(c, [x + k * u, y + 1 * u, x + k * u, y + 4.5 * u], col, 1 * u);
@@ -309,7 +319,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", nemesis: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", companero: "#B8AC9C", puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", nemesis: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", companero: "#B8AC9C", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;
