@@ -266,8 +266,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
-- **facciones.js**: las facciones y la reputación (sistema FACCIONES)
-  - grados y bonos · sumar · la ventana · los estandartes · el sistema
 - **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
   - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
 - **frasco.js**: el frasco de Thora (sistema FRASCO)
@@ -367,8 +365,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: robleTrueno, fuenteLaguz, piedraManantial
 - **assets-este.js**: el este: Aserradero de Orm y Santuario de las Raíces (se suma a ASSETS)
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
-- **assets-facciones.js**: las facciones de Eldervald (assets de FACCIONES)
-  - assets: estandarteFaccion
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
 - **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
