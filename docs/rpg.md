@@ -247,6 +247,21 @@ tener que leer el código para balancear.
 - Trofeos (`TROFEOS`): se cuelga uno del cinto (`colgar`) y suma por `RPG.aporte` (velocidad de ataque, estamina,
   armadura, botín, energía rúnica, vida). Se ven y se cuelgan desde la Bolsa (`CONTRATOS.celdas()`).
 
+## Árbol de habilidades (`motor/arbol.js`, `ARBOL`, pestaña `talentos` de la mochila, acción `talentos`: H; textos `ab.` en `textos/arbol.js`)
+
+- Tres ramas: el Oso (armadura, daño, vida, remate, menos daño con poca vida), el Lobo (velocidad, crítico,
+  velocidad de golpe, daño de crítico, daño a heridas) y el Cuervo (botín, poder rúnico, experiencia, energía
+  rúnica, contraataque). Seis nodos por rama con 3, 3, 3, 2, 2 y 1 rangos: 42 en total, y al nivel 30 hay 29 puntos.
+  Así no se llena todo y hay que elegir.
+- Cada nivel desde el 2 da un punto, más `extra` (`ARBOL.sumarPuntos(n)`: libros, instructores). Las filas piden 0, 3,
+  6 y 10 puntos en la rama (`FILAS`) y algunos nodos a su padre (`pide`).
+- Los nodos pasivos suman por `RPG.aporte`; los demás por `modDano` (remate y caída, criaturas con menos del 35 %,
+  contraataque, sorpresa), `modRecibido` (Sangre fría, Corazón de Björn: si el golpe deja la vida en 0, después de la
+  armadura, lo anula y deja el 30 %; espera 120 s), `alPegar` y `alMorir` (Acecho: 3 s de +25 % de velocidad; Hugin y
+  Munin: 6 de energía rúnica, 25 con un líder o semijefe, y 2 % de vida).
+- «Olvidar todo»: gratis la primera vez, después `25 × nivel` de plata, se toca dos veces. Otros sistemas suman nodos
+  con `ARBOL.sumar(rama, nodo)`. Estado en `E.extra.arbol = { r: { id: rango }, extra, olvidos }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

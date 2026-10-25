@@ -195,6 +195,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **arbol.js**: el árbol de habilidades (sistema ARBOL, pestaña Habilidades de la mochila)
+  - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
 - **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
   - en la mano · dibujo · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
@@ -327,6 +329,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
+- **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
