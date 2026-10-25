@@ -1,10 +1,11 @@
-// ---------- la pesca (sistema PESCA, modo "pesca") ----------
-// Como la pesca del Stardew Valley y del Zelda: a la orilla de la laguna más cercana al Puesto está el puesto de Sverri,
-// con su caña clavada en el barro. Con la caña, en cualquier orilla de laguna o de río se pesca con E:
-//   1. Se tira el sedal y la boya flota (de 1,5 a 4,5 s; menos al alba y al caer el sol).
-//   2. ¡Pica! La boya se hunde: hay que tirar enseguida (E, clic o ✕; 0,8 s). Si no, se va.
-//   3. La pelea: una barra vertical con el pez que sube y baja a su manera y una franja verde que sube mientras se
-//      mantiene apretado y cae al soltar. Con el pez adentro de la franja la captura se llena; afuera se vacía.
+// ---------- la pesca (sistema PESCA) ----------
+// A la orilla de la laguna más cercana al Puesto está el puesto de Sverri, con su caña clavada en el barro. Con la caña,
+// en cualquier orilla de laguna o de río se pesca con E, en el mundo, sin ventana:
+//   1. Eromash tira la caña y la boya vuela hasta el agua; flota de 1,5 a 4,5 s (menos al alba y al caer el sol).
+//   2. ¡Pica! La boya se hunde: hay que clavar enseguida (E, clic, ✕ o tocar; 0,8 s). Si no, se va.
+//   3. La pelea: al costado de Eromash, la barra de la captura y la tensión del sedal. Con «¡Tirá!» (el pez cansado)
+//      cada clic lo acerca; con «¡Esperá!» (el pez tira) hay que soltar: cada clic tensa el sedal y lleno se corta.
+//      Sin tirar el pez se aleja y se suelta. Moverse recoge el sedal; un golpe lo suelta.
 // Cada agua y cada hora tiene sus peces (PECES): perca y lucio en las lagunas, trucha y salmón en los ríos, la anguila
 // de noche en cualquier agua y el pez de escarcha en los ríos del norte. Urriði el Viejo, la trucha enorme de las
 // lagunas, sale de noche cuando ya se pescaron cuatro especies distintas, y una sola vez.
@@ -24,21 +25,24 @@ window.PESCA = (function () {
     escarcha: { agua: "rio", horas: [[0, 24]], peso: 2, agil: 1.6, vel: 0.95, cm: [25, 45], xp: 100, norte: true },
     urridi: { agua: "lago", horas: [[21, 24], [0, 5]], peso: 0, agil: 2.1, vel: 1.15, cm: [140, 165], xp: 600, unico: true },
   };
-  const ZONA = 0.24, // alto de la franja verde
-    SUBE = 2.6, // empuje al mantener
-    CAE = 2.2, // gravedad al soltar
-    LLENA = 0.3,
-    VACIA = 0.2,
-    PICA = 0.8,
+  const LANZA = 0.55, // lo que vuela la boya hasta el agua
+    PICA = 0.8, // el tiempo para clavar el anzuelo cuando pica
+    EMPIEZA = 0.22, // la captura al clavar
+    GANA = 0.065, // lo que acerca cada tirón con el pez cansado (se divide por su fuerza)
+    TENSA = 0.07, // lo que tensa cada tirón con el pez cansado
+    TENSA_MAL = 0.3, // lo que tensa cada tirón mientras el pez tira: con 1 se corta el sedal
+    AFLOJA = 0.7, // lo que se afloja la tensión por segundo
+    GRACIA = 0.25, // al empezar a tirar el pez, el tirón que ya venía no cuenta
     RADIO = 150,
     ESPECIES_URRIDI = 4;
   const base = () => ({ cana: false, libro: {}, urridi: false });
   let st = base();
   let puesto = null; // la cosa canaSverri
-  let pesca = null; // { fase, t, espera, x, y, agua, pez, cm, z, vz, f, ft, fv, p, res }
-  let modoAntes = "juego";
-  let mantiene = false;
-
+  // { fase: lanza · espera · pica · pelea · fin, t, espera, x, y, agua, pez, cm, pez: estado cede/tira y cuánto le queda,
+  //   p (la captura, 0 a 1), ten (la tensión del sedal), res, cierre }
+  let pesca = null;
+  let toque = false; // un toque en la pantalla cuenta como un tirón
+  let hpAntes = 0;
   // ---------- el agua ----------
   const enLago = (x, y) => W.LAGOS.some((g) => !g.seco && Math.hypot((x - g.p[0]) / (g.rx + 80), (y - g.p[1]) / (g.ry + 80)) < 1);
   // el punto de agua más a mano: primero hacia donde mira Eromash, después alrededor
@@ -74,21 +78,22 @@ window.PESCA = (function () {
   }
 
   // ---------- tirar, picar, pelear ----------
+  // Todo pasa en el mundo: Eromash queda quieto a la orilla con la caña (jug.interactuando lo frena cada cuadro), el
+  // bosque sigue andando y la barra de la pelea aparece a su costado. Moverse recoge el sedal; un golpe lo suelta.
   function empezar() {
     if (!st.cana || pesca) return false;
     const w = aguaCerca(jug.x, jug.y);
     if (!w) return HUD.aviso(t("pe.sin_agua"), "#8A8478"), false;
     const h = A.hora(),
       alba = (h >= 4 && h < 8) || (h >= 17 && h < 21);
-    pesca = { fase: "espera", t: 0, espera: (1.5 + Math.random() * 3) * (alba ? 0.7 : 1), x: w.x, y: w.y, agua: w.agua, pez: null, cm: 0, z: 0.3, vz: 0, f: 0.3, ft: 0.3, fv: 0, cambio: 0, p: 0.3, res: null, cierre: 0 };
-    jug.dir = [w.x - jug.x, w.y - jug.y];
-    const l = Math.hypot(jug.dir[0], jug.dir[1]) || 1;
-    jug.dir = [jug.dir[0] / l, jug.dir[1] / l];
-    modoAntes = J.modo === "menu" ? "juego" : J.modo;
-    J.modo = "pesca";
-    mantiene = false;
-    armarCapa();
-    if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.3 });
+    pesca = { fase: "lanza", t: 0, espera: (1.5 + Math.random() * 3) * (alba ? 0.7 : 1), x: w.x, y: w.y, agua: w.agua, pez: null, cm: 0, est: "cede", dura: 0, p: EMPIEZA, ten: 0, tiron: 0, res: null, cierre: 0 };
+    const l = Math.hypot(w.x - jug.x, w.y - jug.y) || 1;
+    jug.dir = [(w.x - jug.x) / l, (w.y - jug.y) / l];
+    jug.mira = VIKINGO.vista(jug.dir[0], jug.dir[1], jug.mira);
+    jug.interactuando = 0.1;
+    hpAntes = jug.hp;
+    toque = false;
+    if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.3, x: jug.x, y: jug.y });
     return true;
   }
   function picar() {
@@ -96,29 +101,32 @@ window.PESCA = (function () {
     pesca.t = 0;
     pesca.pez = elegirPez(pesca.agua, pesca.x, pesca.y);
     if (window.SONIDO) {
-      SONIDO.tocar("caida", { vol: 0.5, tono: 1.4 });
+      SONIDO.tocar("caida", { vol: 0.5, tono: 1.4, x: pesca.x, y: pesca.y });
       SONIDO.tono("sine", 880, 660, 0.18, 0.08);
     }
+    A.textoFlotante(jug.x, jug.y - 190, t("pe.pica"), "#FFD98A");
   }
   function tirar() {
     const P = PECES[pesca.pez];
     pesca.fase = "pelea";
     pesca.t = 0;
-    pesca.p = 0.3;
-    pesca.z = 0.3;
-    pesca.f = 0.4;
-    pesca.ft = 0.4;
+    pesca.p = EMPIEZA;
+    pesca.ten = 0;
+    pesca.est = "cede";
+    pesca.dura = 1 + Math.random() * 0.8;
     pesca.cm = Math.round(P.cm[0] + Math.random() * (P.cm[1] - P.cm[0]));
     if (window.SONIDO) SONIDO.tocar("filo", { vol: 0.4, tono: 1.2 });
     if (pesca.pez === "urridi") HUD.aviso(t("pe.urridi_pica"), "#FFD98A");
   }
   function terminar(res) {
     pesca.fase = "fin";
+    pesca.t = 0;
     pesca.res = res;
-    pesca.cierre = res === "pesco" ? 1.8 : 1.2;
+    pesca.cierre = res === "pesco" ? 1.2 : 0.6;
     if (res !== "pesco") {
-      if (res !== "cancela") HUD.aviso(t(res === "tarde" ? "pe.tarde" : "pe.escapo"), "#8A8478");
-      if (window.ANIMA && res === "escapo") ANIMA.gesto("duda");
+      if (res !== "cancela") HUD.aviso(t(res === "tarde" ? "pe.tarde" : res === "corto" ? "pe.corto" : "pe.escapo"), "#8A8478");
+      if (window.ANIMA && (res === "escapo" || res === "corto")) ANIMA.gesto("duda");
+      if (window.SONIDO && res === "corto") SONIDO.tocar("filo", { vol: 0.5, tono: 2.2 });
       return;
     }
     const id = pesca.pez,
@@ -135,7 +143,10 @@ window.PESCA = (function () {
     }
     if (window.RPG) RPG.dar(nuevo ? P.xp : Math.round(P.xp * 0.25), jug.x, jug.y);
     HUD.aviso(t(nuevo ? "pe.nuevo" : record ? "pe.record" : "pe.pescaste", [t("pe.p_" + id), pesca.cm]), nuevo || record ? "#FFD98A" : "#7BC86C");
-    if (window.SONIDO) SONIDO.tocar(P.unico || nuevo ? "mision" : "plata", { vol: 0.5 });
+    if (window.SONIDO) {
+      SONIDO.tocar("caida", { vol: 0.5, tono: 1.1, x: pesca.x, y: pesca.y });
+      SONIDO.tocar(P.unico || nuevo ? "mision" : "plata", { vol: 0.5 });
+    }
     if (window.ANIMA) ANIMA.gesto("feliz");
     if (P.unico) {
       st.urridi = true;
@@ -148,139 +159,212 @@ window.PESCA = (function () {
   }
   function cerrar() {
     pesca = null;
-    J.modo = modoAntes || "juego";
-    const el = document.getElementById("pesca");
-    if (el) el.classList.add("oculto");
+    jug.interactuando = 0;
     CONTROLES.soltar && CONTROLES.soltar();
   }
+  // un tirón: clic, E, ✕ o un toque en la pantalla
   const aprieta = () => CONTROLES.recien("interactuar") || CONTROLES.recien("atacar") || CONTROLES.recien("saltar") || CONTROLES.recien("seguir");
-  const sostiene = () => mantiene || CONTROLES.pulsado("interactuar") || CONTROLES.pulsado("atacar") || CONTROLES.pulsado("saltar") || CONTROLES.pulsado("seguir");
-  let toque = false; // un toque en la pantalla cuenta como apretar
-  function paso(dt) {
-    if (!pesca) return cerrar();
+  function actualizar(dt) {
+    if (!pesca) return;
+    if (J.dentro || jug.muerto) return cerrar();
     pesca.t += dt;
-    const ap = aprieta() || toque;
+    if (pesca.fase !== "fin") jug.interactuando = Math.max(jug.interactuando, 0.1);
+    const ap = J.modo === "juego" && (aprieta() || toque);
     toque = false;
-    if (pesca.fase !== "fin" && CONTROLES.recien("pausa")) terminar("cancela");
+    if (pesca.fase !== "fin") {
+      // un golpe suelta todo; moverse recoge el sedal
+      if (jug.hp < hpAntes - 0.5) return terminar(pesca.fase === "pelea" ? "escapo" : "cancela");
+      const e = CONTROLES.eje();
+      if (J.modo === "juego" && Math.hypot(e.x, e.y) > 0.5 && pesca.t > 0.3) return terminar("cancela");
+    }
+    hpAntes = jug.hp;
     switch (pesca.fase) {
+      case "lanza":
+        if (pesca.t >= LANZA) {
+          pesca.fase = "espera";
+          pesca.t = 0;
+          if (window.SONIDO) SONIDO.tocar("caida", { vol: 0.25, tono: 1.8, x: pesca.x, y: pesca.y });
+        }
+        break;
       case "espera":
-        if (ap) terminar("cancela");
-        else if (pesca.t >= pesca.espera) picar();
+        if (pesca.t >= pesca.espera) picar();
         break;
       case "pica":
         if (ap) tirar();
         else if (pesca.t >= PICA) terminar("tarde");
         break;
       case "pelea":
-        pelear(dt);
+        pelear(dt, ap);
         break;
       case "fin":
-        if ((pesca.cierre -= dt) <= 0) return cerrar();
+        if ((pesca.cierre -= dt) <= 0) cerrar();
         break;
     }
-    dibujar();
   }
-  // un paso de la pelea (separado para probarlo con la mano quieta o apretada)
-  function pelear(dt, apretado) {
+  // un paso de la pelea (separado para probarlo): tiron = si en este cuadro hubo un tirón.
+  // El pez alterna: «cede» (cansado: ¡Tirá!, cada tirón lo acerca) y «tira» (¡Esperá!: cada tirón tensa el sedal y con
+  // la tensión llena se corta). Sin tirar, se va alejando: si la captura llega a 0 se suelta.
+  function pelear(dt, tiron) {
     const P = PECES[pesca.pez],
-      sost = apretado != null ? apretado : sostiene();
-    // la franja: sube mientras se mantiene, cae al soltar, rebota en los bordes
-    pesca.vz += (sost ? SUBE : -CAE) * dt;
-    pesca.vz = Math.max(-1.6, Math.min(1.6, pesca.vz));
-    pesca.z += pesca.vz * dt;
-    if (pesca.z < 0) (pesca.z = 0), (pesca.vz = Math.max(0, -pesca.vz * 0.3));
-    if (pesca.z > 1 - ZONA) (pesca.z = 1 - ZONA), (pesca.vz = Math.min(0, -pesca.vz * 0.3));
-    // el pez: cambia de idea cada tanto y va hacia ahí con su velocidad
-    pesca.cambio -= dt * P.agil;
-    if (pesca.cambio <= 0) {
-      pesca.cambio = 0.5 + Math.random() * 0.9;
-      pesca.ft = Math.max(0.03, Math.min(0.97, pesca.f + (Math.random() - 0.5) * (0.5 + P.agil * 0.35)));
+      fuerza = 0.6 + P.vel * 0.6;
+    pesca.dura -= dt;
+    if (pesca.dura <= 0) {
+      pesca.est = pesca.est === "cede" ? "tira" : "cede";
+      pesca.dura = pesca.est === "cede" ? (1.2 + Math.random() * 1.2) / (0.6 + P.agil * 0.4) : (0.7 + Math.random() * 0.8) * (0.7 + P.agil * 0.3);
+      pesca.cambio = 0;
+      if (window.SONIDO) SONIDO.tono("triangle", pesca.est === "cede" ? 520 : 300, pesca.est === "cede" ? 700 : 220, 0.12, 0.06);
     }
-    pesca.f += Math.sign(pesca.ft - pesca.f) * Math.min(Math.abs(pesca.ft - pesca.f), P.vel * dt);
-    const adentro = pesca.f >= pesca.z && pesca.f <= pesca.z + ZONA;
-    pesca.p += (adentro ? LLENA : -VACIA * (0.8 + P.vel * 0.4)) * dt;
-    pesca.adentro = adentro;
-    if (pesca.p >= 1) terminar("pesco");
+    pesca.cambio = (pesca.cambio || 0) + dt;
+    pesca.tiron = Math.max(0, pesca.tiron - dt * 4);
+    if (tiron) {
+      pesca.tiron = 1;
+      if (pesca.est === "cede") {
+        pesca.p += GANA / fuerza;
+        pesca.ten += TENSA;
+        if (window.SONIDO) SONIDO.tono("square", 900 + pesca.p * 400, 700, 0.04, 0.025);
+      } else if (pesca.cambio > GRACIA) pesca.ten += TENSA_MAL;
+    }
+    pesca.p -= (pesca.est === "tira" ? 0.09 : 0.05) * (0.5 + P.vel) * dt;
+    pesca.ten = Math.max(0, pesca.ten - AFLOJA * dt);
+    if (pesca.ten >= 1) terminar("corto");
+    else if (pesca.p >= 1) terminar("pesco");
     else if (pesca.p <= 0) terminar("escapo");
   }
 
-  // ---------- la capa del minijuego ----------
-  function armarCapa() {
-    let el = document.getElementById("pesca");
-    if (!el) {
-      document.body.insertAdjacentHTML("beforeend", `<div id="pesca" class="ui panel"><h2></h2><canvas width="560" height="320"></canvas><p class="pe-pie"></p></div>`);
-      el = document.getElementById("pesca");
-      el.addEventListener("pointerdown", (e) => (e.preventDefault(), (mantiene = true), (toque = true)));
-      ["pointerup", "pointercancel", "pointerleave"].forEach((k) => el.addEventListener(k, () => (mantiene = false)));
+  // ---------- el dibujo en el mundo ----------
+  // el sedal, la boya y las ondas van en el piso; la caña, el pez que sale y la barra se paran derechos en la vista
+  const vista = (x, y) => (J.giro ? VOL.vista(x, y, J.cam.x, J.cam.y, J.giro) : [x, y]);
+  function boya() {
+    const f = pesca.fase,
+      T = J.t;
+    if (f === "lanza") {
+      const k = Math.min(1, pesca.t / LANZA);
+      return { x: jug.x + (pesca.x - jug.x) * k, y: jug.y + (pesca.y - jug.y) * k, alto: Math.sin(k * Math.PI) * 140 + (1 - k) * 90 };
     }
-    el.classList.remove("oculto");
-    el.querySelector("h2").textContent = t("pe.titulo");
+    const tira = f === "pelea" && pesca.est === "tira";
+    return {
+      x: pesca.x + (f === "pelea" ? Math.sin(T * (tira ? 9 : 3)) * (tira ? 22 : 10) : 0),
+      y: pesca.y + (f === "pica" ? 5 + Math.sin(T * 30) * 3 : f === "pelea" ? 6 : Math.sin(T * 2.4) * 1.5),
+      alto: 0,
+    };
   }
-  function dibujar() {
-    const el = document.getElementById("pesca");
-    if (!el || !pesca) return;
-    const c = el.querySelector("canvas").getContext("2d"),
-      T = J.t,
-      { P, E, L } = DIB;
-    c.clearRect(0, 0, 560, 320);
-    // el agua: una laguna de noche o de día, con ondas
-    const noche = A.noche() > 0.5;
-    E(c, 210, 190, 200, 110, noche ? "#1E2E3A" : "#2E5A72");
-    E(c, 220, 182, 170, 86, noche ? "#26384A" : "#3E6A86");
-    if (!window.CALIDAD || CALIDAD.nivel !== "baja")
-      for (let k = 0; k < 3; k++) {
-        const u = (T * 0.4 + k / 3) % 1;
-        c.strokeStyle = `rgba(200,242,244,${0.35 * (1 - u)})`;
+  function dibujarPiso(c) {
+    const f = pesca.fase;
+    if (f === "lanza" || (f === "fin" && pesca.res === "pesco")) return;
+    const b = boya(),
+      T = J.t;
+    // ondas alrededor de la boya: suaves esperando, más seguidas al picar y en la pelea
+    if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
+      const n = f === "espera" ? 2 : 3,
+        vel = f === "espera" ? 0.5 : f === "pica" ? 2.2 : pesca.est === "tira" ? 1.8 : 1.1;
+      for (let k = 0; k < n; k++) {
+        const u = (T * vel + k / n) % 1;
+        c.strokeStyle = `rgba(200,242,244,${0.45 * (1 - u)})`;
         c.lineWidth = 2;
         c.beginPath();
-        c.ellipse(210, 186, 20 + u * 90, 6 + u * 28, 0, 0, Math.PI * 2);
+        c.ellipse(b.x, b.y, 8 + u * 46, (8 + u * 46) * 0.45, 0, 0, DIB.TAU);
         c.stroke();
       }
-    // la boya: flota, tiembla al picar, se hunde en la pelea
-    const fase = pesca.fase,
-      hunde = fase === "pica" ? 6 + Math.sin(T * 30) * 4 : fase === "pelea" ? 10 : 0,
-      bx = 210 + (fase === "pelea" ? (pesca.f - 0.5) * 80 : 0),
-      by = 186 + hunde + Math.sin(T * 2.4) * 2;
-    c.strokeStyle = "rgba(232,228,220,0.75)";
-    c.lineWidth = 1.2;
-    c.beginPath();
-    c.moveTo(20, 20);
-    c.quadraticCurveTo(140, 60 + (fase === "pelea" ? 40 : 0), bx, by - 12);
-    c.stroke();
-    E(c, bx, by - 6, 7, 9, "#C8402D");
-    E(c, bx, by - 13, 5, 4, "#F2ECEC");
+    }
     // la sombra del pez cuando pica o pelea
-    if (fase === "pica" || fase === "pelea" || (fase === "fin" && pesca.res === "pesco"))
-      DIB.alfa(c, fase === "fin" ? 1 : 0.55, () => PECES_DIBUJO.pez(c, pesca.pez, bx - 40 + Math.sin(T * 5) * 6, by + 26, pesca.pez === "urridi" ? 2.4 : 1.6, Math.sin(T * 4) * 0.15));
-    // el letrero de la fase
+    if (f === "pica" || f === "pelea") DIB.alfa(c, 0.35, () => DIB.E(c, b.x - 18 + Math.sin(T * 5) * 8, b.y + 14, pesca.pez === "urridi" ? 46 : 24, pesca.pez === "urridi" ? 12 : 7, "#0E1A22"));
+    if (f !== "fin") {
+      DIB.E(c, b.x, b.y - 4, 4, 5, "#C8402D");
+      DIB.E(c, b.x, b.y - 8, 3, 2.4, "#F2ECEC");
+    }
+  }
+  function dibujarDerecho(c) {
+    const f = pesca.fase,
+      T = J.t,
+      [jx, jy] = vista(jug.x, jug.y),
+      lado = jug.dir[0] >= 0 ? 1 : -1,
+      tira = f === "pelea" && pesca.est === "tira",
+      // la caña: del puño a la punta, que se dobla hacia el agua cuando el pez tira
+      mx = jx + lado * 14,
+      my = jy - 78,
+      dob = f === "pelea" ? (tira ? 1 : 0.45) + pesca.tiron * 0.25 : f === "pica" ? 0.5 : 0.1,
+      lanzando = f === "lanza" ? Math.sin(Math.min(1, pesca.t / LANZA) * Math.PI) : 0,
+      px = mx + lado * (62 - dob * 14 - lanzando * 40),
+      py = my - 74 + dob * 46 - lanzando * 30;
+    c.strokeStyle = "#5E4630";
+    c.lineWidth = 4;
+    c.beginPath();
+    c.moveTo(mx - lado * 10, my + 14);
+    c.quadraticCurveTo(mx + lado * 24, my - 44 + dob * 10, px, py);
+    c.stroke();
+    c.strokeStyle = "#9A7650";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(mx + lado * 24, my - 30 + dob * 10);
+    c.quadraticCurveTo(mx + lado * 40, my - 58 + dob * 24, px, py);
+    c.stroke();
+    // el sedal: de la punta a la boya (en el aire mientras vuela)
+    const b = boya(),
+      [bx, by] = vista(b.x, b.y);
+    if (!(f === "fin" && pesca.res !== "pesco")) {
+      const sale = f === "fin" ? Math.min(1, pesca.t / 0.7) : 0,
+        // el pez que sale del agua en arco hasta Eromash
+        fx = bx + (jx + lado * 30 - bx) * sale,
+        fy = by + (jy - 90 - by) * sale - Math.sin(sale * Math.PI) * 120,
+        ex = f === "fin" ? fx : bx,
+        ey = f === "fin" ? fy : by - 8 - b.alto;
+      c.strokeStyle = "rgba(232,228,220,0.75)";
+      c.lineWidth = 1.2;
+      c.beginPath();
+      c.moveTo(px, py);
+      const floja = f === "espera" ? 26 : f === "lanza" ? 10 : 4 - (tira ? 6 : 0);
+      c.quadraticCurveTo((px + ex) / 2, Math.max(py, ey) + floja, ex, ey);
+      c.stroke();
+      if (f === "lanza") {
+        DIB.E(c, ex, ey + 4, 4, 5, "#C8402D");
+        DIB.E(c, ex, ey, 3, 2.4, "#F2ECEC");
+      }
+      if (f === "fin") PECES_DIBUJO.pez(c, pesca.pez, fx, fy + 10, pesca.pez === "urridi" ? 1.6 : 0.9, Math.sin(T * 14) * 0.4 - lado * 0.6);
+    }
+    // la barra al costado de Eromash (del lado contrario al agua): la captura, la tensión y qué hacer
+    if (f !== "pelea" && f !== "pica") return;
+    const x = jx - lado * 92,
+      y0 = jy - 200,
+      alto = 150;
+    DIB.alfa(c, 0.85, () => DIB.R(c, x - 12, y0, 24, alto, "#111111"));
+    DIB.R(c, x - 9, y0 + 3, 18, alto - 6, "#1E2E3A");
+    if (f === "pelea") {
+      const p = Math.max(0, Math.min(1, pesca.p)),
+        ten = Math.max(0, Math.min(1, pesca.ten));
+      DIB.R(c, x - 9, y0 + 3 + (alto - 6) * (1 - p), 18, (alto - 6) * p, p > 0.66 ? "#FFD98A" : p > 0.33 ? "#F5A524" : "#C8402D");
+      PECES_DIBUJO.pez(c, pesca.pez, x, y0 + 3 + (alto - 6) * (1 - p), 0.42, -Math.PI / 2 + Math.sin(T * 10) * 0.2);
+      // la tensión: una tira fina al lado, que se pone roja y tiembla cerca de cortarse
+      const tx = x + lado * -22,
+        tiem = ten > 0.7 ? Math.sin(T * 60) * 2 : 0;
+      DIB.R(c, tx - 4 + tiem, y0, 8, alto, "#111111");
+      DIB.R(c, tx - 2 + tiem, y0 + 2 + (alto - 4) * (1 - ten), 4, (alto - 4) * ten, ten > 0.7 ? "#C8402D" : "#E0B2B2");
+    }
+    // el cartel: ¡Pica! / ¡Tirá! / ¡Esperá!, con la tecla
+    const cartel = f === "pica" ? t("pe.pica") : tira ? t("pe.esperar") : t("pe.tira"),
+      col = f === "pica" ? "#FFD98A" : tira ? "#C8402D" : "#7BC86C",
+      late = f === "pica" || !tira ? 1 + Math.sin(T * 18) * 0.06 : 1;
+    c.save();
+    c.translate(x, y0 - 26);
+    c.scale(late, late);
     c.font = '900 26px "Eromash Display", system-ui, sans-serif';
     c.textAlign = "center";
-    const letrero = fase === "espera" ? t("pe.espera") : fase === "pica" ? t("pe.pica") : fase === "fin" ? (pesca.res === "pesco" ? t("pe.p_" + pesca.pez) + " · " + pesca.cm + " cm" : t(pesca.res === "tarde" ? "pe.tarde" : pesca.res === "cancela" ? "pe.recoges" : "pe.escapo")) : "";
-    c.fillStyle = fase === "pica" ? "#FFD98A" : pesca.res === "pesco" ? "#7BC86C" : "#F2ECEC";
-    if (letrero) c.fillText(letrero, 210, 50);
-    // la barra de la pelea: el pez, la franja verde y la captura que se llena
-    const bx0 = 450,
-      by0 = 24,
-      bh = 272,
-      bw = 40;
-    c.fillStyle = "#111111";
-    c.fillRect(bx0, by0, bw, bh);
-    c.fillStyle = "#1E2E3A";
-    c.fillRect(bx0 + 3, by0 + 3, bw - 6, bh - 6);
-    if (fase === "pelea" || fase === "fin") {
-      const Y = (v) => by0 + bh - 3 - v * (bh - 6);
-      c.fillStyle = pesca.adentro ? "#7BC86C" : "#4E7A44";
-      c.fillRect(bx0 + 4, Y(pesca.z + ZONA), bw - 8, ZONA * (bh - 6));
-      PECES_DIBUJO.pez(c, pesca.pez, bx0 + bw / 2, Y(pesca.f), 0.7, 0);
-      // la captura
-      c.fillStyle = "#111111";
-      c.fillRect(bx0 + bw + 10, by0, 12, bh);
-      c.fillStyle = pesca.p > 0.66 ? "#FFD98A" : pesca.p > 0.33 ? "#F5A524" : "#C8402D";
-      c.fillRect(bx0 + bw + 12, Y(Math.max(0, Math.min(1, pesca.p))), 8, Math.max(0, Math.min(1, pesca.p)) * (bh - 6));
+    c.lineWidth = 5;
+    c.strokeStyle = "#111111";
+    c.strokeText(cartel, 0, 0);
+    c.fillStyle = col;
+    c.fillText(cartel, 0, 0);
+    c.restore();
+    if (!tira) {
+      c.font = '800 13px "Eromash Text", system-ui, sans-serif';
+      c.textAlign = "center";
+      const pie = t(f === "pica" ? "pe.pie_pica" : "pe.pie_pelea", [CONTROLES.glifo("interactuar")]);
+      c.lineWidth = 4;
+      c.strokeStyle = "#111111";
+      c.strokeText(pie, x, y0 + alto + 20);
+      c.fillStyle = "#F2ECEC";
+      c.fillText(pie, x, y0 + alto + 20);
     }
-    el.querySelector(".pe-pie").textContent = t(fase === "pelea" ? "pe.pie_pelea" : fase === "pica" ? "pe.pie_pica" : "pe.pie_espera", [CONTROLES.glifo("interactuar")]);
   }
-
   // ---------- el puesto de Sverri ----------
   function armarPuesto() {
     const pu = W.LUGARES.puesto.p;
@@ -325,8 +409,8 @@ window.PESCA = (function () {
       J = A.J;
       jug = A.jug;
       W = A.W;
-      J.modos = J.modos || {};
-      J.modos.pesca = paso;
+      // en el celular, tocar la pantalla es un tirón
+      document.addEventListener("pointerdown", (e) => pesca && e.pointerType === "touch" && (toque = true));
       armarPuesto();
       if (window.COCINA) {
         COCINA.CARNES.pescado = { de: null, prob: 0, n: 0, col: "#8AA8C0" };
@@ -358,7 +442,7 @@ window.PESCA = (function () {
       if (pesca) cerrar();
     },
     cercanos(dar) {
-      if (J.dentro) return;
+      if (J.dentro || pesca) return;
       if (puesto && !st.cana) {
         const d = Math.hypot(puesto.x - jug.x, puesto.y - jug.y);
         if (d < RADIO) dar(d, t("pe.tomar"), tomarCana, puesto.x, puesto.y - 120);
@@ -367,28 +451,15 @@ window.PESCA = (function () {
       const w = aguaCerca(jug.x, jug.y);
       if (w) dar(120, t("pe.pescar"), empezar, w.x, w.y - 30);
     },
+    actualizar,
     sobreLuz(c) {
-      // el sedal y la boya en el mundo mientras se pesca
+      // la boya y las ondas en el piso; la caña, el sedal, el pez que sale y la barra derechos en la vista
       if (!pesca || J.dentro) return;
-      const hunde = pesca.fase === "pica" ? 4 : pesca.fase === "pelea" ? 6 : 0,
-        bx = pesca.x + (pesca.fase === "pelea" ? Math.sin(J.t * 3) * 14 : 0),
-        by = pesca.y + hunde + Math.sin(J.t * 2.4) * 1.5,
-        px = jug.x + jug.dir[0] * 30,
-        py = jug.y - 70;
-      c.strokeStyle = "#7A5634";
-      c.lineWidth = 3;
-      c.beginPath();
-      c.moveTo(jug.x + jug.dir[0] * 8, jug.y - 30);
-      c.lineTo(px, py - 30);
-      c.stroke();
-      c.strokeStyle = "rgba(232,228,220,0.7)";
-      c.lineWidth = 1;
-      c.beginPath();
-      c.moveTo(px, py - 30);
-      c.quadraticCurveTo((px + bx) / 2, Math.max(py, by) + 10, bx, by - 6);
-      c.stroke();
-      DIB.E(c, bx, by - 4, 4, 5, "#C8402D");
-      DIB.E(c, bx, by - 8, 3, 2.4, "#F2ECEC");
+      dibujarPiso(c);
+      c.save();
+      if (J.baseT) J.baseT();
+      dibujarDerecho(c);
+      c.restore();
     },
     marcasMapa() {
       return puesto ? [{ tipo: "pesca", x: puesto.x, y: puesto.y, op: { nombre: t("as.canaSverri"), apagado: st.cana } }] : [];
@@ -404,5 +475,5 @@ window.PESCA = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, actual: () => pesca, puesto: () => puesto, empezar, picar, tirar, pelear, terminar, cerrar, aguaCerca, elegirPez, tomarCana, PECES, ZONA, PICA };
+  return { sistema, estado: () => st, actual: () => pesca, puesto: () => puesto, empezar, picar, tirar, pelear, terminar, cerrar, aguaCerca, elegirPez, tomarCana, PECES, PICA, LANZA };
 })();
