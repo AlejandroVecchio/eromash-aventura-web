@@ -139,9 +139,26 @@ window.COMBATE = (function () {
     return e;
   }
   // los semijefes siguen una rotación fija que se aprende (secundarias.js): abanico, círculo alrededor o franja al frente
+  // Al terminar cada vuelta de su ronda queda agotado 2,2 s (golpe → castigo: recibe ×1,5) y, bajo la mitad de la vida,
+  // cambia a su segunda ronda (patron2, o la misma al revés: tampoco repite tres veces), con un aviso. Sin enojarse:
+  // los avisos duran lo mismo.
+  const AGOTADO = 2.2,
+    CASTIGO = 1.5;
+  function ronda(e) {
+    if (!e.fase2 && e.vida < e.d.vida * 0.5 && e.vida > 0) {
+      e.fase2 = true;
+      e.cuenta = 0;
+      if (!e.patron2) e.patron2 = e.patron.slice().reverse();
+      e.dice = "cb.otra_ronda"; // lo muestra quien tiene J, al armar el aviso
+    }
+    return e.fase2 ? e.patron2 : e.patron;
+  }
   function patron(e, dir, rgb) {
     const d = e.d,
-      k = e.patron[(e.cuenta = (e.cuenta || 0) + 1) % e.patron.length];
+      P = ronda(e),
+      i = (e.cuenta = (e.cuenta || 0) + 1),
+      k = P[i % P.length];
+    if (i % P.length === 0) e.agotarTras = true; // la vuelta terminó: después de este golpe, el castigo
     if (k === "circulo") return aviso("circulo", e.x, e.y, d.aviso * 1.15, { radio: d.radioGolpe * 1.2, rgb });
     if (k === "franja") return aviso("franja", e.x, e.y, d.aviso, { largo: d.largo || d.radioGolpe * 2.2, ancho: d.ancho || 1.6 * M, dir, rgb });
     return aviso("abanico", e.x, e.y, d.aviso, { radio: d.radioGolpe, ang: d.angulo || 0.8, dir, rgb });
@@ -312,7 +329,10 @@ window.COMBATE = (function () {
           const dir = Math.atan2(dy * 1.25, dx);
           let a;
           const rgb = e.lider ? RGB[e.lider.afijos[0]] : null;
-          if (e.patron) a = patron(e, dir, rgb);
+          if (e.patron) {
+            a = patron(e, dir, rgb);
+            if (e.dice) J.textos.push({ x: e.x, y: e.y - (d.barra || 80) - 50, n: I18N.t(e.dice), t: 0, col: "#FFD98A", palabra: true }), (e.dice = null);
+          }
           else if (lejos) a = aviso("circulo", p.x, p.y, d.aviso, { radio: d.radioGolpe, rgb: rgb || d.rgb || [154, 107, 216], lejos: true, de: e });
           else if (d.forma === "carga") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
           else if (d.forma === "franja") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
@@ -372,6 +392,20 @@ window.COMBATE = (function () {
           J.quitarAviso(e.aviso);
           e.aviso = null;
           e.estado = "espera";
+          e.t = 0;
+          if (e.agotarTras) {
+            e.agotarTras = false;
+            e.estado = "agotado";
+            J.textos.push({ x: e.x, y: e.y - (d.barra || 80) - 40, n: I18N.t("cb.agotado"), t: 0, col: "#FFD98A", palabra: true });
+          }
+        }
+        break;
+      case "agotado":
+        // jadea quieto: es el momento de pegarle
+        e.golpe = Math.max(0, e.golpe - dt * 4);
+        e.mov = 0;
+        if (e.t >= AGOTADO) {
+          e.estado = "persigue";
           e.t = 0;
         }
         break;
@@ -435,6 +469,7 @@ window.COMBATE = (function () {
       }
     }
     if (tiene(e, "piedra")) dano *= 0.7;
+    if (e.estado === "agotado") dano *= CASTIGO;
     e.vida -= dano;
     e.herido = 1;
     const l = Math.hypot(e.x - ox, e.y - oy) || 1,
@@ -478,6 +513,8 @@ window.COMBATE = (function () {
           sy = yy + 6 + Math.sin(a) * 6;
         DIB.P(c, [sx, sy - 6, sx + 2, sy - 2, sx + 6, sy, sx + 2, sy + 2, sx, sy + 6, sx - 2, sy + 2, sx - 6, sy, sx - 2, sy - 2], "#FFD98A");
       }
+    // agotado: un rombo dorado que late sobre la cabeza (es el momento de pegarle)
+    if (e.estado === "agotado") alfa(c, 0.6 + Math.sin(t * 9) * 0.4, () => texto("◆", "#FFD98A", 0.8));
     if (e.estado === "aviso" && e.golpe > 0.82)
       alfa(c, (e.golpe - 0.82) / 0.18, () => {
         DIB.halo(c, e.x, e.y - e.d.barra * 0.45, e.d.barra * 0.6, "#F2ECEC", 1);

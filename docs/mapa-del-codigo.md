@@ -456,6 +456,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **ciudad.js**: Textos de la capital en 2.5D (prefijo ci.): el mapa aparte de Eikholt con la cámara que gira y su página de muestra.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
+- **combate.js**: Textos de la pelea con semijefes y jefes (prefijo cb.), los dos idiomas.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
