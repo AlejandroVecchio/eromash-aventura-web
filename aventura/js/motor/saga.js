@@ -37,7 +37,6 @@ window.SAGA = (function () {
     ["elementos", "mundo", "thurisaz", "#B8A8F0", "ELEMENTOS", () => [(ELEMENTOS.estado().roble ? 1 : 0) + (ELEMENTOS.estado().fuente ? 1 : 0) + Math.min(6, cuenta(ELEMENTOS.estado().vistas)), 8]],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
     ["companero", "gente", "raidho", "#B8AC9C", "COMPANERO", () => [COMPANERO.estado().rescatado ? COMPANERO.nivel() : 0, COMPANERO.TRUCOS]],
-    ["facciones", "gente", "mannaz", "#E0B2B2", "FACCIONES", () => [FACCIONES.IDS.reduce((m, f) => m + FACCIONES.grado(f), 0), FACCIONES.IDS.length * (FACCIONES.NIVELES.length - 1)]],
   ];
   const HITOS = [25, 50, 75, 100];
   const base = () => ({ hitos: {}, leyenda: false });

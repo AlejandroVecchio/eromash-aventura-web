@@ -65,6 +65,4 @@ I18N.textos({
   "sg.e_casa_d": { es: "Se vende junto al camino del Puesto: comprala y mejorala.", en: "For sale by the Outpost road: buy it and improve it." },
   "sg.e_companero": { es: "Skuggi", en: "Skuggi" },
   "sg.e_companero_d": { es: "Se oyen lobos junto a un camino que sale del Puesto.", en: "Wolves can be heard by a road out of the Outpost." },
-  "sg.e_facciones": { es: "Facciones", en: "Factions" },
-  "sg.e_facciones_d": { es: "Guardia del Roble, Guardasendas, Gremio y Pueblo Oculto.", en: "Oak Guard, Pathwardens, Guild and Hidden Folk." },
 });
