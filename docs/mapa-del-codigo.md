@@ -496,7 +496,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **sigilo.js**: Textos del sigilo (motor/sigilo.js): prefijo sl.
 - **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
 - **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
-- **vaettir.js**: Textos de los vættir (motor/vaettir.js, mundo/assets-vaettir.js): prefijo vt. (y as., mp.ley_vaettir).
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.
 
