@@ -262,7 +262,7 @@ tener que leer el código para balancear.
 - «Olvidar todo»: gratis la primera vez, después `25 × nivel` de plata, se toca dos veces. Otros sistemas suman nodos
   con `ARBOL.sumar(rama, nodo)`. Estado en `E.extra.arbol = { r: { id: rango }, extra, olvidos }`.
 
-## Furia y habilidades activas (`motor/furia.js`, `FURIA`; acciones `hab1`, `hab2`, `hab3`: 1 2 3 o L2 + □ △ ○; textos `fu.` en `textos/furia.js`)
+## Furia y habilidades activas (`motor/furia.js`, `FURIA`; con teclado en casillas de la barra (1 a 6), con mando L2 + □ △ ○ (acciones `hab1`, `hab2`, `hab3`); textos `fu.` en `textos/furia.js`)
 
 - La Furia (0 a 100) arranca en 0, suma 5 por golpe (8 si es crítico, nada por los golpes de las habilidades) y 0,6 por
   punto de vida perdido; a los 5 s sin pelear se enfría 8 por segundo. No se guarda. Su barra (`#bFuria`) va debajo
@@ -273,7 +273,7 @@ tener que leer el código para balancear.
   hacia la criatura de enfrente sin cruzar muros, pega 160/200 % de 28 × `J.mulDano` a 150 al caer) y Bandada (45/40,
   10/9 s: 5/7 cuervos buscan criaturas a 440, pican 55 % y marcan 6 s, +12 %). Los golpes pasan por los `modDano` y
   `alPegar` de todos, con `info.d.habilidad`.
-- Hooks nuevos: `casillas()` de un sistema suma casillas a la barra de abajo (antes de la mochila); en `CONTROLES`,
+- Hooks nuevos: `cosasBarra()` de un sistema suma cosas que el jugador puede poner en la barra de abajo (`BARRA`: `{ id: { tipo, icono, nombre, desc, tiene, listo, espera, usar, avisa } }`); en `CONTROLES`,
   `COMBOS` son botones del mando que se aprietan juntos (mientras tanto, esos botones no hacen lo suyo).
 
 ## Instructores y muñeco de práctica (`motor/instructores.js`, `INSTRUCTORES`; muñeco en `mundo/assets-instructores.js`; textos `ie.` en `textos/instructores.js`)
@@ -291,14 +291,14 @@ tener que leer el código para balancear.
   `practica`, así no cuenta como golpe por sorpresa.
 - Estado en `E.extra.instruc = { lec, prueba, pasada, mejor }`. Mapa: clase `instructor`.
 
-## El frasco de Thora (`motor/frasco.js`, `FRASCO`; acción `frasco`: 4 o L2 + ✕; textos `fr.` en `textos/frasco.js`)
+## El frasco de Thora (`motor/frasco.js`, `FRASCO`; en una casilla de la barra o con L2 + ✕ (acción `frasco`); textos `fr.` en `textos/frasco.js`)
 
 - Cargas (3 a 6, `E.extra.frasco = { cargas, max, fuerza }`). Cada trago cura `40 % × (1 + 0,1 · fuerza)` de la vida
   máxima repartido en 1,2 s (un golpe no lo corta) y pone `jug.lento` 0,5 s. No se toma con la vida llena.
 - Se llena al entrar a un pueblo o refugio (la misma lista que `REFUGIOS` de combate.js) y cuando Thora cura: el frasco
   envuelve `PODERES.hablarCon` (los encargos de `SECUNDARIAS` siguen hablando primero) y después del diálogo abre su
   menú de mejoras: cargas 80/160/300 de plata + 1/2/3 ámbar, fuerza 120/240/420 + 1/2/3 esquirlas.
-- La casilla de la barra (hook `casillas`) usa los íconos `frasco_<cargas>_<max>` con una marca por carga.
+- La cosa de la barra (hook `cosasBarra`) usa los íconos `frasco_<cargas>_<max>` con una marca por carga.
 
 ## Hierbas y alquimia (`motor/alquimia.js`, `ALQUIMIA`; plantas y mesa en `mundo/assets-alquimia.js`; textos `aq.` en `textos/alquimia.js`)
 
@@ -311,7 +311,7 @@ tener que leer el código para balancear.
   1,5/s); sus efectos suman por `RPG.aporte`. Aceites (`ACEITES`): +25 % contra su familia por `modDano`, 40 golpes
   que gasta `alPegar` (el muñeco no gasta).
 - Hooks nuevos: `celdasBolsa()` de un sistema suma casillas a la Bolsa. La poción elegida (R / △ en la Bolsa) tiene
-  casilla y acción `pocion` (5 o L2 + R1). Sobre el retrato, `#hudEfectos` lista efectos, aceite y toxicidad.
+  cosa en la barra (`cosasBarra`, se pone en cualquier casilla) y acción `pocion` (L2 + R1). Sobre el retrato, `#hudEfectos` lista efectos, aceite y toxicidad.
 - Estado en `E.extra.alq`.
 
 ## Cocina en la fogata (`motor/cocina.js`, `COCINA`, modo `cocina`; textos `co.` en `textos/cocina.js`)
