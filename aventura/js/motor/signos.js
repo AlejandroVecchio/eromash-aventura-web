@@ -312,9 +312,22 @@ window.SIGNOS = (function () {
       if (escudo) dar({ x: jug.x, y: jug.y - 60, r: 160, col: "#FFD98A", f: 0.35 });
       soplos.forEach((s) => s.fuego && dar({ x: s.x + Math.cos(s.a) * s.largo * 0.5, y: s.y + (Math.sin(s.a) * s.largo * 0.5) / 1.25, r: s.largo, col: "#FF8D71", f: Math.max(0, 1 - s.t / 0.45) }));
     },
-    casillas() {
-      if (!st.activo) return [];
-      return [{ id: "signo", icono: "sg_" + st.activo, accion: "signo", nombre: t("sg.c_" + st.activo), listo: !puede(), espera: espera / ESPERA }];
+    cosasBarra() {
+      // el galdr elegido es una habilidad de la barra (BARRA); también se canta con Y o L2 + ◀
+      return {
+        signo: {
+          tipo: "habilidad",
+          icono: () => "sg_" + (st.activo || "lazo"),
+          avisa: true,
+          nombre: () => t("sg.n_" + st.activo),
+          corto: () => t("sg.c_" + st.activo),
+          desc: () => t("sg.d_" + st.activo),
+          tiene: () => !!st.activo,
+          listo: () => !puede(),
+          espera: () => espera / ESPERA,
+          usar: () => cantar(),
+        },
+      };
     },
     efectosHud() {
       return escudo ? [{ texto: t("sg.n_escudo"), n: Math.ceil(escudo.hp), col: "#FFD98A" }] : [];
