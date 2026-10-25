@@ -1,6 +1,7 @@
 // ---------- la forja al ritmo del yunque (sistema FORJA, modo "forja") ----------
-// Ása forja una pieza nueva y Eromash martilla al ritmo: un juego de ritmo como Guitar Hero. Cuatro carriles (las
-// cuatro direcciones: WASD, flechas, la cruceta o tocando el carril) con runas que bajan hasta el yunque; se aprieta
+// Ása forja una pieza nueva y Eromash martilla al ritmo: un juego de ritmo como Guitar Hero. Cuatro carriles (A S D W
+// de izquierda a derecha, o ← ↓ → ↑, la cruceta o tocando el carril; las teclas se cambian en Opciones → Teclas o
+// desde el menú de la forja) con runas que bajan hasta el yunque; se aprieta
 // justo cuando llegan. Tres tramos: el fuelle (notas largas que se mantienen: el hierro se calienta), el martillo
 // (golpes, cada vez más seguidos) y el temple (un golpe final con atacar cuando el hierro brilla). Lo bien que se
 // martilla decide la rareza (común, mágica, rara o legendaria) y qué tan altos salen los números (OBJETOS.generar
@@ -12,7 +13,7 @@ window.FORJA = (function () {
   "use strict";
   let A, J, jug;
   const t = (k, v) => I18N.t(k, v);
-  const CARRILES = ["izquierda", "abajo", "arriba", "derecha"],
+  const CARRILES = ["carril1", "carril2", "carril3", "carril4"], // acciones de CONTROLES: A S D W
     RUNAS = ["uruz", "kenaz", "tiwaz", "sowilo"],
     COLORES = ["#C8402D", "#FFD98A", "#73D5DB", "#E0B2B2"],
     TONOS = [220, 262, 294, 330, 392, 440];
@@ -100,7 +101,8 @@ window.FORJA = (function () {
     };
     const modos = [linea("calma"), linea("fuego")];
     if (M && M.cuantos("brasa") > 0) modos.push(linea("brasa"));
-    A.menu(`<h2>${t("ob.b_" + b)}</h2><div class="sub">${t("fg.como")}</div>`, modos.concat([{ texto: t("ui.volver"), fn: abrir }]));
+    const teclas = { texto: t("tc.forja"), sub: CONTROLES.GRUPOS.forja.map((a) => CONTROLES.teclaDe(a)).join(" "), fn: () => OPCIONES.teclas(() => elegirModo(g, b), "forja") };
+    A.menu(`<h2>${t("ob.b_" + b)}</h2><div class="sub">${t("fg.como")}</div>`, modos.concat([teclas, { texto: t("ui.volver"), fn: abrir }]));
   }
 
   // ---------- la partitura ----------
@@ -472,7 +474,7 @@ window.FORJA = (function () {
       c.fillStyle = "#E0B2B2";
       c.font = "600 18px 'DM Sans', sans-serif";
       c.textAlign = "center";
-      c.fillText(CONTROLES.glifo(CARRILES[l]) || ["←", "↓", "↑", "→"][l], x, L.yunque + 74);
+      c.fillText(CONTROLES.glifo(CARRILES[l]) || ["←", "↓", "→", "↑"][l], x, L.yunque + 74);
     }
     // las notas
     const y = (tn) => L.yunque - ((tn - S.ahora) / VIAJE) * (L.yunque - L.arriba);
