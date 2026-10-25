@@ -61,3 +61,12 @@
 .inv-detalle p .ob-pista { display: block; margin-top: 4px; font-size: 11px; color: #8A8080; }
 .inv-alt { margin-top: 6px; padding: 4px 10px; font-size: 12px; }
 #c_mochila.con-nuevo::before { content: ""; position: absolute; right: 6px; top: 6px; width: 10px; height: 10px; background: #F5A524; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+
+/* ---------- comercio: la pestaña del mercader (motor/comercio.js) ---------- */
+.cm-saludo { margin: 0 0 6px; color: #E0B2B2; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.cm-saludo b { color: var(--oro); }
+.cm-saludo .cm-plata { margin-left: auto; color: var(--oro); font-weight: 800; }
+.cm-rejilla .inv-celda .cant { color: var(--oro); }
+.inv-celda.cm-caro .cant { color: #C8402D; }
+.inv-celda.cm-envuelta canvas { filter: brightness(0.25) sepia(1) hue-rotate(-20deg) saturate(2); }
+.inv-celda.cm-envuelta::after { content: "?"; position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); font-size: 30px; font-weight: 900; color: var(--oro); }

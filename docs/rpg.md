@@ -196,6 +196,22 @@ tener que leer el código para balancear.
   esquirla. Con una brasa aparece el modo **brasa** (`FORJA.MODOS.brasa`: como fuego vivo, la nota +0,08). Dejar a la
   mitad devuelve plata y materiales.
 
+## Comercio (`motor/comercio.js`, `COMERCIO`; puesto de Kolbrun en `mundo/assets-comercio.js`; textos `cm.` en `textos/comercio.js`)
+
+- Dos mercaderes (`MERCADERES`): **Ingrid** en su mostrador del Puesto (`NOMBRADAS.mostrador`; si ya se fue al norte
+  lo atiende Eydis): 9 piezas de armas, escudo y armaduras (62 % comunes, 30 % mágicas, 8 % raras), hierro y cuero.
+  **Kolbrun** con su alfombra (`alfombraKolbrun`, piso, dibujada en `piso`) y su fardo (`fardoKolbrun`, figura) cerca
+  del Refugio: 6 piezas con joyas y alguna rara o legendaria, ámbar, esquirlas, a veces una brasa y cinco **piezas
+  envueltas** (arma, armadura, escudo, amuleto, anillo) que se pagan sin ver (`OBJETOS.generar` con hallazgo 2,2).
+- El stock sale de `DIB.azar(día × 7919 + mercader)` y se guarda por día (`E.extra.comercio.stock`); el día es el
+  mismo cálculo de `vida.js` sobre `H.E.tiempo`.
+- Precios: comprar `valor × 2,5 × (1 − rebaja del renombre)`, vender `valor × 0,35`, recomprar al precio de venta
+  (ocho lugares, `E.extra.comercio.recompra`). `COMERCIO.modPrecio(fn(precio, info))` deja que otro sistema los
+  cambie (el regateo).
+- Interfaz: la pestaña `tienda` de la mochila (`INVENTARIO.pestana` con `visible()`, nueva) aparece solo mientras se
+  comercia, con el nombre del mercader. Tocar lo suyo compra, tocar la bolsa vende (rara o mejor pide dos toques).
+  En el mapa grande van con la miniatura `mercader` (clase «Mercaderes»).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

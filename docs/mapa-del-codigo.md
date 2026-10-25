@@ -225,6 +225,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
+- **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
+  - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
 - **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
   - recibir · el escudo en el brazo · el sistema
 - **este.js**: el este en el juego (sistema ESTE)
@@ -279,6 +281,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: puertaInterior, pasoSecreto, tapizPared, tablasFlojas
 - **assets-claro.js**: el Claro del Ciervo, versión épica (se suma a ASSETS)
   - assets: arcoAstas, paredRoca, manchaEnferma, camaMusgo, escaleraRaices, apostadero, fisura
+- **assets-comercio.js**: el puesto de Kolbrun, la buhonera de Eldrakar (assets de COMERCIO)
+  - la alfombra de Kolbrun · el fardo de buhonera
+  - assets: alfombraKolbrun, fardoKolbrun
 - **assets-eikholt.js**: Eikholt, la capital (se suma a ASSETS)
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
 - **assets-este.js**: el este: Aserradero de Orm y Santuario de las Raíces (se suma a ASSETS)
@@ -337,6 +342,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
+- **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
