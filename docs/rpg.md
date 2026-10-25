@@ -439,7 +439,6 @@ Santuarios como los del Diablo con la idea de las piedras guardianas del Skyrim:
 - El ojo (en `sobreLuz`): sale de la que está más cerca de verlo entre 1 y 1,7 veces su distancia de detección.
 - Estado en `E.extra.sigilo = { golpes, muertes }`.
 
-
 ## Encuentros en el camino (`motor/encuentros.js`, `ENCUENTROS`; textos `ec.` y `av.nombre_brandr|ragna|hallvard|sigrun|toki`)
 
 Como los encuentros al azar del Skyrim y del Witcher.
@@ -449,7 +448,7 @@ Como los encuentros al azar del Skyrim y del Witcher.
   `LEJOS` = 2600 se va. Los árboles que lo tapan se apartan mientras está.
 - Salen en rueda (`st.n`), así no se repiten seguidos: buhonero, herida, peregrino, escalda, carrero.
 - Brandr vende una pieza envuelta (r ≥ 1, hallazgo × 1,6) por `ENVUELTA` = 45. Ragna toma una carga del frasco y paga
-  30 de plata, 80 de experiencia y destapa en el mapa el cofre con candado sin abrir más cercano. Hallvard destapa el
+  30 de plata, 80 de experiencia y destapa en el mapa el cofre sin abrir más cercano. Hallvard destapa el
   hörgr no encontrado más cercano (40 de experiencia). Sigrun da Inspirado `INSPIRA` = 240 s: daño y experiencia × 1,1
   (`RPG.aporte`, en `efectosHud`). Toki: al acercarse, tres lobos (marcados `e.encuentro`); si caen todos paga 40 de
   plata y una pieza r ≥ 1.
