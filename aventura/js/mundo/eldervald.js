@@ -1259,7 +1259,7 @@ window.ELDERVALD = (function () {
     });
   }
 
-  // ---------- lo que se agregó o se sacó en el editor (editor.html → js/mundo/agregados.js) ----------
+  // ---------- lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) ----------
   // Se aplica con el bosque ya armado, así el resto del mundo no cambia: lo sacado se busca por asset y lugar, y lo
   // agregado aparta los árboles que le quedan encima.
   {

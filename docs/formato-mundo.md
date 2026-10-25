@@ -1,6 +1,6 @@
 # Formato del mundo (`eromash-mundo`, versión 1)
 
-El editor (`aventura/editor.html`, botón **Exportar JSON**) baja el mundo entero ya armado en un solo archivo JSON
+El editor (repo `map-generator`, botón **Exportar JSON**) baja el mundo entero ya armado en un solo archivo JSON
 (`eldervald.mundo.json`). Es el puente para llevar Eldervald a otro motor (Godot u otro): un exportador por motor lee
 este archivo y arma la escena con sus propios assets. Ningún dato depende del código JavaScript del juego.
 

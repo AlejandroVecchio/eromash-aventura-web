@@ -120,33 +120,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **volumen.js**: todo girable: volúmenes que se ven bien desde cualquier lado (módulo VOL)
   - el giro del mundo · colores: cada cara con su tono · el proyector de un objeto · caras · sólidos · en el piso del objeto · partes de un objeto, de atrás hacia adelante · la gente y las criaturas: la vista según la cámara · ayudas para pasar los dibujos viejos
 
-### js/editor/ · el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)
-
-- **boceto.js**: subir un boceto de mapa (tecla U): un dibujo en papel que se vuelve parte de Eldervald
-  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · con todas las IA a la vez: cada una arma su versión y se eligen una, dos o todas (cada una en su capa) · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
-- **capas.js**: las capas del editor (pestaña Capas, L)
-  - las pestañas del costado · las capas del mundo: cada una prende o apaga su casilla · las capas propias
-- **comandos.js**: la paleta de comandos del editor (Ctrl+K)
-- **cuartos.js**: editar los interiores (tecla 9 o «Editar su interior» con una casa elegida)
-  - el panel · elegir, mover, poner · dibujar · los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos · el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste · el generador de casas: texto o controles → un plano nuevo · abrir y cerrar
-- **editor.js**: el editor de Eldervald
-  - estado · capas propias · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo · capas propias (las usa js/editor/capas.js)
-- **historia.js**: la historia en el mapa
-- **ia.js**: hablar con una IA adentro del editor
-  - qué IA hace cada tarea · el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado · en el mapa: la zona (celeste) y la vista previa de lo propuesto
-- **importar.js**: importar cosas propias: estructuras, pinturas, calcos y texturas (panel Importar, tecla N)
-- **menu.js**: la barra de menús del editor (Archivo, Editar, Ver, Herramientas, Crear, Mundo, IA, Ayuda)
-  - la barra · los desplegables
-- **mundo.js**: regiones, piezas y exportar el mundo
-  - regiones · piezas · exportar el mundo entero en JSON
-- **npcs.js**: importar gente propia (tecla N)
-  - las imágenes: recortar, sacar el fondo liso y achicar · el panel · en el mapa · abrir y cerrar
-- **pincel.js**: el pincel (tecla B): rociar, tupir el bosque y abrir claros
-- **texturas.js**: el generador de texturas (tecla Y)
-  - el panel · con IA · guardar en los assets
-- **zonas.js**: las zonas fuera del mapa: generar y retocar mazmorras y tierras con islas (tecla M)
-  - los datos: las del juego, con lo guardado encima · el plano: de la zona al lienzo · tierras · dibujar · tocar el plano · el panel · generar desde un texto · en el mapa del editor: cada entrada con su dibujo y su nombre; con Mover se arrastra · abrir y cerrar
-
 ### js/eikholt/ · la capital en 3D (es del hilo «Construir la ciudad de Eikholt»)
 
 - **casas.js**: la herramienta de casas de Eikholt (módulo CASAS)
@@ -335,7 +308,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
-- **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor
+- **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (repo map-generator). Este archivo lo escribe el editor
 - **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
   - la mesa de alquimia
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
@@ -418,7 +391,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
-  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (editor.html → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
+  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)
 - **luz.js**: luz, sombra y niebla de Eldervald (módulo LUZ)
 - **texturas.js**: las texturas hechas en el editor (TEXTURAS)
@@ -450,8 +423,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
-- **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
-  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
