@@ -563,16 +563,6 @@ Como la pesca del Stardew Valley y del Zelda.
   `sopaPescado` en `COCINA.PLATOS`, experiencia (entera la primera vez, un cuarto después) y el libro del pescador
   (`st.libro[id] = { n, cm }`, el diario). Estado en `E.extra.pesca = { cana, libro, urridi }`.
 
-## Los dados de hueso (`motor/dados.js`, `DADOS`, modo `dados`; asset `mesaDados` y `DADOS_DIBUJO.dado` en `mundo/assets-dados.js`; textos `dd.`)
-
-El juego de taberna de Eldervald, a la manera del farkle. Seis dados; cada 1 vale 100 y cada 5 vale 50; tres iguales valen la cara por cien (tres 1 valen mil) y cada dado más del mismo duplica; 1-5 vale 500, 2-6 vale 750 y 1-6 vale 1500. `puntos(caras)` devuelve lo que vale lo apartado o -1 si algo no suma (`valor` prueba todas las formas); `algoVale` dice si una tirada trae algo.
-
-- **Turno**: se aparta al menos un dado que valga y se sigue tirando el resto o se planta. Una tirada sin nada pierde lo del turno; si los seis valen, se tiran los seis otra vez. Gana el primero a `META` (2000) y cobra el doble de la apuesta.
-- **Rivales** (`RIVALES`): Bersi el Tuerto (patio del Puesto, se planta con 300), Hallgerd la Atrevida (Brunvik, se planta con 650) y Ulf (la mesa de la taberna). `eleccionRival` prueba cada subconjunto que vale y elige por puntos menos dados gastados (`cauto`), con premio a apartar los seis. Contra un jugador razonable (plantarse con 400) se gana cerca del 57 % con cualquiera de los tres.
-- **Apuestas**: 10, 25 y 50; ganándole a los tres se abren 100 y 200 (la mesa alta). Levantarse a la mitad pierde la apuesta.
-- **Controles**: izquierda/derecha eligen dado, interactuar lo aparta (o tocarlo), saltar tira, la lente se planta, pausa se levanta; los botones del panel hacen lo mismo.
-- **Estado** (`E.extra.dados`): ganadas, perdidas, vencidos, mejor turno y plata ganada; va al diario. Mapa: clase `dados`.
-
 ## Los libros de Eldervald (`motor/libros.js`, `LIBROS`, modo `libro`; assets `atrilPiedra` y `libroCaido` y `LIBROS_DIBUJO.libro` en `mundo/assets-libros.js`; textos `lb.`)
 
 Quince libros con tapa, autor y páginas (`lb.<id>_t`, `_a`, `_1`…), en cuatro clases (`LISTA`):
@@ -596,7 +586,7 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 |---|---|---|
 | La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
 | Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
-| El Gremio de Brunvik | pez 6, plato 8, partida de dados ganada 35 | −4 % con Kolbrun, +3 % al vender |
+| El Gremio de Brunvik | pez 6, plato 8 | −4 % con Kolbrun, +3 % al vender |
 | El Pueblo Oculto | piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
 
 - **Cómo suma**: cada medio segundo `mirar` cuenta lo hecho en los estados guardados de los otros sistemas y suma la diferencia (`E.extra.facciones.cont`); no hay que tocar esos sistemas. Al cargar, lo ya hecho se cobra en silencio. Los bandidos suman por `alMorir`.
