@@ -163,6 +163,16 @@ window.SONIDO = (function () {
     tono("sawtooth", 72 / grave, 54 / grave, 0.45, 0.12, { x, y, filtro: 260 });
     tono("square", 36 / grave, 30 / grave, 0.45, 0.06, { x, y, filtro: 180 });
   }
+  // burbujitas de una pócima que hierve (la mesa de alquimia): blips cortos que suben, solo cerca de (x, y)
+  function burbujas(x, y, g = 1) {
+    if (x != null) g *= Math.max(0, 1 - Math.hypot(x - oido.x, (y - oido.y) * 1.3) / 700); // se apaga a los 700: no se oye lejos
+    if (g < 0.02) return;
+    const n = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) {
+      const f = 380 + Math.random() * 520;
+      tono("sine", f, f * (1.6 + Math.random() * 0.8), 0.05 + Math.random() * 0.05, 0.05 * g, { x, y, retraso: i * (0.05 + Math.random() * 0.1), filtro: 2600 });
+    }
+  }
   // el corazón cuando queda poca vida
   function latido() {
     tono("sine", 62, 44, 0.16, 0.35, { filtro: 200 });
@@ -205,6 +215,7 @@ window.SONIDO = (function () {
     runa,
     zumbido,
     latido,
+    burbujas,
     bucle,
     volumen,
     oyente: (x, y) => ((oido.x = x), (oido.y = y)),
