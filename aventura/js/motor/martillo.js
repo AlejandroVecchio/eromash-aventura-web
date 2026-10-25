@@ -12,9 +12,9 @@ window.MARTILLO = (function () {
   const TRUENO = { radio: 280, max: 4, dano: 26, aturde: 0.8 };
   ARMAS.tipo("martillo", {
     combo: [
-      { wind: 0.14, swing: 0.16, rec: 0.26, arc: 2.0, reach: 84, dano: 21, empuje: 0.7, machaca: true, peso: 1.4 },
-      { wind: 0.14, swing: 0.17, rec: 0.28, arc: 2.1, reach: 86, dano: 23, empuje: 0.75, machaca: true, peso: 1.4 },
-      { wind: 0.26, swing: 0.12, rec: 0.4, arc: 1.4, reach: 100, dano: 42, empuje: 2, remate: true, machaca: true, temblor: true, peso: 2.2 },
+      { wind: 0.14, swing: 0.16, rec: 0.26, arc: 2.0, reach: 84, dano: 19, empuje: 0.7, machaca: true, peso: 1.4 },
+      { wind: 0.14, swing: 0.17, rec: 0.28, arc: 2.1, reach: 86, dano: 21, empuje: 0.75, machaca: true, peso: 1.4 },
+      { wind: 0.26, swing: 0.12, rec: 0.4, arc: 1.4, reach: 100, dano: 40, empuje: 2, remate: true, machaca: true, temblor: true, peso: 2.2 },
     ],
     giro: { wind: 0.3, swing: 0.08, rec: 0.36, arc: Math.PI * 2, reach: 90, dano: 16, empuje: 1.6, giro: true, trueno: true, machaca: true, sinEstela: true },
     carrera: { wind: 0.04, swing: 0.16, rec: 0.3, arc: 1.2, reach: 92, dano: 18, avanza: 420, empuje: 2, hombro: true, machaca: true },
