@@ -91,7 +91,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 
 ## Cómo se arma un cuadro
 
-`motor/juego.js` corre el bucle (`cuadro`): actualiza a Eromash, la gente, las criaturas y cada sistema (`actualizar`), y después dibuja en este orden (`dibujar`): piso → `fondo` de los sistemas → avisos y marcas → `piso` de los sistemas → todo lo que tiene altura ordenado por su pie (objetos del mundo, gente, criaturas, lo de cada sistema en `objetos` y Eromash) → silueta de Eromash detrás de lo que lo tapa → `aire` (hojas, lluvia) → niebla → luz → `sobreLuz` (lo que brilla en la oscuridad) → números, rombo de E, haz del objetivo → viñeta y bordes. Al final, el HUD (`actualizarHud`, que solo toca la página cuando algo cambió).
+`motor/juego.js` corre el bucle (`cuadro`): actualiza a Eromash, la gente, las criaturas y cada sistema (`actualizar`), y después dibuja en este orden (`dibujar`): piso → `fondo` de los sistemas → avisos y marcas → `piso` de los sistemas → todo lo que tiene altura ordenado por su pie (objetos del mundo, gente, criaturas, lo de cada sistema en `objetos` y Eromash; lo alto que se cruza con el claro de Eromash se ve transparente ahí) → silueta de Eromash detrás de lo que lo tapa → `aire` (hojas, lluvia) → niebla → luz → `sobreLuz` (lo que brilla en la oscuridad) → números, rombo de E, haz del objetivo → viñeta y bordes. Al final, el HUD (`actualizarHud`, que solo toca la página cuando algo cambió).
 
 Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite (la lista está en `CLAUDE.md`, «Sistemas»).
 
@@ -101,6 +101,7 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 - Los objetos se buscan por baldes (`ELDERVALD.cercanas`), nunca recorriendo el mundo entero; lo pintado en el piso de un tipo se pide con `ELDERVALD.decoDe(id)`.
 - Las luces se pintan con dos dibujos hechos una sola vez (`AGUJERO` y `brillo` en `mundo/luz.js`), no con un degradado nuevo por luz.
 - La silueta de Eromash redibuja solo lo que de verdad se cruza con él (`bordes` en `motor/juego.js` mide cada asset una vez).
+- El claro de Eromash (árboles transparentes a su alrededor, `prepararAura`/`auraAntes`/`auraVolcar` en `motor/juego.js`) no recorta cada árbol: copia el fondo del óvalo una vez por tanda, junta lo que se cruza en una capa y la pasa con una máscara hecha una sola vez; en media la capa va a media resolución y en baja no hay claro.
 - El HUD escribe en la página solo cuando un valor cambió (`cambia` en `interfaz/hud.js`); los metros del rastreador se cambian en su lugar.
 - Todo efecto caro mira `CALIDAD.nivel`.
 
@@ -253,7 +254,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interiores.js**: los interiores (sistema INTERIORES)
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
-  - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
+  - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · el claro de Eromash: lo que lo rodea se vuelve transparente · HUD de cada cuadro · menús · bucle · arranque
 - **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
   - en la mano · dibujo · el sistema
 - **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
