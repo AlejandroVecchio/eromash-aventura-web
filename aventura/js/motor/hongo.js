@@ -679,18 +679,23 @@ window.HONGO = (function () {
   }
 
   // ---------- la cámara ----------
+  const GIRO_OESTE = Math.PI / 2;
   let pegar = true; // al entrar, la cámara salta a su lugar en el primer cuadro
   function camaraPaso(dt, cw, ch) {
-    const libreJ = J.modo === "juego";
-    if (libreJ && CONTROLES.pulsado("camaraIzq")) giroObj -= dt * 1.05;
-    if (libreJ && CONTROLES.pulsado("camaraDer")) giroObj += dt * 1.05;
+    const libreJ = J.modo === "juego",
+      // arriba (galería y escalera) la cámara se pone de frente, sin giro, y se acerca (pedido de Alejandro)
+      plano = !en && ero.modo !== "piso";
+    if (libreJ && !plano && CONTROLES.pulsado("camaraIzq")) giroObj -= dt * 1.05;
+    if (libreJ && !plano && CONTROLES.pulsado("camaraDer")) giroObj += dt * 1.05;
     if (libreJ && CONTROLES.pulsado("acercar")) zoom = Math.min(1, zoom + dt * 0.3);
     if (libreJ && CONTROLES.pulsado("alejar")) zoom = Math.max(0.28, zoom - dt * 0.3);
-    cam.g += corto(giroObj - cam.g) * Math.min(1, dt * 8);
-    const escObj = (en ? Math.min(1, zoom + 0.28) : zoom) * Math.sqrt((cw * ch) / (1600 * 900));
+    // de frente a la pared de la galería donde anda: la norte o, en la galería oeste, la oeste
+    const frente = ero.x < GO && ero.y > GN + 60 ? GIRO_OESTE : 0;
+    cam.g += corto((plano ? frente : giroObj) - cam.g) * Math.min(1, dt * (plano ? 4 : 8));
+    const escObj = (en ? Math.min(1, zoom + 0.28) : plano ? Math.max(0.78, Math.min(1, zoom + 0.36)) : zoom) * Math.sqrt((cw * ch) / (1600 * 900));
     // la cámara mira un poco por encima de Eromash, hacia el fondo, para que entre la galería; en un cuarto, al medio
     const tx = en ? ero.x * 0.35 : ero.x,
-      ty = en ? ero.y * 0.35 - 110 : ero.y - (ero.modo === "piso" ? 260 : 60),
+      ty = en ? ero.y * 0.35 - 110 : ero.y - (plano ? 40 : 260),
       tz = en ? 0 : ero.z * 0.85;
     if (pegar) {
       pegar = false;
@@ -699,7 +704,7 @@ window.HONGO = (function () {
       cam.y = ty;
       cam.z = tz;
     }
-    cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
+    cam.esc += (escObj - cam.esc) * Math.min(1, dt * (plano ? 3 : 6));
     cam.x += (tx - cam.x) * Math.min(1, dt * 5);
     cam.y += (ty - cam.y) * Math.min(1, dt * 5);
     cam.z += (tz - cam.z) * Math.min(1, dt * 5);
