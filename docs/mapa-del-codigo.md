@@ -286,6 +286,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - en la mano · dibujo · el sistema
 - **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
   - al generar: las legendarias traen su poder · qué poderes valen ahora · el golpe de un poder (pasa por los modDano y avisa con alPegar, marcado para no encadenarse) · la pestaña Poderes · el sistema
+- **libros.js**: los libros de Eldervald (sistema LIBROS, modo "libro")
+  - dónde: atriles a un costado de los caminos · leer · la ventana del lector · lo que llevan los líderes · el sistema
 - **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
@@ -362,6 +364,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: escritorioRunico, hogarPiedra, camaPieles, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
 - **assets-jotunn.js**: el asiento de Hrímnir (assets de JOTUNN)
   - assets: asientoJotunn, menhirEscarcha, jotunnFigura
+- **assets-libros.js**: los libros de Eldervald (assets de LIBROS)
+  - assets: atrilPiedra, libroCaido
 - **assets-materiales.js**: las vetas del bosque: de donde sale el material de la forja (assets de MATERIALES)
   - la veta de hierro de pantano · el nódulo de ámbar · la vena rúnica
   - assets: vetaHierro, vetaAmbar, vetaRunica
@@ -449,6 +453,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **jotunn.js**: Textos de Hrímnir, el jötunn de la escarcha (motor/jotunn.js): prefijo jt. (y hd.unico_hrimnir, cr., bs., as., mp.ley_jotunn).
 - **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
+- **libros.js**: Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
+  - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
