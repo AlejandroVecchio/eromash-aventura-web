@@ -218,14 +218,6 @@ window.ICONOS = (function () {
       pol(c, [x - 5.5 * u, y + 5 * u, x - 5.5 * u, y - 4 * u, x - 2.5 * u, y - 6 * u, x - 1.5 * u, y + 5 * u], "#5E5A56");
       linea(c, [x + 1 * u, y - 3.6 * u, x + 1 * u, y + 2.4 * u], "#C8F2F4", 1.4 * u);
     },
-    // el hogar de un vættr (vaettir.js): el espíritu chico de capucha, con ojos de luz
-    vaettr(c, x, y, u, col) {
-      pol(c, [x - 4.6 * u, y + 5 * u, x - 3.4 * u, y - 1 * u, x - 1.2 * u, y - 5 * u, x, y - 5.6 * u, x + 1.2 * u, y - 5 * u, x + 3.4 * u, y - 1 * u, x + 4.6 * u, y + 5 * u], col);
-      pol(c, [x, y - 5.6 * u, x + 1.2 * u, y - 5 * u, x + 3.4 * u, y - 1 * u, x + 4.6 * u, y + 5 * u, x, y + 5 * u], "#7E9A56");
-      pol(c, [x - 2 * u, y - 2.6 * u, x + 2 * u, y - 2.6 * u, x + 1.6 * u, y - 0.4 * u, x - 1.6 * u, y - 0.4 * u], "#1A1E1A");
-      linea(c, [x - 1 * u, y - 1.5 * u, x - 0.6 * u, y - 1.5 * u], "#FFD98A", 0.9 * u);
-      linea(c, [x + 0.6 * u, y - 1.5 * u, x + 1 * u, y - 1.5 * u], "#FFD98A", 0.9 * u);
-    },
     // el puesto de pesca de Sverri (pesca.js): un pez de costado
     pesca(c, x, y, u, col) {
       pol(c, [x - 4 * u, y, x - 1 * u, y - 3 * u, x + 3 * u, y - 2.6 * u, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], col);

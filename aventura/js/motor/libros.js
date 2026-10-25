@@ -73,7 +73,6 @@ window.LIBROS = (function () {
     HORDAS.grupos.forEach((g) => ocupados.push([g.centro[0], g.centro[1], 900]));
     if (window.BANDIDOS) BANDIDOS.guaridas.forEach((g) => ocupados.push([g.centro[0], g.centro[1], 1800]));
     if (window.ARANAS) ARANAS.nidos.forEach((n) => ocupados.push([n.centro[0], n.centro[1], 1800]));
-    if (window.VAETTIR) VAETTIR.hogares.forEach((h) => ocupados.push([h.x, h.y, 1200]));
     if (window.JOTUNN && JOTUNN.jefe()) ocupados.push([JOTUNN.jefe().centro[0], JOTUNN.jefe().centro[1], 2400]);
     const firme = (x, y) => [[0, 0], [0, 120], [-80, 40], [80, 40]].every(([dx, dy]) => W.sueloEn(x + dx, y + dy) === 0);
     const ok = ([x, y]) =>
