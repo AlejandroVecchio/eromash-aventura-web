@@ -115,6 +115,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/editor/ · el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)
 
+- **boceto.js**: subir un boceto de mapa (tecla U): un dibujo en papel que se vuelve parte de Eldervald
+  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
 - **comandos.js**: la paleta de comandos del editor (Ctrl+K)
 - **cuartos.js**: editar los interiores (tecla 9 o «Editar su interior» con una casa elegida)
   - el panel · elegir, mover, poner · dibujar · los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos · el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste · el generador de casas: texto o controles → un plano nuevo · abrir y cerrar
