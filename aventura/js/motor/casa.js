@@ -5,9 +5,9 @@
 // planos y lo que se le vaya haciendo. Las mejoras (MEJORAS) cuestan plata y materiales y se ven puestas:
 //   · El arcón: guarda hasta ARCON piezas que no entran en la Bolsa.
 //   · El armero: +4 % de daño siempre. La estantería: +5 % de experiencia siempre (y muestra los libros leídos).
-//   · El fogón del patio: un fogonOlla de verdad frente a la casa (la cocina y el descanso lo usan solos).
-//   · La huerta: cada día del juego da dos hierbas y a veces una manzana. La cama de pieles de oso: dormir en casa deja
-//     bien descansado el doble de tiempo.
+//   · El fogón del patio: un fogonOlla de verdad frente a la casa (la cocina lo usa sola).
+//   · La huerta: cada día del juego da dos hierbas y a veces una manzana. La cama de pieles de oso: dormir en ella deja
+//     «Bien abrigado», +10 % de experiencia durante 10 minutos.
 // Comprada, «Tu casa» aparece entre los destinos de viaje y en el mapa. Estado en E.extra.casa = { tuya, hechas:
 // { id: 1 }, arcon: [pieza], cosecha }. Textos `hg.`.
 window.CASA = (function () {
@@ -25,7 +25,8 @@ window.CASA = (function () {
     huerta: { plata: 100, mats: { cuero: 2 } },
     cama: { plata: 300, mats: { cuero: 6 } },
   };
-  const base = () => ({ tuya: false, hechas: {}, arcon: [], cosecha: -1 });
+  const base = () => ({ tuya: false, hechas: {}, arcon: [], cosecha: -1, abrigo: 0 });
+  const ABRIGO = 600; // segundos de «Bien abrigado» al dormir en la cama de pieles: +10 % de experiencia
   let st = base();
   let casa = null, // { x, y, cosa, letrero, huerta, fogon, puerta }
     lugar = null;
@@ -233,11 +234,13 @@ window.CASA = (function () {
   function cuarto(ayuda) {
     ayudaCuarto = ayuda;
     ayuda.hogar(1000);
-    // la cama: la de pieles de oso deja descansado el doble
+    // la cama: la de pieles de oso deja «Bien abrigado» (+10 % de experiencia por 10 minutos)
     ayuda.mueble("camaPieles", 1220, 770, { s: hecha("cama") ? 1.1 : 0.95 }, 210, "in.accion_cama", () => {
       ayuda.dormir();
-      const D = window.DESCANSO && DESCANSO.estado();
-      if (hecha("cama") && D && D.descansado > 0) D.descansado *= 2;
+      if (!hecha("cama")) return;
+      st.abrigo = ABRIGO;
+      HUD.aviso(t("hg.abrigado"), "#FFD98A");
+      if (window.RPG) RPG.recalcular();
     });
     ayuda.mueble("mesaBanco", 760, 830, {}, 170, "hg.accion_planos", planos);
     ["arcon", "armero", "estante"].forEach((id) => {
@@ -264,6 +267,7 @@ window.CASA = (function () {
           if (hecha("armero")) s.dano *= 1.04;
           if (hecha("estante")) s.xp *= 1.05;
         }, "casa");
+      if (window.RPG) RPG.aporte((s) => st.abrigo > 0 && (s.xp *= 1.1), "casa");
     },
     alEmpezar(extra) {
       extra.casa = Object.assign(base(), extra.casa || {});
@@ -271,7 +275,11 @@ window.CASA = (function () {
       mostrarAfuera();
       if (window.RPG) RPG.recalcular();
     },
-    actualizar() {
+    actualizar(dt) {
+      if (st.abrigo > 0 && J.modo === "juego" && (st.abrigo -= dt) <= 0) {
+        st.abrigo = 0;
+        if (window.RPG) RPG.recalcular();
+      }
       if (!casa || !hecha("huerta")) return;
       // la huerta crece durante el día y queda lista hasta que se cosecha
       casa.huerta.o.crece = lista() ? 1 : Math.min(0.9, (A.H.E.tiempo / LUZ.DIA) % 1);

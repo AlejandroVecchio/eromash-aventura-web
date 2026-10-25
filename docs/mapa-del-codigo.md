@@ -262,8 +262,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
 - **dados.js**: los dados de hueso (sistema DADOS, modo "dados")
   - los puntos · la partida · la capa del juego · las mesas · el sistema
-- **descanso.js**: el descanso (sistema DESCANSO)
-  - los petates · el menú · descansar · el cartel con el reloj · el sistema
 - **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
   - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
