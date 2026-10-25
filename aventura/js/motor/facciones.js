@@ -6,7 +6,7 @@
 //   · Los Guardasendas de Eydis (el Puesto): misiones, lugares descubiertos, el tablón de cacería, los encuentros del
 //     camino. Ingrid cobra menos.
 //   · El Gremio de Brunvik: peces, platos cocinados, partidas de dados ganadas. Kolbrun cobra menos y vender paga más.
-//   · El Pueblo Oculto: favor de los vættir, piedras y ritos despertados, hörgr visitados. Más energía rúnica.
+//   · El Pueblo Oculto: piedras y ritos despertados, hörgr visitados. Más energía rúnica.
 // No toca los otros sistemas: mira sus estados guardados (FUENTES: cuánto vale cada cosa hecha) y suma la diferencia;
 // una partida vieja cobra todo lo que ya hizo en silencio al cargar. Cada grado regala plata, el Honrado un fragmento
 // y el Exaltado una pieza de la armería de la facción (cada una su casilla). Un estandarte de cada facción (el de la
@@ -35,7 +35,6 @@ window.FACCIONES = (function () {
     peces: ["gremio", 6, () => suma(ex.pesca && ex.pesca.libro, (p) => p.n)],
     platos: ["gremio", 8, () => (ex.cocina && ex.cocina.platos) || 0],
     dados: ["gremio", 35, () => (ex.dados && ex.dados.ganadas) || 0],
-    vaettir: ["ocultos", 60, () => suma(ex.vaettir && ex.vaettir.favor)],
     piedras: ["ocultos", 30, () => cuenta(ex.sec && ex.sec.piedras)],
     ritos: ["ocultos", 50, () => cuenta(ex.ritos && ex.ritos.ritos)],
     horgr: ["ocultos", 40, () => cuenta(ex.santuarios && ex.santuarios.vistos)],
@@ -201,7 +200,7 @@ window.FACCIONES = (function () {
       guardia: () => libreCerca(C.c[0] + 200, C.c[1] + (C.ry || C.rx / 1.3) + 380, 1200, fueraCiudad),
       sendas: () => L.puesto && entrada(L.puesto),
       gremio: () => L.brunvik && entrada(L.brunvik),
-      ocultos: () => window.VAETTIR && VAETTIR.hogares[0] && libreCerca(VAETTIR.hogares[0].x + 200, VAETTIR.hogares[0].y + 80, 500),
+      ocultos: () => L.santuario && entrada(L.santuario),
     };
     for (const f of IDS) {
       const p = sitios[f]();
