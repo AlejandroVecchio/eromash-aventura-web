@@ -19,7 +19,7 @@ I18N.textos({
   "bs.bono_debil": { es: "(+{0} % de daño contra ella)", en: "(+{0}% damage against it)" },
   "bs.bono_maestria": { es: "(otro +{0} % de daño y −{1} % de lo que te pega)", en: "(another +{0}% damage and −{1}% from its hits)" },
   "bs.falta": { es: "Faltan {0} para: {1}", en: "{0} more for: {1}" },
-  "bs.nueva": { es: "Bestiario: viste un {0}", en: "Bestiary: you saw a {0}" },
+  "bs.nueva": { es: "Bestiario: página nueva, {0}", en: "Bestiary: new page, {0}" },
   "bs.aprendiste_1": { es: "Bestiario: página nueva · {0}", en: "Bestiary: new page · {0}" },
   "bs.aprendiste_2": { es: "Bestiario: aprendiste el punto débil · {0}", en: "Bestiary: you learned the weak spot · {0}" },
   "bs.aprendiste_3": { es: "Bestiario: maestría · {0}", en: "Bestiary: mastery · {0}" },

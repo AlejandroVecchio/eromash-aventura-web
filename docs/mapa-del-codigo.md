@@ -152,6 +152,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/enemigos/ · el dibujo de las criaturas
 
+- **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
 - **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
   - Bandido · Arquero
 - **criaturas-bosque.js**: las criaturas del bosque profundo (se suman a CRIATURAS)
@@ -199,6 +200,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - dónde crece cada una · destilar y tomar · la ventana de la mesa (pestaña de la mochila, solo junto a la mesa) · la Bolsa: hierbas, pociones y aceites · íconos · el sistema
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **aranas.js**: los nidos de arañas (sistema ARANAS)
+  - dónde: lo hondo del bosque · tela · sacos y crías · veneno y vendas · el sistema
 - **arbol.js**: el árbol de habilidades (sistema ARBOL, pestaña Habilidades de la mochila)
   - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
 - **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
@@ -304,6 +307,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
   - la mesa de alquimia
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
+- **assets-aranas.js**: el nido de las arañas (assets de ARANAS)
+  - assets: nidoArana, sacoHuevos
 - **assets-arcon.js**: el arcón de Eromash en el Puesto (asset de ARCON)
   - assets: arconPuesto
 - **assets-bandidos.js**: el campamento de los Sin Linde (assets de BANDIDOS)
@@ -385,6 +390,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
 - **alquimia.js**: Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
+- **aranas.js**: Textos de los nidos de arañas (motor/aranas.js, enemigos/aranas.js): prefijo ar. (y cr., bs., as., mt.seda, mp.ley_nidos).
 - **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
 - **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.

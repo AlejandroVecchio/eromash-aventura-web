@@ -5,33 +5,30 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 35,
-    titulo: { es: "Los Sin Linde: guaridas de bandidos", en: "The Lawless: bandit hideouts" },
+    pr: 36,
+    titulo: { es: "Nidos de arañas: tela, veneno y seda", en: "Spider nests: webs, poison and silk" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: el botín robado trae una pieza", en: "loot: the stolen loot holds an item" },
-      { pr: 15, es: "bestiario: bandido y arquero suman sus páginas", en: "bestiary: bandit and archer add their pages" },
-      { pr: 12, es: "materiales: sueltan hierro y cuero", en: "materials: they drop iron and leather" },
-      { pr: 32, es: "cerraduras: sueltan ganzúas y el botín trae dos", en: "locks: they drop lockpicks and the loot holds two" },
-      { pr: 22, es: "cocina: el fogón de la guarida sirve para cocinar", en: "cooking: the hideout's fire can be cooked on" },
-      { pr: 33, es: "némesis: un bandido que te mata puede volverse némesis", en: "nemesis: a bandit who kills you can become a nemesis" },
+      { pr: 12, es: "materiales: la seda es un material nuevo", en: "materials: silk is a new material" },
+      { pr: 15, es: "bestiario: araña y tejedora suman sus páginas", en: "bestiary: spider and weaver add their pages" },
+      { pr: 20, es: "frasco: un trago cura el veneno", en: "flask: a sip cures poison" },
+      { pr: 22, es: "cocina: en la fogata se tejen las vendas", en: "cooking: bandages are woven at the campfire" },
     ],
     mirar: [
-      { es: "Hay guaridas de los Sin Linde cerca de los caminos (en el mapa, clase Guaridas de bandidos): dos tiendas de cueros, la estaca con la linde partida, un fogón y el botín robado. Al acercarte te avisa.", en: "There are Lawless hideouts near the roads (on the map, Bandit hideouts class): two hide tents, the stake with the broken boundary, a fire and the stolen loot. You're warned as you approach." },
-      { es: "Bandidos con hacha y escudo, arqueros y un jefe con nombre. Los arqueros marcan en el piso dónde estás y la flecha cae en arco al final del aviso: moverte o saltar alcanza. De cerca retroceden.", en: "Bandits with axe and shield, archers and a named chief. Archers mark where you stand on the ground and the arrow drops in an arc at the end of the warning: moving or jumping is enough. Up close they back off." },
-      { es: "Cuando cae toda la guarida, el botín se saquea una vez: plata, un fragmento, una pieza y dos ganzúas. Los dos son nuevos en el bestiario. La guarida se vuelve a poblar con el tiempo, el botín no.", en: "When the whole hideout falls, the loot can be taken once: silver, a shard, an item and two lockpicks. Both are new in the bestiary. The hideout repopulates over time, the loot doesn't." },
+      { es: "Tres nidos en lo hondo del bosque, lejos de los caminos (en el mapa, clase Nidos de arañas): el nido de la tejedora, sacos de huevos colgando y tela en el piso. La tela frena mucho al que la pisa; saltarla no.", en: "Three nests deep in the forest, away from the roads (on the map, Spider nests class): the weaver's nest, hanging egg sacs and webs on the ground. Webs slow you a lot when you walk on them; jumping over doesn't." },
+      { es: "Las arañas de musgo se agachan y saltan en línea; su mordida envenena (3 de vida por segundo, 5 s, nunca mata; burbujas verdes y «Envenenado» en el HUD). La tejedora escupe tela donde estás: queda 8 s en el piso.", en: "Moss spiders crouch and leap in a line; their bite poisons (3 life per second, 5 s, never kills; green bubbles and «Poisoned» on the HUD). The weaver spits webbing where you stand: it stays on the ground for 8 s." },
+      { es: "Con E se cortan los sacos de huevos: dan seda y a veces salen dos arañitas. En cualquier fogata se teje una venda con 2 de seda; desde la Bolsa cura el veneno y 30 de vida. Un trago del frasco también cura el veneno.", en: "Press E to cut the egg sacs: they give silk and sometimes two little spiders come out. At any campfire you can weave a bandage from 2 silk; from the Bag it cures poison and restores 30 life. A sip from the flask also cures poison." },
     ],
     botones: [
-      { es: "Llevarme a la guarida más cercana", en: "Take me to the nearest hideout", fn: (A) => {
-        const gu = BANDIDOS.guaridas.slice().sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
-        ir(A, gu.centro, 0, 900);
+      { es: "Llevarme al nido más cercano", en: "Take me to the nearest nest", fn: (A) => {
+        const nd = ARANAS.nidos.slice().sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
+        ir(A, nd.centro, 0, 900);
       } },
-      { es: "Vencer la guarida más cercana y dejarme junto al botín", en: "Defeat the nearest hideout and leave me by the loot", fn: (A) => {
-        const gu = BANDIDOS.guaridas.filter((q) => !BANDIDOS.estado().saqueados[q.i]).sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
-        if (!gu) return;
-        gu.g.miembros.forEach((e) => (e.muerto = 1));
-        ir(A, [gu.botin.x, gu.botin.y], 0, 90);
+      { es: "Darme 6 de seda y 2 vendas", en: "Give me 6 silk and 2 bandages", fn: () => {
+        MATERIALES.dar("seda", 6);
+        ARANAS.estado().vendas += 2;
       } },
+      { es: "Envenenarme", en: "Poison me", fn: () => (ARANAS.estado().veneno = ARANAS.VENENO) },
     ],
   };
   // ---------- ayuda para los botones ----------
