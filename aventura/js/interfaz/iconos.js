@@ -196,11 +196,6 @@ window.ICONOS = (function () {
       linea(c, [x - 4 * u, y - 4 * u, x + 4 * u, y + 4 * u], CLARO, 1.2 * u);
       linea(c, [x + 4 * u, y - 4 * u, x - 4 * u, y + 4 * u], CLARO, 1.2 * u);
     },
-    // una némesis (nemesis.js): la corona roja de tres puntas
-    nemesis(c, x, y, u, col) {
-      pol(c, [x - 5.5 * u, y + 4 * u, x - 5.5 * u, y - 3 * u, x - 2.6 * u, y, x, y - 5.5 * u, x + 2.6 * u, y, x + 5.5 * u, y - 3 * u, x + 5.5 * u, y + 4 * u], col);
-      pol(c, [x, y - 5.5 * u, x + 2.6 * u, y, x + 5.5 * u, y - 3 * u, x + 5.5 * u, y + 4 * u, x, y + 4 * u], "#FF8D71");
-    },
     // una guarida de los Sin Linde (bandidos.js): la linde partida, un rombo cortado por una raya
     bandidos(c, x, y, u, col) {
       pol(c, [x, y - 6 * u, x + 4.8 * u, y, x, y + 6 * u, x - 4.8 * u, y], col);
@@ -313,7 +308,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", nemesis: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;
