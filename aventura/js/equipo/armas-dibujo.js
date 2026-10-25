@@ -170,19 +170,26 @@ window.DIB_ARMAS = (function () {
     f(c, fam || 0, Math.max(0, Math.min(4, tier || 0)));
     return true;
   }
+  // cómo entra cada forma en el cuadrado del icono (las largas como la espada usan lo de siempre)
+  const ICONO = { arco: { k: 1.2, x: 0, y: -12 } };
   // icono(c, forma, fam, tier, x, y, lado): en diagonal, entrando en un cuadrado de lado × lado
   function icono(c, forma, fam, tier, x, y, lado) {
     c.save();
     c.translate(x, y);
     c.rotate(Math.PI / 4);
-    const k = lado / 420;
+    const m = ICONO[forma] || { k: 1, x: -40, y: 40 },
+      k = (lado / 420) * m.k;
     c.scale(k, k);
-    c.translate(-40, 40);
+    c.translate(m.x, m.y);
+    // en la mochila el arco va sin tensar (la tensión es la del arco en la mano)
+    const ten = DIB_ARMAS.tension;
+    DIB_ARMAS.tension = 0;
     const ok = dibujar(c, forma, fam, tier);
+    DIB_ARMAS.tension = ten;
     c.restore();
     return ok;
   }
   // una forma nueva (la suman las PRs de cada arma): fn(c, fam, tier)
   const forma = (id, fn) => (FORMAS[id] = fn);
-  return { dibujar, icono, forma, METAL, mango, filo, remaches, runa };
+  return { dibujar, icono, ICONO, forma, METAL, mango, filo, remaches, runa };
 })();

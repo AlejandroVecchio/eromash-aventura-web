@@ -22,4 +22,10 @@ I18N.textos({
   "ob.b_hachaRunica2": { es: "Gran hacha rúnica", en: "Great Rune Axe" },
   "ob.b_hachaHueso2": { es: "Gran hacha de hueso", en: "Great Bone Axe" },
   "ob.b_labrys": { es: "Lábrys", en: "Labrys" },
+  "ar.rasgo_arco": { es: "Arco · a distancia: dos flechas y un abanico de tres; manteniendo atacar, tiro tenso que atraviesa", en: "Bow · ranged: two arrows and a fan of three; hold attack for a piercing power shot" },
+  "ob.b_arcoCorto": { es: "Arco corto de tejo", en: "Yew Shortbow" },
+  "ob.b_arcoLargo": { es: "Arco largo", en: "Longbow" },
+  "ob.b_arcoRunico": { es: "Arco rúnico", en: "Rune Bow" },
+  "ob.b_arcoAsta": { es: "Arco de asta", en: "Antler Bow" },
+  "ob.b_arcoRecurvo": { es: "Arco recurvo de las estepas", en: "Steppe Recurve Bow" },
 });
