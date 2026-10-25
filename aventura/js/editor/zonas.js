@@ -845,8 +845,8 @@ window.EDITOR_ZONAS = (function () {
   $("znGenIA").onclick = async () => {
     const txt = $("znGenTexto").value.trim();
     if (!txt) return E.avisar(t("ed.zn_gen_sin_texto"));
-    const ia = window.EDITOR_IA && EDITOR_IA.elegida();
-    if (!ia || (!ia.clave && ia.quien !== "otra")) return E.avisar(t("ed.cu_gen_sin_clave"));
+    const ia = window.EDITOR_IA && EDITOR_IA.paraTarea("generar");
+    if (!ia) return E.avisar(t("ed.cu_gen_sin_clave"));
     const sistema =
       "Convertís el pedido de una zona de un juego vikingo en JSON, solo JSON, sin texto alrededor. Hay dos clases de zona. " +
       'Mazmorra: {"tipo": "mazmorra", "nombre": texto corto en el idioma del pedido, "salas": 3 a 14, "jefe": "dreki" (dragón) o "campeon" o null, "familia": una de ' +
@@ -858,7 +858,7 @@ window.EDITOR_ZONAS = (function () {
     $("znGenIA").disabled = true;
     E.avisar(t("ed.cu_gen_pensando"));
     try {
-      const r = await EDITOR_IA.llamar(ia.quien, ia.modelo, ia.clave, [{ role: "user", content: txt }], sistema);
+      const r = (await EDITOR_IA.llamarTarea("generar", [{ role: "user", content: txt }], sistema)).txt;
       const js = JSON.parse((r.match(/\{[\s\S]*\}/) || ["{}"])[0]);
       const leido = Z.leerPedido(txt);
       let p;
