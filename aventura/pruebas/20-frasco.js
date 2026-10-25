@@ -49,7 +49,9 @@
       PODERES.hablarCon({ id: "thora", x: A.jug.x, y: A.jug.y + 40, mira: { vista: "S", espejo: false } });
       igual(A.jug.hp, A.jug.hpMax, "Thora cura:");
       igual(st.cargas, st.max, "y llena el frasco:");
-      si(document.getElementById("c_frasco"), "la casilla del frasco");
+      BARRA.recibido("frasco");
+      si(BARRA.estado().r.includes("frasco") || BARRA.estado().r.indexOf(null) < 0, "el frasco va a una casilla libre de la barra");
+      si(BARRA.COSAS.frasco.icono().startsWith("frasco_"), "con el ícono de sus cargas");
       A.H.guardar(9);
     } },
   );
