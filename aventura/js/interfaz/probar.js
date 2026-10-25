@@ -180,12 +180,12 @@ window.PROBAR = (function () {
     {
       id: "ayudas",
       lista: () => [
-        { id: "plata", si: hay("PODERES"), fn: () => (PODERES.darPlata(1000), HUD.aviso(t("pb.listo"), "#FFD98A"), true) },
-        { id: "materiales", si: true, fn: () => (darTodo(), HUD.aviso(t("pb.listo"), "#7BC86C"), true) },
-        { id: "niveles", si: hay("RPG"), fn: () => (niveles(5), true) },
-        { id: "curar", si: true, fn: () => ((jug.hp = jug.hpMax), (jug.sta = jug.staMax), HUD.aviso(t("pb.listo"), "#7BC86C"), true) },
-        { id: "noche", si: true, fn: () => (hora(23), true) },
-        { id: "dia", si: true, fn: () => (hora(10), true) },
+        { id: "plata", queda: true, si: hay("PODERES"), fn: () => (PODERES.darPlata(1000), HUD.aviso(t("pb.listo"), "#FFD98A")) },
+        { id: "materiales", queda: true, si: true, fn: () => (darTodo(), HUD.aviso(t("pb.listo"), "#7BC86C")) },
+        { id: "niveles", queda: true, si: hay("RPG"), fn: () => niveles(5) },
+        { id: "curar", queda: true, si: true, fn: () => ((jug.hp = jug.hpMax), (jug.sta = jug.staMax), HUD.aviso(t("pb.listo"), "#7BC86C")) },
+        { id: "noche", queda: true, si: true, fn: () => hora(23) },
+        { id: "dia", queda: true, si: true, fn: () => hora(10) },
         { id: "cero", si: true, fn: () => (JUEGO.empezar(RANURA, true), darTodo(), abrir()) },
       ],
     },
@@ -211,8 +211,8 @@ window.PROBAR = (function () {
       .map((e) => ({
         texto: e.texto || (e.fam ? t("pb.grupo", [t("pb.f_" + e.fam)]) : t("pb." + e.id)),
         sub: t("pb." + e.id + "_d"),
-        // las ayudas devuelven true: se queda en el menú para seguir
-        fn: () => e.fn() === true && grupo(gr),
+        // las ayudas (queda) siguen en el menú; lo demás lo cierra y abre lo suyo
+        fn: () => (e.fn(), e.queda && grupo(gr)),
       }));
     if (!bot.length) bot.push({ texto: t("pb.no_hay"), fn: () => grupo(gr) });
     bot.push({ texto: t("pb.volver"), fn: abrir });
