@@ -113,6 +113,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/comun/ · lo compartido: dibujo, runas, controles y sonido
 
 - **controles.js**: controles (módulo CONTROLES)
+  - teclas propias
 - **dibujo.js**: herramientas de dibujo (módulo DIB)
 - **futhark.js**: las runas del Futhark antiguo (módulo FUTHARK)
 - **sonido.js**: sonido (módulo SONIDO)
@@ -199,6 +200,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mapa.js**: el mapa de Eldervald (sistema MAPA)
   - las miniaturas · el mapa grande: zoom, arrastre y la marca propia · el minimapa
 - **opciones.js**: opciones (módulo OPCIONES)
+  - teclas propias
 - **prologo.js**: el prólogo del mago (módulo PROLOGO)
   - el nombre pasado a runas · la cabaña (igual que la ilustración) · el escritorio · el pergamino: lo que escribe el mago, en runas (al revés para quien mira: de frente al mago) · la pluma que escribe sola · lo que hay en el escritorio · la escena desde arriba: el escritorio visto en planta, con el pergamino en el medio · el cuadro: elige la escena y la cámara · las preguntas
 
@@ -410,6 +412,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
+- **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.
 
