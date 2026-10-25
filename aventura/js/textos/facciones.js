@@ -9,7 +9,7 @@ I18N.textos({
   "fc.ocultos": { es: "El Pueblo Oculto", en: "The Hidden Folk" },
   "fc.guardia_d": { es: "Los escudos de Eikholt. Los ganás limpiando los caminos de bandidos, cobrando contratos y vengando a los caídos.", en: "The shields of Eikholt. Earned by clearing bandits from the roads, collecting contracts and avenging the fallen." },
   "fc.sendas_d": { es: "Los que cuidan los caminos desde el Puesto. Los ganás cumpliendo misiones, descubriendo lugares, con el tablón de cacería y ayudando en los encuentros del camino.", en: "Those who watch the roads from the Outpost. Earned by completing quests, discovering places, the hunting board and helping in road encounters." },
-  "fc.gremio_d": { es: "Pescadores, herreros y comerciantes del río. Los ganás pescando, cocinando y ganando a los dados.", en: "Fishers, smiths and river traders. Earned by fishing, cooking and winning at dice." },
+  "fc.gremio_d": { es: "Pescadores, herreros y comerciantes del río. Los ganás pescando y cocinando.", en: "Fishers, smiths and river traders. Earned by fishing and cooking." },
   "fc.ocultos_d": { es: "Los álfar y lo que vive en las piedras. Los ganás despertando piedras y ritos y visitando los hörgr.", en: "The álfar and what lives in the stones. Earned by awakening stones and rites and visiting the hörgr." },
   "fc.n0": { es: "Desconocido", en: "Unknown" },
   "fc.n1": { es: "Conocido", en: "Known" },
