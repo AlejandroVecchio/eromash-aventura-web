@@ -218,6 +218,13 @@ window.ICONOS = (function () {
       pol(c, [x - 5.5 * u, y + 5 * u, x - 5.5 * u, y - 4 * u, x - 2.5 * u, y - 6 * u, x - 1.5 * u, y + 5 * u], "#5E5A56");
       linea(c, [x + 1 * u, y - 3.6 * u, x + 1 * u, y + 2.4 * u], "#C8F2F4", 1.4 * u);
     },
+    // el puesto de pesca de Sverri (pesca.js): un pez de costado
+    pesca(c, x, y, u, col) {
+      pol(c, [x - 4 * u, y, x - 1 * u, y - 3 * u, x + 3 * u, y - 2.6 * u, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], col);
+      pol(c, [x - 4 * u, y, x - 6.5 * u, y - 3 * u, x - 6.5 * u, y + 3 * u], col);
+      pol(c, [x - 4 * u, y, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], "#E0C88A");
+      pol(c, [x + 2.6 * u, y - 1.4 * u, x + 3.4 * u, y - 1.4 * u, x + 3.4 * u, y - 0.6 * u, x + 2.6 * u, y - 0.6 * u], "#111111");
+    },
     // un hörgr de los dioses (santuarios.js): dos lajas y la estela con la marca del dios
     horgr(c, x, y, u, col) {
       pol(c, [x - 6 * u, y + 5 * u, x + 6 * u, y + 5 * u, x + 5 * u, y + 2.5 * u, x - 5 * u, y + 2.5 * u], "#8E8A86");
@@ -275,7 +282,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

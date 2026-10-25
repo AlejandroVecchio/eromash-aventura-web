@@ -544,6 +544,31 @@ Un evento de noche como la Cacería Salvaje del Witcher y las noches de invasió
 - El Cuerno de la Cacería (`celdasBolsa`, ícono `cz_cuerno`): de noche y afuera la llama ya (`tocarCuerno`), una vez
   por noche. Estado en `E.extra.caceria = { avisada, corrida, cuerno, vencidas, sobrevividas, escondidas }`.
 
+## La pesca (`motor/pesca.js`, `PESCA`, en el mundo; asset `canaSverri` y los peces en `mundo/assets-pesca.js`; textos `pe.`)
+
+Todo pasa en el mundo, sin ventana: Eromash tira la caña desde la orilla, el bosque sigue andando y la barra aparece a su costado.
+- El puesto de Sverri: en la orilla de la laguna más cercana al Puesto (el punto que mira al Puesto, 170 afuera del
+  agua). Con E se toma la caña (`st.cana`, `o.sinCana`). Marca `pesca` en el mapa y la caña en la Bolsa.
+- `aguaCerca(x, y)`: busca agua (`sueloEn` = 1) de 50 a 190 hacia donde mira Eromash y después alrededor; si cae dentro
+  de una laguna es `lago`, si no `rio`. Con caña y fuera de pelea, `cercanos` ofrece Pescar.
+- Fases: `lanza` (`LANZA` = 0,55 s: la boya vuela en arco hasta el agua), `espera` (1,5 a 4,5 s, × 0,7 al alba y al
+  ocaso), `pica` (`PICA` = 0,8 s para clavar con interactuar, atacar, saltar o un toque; si no, `tarde`), `pelea` y
+  `fin` (el pez sale del agua en arco hasta Eromash). Mientras tanto `actualizar` deja `jug.interactuando` en 0,1: no
+  camina ni pega. Moverse recoge el sedal (`cancela`); perder vida lo suelta.
+- La pelea (`pelear(dt, tiron)`): el pez alterna `cede` («¡Tirá!», 1,2 a 2,4 s según `agil`) y `tira` («¡Esperá!», 0,7
+  a 1,5 s). Con `cede` cada tirón suma `GANA` / (0,6 + vel × 0,6) a la captura y `TENSA` = 0,07 a la tensión; con `tira`
+  cada tirón (pasada la `GRACIA` de 0,25 s) suma `TENSA_MAL` = 0,3 y con la tensión en 1 se corta el sedal (`corto`).
+  La tensión afloja `AFLOJA` = 0,7/s y sin tirar la captura baja (0,05 cediendo, 0,09 tirando, × 0,5 + vel); en 0 se
+  suelta, en 1 se pesca. Arranca en `EMPIEZA` = 0,22.
+- El dibujo: boya, ondas y sombra del pez en el piso (`sobreLuz`); la caña que se dobla, el sedal, el pez que sale y la
+  barra con la captura, la tensión y el cartel, derechos en la vista con `J.baseT` (del lado contrario al agua).
+- `PECES`: perca (laguna, día), trucha (río, día), salmón (río, alba y ocaso), lucio (laguna, tarde y noche), anguila
+  (cualquiera, noche), pez de escarcha (río del norte) y Urriði el Viejo (laguna, noche, con `ESPECIES_URRIDI` = 4
+  especies, 25 %, una vez: 250 de plata, dos fragmentos, una pieza r ≥ 3). 
+- Cada pez: un pescado para la cocina (tres Urriði) en `COCINA.CARNES.pescado`, platos nuevos `pescadoPalo` y
+  `sopaPescado` en `COCINA.PLATOS`, experiencia (entera la primera vez, un cuarto después) y el libro del pescador
+  (`st.libro[id] = { n, cm }`, el diario). Estado en `E.extra.pesca = { cana, libro, urridi }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
