@@ -5,7 +5,7 @@
 //   1 · Rugido de Björn (Oso): aturde lo que está cerca, lo deja expuesto y endurece la piel de Eromash.
 //   2 · Salto del lobo (Lobo): salta hacia la criatura de enfrente sin que nada lo toque y pega al caer.
 //   3 · Bandada (Cuervo): suelta cuervos que buscan a las criaturas cercanas, pican y las marcan.
-// Teclado 1 2 3, mando L2 + □ △ ○ (CONTROLES.COMBOS). Las casillas se suman a la barra con el hook `casillas`.
+// Con teclado van en casillas de la barra (hook `cosasBarra` de BARRA), con mando L2 + □ △ ○ (CONTROLES.COMBOS).
 // Textos `fu.` en textos/furia.js. Nada se guarda: la Furia arranca en 0 en cada partida.
 window.FURIA = (function () {
   "use strict";
@@ -276,8 +276,22 @@ window.FURIA = (function () {
       if (e.marcaHasta > J.t) k += MARCA;
       return dano * k;
     },
-    casillas() {
-      return IDS.filter(sabe).map((id) => ({ id: "hab_" + id, icono: "hab_" + id, accion: HAB[id].accion, nombre: t("ab." + id), listo: !puede(id), espera: (espera[id] || 0) / esperaDe(id) }));
+    cosasBarra() {
+      // cada habilidad es una casilla de la barra (BARRA): con teclado se usa con su número, con mando con L2 + □ △ ○
+      const o = {};
+      for (const id of IDS)
+        o["hab_" + id] = {
+          tipo: "habilidad",
+          icono: "hab_" + id,
+          avisa: true,
+          nombre: () => t("ab." + id),
+          desc: () => t("ab." + id + "_d", numeros(id, Math.max(1, rango(id)))),
+          tiene: () => sabe(id),
+          listo: () => !puede(id),
+          espera: () => (espera[id] || 0) / esperaDe(id),
+          usar: () => usar(id),
+        };
+      return o;
     },
     hud() {
       // la barra de la Furia, debajo de la estamina, solo si hay alguna habilidad aprendida
