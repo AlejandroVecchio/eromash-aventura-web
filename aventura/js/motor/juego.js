@@ -589,6 +589,7 @@
     CARGA_GIRO = 0.6;
   // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
   const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
+  if (window.ARMAS) ARMAS.tipo("espada", GOLPES_ESPADA); // la de siempre, también para la cuenta del daño por segundo
   const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
   // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
   function dirGolpe() {

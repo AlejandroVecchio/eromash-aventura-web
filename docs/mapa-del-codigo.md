@@ -220,7 +220,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
   - el filtro · el arcón · la pestaña · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
-  - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
+  - hachas · a dos manos · el daño por segundo de cada arma · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
 - **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)

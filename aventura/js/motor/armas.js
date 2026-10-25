@@ -33,9 +33,9 @@ window.ARMAS = (function () {
   // ---------- hachas ----------
   tipo("hacha", {
     combo: [
-      { wind: 0.1, swing: 0.16, rec: 0.24, arc: 2.0, reach: 82, dano: 19, empuje: 0.5, hacha: true },
-      { wind: 0.1, swing: 0.17, rec: 0.26, arc: 2.2, reach: 86, dano: 22, empuje: 0.55, hacha: true },
-      { wind: 0.2, swing: 0.13, rec: 0.36, arc: 1.2, reach: 104, dano: 40, empuje: 1.6, remate: true, grieta: true, hacha: true },
+      { wind: 0.1, swing: 0.16, rec: 0.24, arc: 2.0, reach: 82, dano: 17, empuje: 0.5, hacha: true },
+      { wind: 0.1, swing: 0.17, rec: 0.26, arc: 2.2, reach: 86, dano: 20, empuje: 0.55, hacha: true },
+      { wind: 0.2, swing: 0.13, rec: 0.36, arc: 1.2, reach: 104, dano: 37, empuje: 1.6, remate: true, grieta: true, hacha: true },
     ],
     giro: { wind: 0.14, swing: 0.06, rec: 0.22, arc: 0.01, reach: 1, dano: 0, lanzar: true },
     carrera: { wind: 0.05, swing: 0.16, rec: 0.28, arc: 1.4, reach: 100, dano: 26, avanza: 380, empuje: 1.5, hacha: true },
@@ -47,9 +47,9 @@ window.ARMAS = (function () {
   // barrido, contrabarrido y el golpe desde arriba que sacude el piso; cargado, el torbellino (TORBELLINO)
   const DOS_MANOS = {
     combo: [
-      { wind: 0.22, swing: 0.2, rec: 0.3, arc: 3.2, reach: 124, dano: 17, empuje: 0.9, peso: 1.8, dosManos: true },
-      { wind: 0.2, swing: 0.2, rec: 0.32, arc: 3.2, reach: 124, dano: 19, empuje: 0.9, peso: 1.8, dosManos: true },
-      { wind: 0.34, swing: 0.12, rec: 0.46, arc: 1.5, reach: 132, dano: 32, empuje: 2.2, remate: true, piso: true, peso: 2.4, dosManos: true },
+      { wind: 0.22, swing: 0.2, rec: 0.3, arc: 3.2, reach: 124, dano: 18, empuje: 0.9, peso: 1.8, dosManos: true },
+      { wind: 0.2, swing: 0.2, rec: 0.32, arc: 3.2, reach: 124, dano: 20, empuje: 0.9, peso: 1.8, dosManos: true },
+      { wind: 0.34, swing: 0.12, rec: 0.46, arc: 1.5, reach: 132, dano: 34, empuje: 2.2, remate: true, piso: true, peso: 2.4, dosManos: true },
     ],
     giro: { wind: 0, swing: 0.12, rec: 0.3, arc: Math.PI * 2, reach: 128, dano: 18, empuje: 1.4, giro: true, dosManos: true },
     carrera: { wind: 0.12, swing: 0.18, rec: 0.36, arc: 1.8, reach: 130, dano: 24, avanza: 360, empuje: 1.8, peso: 1.6, dosManos: true },
@@ -80,6 +80,25 @@ window.ARMAS = (function () {
   // otros sistemas pueden dejar la mano vacía (la lanza arrojada): ARMAS.sinArma(fn) con fn() → true mientras tanto
   const vacias = [];
   const manoVacia = () => !!vuelo || vacias.some((f) => f());
+  // ---------- el daño por segundo de cada arma ----------
+  // El combo de tres contra una sola criatura (lo que cuesta cada golpe: preparación, tajo y vuelta), por el daño de la
+  // pieza sobre 10 y su velocidad, y lo que cada tipo suma por su cuenta: el sangrado del hacha (un tercio de los
+  // golpes, 40 %), la quiebra del martillo y la punta de la lanza. Es la cuenta que muestra cada arma («≈ N por
+  // segundo») para compararlas; las armas que pegan a muchos (dos manos, arco, bastón) rinden más en grupo.
+  const EXTRA = { hacha: 1.13, martillo: 1.1, lanza: 1.15 };
+  const danoDe = (g) => g.dano || (g.disparo && g.disparo.dano) || (g.conjuro && g.conjuro.dano) || 0;
+  function dpsTipo(tp) {
+    const T = TIPOS[tp];
+    if (!T || !T.combo) return 0;
+    const tiempo = T.combo.reduce((n, g) => n + g.wind + g.swing + g.rec, 0),
+      dano = T.combo.reduce((n, g) => n + danoDe(g), 0);
+    return (dano / tiempo) * (EXTRA[tp] || 1);
+  }
+  function dps(it) {
+    const B = it && OBJETOS.BASES[it.b];
+    if (!B || !it.d) return 0;
+    return dpsTipo(B.tipo || "espada") * (it.d / 10) * (B.vel || 1);
+  }
   function golpes(def) {
     if (manoVacia()) return PUNOS;
     return TIPOS[tipoActual()] || def;
@@ -379,5 +398,5 @@ window.ARMAS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { tipo, poseDe: (id, fn) => (POSES[id] = fn), golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia, sinArma: (f) => vacias.push(f), lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
+  return { tipo, dps, dpsTipo, poseDe: (id, fn) => (POSES[id] = fn), golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia, sinArma: (f) => vacias.push(f), lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
 })();

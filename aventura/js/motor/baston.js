@@ -16,9 +16,9 @@ window.BASTON = (function () {
   const g = (o) => Object.assign({}, sin, o);
   ARMAS.tipo("baston", {
     combo: [
-      g({ wind: 0.14, swing: 0.04, rec: 0.18, mueve: 0.6, conjuro: { dano: 10 } }),
-      g({ wind: 0.14, swing: 0.04, rec: 0.18, mueve: 0.6, conjuro: { dano: 10 } }),
-      g({ wind: 0.22, swing: 0.04, rec: 0.3, mueve: 0.4, remate: true, conjuro: { dano: 12, estalla: 90, danoEstalla: 16 } }),
+      g({ wind: 0.14, swing: 0.04, rec: 0.18, mueve: 0.6, conjuro: { dano: 11 } }),
+      g({ wind: 0.14, swing: 0.04, rec: 0.18, mueve: 0.6, conjuro: { dano: 11 } }),
+      g({ wind: 0.22, swing: 0.04, rec: 0.3, mueve: 0.4, remate: true, conjuro: { dano: 13, estalla: 90, danoEstalla: 16 } }),
     ],
     giro: g({ wind: 0.12, swing: 0.04, rec: 0.3, mueve: 0.3, sello: true }),
     carrera: g({ wind: 0.02, swing: 0.04, rec: 0.12, mueve: 1, parpadeo: true }),

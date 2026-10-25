@@ -255,6 +255,8 @@ window.OBJETOS = (function () {
     const B = BASES[it.b],
       l = [];
     if (it.d) l.push({ txt: t("ob.l_dano", [String(it.d).replace(".", I18N.lang === "en" ? "." : ","), String(B.vel).replace(".", I18N.lang === "en" ? "." : ",")]), col: "#F2ECEC", grande: true });
+    // el daño por segundo del combo (motor/armas.js), para comparar armas de distinto tipo
+    if (it.d && window.ARMAS && window.ARMAS.dps && window.ARMAS.dps(it)) l.push({ txt: t("ob.l_dps", [Math.round(window.ARMAS.dps(it))]), col: "#FFD98A" }); // (ARMAS acá es la lista de slots)
     if (it.ar) l.push({ txt: t("ob.l_armadura", [it.ar]), col: "#F2ECEC", grande: true });
     // cómo pega cada tipo de arma (motor/armas.js)
     if (B.tipo) l.push({ txt: t("ar.rasgo_" + B.tipo), col: "#E0B2B2" });
