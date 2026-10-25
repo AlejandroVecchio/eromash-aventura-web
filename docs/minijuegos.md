@@ -38,7 +38,22 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 ## Las variaciones de los juegos de runas (`juegos-runas.js`)
 
-(próximamente)
+Parejas, la plegaria (Simón) y el verso escondido (Mastermind) siguen en su propio lienzo (`JUEGOS_RUNAS`), pero ahora
+aceptan `variante` en `JUEGOS_RUNAS.empezar(tipo, { variante })`. Las reglas viven en `JUEGOS_RUNAS.VARIANTES`:
+
+| Juego | Variante | Reglas |
+| --- | --- | --- |
+| parejas | `vistazo` | Se ven todas 2,4 s al empezar (sin poder tocar), 12 vueltas |
+| parejas | `maldita` | Cada tres fallos dos piedras tapadas de runas distintas se cambian (destello violeta), 18 vueltas |
+| simon | `reves` | La plegaria se repite del final al principio, 7 para ganar |
+| simon | `rapido` | 10 para ganar y se muestra 40 % más rápido |
+| mente | `repetidas` | El verso puede repetir runas (la respuesta cuenta cada runa una sola vez) |
+| mente | `largo` | Cinco runas y nueve intentos (las filas se aprietan solas) |
+
+**Dónde se usan**: cada hörgr tiene su rito (`SANTUARIOS.RITO`): Thor la plegaria ligera, Odín el verso con ecos, Tyr
+el verso largo, Freyja parejas de un vistazo, Frigg parejas maldita, Njörd la plegaria al revés y Ullr la plegaria de
+siempre. Ganarlo da la bendición fuerte sin ofrendar plata; perderlo no cuesta nada y se puede volver a probar mientras
+el dios no haya bendecido ese día. Probar mecánicas → Juegos lista cada variante.
 
 ## Las losas deslizantes
 

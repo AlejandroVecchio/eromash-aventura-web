@@ -108,6 +108,12 @@ window.PROBAR = (function () {
       id: "juegos",
       lista: () => [
         ...["parejas", "simon", "mente"].map((tipo) => ({ id: tipo, si: hay("JUEGOS_RUNAS"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo)) })),
+        // sus variantes (las que piden los hörgar)
+        ...(hay("JUEGOS_RUNAS") ? ["parejas", "simon", "mente"] : []).flatMap((tipo) =>
+          Object.keys(JUEGOS_RUNAS.VARIANTES[tipo])
+            .filter((v) => v !== "base")
+            .map((v) => ({ id: tipo + "_" + v, si: true, texto: t("pb." + tipo) + " · " + t("jr.v_" + tipo + "_" + v), sub: t("pb.jr_v_d"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo, { variante: v })) }))
+        ),
         {
           id: "holmr",
           si: hay("HOLMR") && !!HOLMR.centro(),

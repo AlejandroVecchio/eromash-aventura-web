@@ -33,14 +33,26 @@ window.JUEGOS_RUNAS = (function () {
     laguz: [[[-0.3, 1], [-0.3, -1], [0.45, -0.4]]],
     othala: [[[-0.55, 1], [0.45, 0.1], [0, -0.85], [-0.45, 0.1], [0.55, 1]]],
   };
+  // las variantes: el mismo juego con otras reglas (los hörgar las piden, Probar mecánicas las lista)
+  //   parejas: vistazo (se ven todas un instante al empezar, menos vueltas) · maldita (cada tres fallos dos piedras
+  //            tapadas se cambian de lugar, con un destello violeta)
+  //   simon:   reves (la plegaria se repite al revés) · rapido (más larga y más rápida)
+  //   mente:   repetidas (el verso puede repetir runas) · largo (cinco runas, nueve intentos)
+  const VARIANTES = {
+    parejas: { base: {}, vistazo: { vistazo: 2.4, vueltas: 12 }, maldita: { maldita: 3, vueltas: 18 } },
+    simon: { base: {}, reves: { reves: true, meta: 7 }, rapido: { rapido: 0.6, meta: 10 } },
+    mente: { base: {}, repetidas: { repetidas: true }, largo: { largo: 5, intentos: 9 } },
+  };
   const COLORES = ["#73D5DB", "#FFD98A", "#FF8D71", "#9A6BD8", "#7BC86C", "#F5A524", "#4A78D0", "#E0B2B2"];
 
   // ---------- empezar y terminar ----------
-  // tipo: parejas | simon | mente; op: { quien (nombre), x, y (para el sonido), fin(res) }
+  // tipo: parejas | simon | mente; op: { quien (nombre), variante, x, y (para el sonido), fin(res) }
   function empezar(tipo, op = {}) {
     if (!A || !ARMAR[tipo]) return false;
     crearLienzo();
-    S = { tipo, op, t: 0, fin: null, cur: 0, rnd: DIB.azar(Math.floor(Math.random() * 1e9)), luz: {}, modoAntes: J.modo === "menu" || J.modo === "dialogo" ? "juego" : J.modo };
+    const variante = VARIANTES[tipo][op.variante] ? op.variante : "base",
+      v = VARIANTES[tipo][variante];
+    S = { tipo, op, variante, v, vueltasMax: v.vueltas || VUELTAS, meta: v.meta || META, largo: v.largo || LARGO, intentos: v.intentos || INTENTOS, t: 0, fin: null, cur: 0, rnd: DIB.azar(op.semilla != null ? op.semilla : Math.floor(Math.random() * 1e9)), luz: {}, modoAntes: J.modo === "menu" || J.modo === "dialogo" ? "juego" : J.modo };
     ARMAR[tipo]();
     J.modo = "runas";
     lienzo.style.display = "block";
@@ -76,7 +88,7 @@ window.JUEGOS_RUNAS = (function () {
         const j = Math.floor(S.rnd() * (i + 1));
         [cartas[i], cartas[j]] = [cartas[j], cartas[i]];
       }
-      Object.assign(S, { cartas, abiertas: [], espera: 0, vueltas: 0, cols: 4 });
+      Object.assign(S, { cartas, abiertas: [], espera: 0, vueltas: 0, fallos: 0, vistazo: S.v.vistazo || 0, cols: 4 });
     },
     simon() {
       Object.assign(S, { sec: [], idx: 0, fase: "pausa", reloj: 0.9, muestra: 0, cols: 0 });
@@ -84,7 +96,9 @@ window.JUEGOS_RUNAS = (function () {
     },
     mente() {
       const de = Object.keys(RUNAS).sort(() => S.rnd() - 0.5).slice(0, 6);
-      const codigo = de.slice().sort(() => S.rnd() - 0.5).slice(0, LARGO).map((r) => de.indexOf(r));
+      const codigo = S.v.repetidas
+        ? Array.from({ length: S.largo }, () => Math.floor(S.rnd() * de.length))
+        : de.slice().sort(() => S.rnd() - 0.5).slice(0, S.largo).map((r) => de.indexOf(r));
       Object.assign(S, { de, codigo, filas: [], ahora: [], cols: 6 });
     },
   };
@@ -97,7 +111,7 @@ window.JUEGOS_RUNAS = (function () {
     if (!S || S.fin) return;
     if (S.tipo === "parejas") {
       const k = S.cartas[i];
-      if (!k || k.hecha || S.abiertas.includes(i) || S.espera > 0 || S.abiertas.length >= 2) return;
+      if (!k || k.hecha || S.abiertas.includes(i) || S.espera > 0 || S.vistazo > 0 || S.abiertas.length >= 2) return;
       S.abiertas.push(i);
       sonar(500 + Object.keys(RUNAS).indexOf(k.r) * 40, 0.15, "triangle");
       if (S.abiertas.length === 2) {
@@ -108,39 +122,41 @@ window.JUEGOS_RUNAS = (function () {
           S.abiertas = [];
           sonar(880, 0.3);
           if (S.cartas.every((q) => q.hecha)) terminar({ gano: true, vueltas: S.vueltas });
-        } else S.espera = 0.85;
+        } else (S.espera = 0.85), S.fallos++;
       }
     } else if (S.tipo === "simon") {
       if (S.fase !== "repite" || i < 0 || i > 3) return;
       S.luz[i] = 0.3;
-      if (S.sec[S.idx] !== i) {
+      const espera = S.v.reves ? S.sec[S.sec.length - 1 - S.idx] : S.sec[S.idx];
+      if (espera !== i) {
         sonar(110, 0.6, "sawtooth");
         return terminar({ gano: false, ronda: S.sec.length - 1 });
       }
       sonar(TONO_SIMON[i], 0.3);
       if (++S.idx >= S.sec.length) {
-        if (S.sec.length >= META) return terminar({ gano: true, ronda: S.sec.length });
+        if (S.sec.length >= S.meta) return terminar({ gano: true, ronda: S.sec.length });
         S.sec.push(Math.floor(S.rnd() * 4));
         Object.assign(S, { idx: 0, fase: "pausa", reloj: 0.8 });
       }
     } else if (S.tipo === "mente") {
       if (i < 0) return void S.ahora.pop();
-      if (i >= S.de.length || S.ahora.includes(i)) return;
+      if (i >= S.de.length || (!S.v.repetidas && S.ahora.includes(i))) return;
       S.ahora.push(i);
       sonar(440 + i * 60, 0.15, "triangle");
-      if (S.ahora.length === LARGO) probar();
+      if (S.ahora.length === S.largo) probar();
     }
   }
-  // mente: cuántas en su lugar y cuántas en otro
+  // mente: cuántas en su lugar y cuántas en otro (contando bien las repetidas: cada runa del verso vale una vez)
   function probar() {
     const g = S.ahora;
     const oro = g.filter((r, k) => S.codigo[k] === r).length,
-      blanco = g.filter((r, k) => S.codigo[k] !== r && S.codigo.includes(r)).length;
+      cuenta = (a, r) => a.filter((q) => q === r).length,
+      blanco = [...new Set(g)].reduce((n, r) => n + Math.min(cuenta(g, r), cuenta(S.codigo, r)), 0) - oro;
     S.filas.push({ g: g.slice(), oro, blanco });
     S.ahora = [];
-    sonar(oro === LARGO ? 880 : 520 + oro * 80, 0.25);
-    if (oro === LARGO) terminar({ gano: true, intentos: S.filas.length });
-    else if (S.filas.length >= INTENTOS) terminar({ gano: false, intentos: S.filas.length });
+    sonar(oro === S.largo ? 880 : 520 + oro * 80, 0.25);
+    if (oro === S.largo) terminar({ gano: true, intentos: S.filas.length });
+    else if (S.filas.length >= S.intentos) terminar({ gano: false, intentos: S.filas.length });
   }
 
   // ---------- el lienzo y el puntero ----------
@@ -163,6 +179,19 @@ window.JUEGOS_RUNAS = (function () {
       if (hit) (S.cur = Math.max(0, hit.i)), tocar(hit.i);
     });
   }
+  // mente: el alto de cada fila (con más intentos se aprietan para no pisar la fila de abajo)
+  const altoFila = () => Math.min(72, Math.floor(600 / S.intentos));
+  // parejas maldita: dos piedras tapadas se cambian de lugar
+  function maldecir() {
+    const tapadas = S.cartas.map((q, i) => i).filter((i) => !S.cartas[i].hecha);
+    if (tapadas.length < 4) return;
+    const a = tapadas.splice(Math.floor(S.rnd() * tapadas.length), 1)[0],
+      otras = tapadas.filter((i) => S.cartas[i].r !== S.cartas[a].r), // dos de la misma runa no cambiarían nada
+      b = otras[Math.floor(S.rnd() * otras.length)];
+    [S.cartas[a], S.cartas[b]] = [S.cartas[b], S.cartas[a]];
+    S.luz["c" + a] = S.luz["c" + b] = 0.9;
+    sonar(196, 0.5, "sawtooth");
+  }
   // dónde está cada cosa que se toca: { i, x, y, w, h }
   function casillas() {
     if (S.tipo === "parejas")
@@ -170,7 +199,7 @@ window.JUEGOS_RUNAS = (function () {
     if (S.tipo === "simon") return [[800, 250], [990, 440], [800, 630], [610, 440]].map(([x, y], i) => ({ i, x: x - 80, y: y - 80, w: 160, h: 160 }));
     const fila = S.de.map((r, i) => ({ i, x: 800 - 3 * 110 + i * 110 + 10, y: 760, w: 90, h: 90 }));
     // la fila que se está armando: tocarla saca la última
-    fila.push({ i: -1, x: 560, y: 150 + S.filas.length * 72, w: 4 * 72, h: 64 });
+    fila.push({ i: -1, x: 560, y: 150 + S.filas.length * altoFila(), w: S.largo * 72, h: 64 });
     return fila;
   }
 
@@ -196,7 +225,7 @@ window.JUEGOS_RUNAS = (function () {
           const p = S.sec[S.muestra++];
           S.luz[p] = 0.45;
           sonar(TONO_SIMON[p], 0.4);
-          S.reloj = Math.max(0.4, 0.68 - S.sec.length * 0.03);
+          S.reloj = Math.max(0.4, 0.68 - S.sec.length * 0.03) * (S.v.rapido || 1);
         }
       }
     } else {
@@ -206,9 +235,11 @@ window.JUEGOS_RUNAS = (function () {
       if (S.tipo === "parejas") {
         if (CONTROLES.recien("abajo")) S.cur = (S.cur + 4) % n;
         if (CONTROLES.recien("arriba")) S.cur = (S.cur + n - 4) % n;
+        if (S.vistazo > 0) S.vistazo -= dt;
         if (S.espera > 0 && (S.espera -= dt) <= 0) {
           S.abiertas = [];
-          if (S.vueltas >= VUELTAS) terminar({ gano: false, vueltas: S.vueltas });
+          if (S.v.maldita && S.fallos % S.v.maldita === 0) maldecir();
+          if (S.vueltas >= S.vueltasMax) terminar({ gano: false, vueltas: S.vueltas });
         }
       } else if (CONTROLES.recien("arriba")) tocar(-1);
       if (ok) tocar(S.cur);
@@ -257,7 +288,8 @@ window.JUEGOS_RUNAS = (function () {
     // el paño del juego en el piso
     P([180, 40, 1420, 40, 1420, 870, 180, 870], "#1A1412");
     texto(t("jr." + S.tipo), 220, 92, 34, "#FFD98A", "left", 800);
-    if (S.op.quien) texto(S.op.quien, 220, 124, 17, "#E0B2B2", "left", 500);
+    const sub = [S.op.quien, S.variante !== "base" ? t("jr.v_" + S.tipo + "_" + S.variante) : ""].filter(Boolean).join(" · ");
+    if (sub) texto(sub, 220, 124, 17, "#E0B2B2", "left", 500);
     DIBUJAR[S.tipo]();
     texto(t("jr.pie_" + (S.tipo === "simon" ? "simon" : S.tipo), [CONTROLES.glifo("interactuar"), CONTROLES.glifo("pausa"), CONTROLES.glifo("arriba")]), 800, 892, 16, "#E0B2B2", "center", 400);
     if (S.fin) {
@@ -271,7 +303,8 @@ window.JUEGOS_RUNAS = (function () {
     parejas() {
       casillas().forEach((q) => {
         const k = S.cartas[q.i],
-          abierta = k.hecha || S.abiertas.includes(q.i);
+          abierta = k.hecha || S.abiertas.includes(q.i) || S.vistazo > 0;
+        if (S.luz["c" + q.i] > 0) P([q.x - 10, q.y - 10, q.x + q.w + 10, q.y - 10, q.x + q.w + 10, q.y + q.h + 10, q.x - 10, q.y + q.h + 10], "#9A6BD8");
         if (q.i === S.cur) P([q.x - 6, q.y - 6, q.x + q.w + 6, q.y - 6, q.x + q.w + 6, q.y + q.h + 6, q.x - 6, q.y + q.h + 6], "#9C2315");
         if (abierta) {
           piedra(q.x, q.y, q.w, q.h, k.hecha ? "#4A4442" : "#6E6A66", k.hecha ? "#3A3634" : "#56524E");
@@ -281,7 +314,7 @@ window.JUEGOS_RUNAS = (function () {
           rombo(q.x + q.w / 2 + 6, q.y + q.h / 2, 16, "#9C2315");
         }
       });
-      texto(t("jr.vueltas", [S.vueltas, VUELTAS]), 1380, 92, 22, S.vueltas > VUELTAS - 3 ? "#FF8D71" : "#F2ECEC", "right");
+      texto(t("jr.vueltas", [S.vueltas, S.vueltasMax]), 1380, 92, 22, S.vueltas > S.vueltasMax - 3 ? "#FF8D71" : "#F2ECEC", "right");
     },
     simon() {
       casillas().forEach((q) => {
@@ -291,34 +324,36 @@ window.JUEGOS_RUNAS = (function () {
         runa(PIEDRAS_SIMON[q.i], q.x + q.w / 2, q.y + q.h / 2, lit ? 56 : 48, lit ? col : "#2A2220", 0.22);
         if (lit) DIB.alfa(c, 0.5, () => runa(PIEDRAS_SIMON[q.i], q.x + q.w / 2, q.y + q.h / 2, 58, "#F2ECEC", 0.06));
       });
-      texto(t("jr.ronda", [S.sec.length, META]), 1380, 92, 22, "#F2ECEC", "right");
-      texto(t(S.fase === "repite" ? "jr.simon_vos" : "jr.simon_mira"), 800, 840, 22, S.fase === "repite" ? "#7BC86C" : "#73D5DB", "center");
+      texto(t("jr.ronda", [S.sec.length, S.meta]), 1380, 92, 22, "#F2ECEC", "right");
+      texto(t(S.fase === "repite" ? (S.v.reves ? "jr.simon_vos_reves" : "jr.simon_vos") : "jr.simon_mira"), 800, 840, 22, S.fase === "repite" ? "#7BC86C" : "#73D5DB", "center");
     },
     mente() {
       // las filas jugadas y la de ahora
-      for (let f = 0; f < INTENTOS; f++) {
-        const y = 150 + f * 72,
+      const af = altoFila(),
+        xr = 590 + S.largo * 72; // dónde van los rombos de la respuesta
+      for (let f = 0; f < S.intentos; f++) {
+        const y = 150 + f * af,
           fila = S.filas[f],
           ahora = f === S.filas.length;
         P([560, y, 1200, y, 1200, y + 64, 560, y + 64], ahora ? "#2A2220" : "#161210");
-        for (let s = 0; s < LARGO; s++) {
+        for (let s = 0; s < S.largo; s++) {
           const r = fila ? fila.g[s] : ahora ? S.ahora[s] : null;
           const x = 576 + s * 72;
           P([x, y + 7, x + 56, y + 7, x + 56, y + 57, x, y + 57], "#3A3634");
           if (r != null) runa(S.de[r], x + 28, y + 32, 20, COLORES[r], 0.22);
         }
         if (fila) {
-          for (let p = 0; p < LARGO; p++) {
+          for (let p = 0; p < S.largo; p++) {
             const col = p < fila.oro ? "#FFD98A" : p < fila.oro + fila.blanco ? "#F2ECEC" : "#3A3634";
-            rombo(890 + (p % 2) * 26, y + 20 + Math.floor(p / 2) * 24, 9, col);
+            rombo(xr + Math.floor(p / 2) * 26, y + 20 + (p % 2) * 24, 9, col);
           }
           texto(t("jr.mente_dice", [fila.oro, fila.blanco]), 1186, y + 38, 15, "#E0B2B2", "right", 500);
         }
       }
-      texto(t("jr.intentos", [S.filas.length, INTENTOS]), 1380, 92, 22, "#F2ECEC", "right");
+      texto(t("jr.intentos", [S.filas.length, S.intentos]), 1380, 92, 22, "#F2ECEC", "right");
       // las seis runas para elegir
       casillas().filter((q) => q.i >= 0).forEach((q) => {
-        const usada = S.ahora.includes(q.i);
+        const usada = !S.v.repetidas && S.ahora.includes(q.i);
         if (q.i === S.cur) P([q.x - 5, q.y - 5, q.x + q.w + 5, q.y - 5, q.x + q.w + 5, q.y + q.h + 5, q.x - 5, q.y + q.h + 5], "#9C2315");
         piedra(q.x, q.y, q.w, q.h, usada ? "#3A3634" : "#6E6A66", usada ? "#2A2220" : "#56524E");
         runa(S.de[q.i], q.x + q.w / 2, q.y + q.h / 2, 28, usada ? "#56524E" : COLORES[q.i], 0.22);
@@ -346,6 +381,7 @@ window.JUEGOS_RUNAS = (function () {
     activo: () => !!S,
     estado: () => S,
     RUNAS,
+    VARIANTES,
     VUELTAS,
     META,
     INTENTOS,
