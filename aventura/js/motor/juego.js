@@ -410,7 +410,7 @@
     for (const r of REVELA)
       if (r.cond() && dist(jug, r.p) <= r.radio) {
         algo = true;
-        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0 }, m)));
+        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0, dura: 33 }, m)));
         setTimeout(r.al, 450);
       }
     SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
@@ -1231,8 +1231,8 @@
     if (J.modo === "juego" && !n.hablando) dibujarSenal(n);
   }
   function dibujarMarca(m) {
-    // las de la Lente duran 33 s; las de un efecto (la columna rúnica) traen su dura y se apagan en su último tercio
-    const dura = m.dura || 33,
+    // las de la Lente (REVELA) duran 33 s; los anillos de un efecto (columna rúnica, viaje, cofre, piedra) se apagan solos en un par de segundos
+    const dura = m.dura || 2.4,
       fin = Math.min(3, dura / 3);
     const a = Math.min(1, m.t * 2) * (m.t > dura - fin ? Math.max(0, (dura - m.t) / fin) : 1);
     if (a <= 0) return;
@@ -2046,7 +2046,7 @@
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));
-      J.marcas = J.marcas.filter((m) => m.t < (m.dura || 33));
+      J.marcas = J.marcas.filter((m) => m.t < (m.dura || 2.4));
       J.ondas.forEach((o) => (o.t += dt));
       J.ondas = J.ondas.filter((o) => o.t < (o.tipo === "pulso" ? 0.8 : 8));
       J.fx.forEach((f) => {
