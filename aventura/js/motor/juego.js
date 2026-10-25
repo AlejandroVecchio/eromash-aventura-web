@@ -427,7 +427,12 @@
     mostrarLinea();
   }
   // diálogo armado por un sistema: lineas = [[quien, clave completa, variables]], alFin al cerrar
+  // si se abre desde un menú (las reglas de los dados, un maestro), el menú se esconde para que la charla quede adelante
+  // y sin alFin vuelve al terminar
   function dialogoLibre(lineas, alFin) {
+    const volver = HUD.hayMenu() ? HUD.ultimo() : null;
+    if (volver) HUD.cerrar();
+    if (volver && !alFin) alFin = () => J.modo === "juego" && (J.modo = "menu", HUD.abrir(volver.html, volver.botones, volver.op));
     dlg = { id: "_libre", d: { lineas, libre: true, alFin }, i: 0 };
     J.modo = "dialogo";
     mostrarLinea();
