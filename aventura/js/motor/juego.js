@@ -427,7 +427,7 @@
     mostrarLinea();
   }
   // diálogo armado por un sistema: lineas = [[quien, clave completa, variables]], alFin al cerrar
-  // si se abre desde un menú (las reglas de los dados, un maestro), el menú se esconde para que la charla quede adelante
+  // si se abre desde un menú (las charlas de un maestro, unas reglas), el menú se esconde para que la charla quede adelante
   // y sin alFin vuelve al terminar
   function dialogoLibre(lineas, alFin) {
     const volver = HUD.hayMenu() ? HUD.ultimo() : null;
