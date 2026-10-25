@@ -121,6 +121,25 @@
   #iaChat p.error { border-left-color: #C8402D; }
   #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
+  /* subir un boceto de mapa (U): arriba a la derecha del mapa */
+  #boPanel { position: absolute; right: 352px; top: 12px; width: min(400px, calc(100vw - 32px)); max-height: calc(100% - 60px); overflow: auto; background: #1C1714; border: 1px solid #7BC86C; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
+  #boPanel .cab b { color: #7BC86C; }
+  #boPanel small, #boPanel li, #boPanel summary { font-size: 12.5px; line-height: 1.4; color: #D8CCC8; }
+  #boPanel summary { cursor: pointer; color: #FFD98A; font-size: 13px; }
+  #boPanel ul { margin: 6px 0 0; padding-left: 18px; }
+  #boLeyenda { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; margin-top: 6px; }
+  #boLeyenda span { display: flex; gap: 6px; align-items: center; font-size: 12.5px; }
+  #boLeyenda i { width: 14px; height: 14px; flex: none; }
+  #boVista { width: 100%; height: 200px; background: #111111; border: 1px solid #4A3630; display: block; }
+  #boVacio { font-size: 13px; color: #B5A5A0; text-align: center; padding: 18px 8px; border: 1px dashed #4A3630; }
+  #boChequeo { list-style: none; padding: 0 !important; margin: 0 !important; }
+  #boChequeo li.ok { color: #7BC86C; }
+  #boChequeo li.mal { color: #FF8D71; }
+  #boPanel textarea { font: inherit; font-size: 13px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 8px; resize: vertical; }
+  #boPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+  #boPanel .listo { background: #9C2315; border-color: #C8402D; }
+  #boIA.activo { background: #2A4A6A; border-color: #73D5DB; color: #F2ECEC; }
+  #boIAQuien { white-space: pre-wrap; }
   .herr .ancho3 { grid-column: 1 / -1; }
   .herr .ancho2 { grid-column: span 2; }
   /* el generador de texturas: arriba a la izquierda, debajo del minimapa */
@@ -223,10 +242,10 @@
   @media (max-width: 760px) { #cuartos { grid-template-columns: 1fr; grid-template-rows: 55% 45%; } }
   body.foco .ed { grid-template-columns: minmax(0, 1fr); }
   body.foco aside, body.foco #ayuda { display: none; }
-  body.foco #revision, body.foco #iaPanel { right: 12px; }
+  body.foco #revision, body.foco #iaPanel, body.foco #boPanel { right: 12px; }
   @media (max-width: 760px) {
     #mini { display: none; }
-    #revision, #iaPanel { right: 12px; }
+    #revision, #iaPanel, #boPanel { right: 12px; }
     #txPanel { top: 12px; max-height: calc(55% - 24px); }
     .ed { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
     aside { border-left: 0; border-top: 1px solid #3A2A26; }
@@ -262,6 +281,7 @@
       <button id="hTexturas" data-tecla="Y" data-i18n="ed.texturas"></button>
       <button id="hZonas" data-tecla="M" data-i18n="ed.zonas"></button>
       <button id="hNpc" data-tecla="N" data-i18n="ed.importar"></button>
+      <button id="hBoceto" data-tecla="U" data-i18n="ed.bo_boton"></button>
     </div>
     <div id="camPanel" class="oculto">
       <b id="camTitulo"></b>
@@ -510,6 +530,40 @@
   <div id="iaOtra" class="oculto"><textarea id="iaRespuesta" rows="3" data-i18n-ph="ed.ia_pegar"></textarea><div class="botones"><button id="iaLeer" class="listo" data-i18n="ed.ia_leer"></button></div></div>
   <div id="iaPropuesta" class="oculto"><b id="iaResumen"></b><div class="botones"><button id="iaDescartar" data-i18n="ed.ia_descartar"></button><button id="iaAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
 </div>
+<div id="boPanel" class="oculto">
+  <div class="cab"><b data-i18n="ed.bo_titulo"></b><button id="boCerrar" data-i18n="ed.cerrar"></button></div>
+  <details id="boReglas" open>
+    <summary data-i18n="ed.bo_reglas"></summary>
+    <ul><li data-i18n="ed.bo_r1"></li><li data-i18n="ed.bo_r2"></li><li data-i18n="ed.bo_r3"></li><li data-i18n="ed.bo_r4"></li><li data-i18n="ed.bo_r5"></li><li data-i18n="ed.bo_r6"></li><li data-i18n="ed.bo_r7"></li></ul>
+    <div id="boLeyenda">
+      <span><i style="background:#4A78D0"></i><em data-i18n="ed.bo_l_agua"></em></span>
+      <span><i style="background:#111111;border:1px solid #4A3630"></i><em data-i18n="ed.bo_l_trazo"></em></span>
+      <span><i style="background:#7A4A26"></i><em data-i18n="ed.bo_l_marron"></em></span>
+      <span><i style="background:#3E7A3A"></i><em data-i18n="ed.bo_l_bosque"></em></span>
+      <span><i style="background:#C8402D"></i><em data-i18n="ed.bo_l_casa"></em></span>
+      <span><i style="background:#FFD98A"></i><em data-i18n="ed.bo_l_claro"></em></span>
+      <span><i style="background:#FF8D71"></i><em data-i18n="ed.bo_l_fuego"></em></span>
+      <span><i style="background:#9A6BD8"></i><em data-i18n="ed.bo_l_runa"></em></span>
+      <span><i style="background:#646A64"></i><em data-i18n="ed.bo_l_rocas"></em></span>
+    </div>
+  </details>
+  <input id="boArchivo" type="file" accept="image/*" class="oculto" />
+  <div class="botones"><button id="boElegir" class="listo" data-i18n="ed.bo_elegir"></button></div>
+  <div id="boVacio" data-i18n="ed.bo_vacio"></div>
+  <canvas id="boVista" width="376" height="200"></canvas>
+  <label><input id="boVerLeido" type="checkbox" checked /> <small data-i18n="ed.bo_ver_leido"></small></label>
+  <ul id="boChequeo"></ul>
+  <div class="fila"><span data-i18n="ed.bo_ancho"></span><input id="boAncho" type="range" min="60" max="800" step="10" value="200" /><b id="boAnchoV"></b></div>
+  <div class="fila"><span data-i18n="ed.bo_densidad"></span><input id="boDensidad" type="range" min="0.3" max="2.5" step="0.1" value="1" /><b id="boDensidadV"></b></div>
+  <label><input id="boDespejar" type="checkbox" checked /> <small data-i18n="ed.bo_despejar"></small></label>
+  <div class="botones"><button id="boCentrar" data-i18n="ed.bo_centrar"></button><button id="boLeerDeNuevo" data-i18n="ed.bo_releer"></button><button id="boIA" data-i18n="ed.bo_ia_off"></button></div>
+  <div id="boFilaIA" class="oculto">
+    <small id="boIAQuien"></small>
+    <textarea id="boPedido" rows="2" data-i18n-ph="ed.bo_pedido_ph"></textarea>
+    <div class="botones"><button id="boGenerar" class="listo" data-i18n="ed.bo_generar"></button></div>
+  </div>
+  <div id="boPropuesta" class="oculto"><small id="boResumen"></small><div class="botones"><button id="boDescartar" data-i18n="ed.ia_descartar"></button><button id="boAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
+</div>
 <div id="txPanel" class="oculto">
   <div class="cab"><b data-i18n="ed.tx_titulo"></b><span><button id="txVolver" data-i18n="ed.tx_volver"></button> <button id="txCerrar" data-i18n="ed.cerrar"></button></span></div>
   <div class="txArriba">
@@ -626,5 +680,6 @@
 <script src="js/editor/zonas.js"></script>
 <script src="js/editor/npcs.js"></script>
 <script src="js/editor/importar.js"></script>
+<script src="js/editor/boceto.js"></script>
 </body>
 </html>

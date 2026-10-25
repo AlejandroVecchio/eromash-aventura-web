@@ -147,6 +147,7 @@
     iguales: ["ed.sel_iguales", "", () => elegirIguales()],
     pieza: ["ed.pieza_guardar", "", () => $("bPieza").click()],
     ia: ["ed.sig_ia", "8", () => window.EDITOR_IA && EDITOR_IA.abrir()],
+    boceto: ["ed.bo_titulo", "U", () => window.EDITOR_BOCETO && EDITOR_BOCETO.abrir()],
     interior: ["ed.sel_interior", "9", () => $("selInterior").click()],
     girar: ["ed.sig_girar", "Q · E", null],
     vuelta: ["ed.sig_vuelta", "F", () => darVuelta()],
@@ -767,6 +768,7 @@
     if (window.EDITOR_PINCEL) EDITOR_PINCEL.dibujar(c, cam, V, cursor, tt);
     if (window.EDITOR_HISTORIA) EDITOR_HISTORIA.dibujar(c, cam, V);
     if (window.EDITOR_ZONAS) EDITOR_ZONAS.dibujar(c, cam, V, tt);
+    if (window.EDITOR_BOCETO) EDITOR_BOCETO.dibujar(c, cam, V, tt);
     if (window.EDITOR_NPC) EDITOR_NPC.dibujar(c, cam, V, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
@@ -2804,6 +2806,7 @@
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.tecla(e)) return e.preventDefault();
+    if (window.EDITOR_BOCETO && EDITOR_BOCETO.tecla(e)) return e.preventDefault();
     if ((e.key === "m" || e.key === "M") && !ctrl) return window.EDITOR_ZONAS && EDITOR_ZONAS.abrir();
     if ((e.key === "n" || e.key === "N") && !ctrl) return window.EDITOR_NPC && EDITOR_NPC.alternar();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida(), (elegida.a || elegida.cosa).x, (elegida.a || elegida.cosa).y) : null);
@@ -3203,6 +3206,9 @@
         nuevos.push(n);
       });
       (ops.caminos || []).forEach((cm) => est.caminos.push({ p: cm.p.map(rp), w: r1(cm.w || 110), tipo: cm.tipo || "tierra", borde: cm.borde || "pasto", fundir: !!cm.fundir }));
+      // agua nueva (el boceto): ríos { p, w } y lagunas { x, y, rx, ry }
+      (ops.rios || []).forEach((rr) => est.rios.push({ p: rr.p.map(rp), w: r1(rr.w || 300) }));
+      (ops.lagos || []).forEach((l) => est.lagos.push({ x: r1(l.x), y: r1(l.y), rx: r1(l.rx), ry: r1(l.ry) }));
       (ops.quitar || []).forEach((q) => {
         if (q.u) {
           const i = est.poner.findIndex((a) => a.u === q.u);

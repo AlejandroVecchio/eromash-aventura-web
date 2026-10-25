@@ -129,6 +129,8 @@ window.EDITOR_IA = (function () {
 
   // ---------- llamar a cada IA ----------
   // sistema: las instrucciones (las del mapa si no se dice otra cosa; las texturas mandan las suyas)
+  // el contenido de un mensaje para Gemini: texto, o una lista como la de Claude (texto e imágenes, como el boceto)
+  const partes = (ct) => (Array.isArray(ct) ? ct.map((p) => (p.type === "image" ? { inline_data: { mime_type: p.source.media_type, data: p.source.data } } : { text: p.text || "" })) : [{ text: ct }]);
   async function llamar(quien, modelo, clave, mensajes, sistema = SISTEMA) {
     if (quien === "claude") {
       const conRespaldo = /^claude-(opus-5-5|opus-5|fable-5-1|sonnet-5-5)$/.test(modelo),
@@ -161,7 +163,7 @@ window.EDITOR_IA = (function () {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": clave },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })) }),
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: partes(m.content) })) }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
@@ -314,5 +316,5 @@ window.EDITOR_IA = (function () {
   pintarConf();
   // para otros módulos (texturas): la misma IA, modelo y clave que eligió acá
   const elegida = () => ({ quien: conf.quien, modelo: conf.modelos[conf.quien] || MODELOS[conf.quien], clave: conf.claves[conf.quien] || "", claves: conf.claves });
-  return { abrir, cerrar, alternar, abierta, dibujar, llamar, elegida };
+  return { abrir, cerrar, alternar, abierta, dibujar, llamar, elegida, catalogo };
 })();

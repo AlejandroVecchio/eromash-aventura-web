@@ -1089,6 +1089,25 @@ window.VIDA = (function () {
     const s = secretoCerca(6000);
     if (s && soltarGuia(s)) HUD.aviso(t("vd.fresno_eco"), "lugar", t("vd.fresno_guia"));
     else HUD.aviso(t("vd.fresno_nada"), "#73D5DB");
+    // la primera vez Eromash aprende a llamar al eco solo: el conocimiento «Saber del bosque» va a la barra de abajo
+    if (!st.saber) {
+      st.saber = true;
+      if (window.BARRA) {
+        BARRA.recibido("saber");
+        J.retrasar(2.4, () => HUD.aviso(t("bar.aprendiste", [t("bar.saber"), BARRA.glifoDe("saber")]), "#73D5DB"));
+      }
+    }
+  }
+  // el conocimiento «Saber del bosque», desde la barra: el fuego guía va al secreto más cercano, de donde sea
+  function guiar() {
+    const s = secretoCerca(6000);
+    if (s && soltarGuia(s)) {
+      evento("runa", jug.x, jug.y, { runa: "ansuz" });
+      HUD.aviso(t("bar.saber_guia"), "#73D5DB");
+      return true;
+    }
+    HUD.aviso(t("vd.fresno_nada"), "#73D5DB");
+    return false;
   }
   function entrarAnillo(m, noche) {
     if (!noche) return HUD.aviso(t("vd.anillo_duermen"), "#8CF0B4");
@@ -1122,6 +1141,8 @@ window.VIDA = (function () {
   const lugares = () => MISTICOS.map((m) => ({ id: m.id, x: m.cosa.x, y: m.cosa.y, hecho: m.id === "pozaEstrellas" ? st.poza : false }));
   return {
     evento,
+    guiar,
+    sabe: () => !!st.saber,
     nubes,
     niebla,
     lugares,

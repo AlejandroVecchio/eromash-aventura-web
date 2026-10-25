@@ -116,38 +116,53 @@ window.HUD = (function () {
       INVENTARIO.icono($("hIcFrag").getContext("2d"), "fragmento", 18, 18, 0.5);
     }
   }
-  // la barra de acciones, abajo al centro: cada casilla con su ícono, su tecla y si está lista
-  // casillas = [{ id, icono, accion, nombre, listo (bool), espera (0..1), grande, col, runa }]
+  // la barra de abajo al centro: las seis casillas que llena el jugador (habilidades, objetos, herramientas y
+  // conocimientos, ver interfaz/barra.js) y la mochila. Atacar, esquivar o saltar no van: son lo básico.
+  // casillas = [{ id, icono | runa, col, tecla, nombre, vacia, elegida, listo, espera (0..1), energia (0..1), cant,
+  //   usar (fn al tocarla), chica }]
   let barraClave = "";
   function barra(casillas) {
     const el = $("hudBarra");
-    const clave = casillas.map((q) => q.id + ":" + (q.runa || q.icono) + ":" + (q.nivel || 0) + ":" + CONTROLES.glifo(q.accion)).join("|") + I18N.lang + (window.INVENTARIO ? INVENTARIO.version() : 0);
+    const clave = casillas.map((q) => q.id + ":" + (q.vacia ? "-" : q.runa || q.icono) + ":" + (q.nivel || 0) + ":" + q.tecla + ":" + (q.energia != null)).join("|") + I18N.lang + (window.INVENTARIO ? INVENTARIO.version() : 0);
     if (clave !== barraClave) {
       barraClave = clave;
-      casillas.forEach((q) => ["ap", "es", "en"].forEach((p) => delete ultimo[p + q.id]));
+      casillas.forEach((q) => ["ap", "es", "en", "el", "ca"].forEach((p) => delete ultimo[p + q.id]));
       el.innerHTML = casillas
-        .map((q) => `<div class="casilla${q.grande ? " grande" : ""}" id="c_${q.id}"><canvas width="${q.grande ? 128 : 96}" height="${q.grande ? 128 : 96}"></canvas><i class="espera"></i><span class="tecla">${CONTROLES.glifo(q.accion)}</span><small>${q.nombre}</small>${q.grande ? '<b class="poder"><i></i></b>' : ""}</div>`)
+        .map((q) => `<div class="casilla${q.vacia ? " vacia" : ""}${q.chica ? " chica" : ""}" id="c_${q.id}"><canvas width="96" height="96"></canvas><i class="espera"></i><span class="tecla"></span><b class="cant"></b><small></small>${q.energia != null ? '<b class="poder"><i></i></b>' : ""}</div>`)
         .join("");
       casillas.forEach((q) => {
-        const cv = el.querySelector("#c_" + q.id + " canvas"),
-          c = cv.getContext("2d"),
-          k = cv.width / 96;
-        if (q.id === "runa") {
+        const d = $("c_" + q.id),
+          cv = d.querySelector("canvas"),
+          c = cv.getContext("2d");
+        d.querySelector(".tecla").textContent = q.tecla || "";
+        d.querySelector(".tecla").classList.toggle("oculto", !q.tecla);
+        d.querySelector("small").textContent = q.nombre || "";
+        if (q.runa) {
           c.fillStyle = "#1A1614";
           c.beginPath();
-          c.moveTo(48 * k, 6 * k);
-          c.lineTo(90 * k, 48 * k);
-          c.lineTo(48 * k, 90 * k);
-          c.lineTo(6 * k, 48 * k);
+          c.moveTo(48, 6);
+          c.lineTo(90, 48);
+          c.lineTo(48, 90);
+          c.lineTo(6, 48);
           c.closePath();
           c.fill();
-          if (q.runa) FUTHARK.dibujar(c, q.runa, 48 * k, 70 * k, 46 * k, q.col, 5 * k);
-        } else if (window.INVENTARIO) INVENTARIO.icono(c, q.icono, 48 * k, 48 * k, 1.2 * k, q.nivel);
-        if (q.id === "mochila") {
-          const d = el.querySelector("#c_mochila");
+          FUTHARK.dibujar(c, q.runa, 48, 70, 46, q.col, 5);
+        } else if (q.vacia) {
+          // la casilla libre: un rombo hueco que invita a llenarla desde la mochila
+          c.strokeStyle = "rgba(224,178,178,0.25)";
+          c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(48, 26);
+          c.lineTo(70, 48);
+          c.lineTo(48, 70);
+          c.lineTo(26, 48);
+          c.closePath();
+          c.stroke();
+        } else if (window.INVENTARIO) INVENTARIO.icono(c, q.icono, 48, 48, 1.2, q.nivel);
+        if (q.usar) {
           d.style.pointerEvents = "auto";
           d.style.cursor = "pointer";
-          d.addEventListener("click", () => window.INVENTARIO && INVENTARIO.abrir("equipo"));
+          d.addEventListener("click", q.usar);
         }
       });
     }
@@ -155,10 +170,12 @@ window.HUD = (function () {
       const d = $("c_" + q.id);
       if (!d) return;
       // solo se toca el DOM cuando algo cambió (cada escritura obliga a recalcular estilos)
-      if (cambia("ap" + q.id, !q.listo)) d.classList.toggle("apagada", !q.listo);
+      if (cambia("ap" + q.id, !q.listo && !q.vacia)) d.classList.toggle("apagada", !q.listo && !q.vacia);
+      if (cambia("el" + q.id, !!q.elegida)) d.classList.toggle("elegida", !!q.elegida);
       const f = Math.round(Math.max(0, Math.min(1, q.espera || 0)) * 200) / 200;
       if (cambia("es" + q.id, f)) d.querySelector(".espera").style.setProperty("--f", f);
-      if (q.grande && cambia("en" + q.id, Math.round((q.energia || 0) * 100))) d.querySelector(".poder i").style.width = Math.round((q.energia || 0) * 100) + "%";
+      if (cambia("ca" + q.id, q.cant == null ? "" : String(q.cant))) d.querySelector(".cant").textContent = q.cant == null ? "" : q.cant;
+      if (q.energia != null && cambia("en" + q.id, Math.round(q.energia * 100))) d.querySelector(".poder i").style.width = Math.round(q.energia * 100) + "%";
     });
   }
   function jugador(hp, hpMax, sta, staMax, cansado) {
