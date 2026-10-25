@@ -203,3 +203,6 @@
 .el-fila.apagada { opacity: 0.6; }
 .el-fila .el-par { margin-left: 8px; font-size: 0.9em; }
 .el-fila .el-d { margin-top: 3px; font-size: 0.88em; color: #C8C0B8; }
+/* la hólmganga (motor/holmr.js) */
+.hm-reglas{font-size:.86em;color:#E0B2B2;border-left:3px solid #C8402D;padding-left:8px}
+.hm-premio{color:#FFD98A;font-weight:800}

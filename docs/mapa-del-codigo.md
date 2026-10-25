@@ -173,6 +173,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - Lobo del zarzal · Errante de Helheim · Custodio de corteza · Ciervo Hueco (jefe)
 - **dreki.js**: el dreki (se suma a CRIATURAS)
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
+- **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
@@ -274,6 +275,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
+- **holmr.js**: la hólmganga: duelos en la piel (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo · el sistema
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
@@ -365,6 +368,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
+- **assets-holmr.js**: el hólmr: la piel del duelo (assets de HOLMR)
+  - assets: holmrPiel, holmrVara, bancoTestigos
 - **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
   - assets: munecoPractica
 - **assets-interiores.js**: los muebles de adentro (interiores)
@@ -456,6 +461,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
+- **holmr.js**: Textos de la hólmganga (motor/holmr.js, enemigos/kempur.js, mundo/assets-holmr.js): prefijo hm. (y as., cr.kempa,
 - **instructores.js**: Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
