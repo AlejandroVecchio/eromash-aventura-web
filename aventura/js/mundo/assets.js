@@ -1275,6 +1275,18 @@ window.ASSETS = (function () {
   // lo que es plano se arma solo con su dibujo de siempre: en el piso (calco: manchas, charcos, alfombras, rastros) o
   // parado en un plano de dos caras (carta: lo que es una lámina, como un arco de astas o una tela); de canto no se ve
   const calcoV = (f) => (c, x, y, t, o) => VOL.calco(c, VOL.pr(x, y, o), (cc) => f(cc, 0, 0, t, Object.assign({}, o, { s: 1 })));
+  // lo que se dibuja de costado (animales): mira hacia donde mira en el mundo, visto con la cámara (se da vuelta)
+  const ladoV = (f) => (c, x, y, t, o) => {
+    const [dx] = VOL.girar(o.esp ? -1 : 1, 0, VOL.fiDe(o)),
+      v = Object.assign({}, o, { esp: false, fi: 0 });
+    if (dx >= 0) return f(c, x, y, t, v);
+    c.save();
+    c.translate(x, 0);
+    c.scale(-1, 1);
+    c.translate(-x, 0);
+    f(c, x, y, t, v);
+    c.restore();
+  };
   const cartaV = (f, ancho, alto) => (c, x, y, t, o) =>
     VOL.plano(c, VOL.pr(x, y, o), -ancho / 2, ancho / 2, 0, 0, alto, null, (cc, l, h) => VOL.sinSombra(() => f(cc, l / 2, 0, t, Object.assign({}, o, { s: 1 }))));
   // el poste de cruce: el palo, la punta y una tabla con flecha hacia cada camino (o.dirs: ángulos en el mundo)
@@ -1969,5 +1981,5 @@ window.ASSETS = (function () {
   function catalogo() {
     return Object.keys(LISTA).map((id) => ({ id, grupo: LISTA[id].grupo, alto: LISTA[id].alto, ejemplo: EJEMPLO[id] || {} }));
   }
-  return { LISTA, C, dibujar, medidas, catalogo, EJEMPLO, calcoV, cartaV };
+  return { LISTA, C, dibujar, medidas, catalogo, EJEMPLO, calcoV, cartaV, ladoV };
 })();
