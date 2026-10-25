@@ -47,6 +47,7 @@ I18N.textos({
   "av.nombre_eromash": { es: "Eromash", en: "Eromash" },
   "av.nombre_runa": { es: "Runa", en: "Rune" },
   "av.nombre_trabajador": { es: "Trabajador", en: "Worker" },
+  "av.nombre_guardia": { es: "Guardia de Eikholt", en: "Eikholt guard" },
   "av.nombre_ciervo": { es: "El Ciervo Hueco", en: "The Hollow Stag" },
   "av.mision_EL-01": { es: "El camino que dejó de ser seguro", en: "The road that is no longer safe" },
   "av.mision_EL-02": { es: "Una voz bajo la piedra", en: "A voice beneath the stone" },

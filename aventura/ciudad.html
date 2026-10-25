@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eromash · Eikholt</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #111; color: #F2ECEC; font-family: "DM Sans", system-ui, sans-serif; overflow: hidden; }
+  canvas { display: block; touch-action: none; }
+  #panel { position: fixed; left: 12px; top: 12px; width: 300px; background: rgba(17,17,17,0.86); padding: 14px; box-sizing: border-box; border: 1px solid #5E130D; }
+  #panel h1 { font-size: 17px; margin: 0 0 6px; color: #FFD98A; }
+  #panel p { font-size: 12px; color: #E0B2B2; margin: 0 0 10px; line-height: 1.4; }
+  label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin: 6px 0; gap: 8px; }
+  input[type=range] { flex: 1; }
+  button { font: inherit; font-size: 12px; background: #2A1E1A; color: #F2ECEC; border: 1px solid #5E130D; padding: 5px 8px; margin: 3px 3px 3px 0; cursor: pointer; }
+  button:hover { background: #9C2315; }
+  @media (max-width: 600px) { #panel { width: calc(100% - 24px); } }
+</style>
+</head>
+<body>
+<canvas id="vista"></canvas>
+<div id="panel">
+  <h1 id="tTitulo"></h1>
+  <p id="tTexto"></p>
+  <label><span id="tGiro"></span><input id="giro" type="range" min="-180" max="180" value="-28" /></label>
+  <label><span id="tAltura"></span><input id="altura" type="range" min="40" max="100" value="55" /></label>
+  <label><span id="tCerca"></span><input id="cerca" type="range" min="4" max="120" value="40" /></label>
+  <label><span id="tHora"></span><input id="hora" type="range" min="0" max="24" step="0.25" value="17.5" /><span id="vHora" style="min-width:36px;text-align:right"></span></label>
+  <label><span id="tGirar"></span><input id="girar" type="checkbox" /></label>
+  <div id="lugares"></div>
+</div>
+<script src="../juego/js/comun/calidad.js"></script>
+<script src="../juego/js/comun/i18n.js"></script>
+<script src="js/textos/aventura.js"></script>
+<script src="js/textos/capital.js"></script>
+<script src="js/textos/ciudad.js"></script>
+<script src="js/textos/eikholt.js"></script>
+<script src="../juego/js/comun/vikingos.js"></script>
+<script src="js/comun/dibujo.js"></script>
+<script src="js/comun/controles.js"></script>
+<script src="js/comun/futhark.js"></script>
+<script src="js/mundo/assets.js"></script>
+<script src="js/mundo/assets-eikholt.js"></script>
+<script src="js/mundo/assets-capital.js"></script>
+<script src="js/mundo/assets-ciudad.js"></script>
+<script src="js/mundo/assets-interiores.js"></script>
+<script src="js/mundo/assets-secretos.js"></script>
+<script src="js/mundo/assets-este.js"></script>
+<script src="js/mundo/assets-senda.js"></script>
+<script src="js/mundo/assets-puesto.js"></script>
+<script src="js/mundo/assets-norte.js"></script>
+<script src="js/personajes/vikingo.js"></script>
+<script src="js/personajes/gente.js"></script>
+<script src="js/motor/capital.js"></script>
+<script src="js/mundo/caminos.js"></script>
+<script src="js/ciudad/casas.js"></script>
+<script src="js/ciudad/puestos.js"></script>
+<script src="js/ciudad/muralla.js"></script>
+<script src="js/ciudad/roble.js"></script>
+<script src="js/ciudad/ting.js"></script>
+<script src="js/ciudad/enseres.js"></script>
+<script src="js/ciudad/oficios.js"></script>
+<script src="js/ciudad/porton.js"></script>
+<script src="js/ciudad/plano.js"></script>
+<script src="js/ciudad/vista.js"></script>
+<script src="js/ciudad/recorrer.js"></script>
+<script src="js/ciudad/sombras.js"></script>
+<script src="js/ciudad/luces.js"></script>
+<script src="js/ciudad/mundo.js"></script>
+<script src="js/mundo/luz.js"></script>
+<script>
+(function () {
+  const q = new URLSearchParams(location.search);
+  if (q.get("lang")) I18N.setLang(q.get("lang"));
+  const t = (k) => I18N.t(k);
+  document.title = "Eromash · " + t("ci.muestra_titulo");
+  tTitulo.textContent = t("ci.muestra_titulo");
+  tTexto.textContent = t("ci.muestra_texto");
+  tGiro.textContent = t("ci.muestra_giro");
+  tAltura.textContent = t("ci.muestra_altura");
+  tCerca.textContent = t("ci.muestra_cerca");
+  tGirar.textContent = t("ci.muestra_girar");
+  tHora.textContent = t("ci.muestra_hora");
+  if (q.get("panel") === "0") panel.style.display = "none";
+  const c = vista.getContext("2d");
+  let cw = 0, ch = 0;
+  function medir() {
+    cw = vista.width = innerWidth;
+    ch = vista.height = innerHeight;
+  }
+  addEventListener("resize", medir);
+  medir();
+  // el plano, la gente de cada barrio, los choques, las luces y las sombras (MUNDO25, el mismo que usa el juego)
+  const LUG0 = { plaza: 1, ting: 1, sur: 1, oficios: 1, lindes: 1, hongo: 1, guardia: 1, caravanas: 1, sanacion: 1, muelle: 1, lejos: 1 };
+  const enQ = LUG0[q.get("en")] ? q.get("en") : "plaza";
+  const { plano, LUGARES } = MUNDO25.armar({});
+  RECORRER25.ero.x = LUGARES[enQ][0] - 200;
+  RECORRER25.ero.y = LUGARES[enQ][1] - 100;
+  const cam = { x: LUGARES.plaza[0], y: LUGARES.plaza[1], g: -0.49, k: 0.55, esc: 0.4 };
+  const objetivo = { x: cam.x, y: cam.y };
+  window.MUESTRA = { plano, cam, objetivo }; // para revisar la muestra desde afuera (capturas casa por casa)
+  for (const k in LUGARES) {
+    const b = document.createElement("button");
+    b.textContent = t("ci.lugar_" + k);
+    b.onclick = () => {
+      objetivo.x = LUGARES[k][0];
+      objetivo.y = LUGARES[k][1];
+      if (k === "lejos") cerca.value = 4;
+      else if (cerca.value < 20) cerca.value = 40;
+    };
+    lugares.appendChild(b);
+  }
+  if (q.get("en")) {
+    const k = q.get("en");
+    if (LUGARES[k]) { cam.x = objetivo.x = LUGARES[k][0]; cam.y = objetivo.y = LUGARES[k][1]; }
+  }
+  if (q.get("x")) { cam.x = objetivo.x = +q.get("x"); cam.y = objetivo.y = +q.get("y"); }
+  if (q.get("g")) giro.value = q.get("g");
+  if (q.get("k")) altura.value = q.get("k");
+  if (q.get("z")) cerca.value = q.get("z");
+  if (q.get("h")) hora.value = q.get("h");
+  vista.addEventListener("wheel", (e) => { cerca.value = Math.max(4, Math.min(120, +cerca.value - Math.sign(e.deltaY) * 4)); e.preventDefault(); }, { passive: false });
+  let arr = null;
+  vista.addEventListener("pointerdown", (e) => { arr = [e.clientX, e.clientY, cam.x, cam.y]; vista.setPointerCapture(e.pointerId); });
+  vista.addEventListener("pointermove", (e) => {
+    if (!arr) return;
+    const V = VISTA25.proyector(cam);
+    const a = V.inversa(cam.x - (e.clientX - arr[0]) / cam.esc, cam.y - (e.clientY - arr[1]) / cam.esc);
+    objetivo.x = a[0]; objetivo.y = a[1];
+    arr = [e.clientX, e.clientY, objetivo.x, objetivo.y];
+  });
+  vista.addEventListener("pointerup", () => (arr = null));
+  let t0 = performance.now(), tt = 0;
+  function cuadro(ahora) {
+    const dt = Math.min(0.05, (ahora - t0) / 1000);
+    t0 = ahora;
+    tt += dt;
+    if (girar.checked) giro.value = ((+giro.value + 180 + dt * 14) % 360) - 180;
+    if (CONTROLES.pulsado("camaraIzq")) giro.value = ((+giro.value + 180 - dt * 60 + 360) % 360) - 180;
+    if (CONTROLES.pulsado("camaraDer")) giro.value = ((+giro.value + 180 + dt * 60) % 360) - 180;
+    // Eromash camina (las flechas o WASD, relativo a la cámara) y la cámara lo sigue
+    RECORRER25.actualizar(dt, tt, +hora.value, cam, objetivo);
+    const gObj = (+giro.value * Math.PI) / 180;
+    let dg = Math.atan2(Math.sin(gObj - cam.g), Math.cos(gObj - cam.g));
+    cam.g += dg * Math.min(1, dt * 8);
+    cam.k += (+altura.value / 100 - cam.k) * Math.min(1, dt * 6);
+    const escObj = (+cerca.value / 100) * Math.sqrt((cw * ch) / (1600 * 900));
+    cam.esc += (escObj - cam.esc) * Math.min(1, dt * 6);
+    cam.x += (objetivo.x - cam.x) * Math.min(1, dt * 6);
+    cam.y += (objetivo.y - cam.y) * Math.min(1, dt * 6);
+    const h = +hora.value;
+    vHora.textContent = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
+    MUNDO25.moverGente(dt, h);
+    MUNDO25.dibujar(c, cam, cw, ch, tt, h);
+    requestAnimationFrame(cuadro);
+  }
+  requestAnimationFrame(cuadro);
+  window.MUESTRA = { cam, objetivo, plano };
+})();
+</script>
+</body>
+</html>

@@ -30,4 +30,6 @@ I18N.textos({
   "ui.pausa_mision": { es: "Tu misión", en: "Your quest" },
   "ui.pausa_jugado": { es: "Tiempo de juego", en: "Time played" },
   "ui.mision": { es: "Misión {0}", en: "Quest {0}" },
+  "ui.editor_mudado": { es: "El editor de mapas se mudó a su propio repo, map-generator, conectado con el juego.", en: "The map editor moved to its own repo, map-generator, connected to the game." },
+  "ui.editor_ir": { es: "Ir al editor", en: "Go to the editor" },
 });

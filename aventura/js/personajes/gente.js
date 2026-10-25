@@ -115,6 +115,28 @@ window.GENTE = (function () {
       cinto: "#3A2A1A",
       gorro: "#C8B48C",
     },
+    // Un guardia de Eikholt: casco, tabardo verde con la insignia de la capital (la cornamenta) y lanza.
+    guardia: {
+      nombre: "guardia",
+      alto: 1.04,
+      ancho: 1.1,
+      piel: "#C8987A",
+      pielSombra: "#A87A5E",
+      pelo: "#5A4030",
+      barba: "#5A4030",
+      ropa: "#5A5E5A",
+      ropaSombra: "#464A46",
+      pantalon: "#3A3228",
+      botas: "#241C16",
+      cinto: "#3A2A1A",
+      gorro: "#6E6A6E",
+      lanza: true,
+      insignia: true,
+    },
+    // Geir, el aprendiz de Ása: flaco, sin barba todavía, tiznado de hollín y con el delantal de cuero que le queda grande
+    geir: { nombre: "geir", alto: 0.94, ancho: 0.9, piel: "#D8B090", pielSombra: "#B89070", pelo: "#C8803A", ropa: "#6A5A4A", ropaSombra: "#52463A", delantal: "#4A3020", delantalSombra: "#3A2418", pantalon: "#3A3026", botas: "#2A2018", cinto: "#5E4430" },
+    // el guardia de la muralla que espera su punta de lanza en la herrería
+    hr_guardia: { nombre: "hr_guardia", alto: 1.04, ancho: 1.1, piel: "#D0A080", pielSombra: "#AE8064", pelo: "#3A2A1E", barba: "#3A2A1E", ropa: "#5A5E5A", ropaSombra: "#464A46", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", insignia: true },
     // El herido: el trabajador que no puede apoyar la pierna; se dibuja sentado con la venda.
     herido: {
       nombre: "trabajador",
@@ -134,10 +156,13 @@ window.GENTE = (function () {
   };
   const LISTA = Object.keys(FICHAS);
 
-  // ---- frente (S) ----
+  // ---- frente (S); con o.tq = 1 es de tres cuartos (SE: de frente y un poco hacia la derecha) ----
   function frente(c, f, t, o) {
-    const a = f.alto,
-      w = f.ancho,
+    const tq = o.tq || 0,
+      a = f.alto,
+      w = f.ancho * (1 - 0.18 * tq),
+      fx = 4 * tq, // la cara se corre hacia donde mira
+      corte = -6 * tq * f.ancho, // la línea de sombra del cuerpo se corre al costado de lejos
       paso = o.camina ? Math.sin(t * 9) * 3 : 0,
       bob = o.camina ? Math.abs(Math.sin(t * 9)) * 1.5 : Math.sin(t * 1.6) * 0.6,
       habla = o.hablando ? Math.sin(t * 6) * 0.5 + 0.5 : 0;
@@ -151,10 +176,10 @@ window.GENTE = (function () {
     if (f.capa) P(c, [-17 * w, Y(62), 17 * w, Y(62), 20 * w, Y(10), -20 * w, Y(10)], f.capaSombra);
     const base = f.falda ? 0 : 26;
     P(c, [-14 * w, Y(64), 14 * w, Y(64), 16 * w, -base * a, -16 * w, -base * a], f.ropa);
-    P(c, [-14 * w, Y(64), 0, Y(64), 0, -base * a, -16 * w, -base * a], f.ropaSombra);
+    P(c, [-14 * w, Y(64), corte, Y(64), corte, -base * a, -16 * w, -base * a], f.ropaSombra);
     if (f.delantal) {
-      P(c, [-10 * w, Y(52), 10 * w, Y(52), 12 * w, -18, -12 * w, -18], f.delantal);
-      P(c, [-10 * w, Y(52), 0, Y(52), 0, -18, -12 * w, -18], f.delantalSombra);
+      P(c, [-10 * w + fx, Y(52), 10 * w + fx, Y(52), 12 * w + fx, -18, -12 * w + fx, -18], f.delantal);
+      P(c, [-10 * w + fx, Y(52), corte + fx, Y(52), corte + fx, -18, -12 * w + fx, -18], f.delantalSombra);
     }
     R(c, -16 * w, Y(32), 32 * w, 3 * a, f.cinto);
     if (f.tablillas) {
@@ -165,16 +190,28 @@ window.GENTE = (function () {
       P(c, [-18 * w, Y(60), -10 * w, Y(66), 10 * w, Y(66), 18 * w, Y(60), 14 * w, Y(52), -14 * w, Y(52)], f.capa);
       E(c, 0, Y(58), 2.5, 2.5, "#C8B48C");
     }
+    // el tabardo verde con la insignia de Eikholt (la regla de la capital: va en todo lo que la represente)
+    if (f.insignia) {
+      P(c, [-9 * w + fx * 0.6, Y(63), 9 * w + fx * 0.6, Y(63), 10 * w + fx * 0.6, Y(24), -10 * w + fx * 0.6, Y(24)], "#2C4226");
+      P(c, [-9 * w + fx * 0.6, Y(63), corte + fx * 0.6, Y(63), corte + fx * 0.6, Y(24), -10 * w + fx * 0.6, Y(24)], "#1E3018");
+      DIB.insignia(c, (x, y) => [fx * 0.6 + x * 20 * w, Y(60) + y * 20 * a], "#F2ECEC");
+    }
     const brazo = o.hablando ? -habla * 6 : 0;
-    P(c, [-14 * w, Y(62), -20 * w, Y(60), -22 * w, Y(36) + brazo, -16 * w, Y(36) + brazo], f.ropaSombra);
+    // de tres cuartos el brazo de lejos queda medio tapado por el cuerpo
+    if (tq) P(c, [-12 * w, Y(62), -16 * w, Y(60), -17 * w, Y(36) + brazo, -13 * w, Y(36) + brazo], f.ropaSombra);
+    else P(c, [-14 * w, Y(62), -20 * w, Y(60), -22 * w, Y(36) + brazo, -16 * w, Y(36) + brazo], f.ropaSombra);
     P(c, [14 * w, Y(62), 20 * w, Y(60), 22 * w, Y(36), 16 * w, Y(36)], f.ropa);
-    E(c, -19 * w, Y(34) + brazo, 3, 3, f.pielSombra);
+    E(c, (tq ? -15 : -19) * w, Y(34) + brazo, 3, 3, f.pielSombra);
     E(c, 19 * w, Y(34), 3, 3, f.piel);
     if (f.tinta) E(c, 19 * w, Y(33), 1.5, 1.5, "#2A2A40");
+    c.save();
+    c.translate(fx * 0.5, 0);
     R(c, -3, Y(68), 6, 5, f.pielSombra);
     const cy = Y(78);
     P(c, [-9, cy - 8, 9, cy - 8, 9, cy + 7, 4, cy + 11, -4, cy + 11, -9, cy + 7], f.piel);
-    P(c, [-9, cy - 8, 0, cy - 8, 0, cy + 11, -4, cy + 11, -9, cy + 7], f.pielSombra);
+    P(c, [-9, cy - 8, -fx, cy - 8, -fx, cy + 11, -4, cy + 11, -9, cy + 7], f.pielSombra);
+    // de tres cuartos asoma la nariz del lado que mira
+    if (tq) P(c, [9, cy - 2, 12, cy + 3, 9, cy + 5], f.piel);
     if (f.calvo) {
       P(c, [-10, cy - 4, -9, cy - 9, -6, cy - 11, 6, cy - 11, 9, cy - 9, 10, cy - 4, 7, cy - 6, -7, cy - 6], f.pelo);
     } else {
@@ -183,13 +220,14 @@ window.GENTE = (function () {
     if (f.mecha) P(c, [3, cy - 13, 6, cy - 12, 9, cy - 4, 7, cy - 4], f.mecha);
     if (f.rodete) E(c, 0, cy - 14, 6, 4, f.pelo);
     if (f.gorro) P(c, [-10, cy - 5, -8, cy - 12, 0, cy - 15, 8, cy - 12, 10, cy - 5], f.gorro);
-    R(c, -6, cy - 1, 3, 2, "#1A1412");
-    R(c, 3, cy - 1, 3, 2, "#1A1412");
+    R(c, -6 + fx, cy - 1, tq ? 2 : 3, 2, "#1A1412");
+    R(c, 3 + fx, cy - 1, 3, 2, "#1A1412");
     if (f.barba) {
-      P(c, [-9, cy + 3, 9, cy + 3, 8, cy + 12, 3, cy + 17, -3, cy + 17, -8, cy + 12], f.barba);
-      if (f.barbaCana) P(c, [-3, cy + 9, 3, cy + 9, 2, cy + 16, -2, cy + 16], f.barbaCana);
-      if (o.hablando && habla > 0.5) R(c, -2, cy + 5, 4, 2, "#3A1E16");
-    } else if (o.hablando && habla > 0.5) R(c, -2, cy + 6, 4, 1.5, "#6A3A2A");
+      P(c, [-9 + fx * 0.5, cy + 3, 9 + fx * 0.5, cy + 3, 8 + fx * 0.5, cy + 12, 3 + fx, cy + 17, -3 + fx, cy + 17, -8 + fx * 0.5, cy + 12], f.barba);
+      if (f.barbaCana) P(c, [-3 + fx, cy + 9, 3 + fx, cy + 9, 2 + fx, cy + 16, -2 + fx, cy + 16], f.barbaCana);
+      if (o.hablando && habla > 0.5) R(c, -2 + fx, cy + 5, 4, 2, "#3A1E16");
+    } else if (o.hablando && habla > 0.5) R(c, -2 + fx, cy + 6, 4, 1.5, "#6A3A2A");
+    c.restore();
     if (f.lentes) {
       L(c, -6, Y(64), 0, Y(54), "#8A8E92", 1);
       L(c, 6, Y(64), 0, Y(54), "#8A8E92", 1);
@@ -224,6 +262,7 @@ window.GENTE = (function () {
     P(c, [-9 * w, Y(64), 8 * w, Y(64), 10 * w, -base * a, -11 * w, -base * a], f.ropa);
     P(c, [-9 * w, Y(64), -3 * w, Y(64), -4 * w, -base * a, -11 * w, -base * a], f.ropaSombra);
     if (f.delantal) P(c, [4 * w, Y(52), 11 * w, Y(52), 13 * w, -18, 6 * w, -18], f.delantal);
+    if (f.insignia) P(c, [2 * w, Y(63), 9 * w, Y(63), 10 * w, Y(24), 3 * w, Y(24)], "#2C4226");
     R(c, -11 * w, Y(32), 21 * w, 3 * a, f.cinto);
     if (f.tablillas) R(c, -9 * w, Y(31), 5, 9, "#C8B48C");
     const ba = o.camina ? Math.sin(t * 9) * 0.5 : 0;
@@ -259,10 +298,12 @@ window.GENTE = (function () {
     if (f.lentes) E(c, 8, Y(54), 2.5, 2.5, "#B8D8E0");
   }
 
-  // ---- espaldas (N) ----
+  // ---- espaldas (N); con o.tq = 1 es de tres cuartos (NE: de espaldas y un poco hacia la derecha) ----
   function espaldas(c, f, t, o) {
-    const a = f.alto,
-      w = f.ancho,
+    const tq = o.tq || 0,
+      a = f.alto,
+      w = f.ancho * (1 - 0.18 * tq),
+      fx = 3 * tq,
       paso = o.camina ? Math.sin(t * 9) * 3 : 0,
       bob = o.camina ? Math.abs(Math.sin(t * 9)) * 1.5 : Math.sin(t * 1.6) * 0.6;
     const Y = (v) => -v * a - bob;
@@ -278,7 +319,7 @@ window.GENTE = (function () {
     P(c, [2 * w + paso * 0.3, -7, 11 * w + paso * 0.3, -7, 12 * w + paso * 0.3, 0, 2 * w + paso * 0.3, 0], f.botas);
     const base = f.falda ? 0 : 26;
     P(c, [-14 * w, Y(64), 14 * w, Y(64), 16 * w, -base * a, -16 * w, -base * a], f.ropaSombra);
-    P(c, [0, Y(64), 14 * w, Y(64), 16 * w, -base * a, 0, -base * a], f.ropa);
+    P(c, [6 * tq, Y(64), 14 * w, Y(64), 16 * w, -base * a, 6 * tq, -base * a], f.ropa);
     if (f.delantal) {
       L(c, -10 * w, Y(62), 8 * w, Y(34), f.delantal, 3);
       L(c, 10 * w, Y(62), -8 * w, Y(34), f.delantal, 3);
@@ -292,12 +333,18 @@ window.GENTE = (function () {
       P(c, [-18 * w, Y(62), 18 * w, Y(62), 20 * w, Y(12), 6 * w, Y(8), -6 * w, Y(12), -20 * w, Y(10)], f.capa);
       P(c, [-18 * w, Y(62), 0, Y(62), 0, Y(10), -6 * w, Y(12), -20 * w, Y(10)], f.capaSombra);
     }
+    if (f.insignia) {
+      if (!f.capa) P(c, [-10 * w, Y(63), 10 * w, Y(63), 11 * w, Y(24), -11 * w, Y(24)], "#2C4226");
+      DIB.insignia(c, (x, y) => [x * 26 * w, Y(58) + y * 26 * a], "#F2ECEC");
+    }
     if (f.hacha) {
       L(c, 12 * w, Y(34), 12 * w, Y(10), "#6B4A2C", 3);
       P(c, [12 * w, Y(14), 19 * w, Y(10), 19 * w, Y(20), 12 * w, Y(20)], "#8A8E92");
     }
-    R(c, -3, Y(68), 6, 5, f.pielSombra);
+    R(c, -3 + fx, Y(68), 6, 5, f.pielSombra);
     const cy = Y(78);
+    // de tres cuartos asoman la oreja y el borde de la cara del lado que mira
+    if (tq) P(c, [6, cy - 6, 12, cy - 4, 12, cy + 8, 7, cy + 10], f.pielSombra);
     P(c, [-10, cy + 8, -10, cy - 8, -5, cy - 13, 5, cy - 13, 10, cy - 8, 10, cy + 8, 4, cy + 11, -4, cy + 11], f.calvo ? f.piel : f.pelo);
     if (f.calvo) P(c, [-10, cy + 2, -9, cy - 4, 9, cy - 4, 10, cy + 2, 6, cy + 10, -6, cy + 10], f.pelo);
     if (f.trenza) {
@@ -326,6 +373,15 @@ window.GENTE = (function () {
     if (f.barba) P(c, [-8, cy + 3, 8, cy + 3, 6, cy + 12, -6, cy + 12], f.barba);
   }
 
+  // ocho vistas: S, SE, E, NE, N y sus espejos (SO, O, NO) con o.espejo
+  const VISTAS = { S: frente, SE: (c, f, t, o) => frente(c, f, t, Object.assign({}, o, { tq: 1 })), E: costado, NE: (c, f, t, o) => espaldas(c, f, t, Object.assign({}, o, { tq: 1 })), N: espaldas };
+  // la vista según hacia dónde camina en pantalla (dx a la derecha, dy hacia abajo): { vista, espejo }
+  function vistaDe(dx, dy, previa) {
+    if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) return previa || { vista: "S", espejo: false };
+    const oct = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)); // 0 = derecha, 2 = abajo, -2 = arriba
+    const V = { 0: "E", 1: "SE", 2: "S", 3: "SE", 4: "E", "-4": "E", "-1": "NE", "-2": "N", "-3": "NE" };
+    return { vista: V[oct], espejo: oct === 3 || Math.abs(oct) === 4 || oct === -3 };
+  }
   // ---------- los espíritus, como en su hoja: la huldra y el nøkk ----------
   // La huldra: alta, pelo de paja larguísimo con corona de flores, vestido verde musgo de mangas anchas, faja roja con
   // borla dorada y la cola de vaca que asoma bajo el ruedo; de espaldas es hueca como un tronco podrido.
@@ -472,7 +528,6 @@ window.GENTE = (function () {
     L(c, arco * 0.4 - 18, Y(46), arco * 0.4 + 22, Y(60), NK.arco, 1.6);
   }
 
-  const VISTAS = { S: frente, E: costado, N: espaldas };
   const PROPIOS = { huldra, nokk };
   function dibujar(c, id, x, y, t, o = {}) {
     // o.vista y o.espejo son hacia dónde mira en el mundo: con la cámara girada se elige la vista de la pantalla
@@ -488,5 +543,5 @@ window.GENTE = (function () {
     else VISTAS[o.vista || "S"](c, f, t, o);
     c.restore();
   }
-  return { LISTA, FICHAS, dibujar, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
+  return { LISTA, FICHAS, PROPIOS, VISTAS, dibujar, vistaDe, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
 })();

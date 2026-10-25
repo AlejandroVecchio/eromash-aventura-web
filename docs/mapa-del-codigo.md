@@ -110,6 +110,32 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 
 Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.
 
+### js/ciudad/ · 
+
+- **casas.js**: las casas de la capital (módulo CASAS25)
+  - proyección · lo que lleva cada pared, vista de frente (s de 0 a len, t = 0 el piso, hacia arriba negativo) · el cuerpo de la casa · lo que se arrima a la casa · el dibujo entero
+- **enseres.js**: lo chico de la ciudad en volumen (módulo ENSERES25)
+  - la huerta: canteros bajos con sus plantas, el cerco de mimbre; va en el piso · los carros: la carreta con lona, el carro de caravana (más grande) y el carro abierto de la cuadrilla · la leñera: la pila de leños partidos con las puntas a la vista y su techito de un agua · la forja de Ása: el cobertizo abierto con la fragua, la chimenea, el yunque y las herramientas · la chimenea de la herrería: alta, de piedra, angostándose, con la boca encendida · el tablón: dos postes, el tablero con papeles de los dos lados y su alero · la mesa con sus dos bancos · el estante: armas apoyadas, o manojos de hierbas colgados (el secadero) · el tendedero: dos postes, la soga y la ropa colgada · el ahumadero: casita baja de tablas con techo a dos aguas y humo · la lona de la cuadrilla: una carpa en caballete · leños: el tronco caído (asiento) y la pila de troncos del aserradero · un fardo de heno atado · la diana del campo de tiro: el caballete y el disco de paja con sus anillos · la campana de la plaza: el pórtico de dos postes con su techito y la campana colgada · la cama de pieles del patio de Sanación: un catre bajo con las pieles · el estandarte de la cornamenta: el asta y la tela verde con el Ciervo, a lo ancho (u) · el poste del Hongo Dorado: el poste, el brazo y el cartel con el hongo dorado, y su farol · el farol de poste: el poste, el brazo a lo largo (u) y la caja colgada con la luz · una roca: un prisma bajo y desparejo, gris con musgo arriba · el muñeco de práctica: el poste, los brazos de palo a lo ancho, el cuerpo de paja y el escudo al frente · lo que cuenta algo de la ciudad (revisión 7)
+- **juego.js**: Eikholt en el juego (sistema EIKHOLT)
+  - el plano y el bosque · la gente · lo que se puede hacer cerca · Eromash camina · la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) · armar la ciudad (la primera vez que se entra) · entrar y salir · el cuadro · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
+- **luces.js**: la luz de la capital (módulo LUCES25)
+  - el color de cada hora
+- **mundo.js**: la ciudad viva (módulo MUNDO25)
+- **muralla.js**: la muralla doble de Eikholt en volumen (módulo MURALLA25)
+- **oficios.js**: lo de los oficios que va en volumen (módulo OFICIOS25)
+- **plano.js**: el plano de la capital en 2.5D (módulo PLANO25)
+  - el río · los lugares con nombre y lo que reservan · las calles · la empalizada, las atalayas y las piedras de la cúpula · el Roble y la plaza · los edificios con nombre (las casas especiales, cada una con su ficha) · el noroeste: Sanación, sus hierbas, la hospedería y la cordelería · el noreste: la Guardia, su campo de entrenamiento, los forasteros y el corral de caravanas · las casas de la gente · lo que llena la tierra entre los barrios: huertas cercadas, galpones con heno y montecitos · árboles sueltos entre las casas · el río: los dos puentes, el muelle y los botes · lo que cuenta algo: detalles con historia y cofres escondidos (revisión 7)
+- **porton.js**: las puertas de la empalizada (módulo PORTON25)
+- **puestos.js**: los puestos del Mercado de los Toldos (módulo PUESTOS25)
+- **recorrer.js**: recorrer la capital con Eromash (módulo RECORRER25)
+  - los barrios: el más cercano dentro de su radio pone su nombre al entrar · quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio · la tarjeta de lo que se mira (HTML: se lee mejor y se adapta a la pantalla) · cada cuadro · la gente reacciona a Eromash · los animales, el humo, las chispas y las hojas · dibujar
+- **roble.js**: las raíces del Roble de Eikholt (módulo RAIZ25)
+- **sombras.js**: las sombras de la capital (módulo SOMBRAS25)
+  - las sombras horneadas en el piso
+- **ting.js**: las piedras del Ting en volumen (módulo TING25)
+- **vista.js**: cómo se ve la capital (módulo VISTA25)
+  - el piso · el piso entero en un lienzo que se corre · la cámara
+
 ### js/comun/ · lo compartido: dibujo, runas, controles y sonido
 
 - **controles.js**: controles (módulo CONTROLES)
@@ -119,46 +145,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **sonido.js**: sonido (módulo SONIDO)
 - **volumen.js**: todo girable: volúmenes que se ven bien desde cualquier lado (módulo VOL)
   - el giro del mundo · colores: cada cara con su tono · el proyector de un objeto · caras · sólidos · en el piso del objeto · partes de un objeto, de atrás hacia adelante · la gente y las criaturas: la vista según la cámara · ayudas para pasar los dibujos viejos
-
-### js/editor/ · el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)
-
-- **boceto.js**: subir un boceto de mapa (tecla U): un dibujo en papel que se vuelve parte de Eldervald
-  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · con todas las IA a la vez: cada una arma su versión y se eligen una, dos o todas (cada una en su capa) · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
-- **capas.js**: las capas del editor (pestaña Capas, L)
-  - las pestañas del costado · las capas del mundo: cada una prende o apaga su casilla · las capas propias
-- **comandos.js**: la paleta de comandos del editor (Ctrl+K)
-- **cuartos.js**: editar los interiores (tecla 9 o «Editar su interior» con una casa elegida)
-  - el panel · elegir, mover, poner · dibujar · los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos · el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste · el generador de casas: texto o controles → un plano nuevo · abrir y cerrar
-- **editor.js**: el editor de Eldervald
-  - estado · capas propias · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo · capas propias (las usa js/editor/capas.js)
-- **historia.js**: la historia en el mapa
-- **ia.js**: hablar con una IA adentro del editor
-  - qué IA hace cada tarea · el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado · en el mapa: la zona (celeste) y la vista previa de lo propuesto
-- **importar.js**: importar cosas propias: estructuras, pinturas, calcos y texturas (panel Importar, tecla N)
-- **menu.js**: la barra de menús del editor (Archivo, Editar, Ver, Herramientas, Crear, Mundo, IA, Ayuda)
-  - la barra · los desplegables
-- **mundo.js**: regiones, piezas y exportar el mundo
-  - regiones · piezas · exportar el mundo entero en JSON
-- **npcs.js**: importar gente propia (tecla N)
-  - las imágenes: recortar, sacar el fondo liso y achicar · el panel · en el mapa · abrir y cerrar
-- **pincel.js**: el pincel (tecla B): rociar, tupir el bosque y abrir claros
-- **texturas.js**: el generador de texturas (tecla Y)
-  - el panel · con IA · guardar en los assets
-- **zonas.js**: las zonas fuera del mapa: generar y retocar mazmorras y tierras con islas (tecla M)
-  - los datos: las del juego, con lo guardado encima · el plano: de la zona al lienzo · tierras · dibujar · tocar el plano · el panel · generar desde un texto · en el mapa del editor: cada entrada con su dibujo y su nombre; con Mover se arrastra · abrir y cerrar
-
-### js/eikholt/ · la capital en 3D (es del hilo «Construir la ciudad de Eikholt»)
-
-- **casas.js**: la herramienta de casas de Eikholt (módulo CASAS)
-  - una pared · el techo · crear una casa · las cuatro paredes · el techo · porche, cobertizo, leña · choques
-- **ciudad.js**: Eikholt en 3D (sistema EIKHOLT)
-  - grillas de choques y de superficies · de la ciudad al bosque y vuelta · la gente · armar la escena · la gente · la luz del momento · cámaras · Eromash en la ciudad · lo que se puede hacer cerca · la gente se mueve · pintar las figuras · el humo · entrar y salir · el cuadro · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
-- **geo.js**: geometría de caras planas (módulo GEO)
-  - el armador · materiales compartidos
-- **piezas.js**: las piezas de Eikholt en 3D (módulo PIEZAS)
-  - luz de la gente · cosas sueltas · el mercado de los toldos · la plaza · cercos, huertas, el campo · los oficios · la naturaleza
-- **plano.js**: el plano de Eikholt en 3D (módulo EIKPLANO)
-  - el río: entra por el nordeste, baja por el este y rodea el sur · las calles · zonas reservadas (los lugares con nombre) · armar · el piso · la empalizada, el adarve y las atalayas · las cuatro puertas · las doce piedras de la cúpula (dos junto a la Puerta del Norte y dos junto a la del Sur) · el Roble · la plaza · los edificios · las casas de la gente · el bosque de afuera · la cúpula: runas enormes sobre una curva invisible · las celdas a mallas · zonas de cámara · las rutas de la gente (un grafo sobre las calles) · el Roble de Eikholt · la escalera alrededor del tronco y el mirador · la copa · los muebles de una casa que se puede entrar
 
 ### js/enemigos/ · el dibujo de las criaturas
 
@@ -278,8 +264,12 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
-- **holmr.js**: la hólmganga: duelos en la piel (sistema HOLMR)
-  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo · el sistema
+- **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
+  - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
+- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
+- **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
+  - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
@@ -337,7 +327,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
-- **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor
+- **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (repo map-generator). Este archivo lo escribe el editor
 - **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
   - la mesa de alquimia
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
@@ -357,6 +347,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-casas.js**: las casas de varios cuartos
   - La puerta de adentro · El paso secreto · El tapiz de la pared · Las tablas flojas
   - assets: puertaInterior, pasoSecreto, tapizPared, tablasFlojas
+- **assets-ciudad.js**: la capital en 2.5D (se suma a ASSETS)
+  - assets: posteHongo, munecoPractica, dianaTiro, estanteArmas, secaderoHierbas, fardoHeno, chimeneaHerreria
 - **assets-claro.js**: el Claro del Ciervo, versión épica (se suma a ASSETS)
   - assets: arcoAstas, paredRoca, manchaEnferma, camaMusgo, escaleraRaices, apostadero, fisura
 - **assets-comercio.js**: el puesto de Kolbrun, la buhonera de Eldrakar (assets de COMERCIO)
@@ -373,8 +365,14 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
+- **assets-herreria.js**: lo de adentro de la herrería de Ása (assets armados con caras)
+  - La forja de Ása · El fuelle · La pila de templar · La muela de afilar · La pared de las herramientas · El armero de lo terminado · El banco de lo que está a medio hacer · El montón de carbón · Brasa, la gata de la forja
+  - assets: forjaGrande, fuelle, pilaTemplar, muelaAfilar, panopliaHerramientas, armeroForja, bancoForja, montonCarbon, gataForja
 - **assets-holmr.js**: el hólmr: la piel del duelo (assets de HOLMR)
   - assets: holmrPiel, holmrVara, bancoTestigos
+- **assets-hongo.js**: lo de adentro del Hongo Dorado (assets armados con caras)
+  - El fogón del Hongo Dorado · La barra de Ulf · El estante de jarras y cuernos · Los toneles de las aldeas · La mesa larga de los parroquianos · La mesa redonda de los forasteros · La rueda de velas · La tarima del skald · El estandarte de Eikholt · Los escudos de los que no volvieron · Los hongos dorados de las vigas
+  - assets: fogonHongo, barraHongo, estanteJarras, tonelesHongo, mesaLarga, mesaRonda, lamparaRueda, tarimaSkald, estandarteEikholt, escudosPared, hongosDorados
 - **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
   - assets: munecoPractica
 - **assets-interiores.js**: los muebles de adentro (interiores)
@@ -420,7 +418,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
-  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (editor.html → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
+  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)
 - **luz.js**: luz, sombra y niebla de Eldervald (módulo LUZ)
 - **texturas.js**: las texturas hechas en el editor (TEXTURAS)
@@ -431,6 +429,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **animacion.js**: cómo se mueve Eromash (módulo ANIMA)
 - **gente.js**: la gente de Eldervald (módulo GENTE)
   - los espíritus, como en su hoja: la huldra y el nøkk
+- **viajeros.js**: los forasteros del Hongo Dorado (fichas y dibujos propios de GENTE)
+  - lo que llevan encima los aventureros · Fjalar, el dvergr de las montañas de hierro · Lysa, álfr del sur · Bergr, medio jötunn · el nisse de la casa
 - **vikingo.js**: Eromash en cuatro vistas (módulo VIKINGO)
 
 ### js/textos/ · todos los textos del juego en los dos idiomas
@@ -447,15 +447,14 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **casa.js**: Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).
+- **ciudad.js**: Textos de la capital en 2.5D (prefijo ci.): el mapa aparte de Eikholt con la cámara que gira y su página de muestra.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
-- **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
-  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
-- **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
-  - el banco de casas (aventura/casas.html) · la ciudad en 3D
+- **eikholt.js**: Textos de Eikholt (prefijo ek.): el mapa aparte de la capital, sus lugares y lo que dice su gente.
+  - la ciudad
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
 - **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
@@ -465,9 +464,12 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
+- **herreria.js**: textos de la herrería de Ása por dentro (hr.) y de sus muebles (as.)
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **hoja.js**: Textos de la hoja de Eromash y los topes del balance (interfaz/hoja.js, motor/rpg.js): prefijo hj.
 - **holmr.js**: Textos de la hólmganga (motor/holmr.js, enemigos/kempur.js, mundo/assets-holmr.js): prefijo hm. (y as., cr.kempa,
+- **hongo.js**: Textos del Hongo Dorado por dentro (motor/hongo.js): la sala grande, la gente que la frecuenta, los forasteros de otras
+  - arriba: la galería y los cuartos
 - **instructores.js**: Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
