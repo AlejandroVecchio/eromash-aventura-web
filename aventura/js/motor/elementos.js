@@ -7,7 +7,7 @@
 //   Laguz (agua)       una ola en abanico que empuja, empapa (e.mojado) y cierra un 5 % de las heridas.
 //                      Se gana en la Fuente de Laguz, seca en la orilla de una laguna: despertar las tres piedras de
 //                      la orilla con su marca la hace manar.
-// Cuatro elementos sobre las criaturas: fuego (e.quema: Kenaz, el galdr de fuego), hielo (e.helado > 1,2: Isa),
+// Cuatro elementos sobre las criaturas: fuego (e.quema: Kenaz), hielo (e.helado > 1,2: Isa),
 // agua (e.mojado: Laguz, estar en el agua o la lluvia) y trueno (e.electro: Thurisaz). Dos juntos hacen una
 // reacción (REACCIONES) y se consumen:
 //   vapor (agua + fuego)       nube que quema y deja ciegas un rato a las de adentro
