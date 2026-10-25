@@ -257,7 +257,7 @@ window.ARBOL = (function () {
         const ahora = n ? `<span class="ab-ahora">${t("ab.ahora")} ${efectoTexto(d, n)}</span>` : "";
         const luego = n < d.max ? `<span class="ab-luego">${n ? t("ab.siguiente") : t("ab.primero")} ${efectoTexto(d, n + 1)}</span>` : "";
         const traba = porque && n < d.max ? `<span class="ob-pista">${porque}</span>` : "";
-        enfocar.push([b, { nombre: t("ab." + d.id) + (d.clave ? " ◆" : "") + (d.activa ? " · " + CONTROLES.glifo(d.activa) : ""), col: R.col, html: `<span class="ob-rotulo">${t("ab.rango", [n, d.max])} · ${t("ab.rama_" + rama)}</span>${ahora}${luego}${traba}`, fn: () => subir(d.id) }]);
+        enfocar.push([b, { nombre: t("ab." + d.id) + (d.clave ? " ◆" : "") + (d.activa ? " · " + (CONTROLES.mando() || !window.BARRA ? CONTROLES.glifo(d.activa) : BARRA.glifoDe("hab_" + d.id)) : ""), col: R.col, html: `<span class="ob-rotulo">${t("ab.rango", [n, d.max])} · ${t("ab.rama_" + rama)}</span>${ahora}${luego}${traba}`, fn: () => subir(d.id) }]);
       });
       col.appendChild(grilla);
       ramas.appendChild(col);

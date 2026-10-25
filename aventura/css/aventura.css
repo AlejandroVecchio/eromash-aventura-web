@@ -26,6 +26,13 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudJugador .nombre small { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--oro); font-weight: 700; }
 #hudJugador .barra.est { height: 10px; }
 #hudJugador .barra.est span { line-height: 10px; font-size: 8px; }
+/* las piedras de Berkano (berkano.js): rombos con la runa que se llenan de luz rúnica de abajo arriba */
+#hudJugador .piedras { display: flex; gap: 5px; margin: -2px 0 6px; pointer-events: auto; }
+#hudJugador .piedra { position: relative; width: 17px; height: 17px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #3A3634; }
+#hudJugador .piedra i { position: absolute; left: 0; right: 0; bottom: 0; height: var(--f); background: var(--runico); opacity: 0.75; }
+#hudJugador .piedra b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #111; line-height: 1; }
+#hudJugador .piedra.vacia b { color: #6A6660; }
+#hudJugador .piedra.llena i { opacity: 1; box-shadow: 0 0 6px var(--runico); }
 #hudJugador .chips { display: flex; gap: 14px; margin-top: 7px; font-size: 13px; }
 #hudJugador .chip { display: flex; align-items: center; gap: 4px; }
 #hudJugador .chip canvas { width: 18px; height: 18px; }
@@ -35,7 +42,15 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudBarra { left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 8px; }
 .casilla { position: relative; width: 58px; height: 58px; background: rgba(17, 17, 17, 0.88); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); transition: opacity 0.15s; }
 .casilla canvas { height: calc(100% - 12px); aspect-ratio: 1; display: block; margin: 0 auto; }
-.casilla.grande { width: 78px; height: 78px; }
+.casilla small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
+.casilla.chica { width: 46px; height: 46px; margin-left: 6px; }
+.casilla.chica small { display: none; }
+.casilla.chica canvas { height: 100%; }
+.casilla.vacia { background: rgba(17, 17, 17, 0.55); }
+.casilla.vacia small { color: rgba(224, 178, 178, 0.35); }
+.casilla.elegida { box-shadow: inset 0 0 0 2px var(--runico); }
+.casilla .tecla.oculto { display: none; }
+.casilla .cant { position: absolute; left: 6px; top: 3px; font-size: 11px; font-weight: 800; color: #F2ECEC; text-shadow: 0 1px 0 #000; }
 .casilla .tecla { position: absolute; right: 3px; top: 3px; min-width: 16px; height: 16px; font-size: 9px; padding: 0 3px; }
 .casilla small { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rosa); font-weight: 700; text-shadow: 0 1px 0 #000; }
 .casilla .espera { position: absolute; inset: 0; background: conic-gradient(rgba(8, 8, 6, 0.7) calc(var(--f, 0) * 360deg), transparent 0); pointer-events: none; }
@@ -191,6 +206,13 @@ canvas.mapa { cursor: crosshair; }
 .inv-celda .niv { position: absolute; left: 6px; top: 4px; font-weight: 800; font-size: 12px; color: var(--oro); text-shadow: 0 1px 0 #000; }
 .inv .rotulo { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rosa); margin: 4px 0 8px; }
 .inv-runas { margin-top: 10px; }
+.inv-cuerpo.barra { display: block; padding: 0 8px; }
+.inv-barra { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 6px 0 2px; }
+.inv-barra .inv-celda.elegida { box-shadow: inset 0 0 0 3px var(--runico); }
+.inv-grupos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.inv-grupo { margin-top: 12px; }
+.inv-grupo .fila { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.inv-nada { color: #8A8A80; font-size: 13px; }
 .inv-runas .fila { display: flex; gap: 12px; justify-content: center; }
 .inv-stats { background: rgba(255, 255, 255, 0.03); padding: 12px 14px; align-self: start; }
 .inv-stats .st { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid #2A221E; font-size: 13px; }
@@ -207,6 +229,7 @@ canvas.mapa { cursor: crosshair; }
   .inv-cuerpo.equipo { grid-template-columns: 1fr; }
   .inv-celda { width: 64px; height: 64px; }
   .inv-rejilla { grid-template-columns: repeat(auto-fill, 64px); }
+  .inv-grupos { grid-template-columns: 1fr; }
   .inv footer { flex-direction: column; align-items: stretch; }
   .inv-ayuda { text-align: left; }
 }
