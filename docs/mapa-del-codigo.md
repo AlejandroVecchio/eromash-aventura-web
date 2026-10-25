@@ -13,6 +13,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | Vida, estamina y lo que gana con la herrería, las manzanas y la pechera | `motor/poderes.js` (`jug.hpMax = …`) y el arranque de `jug` en `motor/juego.js` (sección `estado`) |
 | Velocidad al caminar, correr y esquivar; salto; estamina que gasta cada cosa | `motor/juego.js`, sección `Eromash` (`VEL_PASO`, `actualizarJugador`) |
 | Combo de golpes, giro, estocada, críticos, contraataque | `motor/juego.js`: `golpear`, `atacarCon`, `objetivoCerca` |
+| Los golpes de cada tipo de arma (hacha, y las que vengan), sangrado y el hacha lanzada | `motor/armas.js` (`ARMAS.tipo`, `golpes`); el dibujo en `equipo/armas-dibujo.js` |
 | Cómo se ve y cómo se anima | dibujo en `personajes/vikingo.js`, vida y gestos en `personajes/animacion.js` (`ANIMA.pose`), espada y sombra en `dibujarJugador` de `motor/juego.js` |
 | Morir y reaparecer | `motor/juego.js`, sección `muerte y reaparición` (`dondeReaparecer`); los refugios por misión en `historia/guion.js` (`REAPARECER`) |
 | Runas (Kenaz, Isa, Algiz, Sowilo), poder rúnico, plata y fragmentos | `motor/poderes.js` (`RUNAS`, `darPlata`, `botinCofre`) |
@@ -168,6 +169,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
+- **armas-dibujo.js**: el dibujo de las armas que la arena no tiene (módulo DIB_ARMAS)
+  - hachas de una mano
 - **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
   - qué dibujo de la arena le toca · amuletos y anillos (propios) · dibujar
 - **objetos.js**: los objetos de equipo: bases, rarezas, afijos y nombres (módulo OBJETOS)
@@ -199,6 +202,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
+  - hachas · el hacha lanzada · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
@@ -303,6 +308,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
+- **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.

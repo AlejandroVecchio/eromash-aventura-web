@@ -451,7 +451,8 @@ window.BOTIN = (function () {
     html,
     nivelEn,
     alMorir,
-    dibujarArma: (c, x, y, ang, s, brillo) => !!(st && st.puesto.arma && ARTE_OBJ.dibujarArma(c, st.puesto.arma, x, y, ang, s, brillo)),
+    // el arma en la mano (con el hacha lanzada no hay nada que dibujar: Eromash pelea a puño limpio)
+    dibujarArma: (c, x, y, ang, s, brillo) => !!(st && st.puesto.arma && ((window.ARMAS && ARMAS.manoVacia()) || ARTE_OBJ.dibujarArma(c, st.puesto.arma, x, y, ang, s, brillo))),
     MAX_BOLSA,
   };
 })();

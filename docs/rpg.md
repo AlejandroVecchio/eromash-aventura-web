@@ -82,6 +82,22 @@ tener que leer el código para balancear.
   costa, al oeste el volcán y al sur la arena). Amuletos y anillos propios en `arte.js`.
 - Los atributos del equipo suman con `ATRIBUTOS.bono(fn)`; lo demás con `RPG.aporte`.
 
+## Armas (`motor/armas.js`, dibujo en `equipo/armas-dibujo.js`, textos `ar.`)
+
+- Cada tipo de arma trae su juego de golpes: `{ combo: [3 golpes], giro (mantener atacar), carrera, caida, carga
+  (segundos), coste (estamina) }`; el motor pide `ARMAS.golpes(los de la espada)`. Un golpe es `{ wind, swing, rec,
+  arc, reach, dano, empuje }` más banderas (`remate`, `giro`, `avanza`, `caida`) y las del tipo. Un tipo nuevo:
+  `ARMAS.tipo(id, def)` y bases con `tipo: id` en `OBJETOS.BASES`.
+- **Espada**: la de siempre (16 / 20 / 32, giro 28).
+- **Hacha**: 19 / 22 / 40 (el tercero, el hachazo, angosto y largo, parte el piso), más lenta (≈1,7 s el combo
+  contra 1,55 de la espada). Un golpe de cada tres (el hachazo siempre) hace **sangrar**: el 40 % del golpe en 3 s, de
+  a 0,5 s. **Cargada (0,55 s, 18 de estamina) se lanza**: vuela 380 a 1000 por segundo, corta a la ida y a la vuelta
+  (24 de daño base, crítico y robo de vida como un golpe), choca contra árboles y rocas y vuelve sola. Mientras vuela,
+  Eromash pega con los puños (7 / 8).
+- Cinco hachas de una mano: de mano (1), barbuda (4), rúnica (9, +8 % de poder rúnico), de hueso (13, 1 % de robo de
+  vida) y de doble filo (16). El dibujo (`DIB_ARMAS.forma(id, fn)`) usa el lenguaje de las espadas de la arena: cinco
+  escalones con tientos de cuero, remaches de oro, runas que laten y el filo encendido de la legendaria.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
