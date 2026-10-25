@@ -161,7 +161,7 @@
   if (window.GENTE) {
     const gg = grupo("as.grupo.gente");
     Object.keys(GENTE.FICHAS).forEach((id) =>
-      ["S", "E", "N"].forEach((v) =>
+      ["S", "SE", "E", "NE", "N"].forEach((v) =>
         ficha(gg, I18N.t("av.nombre_" + GENTE.nombre(id)) + " · " + v, 150, 180, (c, t) => {
           piso(c, 150, 180);
           GENTE.dibujar(c, id, 75, 150, t, { vista: v, hablando: v === "S" });

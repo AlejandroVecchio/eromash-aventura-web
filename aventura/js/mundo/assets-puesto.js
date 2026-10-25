@@ -59,10 +59,10 @@
     if (o.faroles !== 2) {
       L(c, x + 60 * s, y - 152 * s, x + 60 * s, y - 140 * s, C.hierro, 2 * s);
       P(c, [x + 54 * s, y - 140 * s, x + 50 * s, y - 120 * s, x + 70 * s, y - 120 * s, x + 66 * s, y - 140 * s], "#8A6A2A");
-      // el estandarte verde con las astas
+      // el estandarte verde con la insignia de Eikholt
       const v = Math.sin(t * 1.5) * 3 * s;
       P(c, [x - 30 * s, y - 152 * s, x + 10 * s, y - 152 * s, x + 10 * s + v, y - 90 * s, x - 10 * s + v, y - 100 * s, x - 30 * s + v, y - 90 * s], "#2C4226");
-      [-1, 1].forEach((l) => L(c, x - 10 * s + v * 0.5, y - 116 * s, x - 10 * s + l * 12 * s + v * 0.5, y - 136 * s, C.hueso, 2.5 * s));
+      DIB.insignia(c, (x2, y2) => [x - 10 * s + v * 0.5 + x2 * 40 * s, y - 146 * s + y2 * 40 * s], "#F2ECEC");
     }
   }
 

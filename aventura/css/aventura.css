@@ -11,7 +11,6 @@
 :root { --negro: #111111; --rojo: #9C2315; --rojo2: #C8402D; --rosa: #E0B2B2; --hueso: #F2ECEC; --oro: #FFD98A; --coral: #FF8D71; --runico: #73D5DB; --violeta: #9A6BD8; }
 body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; color: var(--hueso); font-family: "Eromash Text", system-ui, sans-serif; }
 #lienzo { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
-.lienzo3d { position: fixed; inset: 0; width: 100vw; height: 100vh; display: none; pointer-events: none; }
 .ui { position: fixed; pointer-events: none; }
 .panel { background: rgba(17, 17, 17, 0.88); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
 .rotulo { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 800; }
