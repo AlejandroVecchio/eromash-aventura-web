@@ -204,10 +204,10 @@ window.MAPA = (function () {
   const unicoMuerto = (id) => window.HORDAS && HORDAS.grupos.some((g) => g.unico === id && g.miembros.some((e) => e.lider && e.muerto > 0));
   const limpio = (g) => g && g.miembros.every((e) => e.muerto > 0);
   // las clases de marca: así se filtran en el mapa grande y se nombran en la leyenda (mp.ley_<clase>)
-  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano", mistico: "mistico", mazmorra: "zona", barca: "zona", mercader: "mercader", contrato: "contrato" };
-  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "mistico", "puente", "zona", "mercader", "contrato"];
+  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano", mistico: "mistico", mazmorra: "zona", barca: "zona", mercader: "mercader", contrato: "contrato", instructor: "instructor" };
+  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "mistico", "puente", "zona", "mercader", "contrato", "instructor"];
   // ícono de muestra de cada clase para la leyenda
-  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], mistico: ["mistico", { forma: "fresnoEcos" }], puente: ["puente", {}], zona: ["mazmorra", {}], mercader: ["mercader", {}], contrato: ["contrato", {}] };
+  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], mistico: ["mistico", { forma: "fresnoEcos" }], puente: ["puente", {}], zona: ["mazmorra", {}], mercader: ["mercader", {}], contrato: ["contrato", {}], instructor: ["instructor", {}] };
   const filtro = (cat) => !st || !st.ocultas || !st.ocultas[cat];
   function cadaMarca(fn) {
     const hechas = [],

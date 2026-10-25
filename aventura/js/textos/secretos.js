@@ -190,6 +190,7 @@ I18N.textos({
   "mp.ley_zona": { es: "Mazmorras y travesías", en: "Dungeons and voyages" },
   "mp.ley_mercader": { es: "Mercaderes", en: "Merchants" },
   "mp.ley_contrato": { es: "Contratos de caza", en: "Hunting contracts" },
+  "mp.ley_instructor": { es: "Instructores", en: "Trainers" },
   "mp.ley_hecho": { es: "Mostrar lo ya hecho", en: "Show what's done" },
   "mp.hecho": { es: "hecho", en: "done" },
   "mp.bosque": { es: "Bosque de Eldervald", en: "Eldervald forest" },

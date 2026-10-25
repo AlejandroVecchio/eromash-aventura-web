@@ -5,29 +5,42 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 18,
-    titulo: { es: "Furia y habilidades activas", en: "Fury and active skills" },
+    pr: 19,
+    titulo: { es: "Instructores y muñeco de práctica", en: "Trainers and training dummy" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 17, es: "árbol de habilidades: cada habilidad activa es un nodo nuevo (círculo) de su rama y se aprende con puntos", en: "skill tree: each active skill is a new node (circle) in its branch, learned with points" },
-      { pr: 15, es: "bestiario: los golpes de las habilidades también suman el punto débil", en: "bestiary: skill hits also benefit from weak spots" },
+      { pr: 17, es: "árbol de habilidades: cada lección da un punto de habilidad y cada maestro es de una rama", en: "skill tree: each lesson grants a skill point and each trainer belongs to a branch" },
+      { pr: 16, es: "contratos: usa los ganchos de brújula y mapa (marcasBrujula, marcasMapa)", en: "contracts: uses the compass and map hooks (marcasBrujula, marcasMapa)" },
     ],
     mirar: [
-      { es: "Debajo de la estamina aparece la barra de Furia (cuando sabés alguna habilidad). Arranca vacía, se llena pegando (los críticos más) y recibiendo golpes, y se enfría a los 5 s fuera de pelea.", en: "Below stamina there's a Fury bar (once you know a skill). It starts empty, fills as you hit (crits more) and take blows, and cools down 5 s out of combat." },
-      { es: "1 · Rugido de Björn (Oso): aturde lo cercano, lo deja expuesto (+15 %) y te da armadura. 2 · Salto del lobo: saltás hacia la criatura de enfrente sin que te toquen y pegás al caer. 3 · Bandada (Cuervo): cuervos que buscan, pican y marcan.", en: "1 · Björn's roar (Bear): stuns what's near, exposes it (+15 %) and grants armour. 2 · Wolf's leap: leap at the creature in front, untouchable, and hit on landing. 3 · Flock (Raven): ravens that seek, peck and mark." },
-      { es: "Con mando: L2 (escudo) + □ △ ○. Cada una tiene su casilla en la barra de abajo con su espera, y se apaga si falta Furia.", en: "With a gamepad: L2 (shield) + □ △ ○. Each one has its slot on the bottom bar with its cooldown, greyed out without Fury." },
-      { es: "En el árbol son círculos en la tercera fila (piden 6 puntos en la rama y su padre). El rango 2 abarata y mejora cada una.", en: "In the tree they're circles on the third row (they need 6 points in the branch and their parent). Rank 2 makes each cheaper and stronger." },
+      { es: "En el patio del Puesto, al oeste del portón, está el muñeco de práctica de Hallbera. Con E: «Medir el daño» da 10 s y después el total, el daño por segundo, golpes, críticos y el mejor golpe (guarda tu mejor marca).", en: "In the Outpost yard, west of the gate, stands Hallbera's training dummy. With E: «Measure damage» gives 10 s and then total damage, DPS, hits, crits and best hit (it keeps your best mark)." },
+      { es: "Tres maestros, como en el Gothic: Hallbera junto al muñeco (Oso), Ulfar cerca del refugio (Lobo) y Vör junto al túmulo (Cuervo). Cada lección pide nivel, plata y pasar antes su prueba en el muñeco.", en: "Three trainers, Gothic-style: Hallbera by the dummy (Bear), Ulfar near the refuge (Wolf) and Vör by the barrow (Raven). Each lesson needs a level, silver and passing their trial at the dummy first." },
+      { es: "Las pruebas: daño en 10 s (Hallbera), críticos en 12 s (Ulfar) y esquivas justas al brazo del muñeco, que gira con aviso exacto en el piso (Vör). La prueba pedida se sigue en el rastreador y la brújula.", en: "Trials: damage in 10 s (Hallbera), crits in 12 s (Ulfar) and perfect dodges of the dummy's arm, which swings with an exact floor telegraph (Vör). The requested trial shows in the tracker and compass." },
+      { es: "Cada lección enseña algo propio (vida, armadura, crítico, poder rúnico…) y da +1 punto de habilidad. Los maestros salen en el mapa con su clase.", en: "Each lesson teaches something of its own (life, armour, crit, rune power…) and grants +1 skill point. Trainers appear on the map with their own class." },
     ],
     botones: [
-      { es: "Aprender las tres e ir a pelear", en: "Learn all three and go fight", fn: (A) => {
-        if (RPG.nivel() < 25) RPG.estado().nivel = 25;
-        Object.assign(ARBOL.estado().r, { piel: 3, zarpa: 3, zarpazo: 1, rugido: 1, patas: 3, jauria: 3, salto: 1, ojo: 3, memoria: 3, bandada: 1 });
-        RPG.recalcular();
-        FURIA.ponerFuria(100);
-        ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 400);
+      { es: "Ir al muñeco y a Hallbera", en: "Go to the dummy and Hallbera", fn: (A) => {
+        const m = INSTRUCTORES.muneco();
+        ir(A, [m.x + 40, m.y + 130]);
       } },
-      { es: "Llenar la Furia", en: "Fill Fury", fn: () => FURIA.ponerFuria(100) },
-      { es: "Ver los nodos activos en el árbol", en: "See the active nodes in the tree", fn: () => INVENTARIO.abrir("talentos") },
+      { es: "Nivel 16 y 1500 de plata", en: "Level 16 and 1500 silver", fn: () => {
+        if (RPG.nivel() < 16) RPG.estado().nivel = 16;
+        RPG.recalcular();
+        PODERES.pj().plata = Math.max(PODERES.pj().plata, 1500);
+      } },
+      { es: "Pedir la prueba de Vör (esquivas)", en: "Ask for Vör's trial (dodges)", fn: (A) => {
+        INSTRUCTORES.pedirPrueba("vor");
+        const m = INSTRUCTORES.muneco();
+        ir(A, [m.x + 40, m.y + 130]);
+      } },
+      { es: "Ir a Ulfar", en: "Go to Ulfar", fn: (A) => {
+        const g = INSTRUCTORES.gente().ulfar;
+        ir(A, [g.x, g.y + 120]);
+      } },
+      { es: "Ir a Vör", en: "Go to Vör", fn: (A) => {
+        const g = INSTRUCTORES.gente().vor;
+        ir(A, [g.x, g.y + 120]);
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

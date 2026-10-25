@@ -231,6 +231,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
+- **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
+  - dónde está cada uno · las lecciones · el muñeco · el sistema
 - **interiores.js**: los interiores (sistema INTERIORES)
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
@@ -284,6 +286,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
+- **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
+  - assets: munecoPractica
 - **assets-interiores.js**: los muebles de adentro (interiores)
   - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco
   - assets: escritorioRunico, hogarPiedra, camaPieles, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
@@ -349,6 +353,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
+- **instructores.js**: Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario) y de la barra de acciones del HUD (prefijo inv.), los dos idiomas.
