@@ -261,6 +261,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
+- **nemesis.js**: las némesis: las criaturas que vencieron a Eromash (sistema NEMESIS)
+  - nacer y crecer · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · lanzar runas · dibujo
@@ -407,6 +409,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
+- **nemesis.js**: Textos de las némesis (motor/nemesis.js): prefijo nm. (y mp.ley_nemesis). Los nombres nórdicos no se traducen.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones

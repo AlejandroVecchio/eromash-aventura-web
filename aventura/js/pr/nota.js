@@ -5,29 +5,26 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 32,
-    titulo: { es: "Cofres con candado y ganzúas", en: "Padlocked chests and lockpicks" },
+    pr: 33,
+    titulo: { es: "Némesis: la que te vence no te olvida", en: "Nemesis: the one that beats you won't forget" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: lo de adentro son piezas", en: "loot: what's inside are items" },
-      { pr: 12, es: "materiales: la ganzúa es un material de la Bolsa", en: "materials: the lockpick is a Bag material" },
-      { pr: 13, es: "comercio: Ingrid vende ganzúas", en: "trade: Ingrid sells lockpicks" },
+      { pr: 1, es: "niveles: vencerla da mucha experiencia", en: "levels: defeating it gives lots of experience" },
+      { pr: 3, es: "botín: deja una pieza rara o mejor", en: "loot: it drops a rare or better item" },
     ],
     mirar: [
-      { es: "Catorce cofres con candado en lugares apartados (también en el mapa). El candado dice el nivel: bronce, hierro, plata o runas (este brilla). Arrancás con tres ganzúas e Ingrid vende más.", en: "Fourteen padlocked chests in out-of-the-way places (also on the map). The padlock shows the level: bronze, iron, silver or runes (that one glows). You start with three lockpicks and Ingrid sells more." },
-      { es: "«Forzar el candado» abre el juego de la cerradura: ◀ ▶ o arrastrar mueve la ganzúa y mantener E (o el botón Girar) gira. Cerca del punto justo gira más; si se fuerza donde no va, la ganzúa tiembla, se pone roja y se rompe.", en: "«Pick the padlock» opens the lock game: ◀ ▶ or dragging moves the pick and holding E (or the Turn button) turns. Closer to the sweet spot it turns further; forcing it where it won't go makes the pick shake, turn red and break." },
-      { es: "Cuanto más difícil, más chico el punto (30°, 20°, 12°, 7°) y mejor lo de adentro: plata, piezas raras, esquirlas. A los 5, 15 y 30 candados abiertos el punto se agranda.", en: "The harder it is, the smaller the spot (30°, 20°, 12°, 7°) and the better the contents: silver, rare items, shards. At 5, 15 and 30 opened padlocks the spot gets wider." },
+      { es: "Dejate matar por una criatura de un grupo del bosque: se gana un nombre y un apodo («Ulfr Rompeyelmos»), un rasgo (piel de hierro, rabiosa, veloz o sanguijuela), más vida y daño, y una corona roja con su nombre y sus estrellas de rango.", en: "Let a creature from a forest pack kill you: it earns a name and epithet («Ulfr Helmbreaker»), a trait (iron hide, rabid, swift or leech), more life and damage, and a red crown with its name and rank stars." },
+      { es: "Si te vuelve a vencer sube de rango (hasta 5). Al acercarte te reconoce con un rugido. Está en el mapa (clase Némesis) y en el diario con cuántas veces te venció.", en: "If it beats you again it ranks up (up to 5). When you get close it recognises you with a roar. It's on the map (Nemeses class) and in the journal with how many times it beat you." },
+      { es: "Vencerla paga plata, mucha experiencia y una pieza rara o mejor, y queda en el diario entre las vengadas. Hay tres a la vez como mucho.", en: "Defeating it pays silver, lots of experience and a rare or better item, and it goes into the journal as avenged. Three at a time at most." },
     ],
     botones: [
-      { es: "Ir al cofre de bronce más cercano con 10 ganzúas", en: "Go to the nearest bronze chest with 10 lockpicks", fn: (A) => {
-        MATERIALES.estado().tiene.ganzua = (MATERIALES.cuantos("ganzua") || 0) + 10;
-        const cs = CERRADURAS.cofres().filter((c) => c.nivel === 0 && !CERRADURAS.estado().abiertos[c.i]).sort((a, b) => Math.hypot(a.cosa.x - A.jug.x, a.cosa.y - A.jug.y) - Math.hypot(b.cosa.x - A.jug.x, b.cosa.y - A.jug.y));
-        if (cs[0]) ir(A, [cs[0].cosa.x, cs[0].cosa.y + 90]);
-      } },
-      { es: "Ir a un cofre de runas (maestro) con 10 ganzúas", en: "Go to a rune chest (master) with 10 lockpicks", fn: (A) => {
-        MATERIALES.estado().tiene.ganzua = (MATERIALES.cuantos("ganzua") || 0) + 10;
-        const c = CERRADURAS.cofres().find((q) => q.nivel === 3 && !CERRADURAS.estado().abiertos[q.i]) || CERRADURAS.cofres().find((q) => q.nivel === 3);
-        ir(A, [c.cosa.x, c.cosa.y + 90]);
+      { es: "Crear una némesis de rango 3 y llevarme cerca", en: "Make a rank 3 nemesis and take me near it", fn: (A) => {
+        const g = HORDAS.grupos.filter((q) => !q.unico).sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
+        const e = g.miembros.find((q) => !q.lider && !q.muerto) || g.miembros[0];
+        NEMESIS.nacer(e);
+        NEMESIS.nacer(e);
+        NEMESIS.nacer(e);
+        ir(A, g.centro, 0, 700);
       } },
     ],
   };

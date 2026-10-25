@@ -486,6 +486,24 @@ Santuarios como los del Diablo con la idea de las piedras guardianas del Skyrim:
 - Práctica: a los 5, 15 y 30 candados abiertos el punto es 3° más ancho cada vez.
 - Estado en `E.extra.cerraduras = { abiertos, abiertas, rotas, regalo }`.
 
+## Némesis (`motor/nemesis.js`, `NEMESIS`; textos `nm.`)
+
+Como el sistema Némesis del Shadow of Mordor.
+- Quién mata: `J.herir(dano, ox, oy)` recibe el lugar de quien pega (combate.js pasa `e.x, e.y`). NEMESIS envuelve
+  `J.herir`; si ese golpe deja a Eromash muerto, la criatura se vuelve némesis (`nacer`). Solo cuentan las de los grupos
+  de HORDAS (`e.hordaGrupo`), y no los líderes únicos.
+- Cada némesis tiene nombre nórdico (fijo, `NOMBRES`), apodo (`nm.ep_*`), rasgo y rango 1 a 5. Si vuelve a ganar, sube
+  un rango. A lo sumo hay `TOPE` = 3; la nueva reemplaza a la de rango más bajo.
+- La fuerza es una copia propia de la ficha (`e.d`, con la original en `e.dBase`): vida × (1,6 + 0,3 × rango), daño
+  × (1,15 + 0,08 × rango) (× 1,3 si es rabiosa), velocidad × 1,25 si es veloz, plata × 4. La piel de hierro recibe
+  × 0,65 (`modDano`) y la sanguijuela se cura el doble de lo que saca.
+- Vencerla da 60 + 40 × rango de plata, 150 + 80 × rango de experiencia y una pieza rara (épica desde rango 4), y queda
+  en `vengadas`.
+- Se dibuja corona y nombre en `sobreLuz`. En el mapa es la marca `nemesis` (clase `nemesis`). A menos de 900 la
+  criatura avisa que lo reconoce.
+- Estado en `E.extra.nemesis = { vivas: [{ id, g, m, tipo, nombre, ep, rango, rasgo, x, y, muertes }], vengadas, cuenta }`;
+  `g` y `m` son el índice del grupo y del miembro, que salen iguales en cada partida.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
