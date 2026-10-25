@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="css/aventura.css" />
 <style>
   /* el mapa a la izquierda, el panel de objetos y herramientas a la derecha */
+  /* arriba la barra de menús (fija); todo lo demás se ubica debajo (body es el marco de lo absoluto) */
+  html { height: 100%; background: #111111; }
+  body { position: relative; margin-top: 34px !important; height: calc(100% - 34px) !important; }
   html, body { margin: 0; height: 100%; background: #111111; color: #F2ECEC; font-family: "Eromash Text", system-ui, sans-serif; overflow: hidden; }
   .ed { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
   #mapa { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; background: #1E2C1B; }
@@ -38,6 +41,49 @@
   .obj span { font-size: 12px; line-height: 1.2; color: #E0B2B2; }
   .obj.elegido { border-color: #FFD98A; }
   .grupo { grid-column: 1 / -1; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #FFD98A; margin: 8px 0 0; }
+  #pestanasLado { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-bottom: 1px solid #3A2A26; position: sticky; top: 0; z-index: 2; background: #1C1714; }
+  #pestanasLado button { border: 0; border-bottom: 2px solid transparent; background: none; padding: 10px 8px; font-size: 13px; color: #B5A5A0; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #pestanasLado button.activa { color: #FFD98A; border-bottom-color: #FFD98A; }
+  #pestanasLado small { color: #73D5DB; font-size: 11px; }
+  /* cada pestaña se desplaza sola; el pie (probar y descargar) queda siempre a la vista */
+  .ed > aside { overflow: hidden; }
+  #ladoObjetos { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-top: 8px; }
+  #ladoObjetos #lista { flex: none; min-height: 0; overflow: visible; }
+  #ladoCapas { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 8px; }
+  footer #cuenta, footer #donde, footer #guardadoV { font-size: 11.5px; line-height: 1.3; }
+  .cpCab { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 4px; }
+  .cpCab b { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #FFD98A; }
+  .cpCab button { padding: 4px 10px; font-size: 12px; }
+  .cpAyuda { display: block; padding: 2px 16px 6px; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
+  .cpFila { display: grid; grid-template-columns: 30px 30px minmax(0, 1fr) auto auto; align-items: center; gap: 2px; padding: 2px 10px 2px 8px; border-left: 2px solid transparent; font-size: 13px; }
+  .cpFila.activa { background: #3A1510; border-left-color: #FFD98A; }
+  .cpFila.conElegido .cpNom::after { content: " ◆"; color: #FFD98A; font-size: 10px; }
+  .cpFila button { background: none; border: 0; padding: 4px; color: #B5A5A0; min-width: 28px; }
+  .cpFila button:hover { color: #FFD98A; }
+  .cpFila .apagado { opacity: .35; }
+  .cpFila .on { color: #FFD98A; }
+  .cpFila .cpNom { text-align: left; color: #F2ECEC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 4px; }
+  .cpFila.oculta .cpNom { opacity: .45; }
+  .cpFila .cpN { color: #B5A5A0; font-size: 11px; font-variant-numeric: tabular-nums; padding: 0 4px; }
+  .cpFila input { font: inherit; font-size: 13px; background: #111111; color: #F2ECEC; border: 1px solid #FFD98A; padding: 4px 6px; min-width: 0; }
+  .cpAcciones { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 10px 8px 70px; }
+  .cpAcciones button { font-size: 11.5px; padding: 4px 7px; }
+  /* la barra de menús */
+  #menubar { position: fixed; top: 0; left: 0; right: 0; height: 34px; z-index: 40; display: flex; align-items: stretch; gap: 1px; background: #1C1714; border-bottom: 1px solid #3A2A26; padding: 0 6px; overflow-x: auto; scrollbar-width: none; box-sizing: border-box; }
+  #menubar .marca { font-family: "Eromash Display", system-ui, sans-serif; color: #FFD98A; padding: 0 12px 0 6px; white-space: nowrap; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  #menubar .marca i { width: 9px; height: 9px; background: #C8402D; transform: rotate(45deg); display: inline-block; }
+  #menubar > button.m { padding: 0 11px; white-space: nowrap; border: 0; border-bottom: 2px solid transparent; background: none; font-size: 13px; }
+  #menubar > button.m.abierto { background: #241A17; border-bottom-color: #FFD98A; color: #FFD98A; }
+  #menubar .der { margin-left: auto; display: flex; align-items: center; gap: 8px; color: #B5A5A0; font-size: 12px; white-space: nowrap; padding-right: 6px; }
+  .desp { position: fixed; z-index: 45; min-width: 260px; max-height: calc(100vh - 50px); overflow: auto; background: #1C1714; border: 1px solid #FFD98A; padding: 4px 0; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+  .desp .it { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 6px 14px 6px 10px; font-size: 13px; border: 0; background: none; }
+  .desp .it.activo, .desp .it:hover { background: #9C2315; }
+  .desp .it[disabled] { opacity: .4; cursor: default; background: none; }
+  .desp .it kbd { font: inherit; font-size: 11.5px; color: #B5A5A0; }
+  .desp .it .ico { color: #FFD98A; font-size: 11px; text-align: center; }
+  .desp .it.sub kbd::after { content: " ›"; }
+  .desp .sep { height: 1px; background: #3A2A26; margin: 4px 0; }
+  .desp .tit { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #B5A5A0; padding: 6px 14px 2px 36px; }
   footer { border-top: 1px solid #3A2A26; padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
   footer .botones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   footer .botones button { padding: 7px 6px; font-size: 12px; }
@@ -130,6 +176,23 @@
   .iaTarea select { min-width: 0; font: inherit; font-size: 12.5px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 4px; }
   #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
+  #boVarias { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #3A2A26; padding-top: 8px; }
+  #boVarias > b { color: #7BC86C; font-size: 13px; }
+  #boVariasLista { display: flex; flex-direction: column; gap: 6px; }
+  #boPanel button[disabled] { opacity: .45; cursor: default; }
+  #iaVarias { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid #3A2A26; padding-top: 8px; }
+  #iaVarias > b { color: #73D5DB; font-size: 13px; }
+  #iaVariasLista, #boVariasLista { display: flex; flex-direction: column; gap: 6px; max-height: 34vh; overflow: auto; }
+  .iaVar { background: #241A17; border-left: 4px solid #73D5DB; padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; }
+  .iaVar.mal { opacity: .7; }
+  .iaVarCab { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .iaVarCab small { text-align: right; }
+  .iaVarFila { display: flex; gap: 14px; font-size: 13px; }
+  .iaVarFila label { display: flex; gap: 5px; align-items: center; }
+  .iaVar details summary { font-size: 12px; color: #B5A5A0; border: 0; }
+  .iaVar details { border: 0 !important; padding: 0 !important; }
+  .iaVar details p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.4; white-space: pre-wrap; color: #E0B2B2; }
+  #iaPanel button[disabled] { opacity: .45; cursor: default; }
   /* subir un boceto de mapa (U): arriba a la derecha del mapa */
   #boPanel { position: absolute; right: 352px; top: 12px; width: min(400px, calc(100vw - 32px)); max-height: calc(100% - 60px); overflow: auto; background: #1C1714; border: 1px solid #7BC86C; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; }
   #boPanel .cab b { color: #7BC86C; }
@@ -212,7 +275,7 @@
   #znSel { margin: 6px 12px; padding: 8px 4px; border: 1px solid #73D5DB; }
   #znSel b { padding: 0 12px; color: #73D5DB; }
   @media (max-width: 760px) { #zonas { grid-template-columns: 1fr; grid-template-rows: 55% 45%; } }
-  #npcs { position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 100vw; z-index: 25; background: #111111; border-left: 1px solid #3A2A26; overflow: auto; }
+  #npcs { position: fixed; top: 34px; right: 0; bottom: 0; width: 360px; max-width: 100vw; z-index: 25; background: #111111; border-left: 1px solid #3A2A26; overflow: auto; }
   #npcs.oculto { display: none; }
   #npcs header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 16px; }
   #npcs small { display: block; padding: 2px 16px; color: #B5A5A0; font-size: 12px; line-height: 1.35; }
@@ -259,17 +322,20 @@
     .ed { grid-template-columns: 1fr; grid-template-rows: 55% 45%; }
     aside { border-left: 0; border-top: 1px solid #3A2A26; }
     #ayuda { right: 12px; bottom: calc(45% + 8px); }
+    footer #cuenta, footer #donde, footer #guardadoV { display: none; }
   }
 </style>
 </head>
 <body>
+<nav id="menubar" aria-label=""></nav>
 <div class="ed">
   <canvas id="mapa"></canvas>
   <aside>
-    <header>
-      <h1 data-i18n="ed.titulo"></h1>
-      <p class="sub" data-i18n="ed.sub"></p>
-    </header>
+    <div id="pestanasLado" role="tablist">
+      <button id="pObjetos" role="tab" class="activa" data-i18n="ed.cp_objetos"></button>
+      <button id="pCapas" role="tab" data-tecla="L"><span data-i18n="ed.cp_titulo"></span> <small id="pCapaActiva"></small></button>
+    </div>
+    <div id="ladoObjetos">
     <div id="planoBar">
       <input id="planoNombre" type="text" spellcheck="false" />
       <div class="botones3"><button id="planoDup" data-i18n="ed.plano_dup"></button><button id="planoCopiar" data-i18n="ed.plano_copiar"></button><button id="planoPegar" data-i18n="ed.plano_pegar"></button></div>
@@ -282,15 +348,8 @@
       <button id="hNota" data-tecla="5" data-i18n="ed.nota"></button>
       <button id="hAgua" data-tecla="6" data-i18n="ed.agua"></button>
       <button id="hMedir" data-tecla="7" data-i18n="ed.medir"></button>
-      <button id="hIA" data-tecla="8" data-i18n="ed.ia"></button>
-      <button id="hComandos" data-tecla="Ctrl+K" data-i18n="ed.comandos"></button>
       <button id="hRegion" data-tecla="0" data-i18n="ed.region"></button>
       <button id="hPincel" data-tecla="B" data-i18n="ed.pincel"></button>
-      <button id="hInteriores" data-tecla="9" data-i18n="ed.interiores"></button>
-      <button id="hTexturas" data-tecla="Y" data-i18n="ed.texturas"></button>
-      <button id="hZonas" data-tecla="M" data-i18n="ed.zonas"></button>
-      <button id="hNpc" data-tecla="N" data-i18n="ed.importar"></button>
-      <button id="hBoceto" data-tecla="U" data-i18n="ed.bo_boton"></button>
     </div>
     <div id="camPanel" class="oculto">
       <b id="camTitulo"></b>
@@ -359,28 +418,31 @@
       <label><input id="variar" type="checkbox" /><span data-i18n="ed.variar"></span></label>
     </div>
     </div>
-    <details id="vistaOpc"><summary data-i18n="ed.vista"></summary>
-    <div class="fila">
-      <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
-      <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
-      <label><input id="grilla" type="checkbox" /><span data-i18n="ed.grilla"></span></label>
-    </div>
-    <div class="fila">
-      <label><input id="verBosque" type="checkbox" checked /><span data-i18n="ed.ver_bosque"></span></label>
-      <label><input id="verNotas" type="checkbox" checked /><span data-i18n="ed.ver_notas"></span></label>
-      <label><input id="bloquear" type="checkbox" /><span data-i18n="ed.bloquear"></span></label>
-    </div>
-    <div class="fila"><label><input id="verZonas" type="checkbox" checked /><span data-i18n="ed.ver_zonas"></span></label></div>
-    <div class="fila"><label><input id="verRegiones" type="checkbox" /><span data-i18n="ed.ver_regiones"></span></label><select id="verHistoria" style="flex: 1"></select></div>
-    <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
-    <div class="fila">
-      <label><input id="original" type="checkbox" /><span data-i18n="ed.original"></span></label>
-      <input id="originalA" type="range" min="0.05" max="1" step="0.05" value="0.5" /><b id="originalV">50%</b>
-    </div>
-    </details>
     <div class="fila"><select id="ir"></select></div>
     <div class="fila"><input id="buscar" type="search" /></div>
     <div id="lista"></div>
+    </div>
+    <div id="ladoCapas" class="oculto">
+      <div class="cpCab"><b data-i18n="ed.cp_propias"></b><button id="cpNueva" data-i18n="ed.cp_nueva"></button></div>
+      <div id="cpLista"></div>
+      <small class="cpAyuda" data-i18n="ed.cp_ayuda"></small>
+      <div class="cpCab"><b data-i18n="ed.cp_mundo"></b></div>
+      <div id="cpBase"></div>
+      <div class="fila"><span data-i18n="ed.cp_original_a"></span><input id="originalA" type="range" min="0.05" max="1" step="0.05" value="0.5" /><b id="originalV">50%</b></div>
+      <details id="vistaOpc"><summary data-i18n="ed.vista"></summary>
+      <div class="fila">
+        <label><input id="choques" type="checkbox" /><span data-i18n="ed.choques"></span></label>
+        <label><input id="historia" type="checkbox" /><span data-i18n="ed.nombres"></span></label>
+        <label><input id="grilla" type="checkbox" /><span data-i18n="ed.grilla"></span></label>
+      </div>
+      <div class="fila"><span data-i18n="ed.cp_historia"></span><select id="verHistoria" style="flex: 1"></select></div>
+      <div class="fila"><span data-i18n="ed.camara"></span><input id="camara" type="range" min="-180" max="180" step="15" value="0" /><b id="camaraV">0°</b><button id="norte" data-i18n="ed.norte"></button></div>
+      </details>
+      <div class="oculto">
+        <input id="verBosque" type="checkbox" checked /><input id="verNotas" type="checkbox" checked /><input id="bloquear" type="checkbox" />
+        <input id="verZonas" type="checkbox" checked /><input id="verRegiones" type="checkbox" /><input id="original" type="checkbox" />
+      </div>
+    </div>
     <footer>
       <div id="cuenta"></div>
       <div id="donde"></div>
@@ -391,19 +453,20 @@
       <div class="botones">
         <button id="bDeshacer" data-i18n="ed.deshacer"></button>
         <button id="bRehacer" data-i18n="ed.rehacer"></button>
-        <button id="bRevisar" data-i18n="ed.revisar"></button>
         <button id="bProbar" data-i18n="ed.probar"></button>
-        <button id="bCopiar" data-i18n="ed.copiar"></button>
-        <button id="bAtajos" data-i18n="ed.atajos_b"></button>
-        <button id="bBorrador" data-i18n="ed.borrador_guardar"></button>
-        <select id="borradores"></select>
-        <button id="bPieza" data-i18n="ed.pieza_guardar"></button>
-        <select id="piezas"></select>
-        <button id="bCargar" data-i18n="ed.cargar"></button>
-        <button id="bLimpiar" data-i18n="ed.limpiar"></button>
+        <button id="bDescargar" class="ancho" data-i18n="ed.descargar"></button>
+      </div>
+      <!-- lo que ahora vive en los menús (Archivo, Editar, Crear, IA, Ayuda): los botones siguen acá, escondidos -->
+      <div id="escondidos" class="oculto">
+        <button id="hIA" data-i18n="ed.ia"></button><button id="hComandos" data-i18n="ed.comandos"></button>
+        <button id="hInteriores" data-i18n="ed.interiores"></button><button id="hTexturas" data-i18n="ed.texturas"></button>
+        <button id="hZonas" data-i18n="ed.zonas"></button><button id="hNpc" data-i18n="ed.importar"></button><button id="hBoceto" data-i18n="ed.bo_boton"></button>
+        <button id="bRevisar" data-i18n="ed.revisar"></button><button id="bCopiar" data-i18n="ed.copiar"></button><button id="bAtajos" data-i18n="ed.atajos_b"></button>
+        <button id="bBorrador" data-i18n="ed.borrador_guardar"></button><select id="borradores"></select>
+        <button id="bPieza" data-i18n="ed.pieza_guardar"></button><select id="piezas"></select>
+        <button id="bCargar" data-i18n="ed.cargar"></button><button id="bLimpiar" data-i18n="ed.limpiar"></button>
         <button id="bExportar" data-i18n="ed.exportar_corto" title=""></button>
         <input id="archivo" type="file" accept=".js,.json,text/javascript,application/json" hidden />
-        <button id="bDescargar" class="ancho" data-i18n="ed.descargar"></button>
       </div>
     </footer>
   </aside>
@@ -545,7 +608,8 @@
   <small id="iaZona"></small>
   <div id="iaChat"></div>
   <textarea id="iaPedido" rows="3" data-i18n-ph="ed.ia_ph"></textarea>
-  <div class="botones"><button id="iaZonaVista" data-i18n="ed.ia_zona_vista"></button><button id="iaCopiar" data-i18n="ed.ia_copiar"></button><button id="iaEnviar" class="listo" data-i18n="ed.ia_enviar"></button></div>
+  <div class="botones"><button id="iaZonaVista" data-i18n="ed.ia_zona_vista"></button><button id="iaCopiar" data-i18n="ed.ia_copiar"></button><button id="iaTodas" data-i18n="ed.ia_todas"></button><button id="iaEnviar" class="listo" data-i18n="ed.ia_enviar"></button></div>
+  <div id="iaVarias" class="oculto"><b data-i18n="ed.ia_todas_titulo"></b><div id="iaVariasLista"></div><div class="botones"><button id="iaVariasDescartar" data-i18n="ed.ia_descartar"></button><button id="iaVariasAplicar" class="listo"></button></div></div>
   <div id="iaOtra" class="oculto"><textarea id="iaRespuesta" rows="3" data-i18n-ph="ed.ia_pegar"></textarea><div class="botones"><button id="iaLeer" class="listo" data-i18n="ed.ia_leer"></button></div></div>
   <div id="iaPropuesta" class="oculto"><b id="iaResumen"></b><div class="botones"><button id="iaDescartar" data-i18n="ed.ia_descartar"></button><button id="iaAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
 </div>
@@ -579,8 +643,9 @@
   <div id="boFilaIA" class="oculto">
     <small id="boIAQuien"></small>
     <textarea id="boPedido" rows="2" data-i18n-ph="ed.bo_pedido_ph"></textarea>
-    <div class="botones"><button id="boGenerar" class="listo" data-i18n="ed.bo_generar"></button></div>
+    <div class="botones"><button id="boTodas" data-i18n="ed.ia_todas"></button><button id="boGenerar" class="listo" data-i18n="ed.bo_generar"></button></div>
   </div>
+  <div id="boVarias" class="oculto"><b data-i18n="ed.ia_todas_titulo"></b><div id="boVariasLista"></div><div class="botones"><button id="boVariasDescartar" data-i18n="ed.ia_descartar"></button><button id="boVariasAplicar" class="listo"></button></div></div>
   <div id="boPropuesta" class="oculto"><small id="boResumen"></small><div class="botones"><button id="boDescartar" data-i18n="ed.ia_descartar"></button><button id="boAplicar" class="listo" data-i18n="ed.ia_aplicar"></button></div></div>
 </div>
 <div id="txPanel" class="oculto">
@@ -698,5 +763,7 @@
 <script src="js/editor/npcs.js"></script>
 <script src="js/editor/importar.js"></script>
 <script src="js/editor/boceto.js"></script>
+<script src="js/editor/capas.js"></script>
+<script src="js/editor/menu.js"></script>
 </body>
 </html>

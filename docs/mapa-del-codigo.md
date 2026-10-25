@@ -116,16 +116,20 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/editor/ · el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)
 
 - **boceto.js**: subir un boceto de mapa (tecla U): un dibujo en papel que se vuelve parte de Eldervald
-  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
+  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · con todas las IA a la vez: cada una arma su versión y se eligen una, dos o todas (cada una en su capa) · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
+- **capas.js**: las capas del editor (pestaña Capas, L)
+  - las pestañas del costado · las capas del mundo: cada una prende o apaga su casilla · las capas propias
 - **comandos.js**: la paleta de comandos del editor (Ctrl+K)
 - **cuartos.js**: editar los interiores (tecla 9 o «Editar su interior» con una casa elegida)
   - el panel · elegir, mover, poner · dibujar · los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos · el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste · el generador de casas: texto o controles → un plano nuevo · abrir y cerrar
 - **editor.js**: el editor de Eldervald
-  - estado · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo
+  - estado · capas propias · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo · capas propias (las usa js/editor/capas.js)
 - **historia.js**: la historia en el mapa
 - **ia.js**: hablar con una IA adentro del editor
-  - qué IA hace cada tarea · el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · en el mapa: la zona (celeste) y la vista previa de lo propuesto
+  - qué IA hace cada tarea · el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado · en el mapa: la zona (celeste) y la vista previa de lo propuesto
 - **importar.js**: importar cosas propias: estructuras, pinturas, calcos y texturas (panel Importar, tecla N)
+- **menu.js**: la barra de menús del editor (Archivo, Editar, Ver, Herramientas, Crear, Mundo, IA, Ayuda)
+  - la barra · los desplegables
 - **mundo.js**: regiones, piezas y exportar el mundo
   - regiones · piezas · exportar el mundo entero en JSON
 - **npcs.js**: importar gente propia (tecla N)
@@ -280,7 +284,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
-  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas
+  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.

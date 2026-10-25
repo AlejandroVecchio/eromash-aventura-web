@@ -110,6 +110,8 @@ window.EDITOR_IA = (function () {
       tabla.appendChild(fila);
     });
     const ning = !["claude", "chatgpt", "gemini"].some(tiene);
+    $("iaTodas").disabled = otra || conClave().length < 2;
+    $("iaTodas").title = t("ed.ia_todas_tit", [conClave().map((q) => NOMBRES[q]).join(", ") || "—"]);
     $("iaSinNinguna").classList.toggle("oculto", !ning || otra);
     if (ning) $("iaTus").open = true;
   }
@@ -316,6 +318,192 @@ window.EDITOR_IA = (function () {
     pensando = false;
   }
   $("iaEnviar").onclick = enviar;
+
+  // ---------- «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado ----------
+  // Cada uno con su color en el mapa; se ve o se oculta, se marca para usar y los elegidos van cada uno a una capa
+  // nueva con el nombre de la IA («Claude · pedido»), así se comparan prendiendo y apagando capas.
+  const COLOR = { claude: "#FF8D71", chatgpt: "#7BC86C", gemini: "#73D5DB" };
+  const conClave = () => ["claude", "chatgpt", "gemini"].filter(tiene);
+  let varias = null; // { pedido, res: [{ quien, nombre, ops, texto, txt, error, ver, usar, pensando }] }
+  async function enviarTodas() {
+    const pedido = $("iaPedido").value.trim();
+    if (pensando) return;
+    if (!pedido) return decir(t("ed.ia_falta_pedido"), "error");
+    const qs = conClave();
+    if (qs.length < 2) return decir(t("ed.ia_todas_falta"), "error");
+    decir(pedido, "yo");
+    decir(t("ed.ia_todas_pensando", [qs.map((q) => NOMBRES[q]).join(", ")]));
+    $("iaPedido").value = "";
+    propuesta = null;
+    $("iaPropuesta").classList.add("oculto");
+    const mensajes = conv.concat([{ role: "user", content: contexto(pedido) }]);
+    const yo = { pedido, mensajes };
+    const { res, listo } = pedirATodas(
+      mensajes,
+      SISTEMA,
+      (txt) => {
+        const l = leer(txt);
+        return l.ops && (l.ops.poner.length || l.ops.caminos.length || l.ops.quitar.length) ? l : null;
+      },
+      () => varias === yo && (pintarVarias(), E.pedir()),
+    );
+    yo.res = res;
+    varias = yo;
+    pensando = true;
+    pintarVarias();
+    await listo;
+    pensando = false;
+  }
+  function pintarVarias() {
+    const caja = $("iaVarias");
+    caja.classList.toggle("oculto", !varias);
+    if (!varias) return;
+    pintarLista($("iaVariasLista"), varias.res, pintarUsar);
+  }
+  // la lista de resultados (la usa también el boceto): cada IA con su color, «Ver en el mapa» y «Usar esta»
+  function pintarLista(l, res, alCambiar, resumen) {
+    l.innerHTML = "";
+    res.forEach((r) => {
+      const f = document.createElement("div");
+      f.className = "iaVar" + (r.error ? " mal" : "");
+      f.style.borderLeftColor = COLOR[r.quien];
+      const cab = document.createElement("div");
+      cab.className = "iaVarCab";
+      const nom = document.createElement("b");
+      nom.textContent = r.nombre;
+      nom.style.color = COLOR[r.quien];
+      const que = document.createElement("small");
+      que.textContent = r.pensando ? t("ed.ia_todas_esperando") : r.error ? r.error : resumen ? resumen(r.ops) : t("ed.ia_resumen", [r.ops.poner.length, r.ops.caminos.length, r.ops.quitar.length]);
+      cab.append(nom, que);
+      f.appendChild(cab);
+      if (!r.pensando && !r.error) {
+        const fila = document.createElement("div");
+        fila.className = "iaVarFila";
+        const chk = (k, txt) => {
+          const lb = document.createElement("label"),
+            c = document.createElement("input");
+          c.type = "checkbox";
+          c.checked = !!r[k];
+          c.addEventListener("change", () => ((r[k] = c.checked), alCambiar(), E.pedir()));
+          lb.append(c, document.createTextNode(txt));
+          return lb;
+        };
+        fila.append(chk("ver", t("ed.ia_todas_ver")), chk("usar", t("ed.ia_todas_usar")));
+        f.appendChild(fila);
+        if (r.texto) {
+          const d = document.createElement("details"),
+            sm = document.createElement("summary"),
+            p = document.createElement("p");
+          sm.textContent = t("ed.ia_todas_dice");
+          p.textContent = r.texto;
+          d.append(sm, p);
+          f.appendChild(d);
+        }
+      }
+      l.appendChild(f);
+    });
+    alCambiar();
+  }
+  function pintarUsar() {
+    const n = varias ? varias.res.filter((r) => r.usar && r.ops).length : 0;
+    $("iaVariasAplicar").disabled = !n;
+    $("iaVariasAplicar").textContent = t("ed.ia_todas_aplicar", [n]);
+  }
+  $("iaTodas").onclick = enviarTodas;
+  $("iaVariasDescartar").onclick = () => {
+    varias = null;
+    pintarVarias();
+    E.pedir();
+  };
+  $("iaVariasAplicar").onclick = () => {
+    if (!varias) return;
+    const elegidas = varias.res.filter((r) => r.usar && r.ops);
+    if (!elegidas.length) return;
+    aplicarEnCapas(elegidas, varias.pedido);
+    // la conversación sigue con lo que dijo la primera elegida
+    conv = varias.mensajes.concat([{ role: "assistant", content: elegidas[0].txt }]).slice(-8);
+    decir(t("ed.ia_todas_aplicado", [elegidas.map((r) => r.nombre).join(", ")]));
+    varias = null;
+    pintarVarias();
+    if (window.EDITOR_CAPAS) EDITOR_CAPAS.verPestana("capas");
+  };
+  // cada resultado elegido a una capa nueva con el nombre de la IA; todo en un solo paso de Deshacer
+  function aplicarEnCapas(elegidas, pedido) {
+    const corto = pedido.length > 30 ? pedido.slice(0, 29) + "…" : pedido;
+    elegidas.forEach((r, k) => {
+      const id = E.capas.nueva(r.nombre + " · " + corto, true, k > 0);
+      E.aplicar(r.ops, { capa: id, sinPaso: true, sinElegir: true });
+    });
+  }
+  // el mismo pedido a cada IA con clave, a la vez: res = [{ quien, nombre, pensando, ver, usar }], se va llenando;
+  // armar(txt) → { ops, texto } o null; alLlegar() repinta
+  function pedirATodas(mensajes, sistema, armar, alLlegar) {
+    const res = conClave().map((q) => ({ quien: q, nombre: NOMBRES[q], pensando: true, ver: true, usar: false }));
+    const listo = Promise.allSettled(
+      res.map(async (r) => {
+        try {
+          const txt = await llamar(r.quien, modeloDe(r.quien), conf.claves[r.quien], typeof mensajes === "function" ? mensajes(r.quien) : mensajes, sistema);
+          const l = armar(txt);
+          if (!l || !l.ops) throw new Error(t("ed.ia_sin_json"));
+          Object.assign(r, { txt, texto: l.texto, ops: l.ops, pensando: false });
+        } catch (e) {
+          Object.assign(r, { pensando: false, error: String(e.message || e) });
+        }
+        alLlegar();
+      }),
+    );
+    return { res, listo };
+  }
+  // en el mapa: lo de cada IA con su color (anillos en cada objeto, caminos y agua), encima de su vista previa
+  function dibujarVarias(c, cam, V, tt) {
+    if (!varias || !abierta()) return;
+    dibujarRes(c, cam, V, tt, varias.res);
+  }
+  function dibujarRes(c, cam, V, tt, res) {
+    res.forEach((r) => {
+      if (!r.ver || !r.ops) return;
+      E.fantasmas(c, r.ops.poner, tt, 0.4);
+      c.save();
+      c.strokeStyle = COLOR[r.quien];
+      c.lineWidth = 5 / cam.z;
+      c.setLineDash([16 / cam.z, 10 / cam.z]);
+      r.ops.caminos.concat(r.ops.rios || []).forEach((cm) => {
+        c.beginPath();
+        cm.p.forEach(([x, y], i) => (i ? c.lineTo(...V(x, y)) : c.moveTo(...V(x, y))));
+        c.stroke();
+      });
+      (r.ops.lagos || []).forEach((lg) => {
+        c.beginPath();
+        for (let k = 0; k <= 24; k++) {
+          const a = (k / 24) * Math.PI * 2,
+            q = V(lg.x + Math.cos(a) * lg.rx, lg.y + Math.sin(a) * lg.ry);
+          k ? c.lineTo(...q) : c.moveTo(...q);
+        }
+        c.stroke();
+      });
+      c.setLineDash([]);
+      c.lineWidth = 2.5 / cam.z;
+      r.ops.poner.slice(0, 600).forEach((a) => {
+        const [x, y] = V(a.x, a.y);
+        c.beginPath();
+        c.ellipse(x, y, 22 / cam.z, 11 / cam.z, 0, 0, Math.PI * 2);
+        c.stroke();
+      });
+      c.globalAlpha = 0.35;
+      r.ops.quitar.slice(0, 400).forEach((q) => {
+        const [x, y] = V(q.x, q.y),
+          d = 6 / cam.z;
+        c.beginPath();
+        c.moveTo(x - d, y - d);
+        c.lineTo(x + d, y + d);
+        c.moveTo(x + d, y - d);
+        c.lineTo(x - d, y + d);
+        c.stroke();
+      });
+      c.restore();
+    });
+  }
+  const todasFoco = () => setTimeout(() => $("iaPedido").focus(), 0);
   // con Cursor u otro chat: se copia el pedido entero y después se pega lo que contestó
   $("iaCopiar").onclick = () => {
     const pedido = $("iaPedido").value.trim();
@@ -392,5 +580,5 @@ window.EDITOR_IA = (function () {
   // para otros módulos (texturas): la misma IA, modelo y clave que eligió acá
   // la que haría los pedidos del mapa (para lo viejo que todavía pregunta «cuál está elegida»)
   const elegida = () => paraTarea("mapa") || { quien: conf.quien === "otra" ? "otra" : "claude", modelo: "", clave: "", claves: conf.claves };
-  return { abrir, cerrar, alternar, abierta, dibujar, llamar, llamarTarea, paraTarea, candidatas, elegida, catalogo, NOMBRES };
+  return { abrir, cerrar, alternar, abierta, dibujar, dibujarVarias, todasFoco, conClave, pedirATodas, pintarLista, dibujarRes, aplicarEnCapas, llamar, llamarTarea, paraTarea, candidatas, elegida, catalogo, NOMBRES };
 })();

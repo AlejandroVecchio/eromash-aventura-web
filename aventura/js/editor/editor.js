@@ -40,8 +40,23 @@
     if (!e.zonas || typeof e.zonas !== "object") e.zonas = {};
     if (!Array.isArray(e.npcs)) e.npcs = [];
     if (!e.imagenes || typeof e.imagenes !== "object") e.imagenes = {};
+    if (!Array.isArray(e.capas)) e.capas = [];
+    if (!e.capaSuelta || typeof e.capaSuelta !== "object") e.capaSuelta = { ver: true, lock: false };
   };
   completar(est);
+  // ---------- capas propias ----------
+  // Como en Photoshop: est.capas = [{ id, nom, ver, lock }] y lo agregado (poner, caminos, ríos, lagunas) lleva .capa;
+  // lo que no tiene va a «Sueltos» (est.capaSuelta). Lo nuevo y lo pegado cae en la capa activa (est.capaActiva).
+  // Apagada no se dibuja en el editor; trabada no se elige. El juego las dibuja todas.
+  const capaPorId = (id) => (id && est.capas.find((c) => c.id === id)) || est.capaSuelta;
+  const capaVe = (a) => capaPorId(a && a.capa).ver !== false;
+  const capaTraba = (a) => !!capaPorId(a && a.capa).lock;
+  function enCapa(a, id) {
+    const c = id !== undefined ? id : est.capaActiva;
+    if (c && est.capas.some((k) => k.id === c)) a.capa = c;
+    else delete a.capa;
+    return a;
+  }
   // las texturas hechas acá son assets: se suman a la lista antes de armarla
   let firmaTex = "";
   const cargarTexturas = () => {
@@ -95,6 +110,7 @@
     if (cargarTexturas() | cargarImagenes()) armarLista();
     if (window.EDITOR_TEXTURAS) EDITOR_TEXTURAS.pintarLista();
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
+    if (window.EDITOR_CAPAS) EDITOR_CAPAS.pintar();
   };
   // «Descargar» se resalta mientras haya cambios que todavía no se bajaron
   let bajado = null;
@@ -348,6 +364,8 @@
   // capas: el bosque se puede ocultar y lo del mundo bloquear (solo se toca lo agregado); las notas, ocultar
   const esNatural = (id) => ((ASSETS.LISTA[id] || {}).grupo === "naturaleza");
   const sinBosque = () => !$("verBosque").checked;
+  // lo que no se puede elegir: el mundo de base con «Trabar lo de base» y lo de una capa trabada
+  const trabado = (d) => (d.agregado == null ? $("bloquear").checked : capaTraba(est.poner[d.agregado]));
   function visibles(x0, y0, x1, y1) {
     const l = visibles0(x0, y0, x1, y1);
     if (!sinBosque()) return l;
@@ -376,7 +394,7 @@
     });
     est.poner.forEach((a, i) => {
       const def = ASSETS.LISTA[a.id];
-      if (!def || a.x < x0 - 400 || a.x > x1 + 400 || a.y < y0 - 60 || a.y > y1 + 900) return;
+      if (!def || !capaVe(a) || a.x < x0 - 400 || a.x > x1 + 400 || a.y < y0 - 60 || a.y > y1 + 900) return;
       const o = opcionesDe(a),
         md = ASSETS.medidas(a.id, o);
       l.push({ id: a.id, x: a.x, y: a.y, o, alto: md.alto, choque: md.choque, agregado: i, piso: !!def.piso });
@@ -769,6 +787,7 @@
     if (window.EDITOR_HISTORIA) EDITOR_HISTORIA.dibujar(c, cam, V);
     if (window.EDITOR_ZONAS) EDITOR_ZONAS.dibujar(c, cam, V, tt);
     if (window.EDITOR_BOCETO) EDITOR_BOCETO.dibujar(c, cam, V, tt);
+    if (window.EDITOR_IA && EDITOR_IA.dibujarVarias) EDITOR_IA.dibujarVarias(c, cam, V, tt);
     if (window.EDITOR_NPC) EDITOR_NPC.dibujar(c, cam, V, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
@@ -887,6 +906,7 @@
   const uid = () => "a" + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
   function nuevo(a) {
     a.u = uid();
+    enCapa(a);
     if (pegarA) a.pegado = pegarA;
     return a;
   }
@@ -953,6 +973,7 @@
     ["selGiro", "giro", 0],
   ];
   function pintarElegida() {
+    if (window.EDITOR_CAPAS) EDITOR_CAPAS.pintar();
     const panel = $("selPanel");
     if (!elegida) return panel.classList.add("oculto");
     panel.classList.remove("oculto");
@@ -1135,7 +1156,7 @@
       const e = est.estiloCaminos.find((q) => q.i === i);
       lista.push(e ? Object.assign({}, cm, { tipo: e.tipo, borde: e.borde, fundir: e.fundir, w: e.w || cm.w, p: e.p || cm.p, tramos: e.tramos, base: i }) : Object.assign(cm, { base: i }));
     });
-    est.caminos.forEach((cm, i) => lista.push(Object.assign({}, cm, { sem: 1000 + i, nuevo: i })));
+    est.caminos.forEach((cm, i) => capaVe(cm) && lista.push(Object.assign({}, cm, { sem: 1000 + i, nuevo: i })));
     const nuevas = new Map(lista.map((cm) => [(cm.base != null ? "b" + cm.base : "n" + cm.nuevo), JSON.stringify([cm.p, cm.w, cm.tipo, cm.borde, cm.fundir, cm.tramos])]));
     const repintar = [];
     nuevas.forEach((f, k) => firmasCam.get(k) !== f && repintar.push(k));
@@ -1181,7 +1202,7 @@
           if (tr.length) tr.unshift(...nuevos.map(() => null));
         }
         else p.push(...nuevos);
-      } else est.caminos.push(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino()));
+      } else est.caminos.push(enCapa(Object.assign({ p: camino.p, w: camino.w }, opcionesCamino())));
       guardar();
     }
     camino = null;
@@ -1379,6 +1400,7 @@
   function caminoEn(x, y) {
     for (let i = W.CAMINOS.length - 1; i >= 0; i--) {
       const cm = W.CAMINOS[i];
+      if (cm.nuevo != null && capaTraba(est.caminos[cm.nuevo])) continue;
       for (let k = 1; k < cm.p.length; k++) if (distSeg(x, y, cm.p[k - 1][0], cm.p[k - 1][1], cm.p[k][0], cm.p[k][1]) < cm.w / 2 + 10 / cam.z) return cm;
     }
     return null;
@@ -1437,13 +1459,13 @@
       const e = est.estiloRios.find((q) => q.i === i);
       W.RIOS.push(Object.assign(r, { base: i, p: (e && e.p) || r.p0, w: (e && e.w) || r.w0, anchos: e ? e.anchos : r.an0 }));
     });
-    est.rios.forEach((r, i) => W.RIOS.push({ p: r.p, w: r.w, anchos: r.anchos, agregado: true, nuevo: i }));
+    est.rios.forEach((r, i) => W.RIOS.push({ p: r.p, w: r.w, anchos: r.anchos, agregado: true, nuevo: i, seco: !capaVe(r) }));
     W.LAGOS.length = 0;
     LAGOS0.forEach((l, i) => {
       const e = est.estiloLagos.find((q) => q.i === i);
       W.LAGOS.push(Object.assign(l, { base: i, p: e ? [e.x, e.y] : l.c0, rx: e ? e.rx : l.rx0, ry: e ? e.ry : l.ry0 }));
     });
-    est.lagos.forEach((l, i) => W.LAGOS.push({ p: [l.x, l.y], rx: l.rx, ry: l.ry, agregado: true, nuevo: i }));
+    est.lagos.forEach((l, i) => W.LAGOS.push({ p: [l.x, l.y], rx: l.rx, ry: l.ry, agregado: true, nuevo: i, seco: !capaVe(l) }));
     // se repintan los trozos de lo que cambió
     const nuevas = new Map();
     W.RIOS.forEach((r) => !r.seco && nuevas.set(JSON.stringify([r.p, r.w, r.anchos]), cajaRio(r)));
@@ -1499,12 +1521,14 @@
   const enLago = (l, x, y, m = 0) => Math.hypot((x - l.p[0]) / (l.rx + m), (y - l.p[1]) / (l.ry + m)) < 1;
   function aguaEn(x, y) {
     const m = 8 / cam.z;
-    for (let i = W.LAGOS.length - 1; i >= 0; i--) if (!W.LAGOS[i].seco && enLago(W.LAGOS[i], x, y, m)) return { lago: i };
-    for (let i = W.RIOS.length - 1; i >= 0; i--) if (!W.RIOS[i].seco && enRio(W.RIOS[i], x, y, m)) return { rio: i };
+    // lo de una capa trabada no se elige
+    const libre = (a, lago) => !a.seco && !(a.agregado && capaTraba((lago ? est.lagos : est.rios)[a.nuevo]));
+    for (let i = W.LAGOS.length - 1; i >= 0; i--) if (libre(W.LAGOS[i], true) && enLago(W.LAGOS[i], x, y, m)) return { lago: i };
+    for (let i = W.RIOS.length - 1; i >= 0; i--) if (libre(W.RIOS[i]) && enRio(W.RIOS[i], x, y, m)) return { rio: i };
     return null;
   }
   // lo del mundo que quedó bajo el agua nueva no se ve (en el juego se saca), salvo lo de la historia
-  const enAguaNueva = (x, y) => est.rios.some((r) => enRio(r, x, y)) || est.lagos.some((l) => enLago({ p: [l.x, l.y], rx: l.rx, ry: l.ry }, x, y));
+  const enAguaNueva = (x, y) => est.rios.some((r) => capaVe(r) && enRio(r, x, y)) || est.lagos.some((l) => capaVe(l) && enLago({ p: [l.x, l.y], rx: l.rx, ry: l.ry }, x, y));
   const ahogado = (o) =>
     (est.rios.length || est.lagos.length) &&
     !o.o.piso &&
@@ -1601,7 +1625,7 @@
           e.p.unshift(...nuevos.reverse());
           if (e.anchos) e.anchos.unshift(...nuevos.map(() => null));
         } else e.p.push(...nuevos);
-      } else est.rios.push({ p: rio.p, w: rio.w });
+      } else est.rios.push(enCapa({ p: rio.p, w: rio.w }));
       guardar();
     }
     rio = null;
@@ -1980,7 +2004,7 @@
     // con la cámara girada todo se compara en la vista, donde los objetos están parados
     [x, y] = V(x, y);
     l.forEach((d0) => {
-      if ($("bloquear").checked && d0.agregado == null) return;
+      if (trabado(d0)) return;
       const d = enVista(d0);
       // lo que va de punta a punta se toca en todo su largo
       if (d.o && d.o.x2 !== undefined) {
@@ -2277,7 +2301,7 @@
     if (arrastre && arrastre.lago) {
       const [rx, ry] = medidaLago(arrastre, { x, y });
       recordar();
-      est.lagos.push({ x: r1(arrastre.x), y: r1(arrastre.y), rx, ry });
+      est.lagos.push(enCapa({ x: r1(arrastre.x), y: r1(arrastre.y), rx, ry }));
       guardar();
     }
     if (sel && sel.rioV != null) {
@@ -2357,7 +2381,7 @@
     const [x0, y0, x1, y1] = cajaMundo(a);
     ultimaCaja = [r1(x0), r1(y0), r1(x1), r1(y1)];
     const dentro = visibles(x0 - 50, y0 - 50, x1 + 50, y1 + 50)
-      .filter((d) => !($("bloquear").checked && d.agregado == null))
+      .filter((d) => !trabado(d))
       .filter((d) => {
         const [x, y] = V(d.x, d.y);
         return x >= vx0 && x <= vx1 && y >= vy0 && y <= vy1;
@@ -2386,7 +2410,7 @@
       vw = cw / cam.z,
       vh = ch / cam.z,
       rr = Math.hypot(vw, vh / VOL.K) / 2;
-    const l = visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr).filter((d) => d.id === id && !($("bloquear").checked && d.agregado == null));
+    const l = visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr).filter((d) => d.id === id && !trabado(d));
     grupo = [];
     l.forEach((d) => {
       const g = gDe(d);
@@ -2446,7 +2470,7 @@
     const nuevos = copia.map((it) => {
       const o = JSON.parse(JSON.stringify(it.o));
       if (o.x2 !== undefined) (o.x2 = r1(o.x2 + x)), (o.y2 = r1(o.y2 + y));
-      const a = { id: it.id, x: r1(x + it.dx), y: r1(y + it.dy), o, u: uid() };
+      const a = enCapa({ id: it.id, x: r1(x + it.dx), y: r1(y + it.dy), o, u: uid() });
       est.poner.push(a);
       return a;
     });
@@ -2807,6 +2831,7 @@
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.tecla(e)) return e.preventDefault();
     if (window.EDITOR_BOCETO && EDITOR_BOCETO.tecla(e)) return e.preventDefault();
+    if (window.EDITOR_CAPAS && EDITOR_CAPAS.tecla(e)) return e.preventDefault();
     if ((e.key === "m" || e.key === "M") && !ctrl) return window.EDITOR_ZONAS && EDITOR_ZONAS.abrir();
     if ((e.key === "n" || e.key === "N") && !ctrl) return window.EDITOR_NPC && EDITOR_NPC.alternar();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida(), (elegida.a || elegida.cosa).x, (elegida.a || elegida.cosa).y) : null);
@@ -3019,7 +3044,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  nombre: " + JSON.stringify(est.nombre || "") + ",\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>\n  casas: " + JSON.stringify(est.casas || {}) + ",\n  // zonas fuera del mapa (sección Zonas): mazmorras oscuras y tierras con islas, cada una con su entrada en el bosque\n  zonas: " + JSON.stringify(est.zonas || {}) + ",\n  // gente propia (Importar NPC): nombre, diálogo, lugar y sus dibujos por vista (imágenes achicadas)\n  npcs: [" + lineas(est.npcs || []) + "],\n  // imágenes importadas (estructuras, pinturas de pared y calcos en el piso): cada una es el asset im_<id>\n  imagenes: " + JSON.stringify(est.imagenes || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  nombre: " + JSON.stringify(est.nombre || "") + ",\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>\n  casas: " + JSON.stringify(est.casas || {}) + ",\n  // zonas fuera del mapa (sección Zonas): mazmorras oscuras y tierras con islas, cada una con su entrada en el bosque\n  zonas: " + JSON.stringify(est.zonas || {}) + ",\n  // gente propia (Importar NPC): nombre, diálogo, lugar y sus dibujos por vista (imágenes achicadas)\n  npcs: [" + lineas(est.npcs || []) + "],\n  // imágenes importadas (estructuras, pinturas de pared y calcos en el piso): cada una es el asset im_<id>\n  imagenes: " + JSON.stringify(est.imagenes || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // capas propias del editor (el juego las dibuja todas): id, nombre, prendida, trabada\n  capas: " + JSON.stringify(est.capas || []) + ",\n  capaSuelta: " + JSON.stringify(est.capaSuelta || {}) + ",\n  capaActiva: " + JSON.stringify(est.capaActiva || "") + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -3065,7 +3090,7 @@
       try {
         const i = s.indexOf("{", s.indexOf("AGREGADOS")),
           j = s.indexOf("\n};", i);
-        const cuerpo = s.slice(i, j + 2).replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "rios" || k === "lagos" || k === "quitarRios" || k === "quitarLagos" || k === "estiloRios" || k === "estiloLagos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
+        const cuerpo = s.slice(i, j + 2).replace(/^(\s*)([A-Za-z_]\w*):/gm, '$1"$2":').replace(/(\w+):/g, (m, k) => (k === "poner" || k === "quitar" || k === "mover" || k === "quitarDeco" || k === "caminos" || k === "quitarCaminos" || k === "estiloCaminos" || k === "rios" || k === "lagos" || k === "quitarRios" || k === "quitarLagos" || k === "estiloRios" || k === "estiloLagos" || k === "notas" || k === "p" || k === "w" ? '"' + k + '":' : m)).replace(/\n\s*\/\/[^\n]*/g, "").replace(/,(\s*[\]}])/g, "$1");
         const nuevo = JSON.parse(cuerpo);
         if (!nuevo.poner) throw 0;
         if (!nuevo.notas) nuevo.notas = [];
@@ -3182,6 +3207,97 @@
       pieza: () => $("bPieza").click(),
       exportar: () => $("bExportar").click(),
       texturas: () => window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.abrir(),
+      // las que usa la barra de menús
+      soltar: () => soltarTodo(false),
+      vuelta: () => darVuelta(),
+      acercar: () => zoom(1.2),
+      alejar: () => zoom(1 / 1.2),
+      variar: () => alternarVariar(),
+      choques: () => ($("choques").checked = !$("choques").checked),
+      nombres: () => ($("historia").checked = !$("historia").checked),
+    },
+    // ---------- capas propias (las usa js/editor/capas.js) ----------
+    capas: {
+      lista: () => est.capas,
+      suelta: () => est.capaSuelta,
+      activa: () => (est.capaActiva && est.capas.some((c) => c.id === est.capaActiva) ? est.capaActiva : ""),
+      // cuánto tiene cada capa ("" = sueltos): objetos, caminos y agua
+      cuantos: () => {
+        const n = { "": 0 };
+        est.capas.forEach((c) => (n[c.id] = 0));
+        [est.poner, est.caminos, est.rios, est.lagos].forEach((l) => l.forEach((a) => (n[a.capa in n ? a.capa : ""] += 1)));
+        return n;
+      },
+      // la capa de lo elegido (para resaltarla en el panel)
+      deElegida: () => (elegida && elegida.a ? (elegida.a.capa && est.capas.some((c) => c.id === elegida.a.capa) ? elegida.a.capa : "") : null),
+      nueva: (nom, sinActivar, sinPaso) => {
+        if (!sinPaso) recordar();
+        const id = "c" + uid().slice(1);
+        est.capas.unshift({ id, nom: nom || t("ed.cp_nueva_nom", [est.capas.length + 1]), ver: true, lock: false });
+        if (!sinActivar) est.capaActiva = id;
+        guardar();
+        return id;
+      },
+      activar: (id) => {
+        est.capaActiva = id || "";
+        guardar();
+      },
+      // ver y trabar no son un paso de Deshacer (como en Photoshop); el nombre sí
+      cambiar: (id, k, v) => {
+        const c = id ? est.capas.find((q) => q.id === id) : est.capaSuelta;
+        if (!c) return;
+        if (k === "nom") recordar();
+        c[k] = v;
+        if (k === "lock" && v) soltarElegida(), elegirAgua(null);
+        guardar();
+      },
+      mover: (id, d) => {
+        const i = est.capas.findIndex((c) => c.id === id),
+          j = i + d;
+        if (i < 0 || j < 0 || j >= est.capas.length) return;
+        recordar();
+        est.capas.splice(j, 0, est.capas.splice(i, 1)[0]);
+        guardar();
+      },
+      // borrar una capa: con todo lo que tiene, o pasándolo a sueltos
+      borrar: (id, conTodo) => {
+        recordar();
+        est.capas = est.capas.filter((c) => c.id !== id);
+        ["poner", "caminos", "rios", "lagos"].forEach((k) => {
+          if (conTodo) est[k] = est[k].filter((a) => a.capa !== id);
+          else est[k].forEach((a) => a.capa === id && delete a.capa);
+        });
+        if (est.capaActiva === id) est.capaActiva = "";
+        soltarElegida(), elegirAgua(null);
+        guardar();
+      },
+      // pasar lo elegido (objetos, el camino o el agua elegidos) a otra capa; devuelve cuántos
+      pasar: (id) => {
+        const l = elegidos().filter((g) => g.a).map((g) => g.a),
+          cm = caminoElegido(),
+          ag = aguaElegida();
+        if (cm && cm.nuevo != null) l.push(est.caminos[cm.nuevo]);
+        if (ag && ag.agregado) l.push((ag.rx !== undefined ? est.lagos : est.rios)[ag.nuevo]);
+        if (!l.length) return 0;
+        recordar();
+        l.forEach((a) => enCapa(a, id));
+        guardar();
+        pintarElegida();
+        return l.length;
+      },
+      // elegir todo lo puesto de una capa (para copiarlo, moverlo o pasarlo); devuelve cuántos
+      elegirTodo: (id) => {
+        const c = capaPorId(id);
+        if (c.lock || c.ver === false) return 0;
+        const l = est.poner.filter((a) => (a.capa && est.capas.some((c) => c.id === a.capa) ? a.capa : "") === (id || ""));
+        if (!l.length) return 0;
+        ponerHerr("mover");
+        grupo = l.length > 1 ? l.map((a) => ({ a })) : [];
+        elegida = { a: l[l.length - 1] };
+        pintarElegida();
+        pedir();
+        return l.length;
+      },
     },
     // los lugares de «Ir a…»: [{ nom, x, y }]
     lugares: () => [{ nom: t("av.lugar_eikholt"), x: W.CIUDAD.c[0], y: W.CIUDAD.c[1] }].concat(Object.keys(W.LUGARES).filter((k) => t("av.lugar_" + k) !== "av.lugar_" + k).map((k) => ({ nom: t("av.lugar_" + k), x: W.LUGARES[k].p[0], y: W.LUGARES[k].p[1] }))).concat([...nombradas.keys()].map((o) => ({ nom: t("as." + o.id) + " · " + nombradas.get(o), x: o.x, y: o.y }))),
@@ -3197,18 +3313,21 @@
     cosasEn: (x0, y0, x1, y1) => visibles(x0, y0, x1, y1).filter((d) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1).map((d) => ({ id: d.id, x: r1(d.x), y: r1(d.y), historia: !!(d.cosa && nombradas.has(d.cosa)), agregado: d.agregado != null, u: d.agregado != null ? (est.poner[d.agregado] || {}).u : undefined, natural: esNatural(d.id) })),
     caminosEn: (x0, y0, x1, y1) => W.CAMINOS.filter((cm) => cm.p.some(([x, y]) => x > x0 - 300 && x < x1 + 300 && y > y0 - 300 && y < y1 + 300)).map((cm) => ({ p: cm.p.map(rp), w: cm.w, tipo: cm.tipo || "tierra" })),
     // aplica lo que propuso la IA: { poner: [{ id, x, y, o }], caminos: [{ p, w, tipo, borde }], quitar: [{ id, x, y }] }
+    // opc.capa: a qué capa va (si no, a la activa); opc.sinPaso: va en el mismo paso de Deshacer que lo anterior
     aplicar: (ops, opc) => {
-      recordar();
-      const nuevos = [];
+      opc = opc || {};
+      if (!opc.sinPaso) recordar();
+      const nuevos = [],
+        cc = (a) => enCapa(a, opc.capa);
       (ops.poner || []).forEach((a) => {
-        const n = { id: a.id, x: r1(a.x), y: r1(a.y), o: a.o || {}, u: uid() };
+        const n = cc({ id: a.id, x: r1(a.x), y: r1(a.y), o: a.o || {}, u: uid() });
         est.poner.push(n);
         nuevos.push(n);
       });
-      (ops.caminos || []).forEach((cm) => est.caminos.push({ p: cm.p.map(rp), w: r1(cm.w || 110), tipo: cm.tipo || "tierra", borde: cm.borde || "pasto", fundir: !!cm.fundir }));
+      (ops.caminos || []).forEach((cm) => est.caminos.push(cc({ p: cm.p.map(rp), w: r1(cm.w || 110), tipo: cm.tipo || "tierra", borde: cm.borde || "pasto", fundir: !!cm.fundir })));
       // agua nueva (el boceto): ríos { p, w } y lagunas { x, y, rx, ry }
-      (ops.rios || []).forEach((rr) => est.rios.push({ p: rr.p.map(rp), w: r1(rr.w || 300) }));
-      (ops.lagos || []).forEach((l) => est.lagos.push({ x: r1(l.x), y: r1(l.y), rx: r1(l.rx), ry: r1(l.ry) }));
+      (ops.rios || []).forEach((rr) => est.rios.push(cc({ p: rr.p.map(rp), w: r1(rr.w || 300) })));
+      (ops.lagos || []).forEach((l) => est.lagos.push(cc({ x: r1(l.x), y: r1(l.y), rx: r1(l.rx), ry: r1(l.ry) })));
       (ops.quitar || []).forEach((q) => {
         if (q.u) {
           const i = est.poner.findIndex((a) => a.u === q.u);
@@ -3219,7 +3338,7 @@
         if (cosa && !nombradas.has(cosa)) est.quitar.push({ id: cosa.id, x: r1(cosa.x), y: r1(cosa.y) });
       });
       guardar();
-      if (nuevos.length && !(opc && opc.sinElegir)) {
+      if (nuevos.length && !opc.sinElegir) {
         ponerHerr("mover");
         grupo = nuevos.length > 1 ? nuevos.map((a) => ({ a })) : [];
         elegida = { a: nuevos[nuevos.length - 1] };

@@ -569,11 +569,14 @@ window.EDITOR_BOCETO = (function () {
     if (av.includes("ed.bo_av_ruido")) fila(false, t("ed.bo_av_ruido"));
     fila(!av.includes("ed.bo_av_nada"), t(av.includes("ed.bo_av_nada") ? "ed.bo_av_nada" : "ed.bo_ok_algo"));
   }
+  function resumenDe(p) {
+    const n = (id) => p.poner.filter((a) => a.id === id).length,
+      arboles = p.poner.filter((a) => (ASSETS.LISTA[a.id] || {}).grupo === "naturaleza" && a.id !== "roca").length;
+    return t("ed.bo_resumen", [p.caminos.length, p.rios.length, p.lagos.length, arboles, n("roca"), n("casaNordica"), p.poner.length - arboles - n("roca") - n("casaNordica"), p.quitar.length]);
+  }
   function pintarResumen() {
     if (!propuesta) return $("boPropuesta").classList.add("oculto");
-    const n = (id) => propuesta.poner.filter((a) => a.id === id).length,
-      arboles = propuesta.poner.filter((a) => (ASSETS.LISTA[a.id] || {}).grupo === "naturaleza" && a.id !== "roca").length;
-    $("boResumen").textContent = t("ed.bo_resumen", [propuesta.caminos.length, propuesta.rios.length, propuesta.lagos.length, arboles, n("roca"), n("casaNordica"), propuesta.poner.length - arboles - n("roca") - n("casaNordica"), propuesta.quitar.length]);
+    $("boResumen").textContent = resumenDe(propuesta);
     $("boPropuesta").classList.remove("oculto");
   }
   // la hoja chica con lo que se leyó encima (cada clase con su color)
@@ -751,6 +754,13 @@ window.EDITOR_BOCETO = (function () {
       },
     };
   }
+  function textoIA(base) {
+    const cat = EDITOR_IA.catalogo ? EDITOR_IA.catalogo() : "";
+    return (
+      (($("boPedido").value || "").trim() ? "Extra request from the user: " + $("boPedido").value.trim() + "\n\n" : "") +
+      "World rectangle of the sheet and the engine's reading:\n" + JSON.stringify(lecturaParaIA(base)) + "\n\nAsset catalog:\n" + cat
+    );
+  }
   async function generarIA() {
     if (!hoja || !lectura || pensando) return;
     const el = window.EDITOR_IA && EDITOR_IA.paraTarea("boceto");
@@ -759,10 +769,7 @@ window.EDITOR_BOCETO = (function () {
     $("boGenerar").disabled = true;
     pintarIA(t("ed.bo_ia_pensando"));
     const base = lectura.deIA ? lectura.base : lectura,
-      cat = EDITOR_IA.catalogo ? EDITOR_IA.catalogo() : "";
-    const texto =
-      (($("boPedido").value || "").trim() ? "Extra request from the user: " + $("boPedido").value.trim() + "\n\n" : "") +
-      "World rectangle of the sheet and the engine's reading:\n" + JSON.stringify(lecturaParaIA(base)) + "\n\nAsset catalog:\n" + cat;
+      texto = textoIA(base);
     try {
       const { txt } = await EDITOR_IA.llamarTarea("boceto", (q) => [{ role: "user", content: contenido(q, texto) }], SISTEMA, (n) => pintarIA(t("ed.bo_ia_pensando_con", [n])));
       const r = leerIA(txt);
@@ -780,6 +787,64 @@ window.EDITOR_BOCETO = (function () {
     $("boGenerar").disabled = false;
   }
   $("boGenerar").onclick = generarIA;
+
+  // ---------- con todas las IA a la vez: cada una arma su versión y se eligen una, dos o todas (cada una en su capa) ----------
+  let varias = null;
+  async function generarTodas() {
+    if (!hoja || !lectura || pensando) return;
+    if (!window.EDITOR_IA || EDITOR_IA.conClave().length < 2) return E.avisar(t("ed.ia_todas_falta"));
+    const base = lectura.deIA ? lectura.base : lectura,
+      texto = textoIA(base),
+      yo = {};
+    pensando = true;
+    $("boTodas").disabled = $("boGenerar").disabled = true;
+    pintarIA(t("ed.ia_todas_pensando", [EDITOR_IA.conClave().map((q) => EDITOR_IA.NOMBRES[q]).join(", ")]));
+    const { res, listo } = EDITOR_IA.pedirATodas(
+      (q) => [{ role: "user", content: contenido(q, texto) }],
+      SISTEMA,
+      (txt) => {
+        const r = leerIA(txt);
+        if (!r) return null;
+        r.L.base = base;
+        return { ops: armar(r.L), texto: r.texto };
+      },
+      () => varias === yo && (pintarVarias(), E.pedir()),
+    );
+    yo.res = res;
+    varias = yo;
+    propuesta = null;
+    pintarResumen();
+    pintarVarias();
+    $("boVarias").scrollIntoView({ block: "nearest" });
+    await listo;
+    pensando = false;
+    $("boTodas").disabled = $("boGenerar").disabled = false;
+    pintarIA(t("ed.bo_todas_listo"));
+  }
+  function pintarVarias() {
+    $("boVarias").classList.toggle("oculto", !varias);
+    if (varias) EDITOR_IA.pintarLista($("boVariasLista"), varias.res, pintarUsar, resumenDe);
+  }
+  function pintarUsar() {
+    const n = varias ? varias.res.filter((r) => r.usar && r.ops).length : 0;
+    $("boVariasAplicar").disabled = !n;
+    $("boVariasAplicar").textContent = t("ed.ia_todas_aplicar", [n]);
+  }
+  $("boTodas").onclick = generarTodas;
+  $("boVariasDescartar").onclick = () => {
+    varias = null;
+    pintarVarias();
+    E.pedir();
+  };
+  $("boVariasAplicar").onclick = () => {
+    const elegidas = varias ? varias.res.filter((r) => r.usar && r.ops) : [];
+    if (!elegidas.length) return;
+    EDITOR_IA.aplicarEnCapas(elegidas, ($("boPedido").value || "").trim() || t("ed.bo_capa"));
+    E.avisar(t("ed.ia_todas_aplicado", [elegidas.map((r) => r.nombre).join(", ")]));
+    varias = null;
+    pintarVarias();
+    if (window.EDITOR_CAPAS) EDITOR_CAPAS.verPestana("capas");
+  };
 
   // ---------- en el mapa: la hoja apoyada en el piso y lo que se va a hacer ----------
   function dibujar(c, cam, V, tt) {
@@ -802,6 +867,7 @@ window.EDITOR_BOCETO = (function () {
     c.closePath();
     c.stroke();
     c.restore();
+    if (varias) EDITOR_IA.dibujarRes(c, cam, V, tt, varias.res);
     if (!propuesta) return;
     const linea = (p, col, ancho) => {
       c.strokeStyle = col;
