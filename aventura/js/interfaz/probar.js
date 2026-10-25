@@ -124,6 +124,20 @@ window.PROBAR = (function () {
       ],
     },
     {
+      // los minijuegos de MINIJ, cada uno con sus variantes (se listan solos al registrarse)
+      id: "minijuegos",
+      lista: () =>
+        hay("MINIJ")
+          ? MINIJ.lista().map(({ tipo, variante }) => ({
+              id: "mj_" + tipo + "_" + variante,
+              si: true,
+              texto: t("mn.probar", [t("mn." + tipo), variante === "base" ? t("mn.base") : t("mn." + tipo + "_v_" + variante)]),
+              sub: t("pb.mj_d"),
+              fn: () => (limpiar(), MINIJ.empezar(tipo, { variante })),
+            }))
+          : [],
+    },
+    {
       id: "pelea",
       lista: () => [
         {
@@ -210,7 +224,7 @@ window.PROBAR = (function () {
       .filter((e) => e.si)
       .map((e) => ({
         texto: e.texto || (e.fam ? t("pb.grupo", [t("pb.f_" + e.fam)]) : t("pb." + e.id)),
-        sub: t("pb." + e.id + "_d"),
+        sub: e.sub || t("pb." + e.id + "_d"),
         // las ayudas (queda) siguen en el menú; lo demás lo cierra y abre lo suyo
         fn: () => (e.fn(), e.queda && grupo(gr)),
       }));

@@ -21,7 +21,8 @@
           if (!e.si) faltan.push(g.id + "/" + e.id + " (no está)");
           const k = e.fam ? "pb.f_" + e.fam : "pb." + e.id;
           if (!e.texto && I18N.t(k) === k) faltan.push(k);
-          if (I18N.t("pb." + e.id + "_d") === "pb." + e.id + "_d") faltan.push("pb." + e.id + "_d");
+          if (!e.sub && I18N.t("pb." + e.id + "_d") === "pb." + e.id + "_d") faltan.push("pb." + e.id + "_d");
+          if (e.texto && /(^|· )(mn|pb)\./.test(e.texto)) faltan.push(e.texto);
         })
       );
       igual(faltan.join(", "), "", "todo está y tiene texto:");

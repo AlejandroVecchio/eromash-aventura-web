@@ -205,8 +205,19 @@ window.SECRETOS = (function () {
   const selloRoto = (c) => (c.sello === "fuego" ? braseros.every((b, i) => st.braseros[i]) : c.sello == null || !!st.piedras[c.sello]);
 
   // ---------- acciones ----------
-  function abrir(c) {
+  // los cofres que cierran con la cerradura de anillos (MINIJ): las arcas enterradas contra el tiempo, los cofres
+  // rúnicos con anillos ligados y uno de cada cuatro arcones del leñador con tres anillos
+  function cerrojo(c) {
+    if (!window.MINIJ) return null;
+    if (c.tipo === "arcaEnterrada") return "reloj";
+    if (c.tipo === "cofreRunico") return "ligados";
+    if (c.tipo === "arconLenador" && c.id % 4 === 1) return "base";
+    return null;
+  }
+  function abrir(c, abierta) {
     if (c.cosa.o.sellado) return sellado(c);
+    const v = !abierta && cerrojo(c);
+    if (v) return MINIJ.empezar("anillos", { variante: v, quien: t("mn.cerrado"), x: c.cosa.x, y: c.cosa.y, fin: (r) => r.gano && abrir(c, true) });
     jug.interactuando = 0.3;
     J.retrasar(0.18, () => {
       st.cofres[c.id] = true;
@@ -493,6 +504,8 @@ window.SECRETOS = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     lista: () => ({ cofres, piedras, altares, manzanos, st }),
+    abrir,
+    cerrojo,
     viajar: () => viajar(null, true),
     pistas,
     sacudir,
