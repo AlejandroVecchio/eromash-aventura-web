@@ -219,6 +219,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
   - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+- **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
+  - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
@@ -342,6 +344,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
+- **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
