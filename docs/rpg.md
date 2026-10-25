@@ -429,6 +429,29 @@ La fuerza es `J.poderRunico` × 1,35 en rango II.
 - Casilla de la barra con la runa del elegido (`sg_<id>`), el escudo en los efectos del HUD y los sabidos en el diario.
 - Estado en `E.extra.signos = { sabe: { id: rango }, activo, cantos }`.
 
+## Hörgar de los dioses (`motor/santuarios.js`, `SANTUARIOS`; asset `horgr` en `mundo/assets-santuarios.js`; textos `sn.`)
+
+Santuarios como los del Diablo con la idea de las piedras guardianas del Skyrim: siete hörgar al costado de los caminos
+(`LISTA[id].p` en px del mapa; se ubican en `alEmpezar` lejos de caminos y de otras cosas). «Rezarle a …» abre su menú.
+
+| Dios | Runa · color | Bendición (× 1,5 con ofrenda) |
+|---|---|---|
+| Thor | Thurisaz · #C8402D | daño × 1,15 |
+| Odín | Ansuz · #4A78D0 | experiencia × 1,2 y poder rúnico × 1,1 |
+| Tyr | Tiwaz · #E0B2B2 | crítico + 8 % |
+| Freyja | Fehu · #F5A524 | cura al pedirla, vida × 1,1 y regeneración × 1,5 |
+| Frigg | Berkano · #7BC86C | armadura + 15 |
+| Njörd | Laguz · #73D5DB | velocidad × 1,1 |
+| Ullr | Eihwaz · #9A7650 | estamina + 25 y ataques × 1,08 |
+
+- Una bendición por vez (`st.bend = { dios, t, fuerte }`, corre solo en modo juego): 480 s, 720 s con el favor de los Æsir.
+  Ofrendar cuesta 25 de plata. Cada hörgr bendice una vez por día (`st.dia[id]` = día de `E.tiempo`).
+- El primer toque de cada uno da 40 de experiencia; los siete dan el favor de los Æsir (+3 % de daño y vida, fijo).
+- La cara del asset: `o.vivo` (runa dorada, humo, luz) y `o.dormido` (ya bendijo hoy). En el mapa: marca `horgr`, clase
+  `dioses`, apagada si ya bendijo hoy.
+- El evento del bosque vivo es `sanar` y no `rito`, porque `rito` da experiencia (se podría repetir cada día).
+- Estado en `E.extra.santuarios = { vistos, dia, bend }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

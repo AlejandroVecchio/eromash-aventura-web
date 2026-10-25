@@ -5,35 +5,31 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 29,
-    titulo: { es: "Galdrar de Vör: magia rápida", en: "Vör's galdrar: quick magic" },
+    pr: 30,
+    titulo: { es: "Hörgar de los dioses: bendiciones", en: "Hörgar of the gods: blessings" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: cada galdr pide un nivel", en: "levels: each galdr needs a level" },
-      { pr: 12, es: "materiales: el rango II pide una esquirla", en: "materials: rank II needs a shard" },
-      { pr: 19, es: "instructores: Vör los enseña desde su menú", en: "trainers: Vör teaches them from her menu" },
+      { pr: 1, es: "niveles: las bendiciones suman a las estadísticas y encontrar un hörgr da experiencia", en: "levels: blessings add to the stats and finding a hörgr gives experience" },
     ],
     mirar: [
-      { es: "Hablá con Vör en el túmulo: «Aprender galdrar» lista los cinco cantos (viento, fuego, escudo, lazo y sueño) con nivel y plata; por plata y una esquirla cada uno sube a II.", en: "Talk to Vör at the barrow: «Learn galdrar» lists the five chants (wind, fire, shield, binding and sleep) with level and silver; for silver and a shard each one goes up to II." },
-      { es: "Y canta el galdr elegido (L2 + L1 en el mando) y N cambia de galdr (L2 + ▶). Gastan 30 de estamina, no energía rúnica, y van con cualquier arma. La casilla nueva de la barra muestra el elegido.", en: "Y chants the chosen galdr (L2 + L1 on a pad) and N switches galdr (L2 + ▶). They cost 30 stamina, not rune energy, and work with any weapon. The new action-bar slot shows the chosen one." },
-      { es: "Viento: un cono que empuja, voltea y corta el golpe que venían cargando. Fuego: abanico que deja quemando. Escudo: un óvalo dorado que se come los golpes (30 % de la vida). Lazo: círculo violeta con runas donde van lentas. Sueño: la de enfrente se duerme con zetas (las líderes, poco).", en: "Wind: a cone that pushes, knocks down and breaks the blow they were winding up. Fire: a fan that leaves them burning. Shield: a golden oval that soaks blows (30 % of life). Binding: a violet circle with runes where they slow down. Sleep: the one in front falls asleep with z's (leaders, briefly)." },
+      { es: "Siete hörgar (altares de lajas con la estela tallada, cintas del color del dios y ofrendas) al costado de los caminos, uno por dios: Thor, Odín, Tyr, Freyja, Frigg, Njörd y Ullr. Salen en el mapa con su miniatura y su clase en la leyenda.", en: "Seven hörgar (slab altars with a carved stele, ribbons in the god's colour and offerings) by the roads, one per god: Thor, Odin, Tyr, Freyja, Frigg, Njord and Ullr. They show on the map with their icon and a legend class." },
+      { es: "«Rezarle a …» abre el hörgr: pedir la bendición (gratis) u ofrendar 25 de plata para que salga una vez y media más fuerte. Dura 8 minutos, se lleva una por vez y aparece arriba de la vida con los minutos que quedan.", en: "«Pray to …» opens the hörgr: ask for the blessing (free) or offer 25 silver to make it half again as strong. It lasts 8 minutes, you carry one at a time and it shows above the life bar with the minutes left." },
+      { es: "Con la bendición puesta la runa brilla dorada y sube humo; si ya bendijo hoy queda apagada (vuelve al otro día). Encontrar los siete da el favor de los Æsir: 12 minutos por bendición y +3 % de daño y vida para siempre.", en: "With the blessing on, the rune glows gold and smoke rises; if it already blessed today it stays dark (back the next day). Finding all seven grants the Æsir's favour: 12 minutes per blessing and +3 % damage and life for good." },
     ],
     botones: [
-      { es: "Ir con Vör con nivel 10 y plata para aprenderlos", en: "Go to Vör at level 10 with silver to learn them", fn: (A) => {
-        const g = INSTRUCTORES.gente().vor;
-        ir(A, [g.x, g.y + 110]);
-        RPG.estado().nivel = Math.max(RPG.nivel(), 10);
-        RPG.recalcular();
-        PODERES.pj().plata += 1400;
-        MATERIALES.dar("esquirla", 5);
+      { es: "Ir al hörgr de Thor con plata para ofrendar", en: "Go to Thor's hörgr with silver to offer", fn: (A) => {
+        const h = SANTUARIOS.horgar().thor;
+        ir(A, [h.x, h.y + 110]);
+        PODERES.pj().plata += 200;
       } },
-      { es: "Saber los cinco e ir al grupo de criaturas más cercano", en: "Know all five and go to the nearest creature pack", fn: (A) => {
-        const st = SIGNOS.estado();
-        SIGNOS.LISTA && Object.keys(SIGNOS.LISTA).forEach((id) => (st.sabe[id] = Math.max(st.sabe[id] || 0, 1)));
-        st.activo = st.activo || "viento";
-        const p = cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y));
-        ir(A, p, 0, 380);
+      { es: "Ir al hörgr más cercano que todavía no encontraste", en: "Go to the nearest hörgr you haven't found yet", fn: (A) => {
+        const st = SANTUARIOS.estado(),
+          h = SANTUARIOS.horgar();
+        const ids = Object.keys(h).filter((id) => !st.vistos[id]).sort((a, b) => Math.hypot(h[a].x - A.jug.x, h[a].y - A.jug.y) - Math.hypot(h[b].x - A.jug.x, h[b].y - A.jug.y));
+        const id = ids[0] || "odin";
+        ir(A, [h[id].x, h[id].y + 110]);
       } },
+      { es: "Encontrar los siete (favor de los Æsir)", en: "Find all seven (Æsir's favour)", fn: () => Object.keys(SANTUARIOS.LISTA).forEach((id) => SANTUARIOS.hallar(id)) },
     ],
   };
   // ---------- ayuda para los botones ----------
