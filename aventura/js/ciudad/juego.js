@@ -93,18 +93,63 @@ window.EIKHOLT = (function () {
     }
     return [m.x + ox, m.y + oy];
   }
-  // asomarse a un punto del bosque: el motor ve a Eromash ahí mientras dura fn
+  // asomarse a un punto del bosque: el motor ve a Eromash ahí mientras dura fn (los sistemas que no responden adentro
+  // de un cuarto preguntan EIKHOLT.asomando() para contestar igual desde la ciudad)
+  let asomando = 0;
   function asomado(fx, fy, fn) {
     const px = jug.x,
       py = jug.y;
     jug.x = fx;
     jug.y = fy;
+    asomando++;
     try {
       return fn();
     } finally {
+      asomando--;
       jug.x = px;
       jug.y = py;
     }
+  }
+
+  // ---------- lo que los sistemas mudan a la ciudad ----------
+  // EIKHOLT.traer({ k, ancla | en: [x, y] metros, dx, dy, asset, o, r, gente, mira }): un oficio que dejó el Puesto (la mesa de alquimia, la
+  // tina, el mostrador, el arcón). En el bosque el sistema deja su cosa dentro de la elipse y anota su punto en W.PUNTOS[k];
+  // en la ciudad se dibuja junto al ancla del plano (o el lugar) con dx, dy en metros, choca con radio r y se usa
+  // asomándose a ese punto, como el resto de la historia.
+  const TRAIDOS = [];
+  function traer(d) {
+    if (!TRAIDOS.some((x) => x.k === d.k)) TRAIDOS.push(d);
+    if (listo) ubicarTraidos();
+  }
+  function ubicarTraidos() {
+    for (const d of TRAIDOS) {
+      if (d.c) continue;
+      const b = d.en ? [d.en[0] * M, d.en[1] * M] : plano.anclas[d.ancla] || plano.lugares[d.ancla];
+      if (!b) continue;
+      d.c = MUNDO25.buscarLibre(b[0] + (d.dx || 0) * M, b[1] + (d.dy || 0) * M);
+      ANCLAS[d.k] = d.c;
+      if (d.r) plano.choques.push({ circulo: [d.c[0], d.c[1], d.r] });
+    }
+    armarSondas();
+  }
+  // lo que se dibuja de los traídos: la cosa con su volumen girado con la cámara de la ciudad y quien atiende
+  function dibujosTraidos() {
+    const l = [];
+    for (const d of TRAIDOS) {
+      if (!d.c) continue;
+      if (d.asset)
+        l.push({ x: d.c[0], y: d.c[1], dibujo: (cx, sx, sy) => {
+            const g0 = VOL.cam.g;
+            VOL.cam.g = -cam.g;
+            try {
+              ASSETS.dibujar(cx, d.asset, sx, sy, tiempo, Object.assign({}, typeof d.o === "function" ? d.o() : d.o));
+            } finally {
+              VOL.cam.g = g0;
+            }
+          } });
+      if (d.gente) l.push({ id: d.gente, x: d.c[0] + (d.gx || 0) * M, y: d.c[1] + (d.gy || -1.2) * M, vx: 0, vy: 0, s: 1, rumbo: Math.PI / 2 });
+    }
+    return l;
   }
   // lo que el motor ofrece cerca del ancla (o de la persona de la historia) más próxima
   let nativos = new Set();
@@ -380,7 +425,8 @@ window.EIKHOLT = (function () {
     plano = MUNDO25.plano();
     M = plano.M;
     ANCLAS = anclasBosque();
-    armarSondas();
+    for (const d of TRAIDOS) d.c = null;
+    ubicarTraidos();
     nativos = new Set();
     for (const p of MUNDO25.gente()) if (p.nombrado) nativos.add(t("av.accion_hablar") + " · " + t("av.nombre_" + p.id));
     listo = true;
@@ -404,6 +450,10 @@ window.EIKHOLT = (function () {
       RECORRER25.cargar(st.hallado);
       let p;
       if (desde && desde.guardado) p = [st.x, st.y];
+      else if (desde && desde.traido) {
+        const d = TRAIDOS.find((x) => x.k === desde.traido);
+        p = d && d.c ? [d.c[0], d.c[1] + 1.6 * M] : lugarDe(jug.x, jug.y);
+      }
       else if (desde && desde.puerta && plano.anclas["puerta_" + desde.puerta]) {
         // del lado de adentro de la puerta, un poco más adentro que el portón
         const q = plano.anclas["puerta_" + desde.puerta],
@@ -497,6 +547,8 @@ window.EIKHOLT = (function () {
     tarjetaAntes = RECORRER25.tarjetaAbierta();
     if (J.modo === "juego" || J.modo === "dialogo") jugadorPaso(dt);
     if (!activo) return;
+    // lo que los sistemas cuidan también en la ciudad (cerrar la pestaña de un oficio traído, por ejemplo)
+    for (const s of window.SISTEMAS || []) if (s.enCiudad) s.enCiudad(dt);
     RECORRER25.callados = J.modo !== "juego";
     RECORRER25.actualizar(dt, tiempo, h, cam, null);
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
@@ -527,7 +579,7 @@ window.EIKHOLT = (function () {
     }
     const dt = J.modo === "juego" || J.modo === "dialogo" ? dtUlt : 0;
     camaraPaso(dt || 1e-4, cw, ch);
-    MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), historia);
+    MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), TRAIDOS.length ? historia.concat(dibujosTraidos()) : historia);
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
   const sistemaCiudad = { paso, dibujar, cercano };
@@ -585,5 +637,22 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  // llevar a Eromash a la ciudad junto a un traído (las pruebas y el menú de probar)
+  function irA(k) {
+    if (activo) {
+      const d = TRAIDOS.find((x) => x.k === k);
+      if (d && d.c) {
+        const e = ero();
+        e.x = cam.x = d.c[0];
+        e.y = cam.y = d.c[1] + 1.6 * M;
+        [jug.x, jug.y] = aBosque(e.x, e.y);
+        jugUlt = [jug.x, jug.y];
+      }
+      return;
+    }
+    const p = W.PUNTOS[k];
+    if (p) [jug.x, jug.y] = p;
+    entrar({ traido: k });
+  }
+  return { traer, irA, traido: (k) => TRAIDOS.find((x) => x.k === k) || null, asomando: () => asomando > 0, activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
 })();

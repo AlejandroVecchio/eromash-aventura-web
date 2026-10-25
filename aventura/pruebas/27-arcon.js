@@ -3,13 +3,14 @@
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push(
-    { nombre: "arcón: está en el Puesto, guarda y devuelve piezas y Eydis lo agranda", fn: async (A, { igual, si }) => {
+    { nombre: "arcón: está en la Casa de las Lindes de Eikholt, guarda y devuelve piezas y Eydis lo agranda", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       const st = ARCON.estado(),
         ar = ARCON.arcon();
       si(ar && ar.id === "arconPuesto", "el arcón está");
-      const pu = A.W.LUGARES.puesto;
-      si(Math.hypot(ar.x - pu.p[0], ar.y - pu.p[1]) < pu.r + 400, "cerca del Puesto");
+      const cl = A.W.LUGARES.casa_lindes.p;
+      si(Math.hypot(ar.x - cl[0], ar.y - cl[1]) < 600, "junto a la Casa de las Lindes");
+      si(EIKHOLT.traido("arcon_lindes"), "y la ciudad lo trae");
       const b = BOTIN.estado();
       const it = OBJETOS.generar({ base: "espadaAncha", r: 2, n: 5 });
       BOTIN.dar(it);
@@ -35,9 +36,11 @@
     } },
     { nombre: "arcón: la pestaña se abre en el arcón y la Bolsa trae el filtro", fn: async (A, { igual, si }) => {
       const ar = ARCON.arcon();
-      A.teletransportar(ar.x, ar.y + 80);
-      for (let i = 0; i < 60 && A.J.modo !== "juego"; i++) await esperar(100);
-      ARCON.abrir();
+      EIKHOLT.irA("arcon_lindes");
+      for (let i = 0; i < 60 && !(EIKHOLT.activo() && A.J.modo === "juego"); i++) await esperar(100);
+      const c = EIKHOLT.cercano();
+      si(c && c.texto === I18N.t("ac.abrir"), "en la ciudad se abre junto a la casa");
+      c.fn();
       await esperar(100);
       igual(INVENTARIO.actual(), "arcon", "la pestaña:");
       si(ar.o.abierto, "la tapa abierta");
@@ -45,6 +48,8 @@
       INVENTARIO.cerrar();
       await esperar(80);
       si(!ar.o.abierto, "al cerrar se cierra");
+      EIKHOLT.salir();
+      for (let i = 0; i < 40 && (EIKHOLT.activo() || A.J.modo !== "juego"); i++) await esperar(100);
       const ids = ARCON.sistema.celdasBolsa().map((c) => c.id);
       si(ids.includes("ac_filtro") && ids.includes("ac_desarmar"), "el filtro en la Bolsa");
     } },

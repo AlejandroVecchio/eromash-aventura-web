@@ -291,7 +291,7 @@ window.MUNDO25 = (function () {
     const todos = mas ? gente.concat(mas) : gente;
     const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : todos)
       .filter((p) => p.visible !== false && enPantalla(p))
-      .map((p) => ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
+      .map((p) => p.dibujo ? { x: p.x, y: p.y, f: p.dibujo } : ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
     extra.push(...RECORRER25.extra(cam, tt));
     ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
     // la luz según la hora (LUCES25): sombras que caen según el sol, el color de cada hora, la bruma de lo lejano y de

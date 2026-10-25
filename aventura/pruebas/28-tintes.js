@@ -3,7 +3,7 @@
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push(
-    { nombre: "tintes: la tina está en el Puesto y teñir pide plata y hierbas la primera vez", fn: async (A, { igual, si }) => {
+    { nombre: "tintes: la tina está en la curtiembre de Eikholt y teñir pide plata y hierbas la primera vez", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       const st = TINTES.estado(),
         tina = TINTES.tina();
@@ -42,17 +42,18 @@
       igual(VIKINGO.color, "G", "Eromash dorado:");
     } },
     { nombre: "tintes: la pestaña se abre en la tina y el color se guarda", fn: async (A, { igual, si }) => {
-      const tina = TINTES.tina();
-      A.teletransportar(tina.x, tina.y + 90);
-      for (let i = 0; i < 60 && A.J.modo !== "juego"; i++) await esperar(100);
+      EIKHOLT.irA("tina_tintes");
+      for (let i = 0; i < 60 && !(EIKHOLT.activo() && A.J.modo === "juego"); i++) await esperar(100);
       await esperar(100);
-      const c = A.J.cerca;
+      const c = EIKHOLT.cercano();
       si(c && c.fn, "algo para usar cerca");
       if (c && c.fn) c.fn();
       await esperar(100);
       igual(INVENTARIO.actual(), "tintes", "la pestaña:");
       igual(document.querySelectorAll(".inv-rejilla .inv-celda").length, 8, "ocho colores:");
       INVENTARIO.cerrar();
+      EIKHOLT.salir();
+      for (let i = 0; i < 40 && (EIKHOLT.activo() || A.J.modo !== "juego"); i++) await esperar(100);
       A.H.guardar(9);
       JUEGO.empezar(9, false);
       await esperar(100);

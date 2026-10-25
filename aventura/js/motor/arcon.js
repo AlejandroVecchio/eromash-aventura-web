@@ -1,6 +1,6 @@
-// ---------- el arcón del Puesto y el filtro del botín (sistema ARCON) ----------
+// ---------- el arcón de la Casa de las Lindes y el filtro del botín (sistema ARCON) ----------
 // Como el baúl del Diablo y el filtro de botín del Path of Exile:
-// - El arcón de Eromash, en el patio del Puesto (asset `arconPuesto`): «Abrir el arcón» abre la pestaña Arcón de la
+// - El arcón de Eromash, en la Casa de las Lindes de Eikholt (asset `arconPuesto`): «Abrir el arcón» abre la pestaña Arcón de la
 //   mochila; tocar una pieza de la bolsa la guarda y tocar una guardada la devuelve. Empieza con 24 lugares y Eydis lo
 //   agranda dos veces (36 y 48) por plata desde la misma pestaña. Lo guardado no se pierde nunca.
 // - El filtro, en la Bolsa: qué piezas muestran su haz y su nombre en el piso (todo, mágicas o mejores, raras o
@@ -91,19 +91,13 @@ window.ARCON = (function () {
     INVENTARIO.abrir("arcon");
   }
   function ubicar() {
-    // en el patio del Puesto, del otro lado de la mesa de alquimia
-    const pp = W.PUNTOS.puesto || W.LUGARES.puesto.p;
-    let pm = null;
-    for (let k = 0; k < 140 && !pm; k++) {
-      const a = 5.4 + k * 0.61,
-        d = 240 + k * 5,
-        x = pp[0] + Math.cos(a) * d,
-        y = pp[1] + Math.sin(a) * d * 0.8;
-      // lejos de los otros muebles del patio (el tablón, el poste, la mesa), así se ve entero
-      const solo = !W.COSAS.some((o) => !o.oculto && o.id !== "arconPuesto" && Math.abs(o.x - x) < 190 && o.y - y > -60 && o.y - y < 220);
-      if (solo && W.libre(x, y, 70) && W.libre(x - 70, y, 30) && W.libre(x + 70, y, 30) && !W.CAMINOS.some((c) => W.distLinea(x, y, c.p) < c.w / 2 + 50)) pm = [x, y];
-    }
-    arcon = W.agregar("arconPuesto", pm || [pp[0] + 300, pp[1] + 140], { sem: 2 });
+    // el arcón se mudó del Puesto a la Casa de las Lindes de Eikholt, donde Svanhild guarda lo de cada linde (en el bosque
+    // queda dentro de la elipse junto a la casa; en la ciudad lo dibuja y lo abre EIKHOLT.traer)
+    const cl = W.LUGARES.casa_lindes,
+      pp = cl ? [cl.p[0] - 260, cl.p[1] + 120] : W.PUNTOS.puesto || W.LUGARES.puesto.p;
+    arcon = W.agregar("arconPuesto", pp, { sem: 2 });
+    W.PUNTOS.arcon_lindes = [arcon.x, arcon.y];
+    if (window.EIKHOLT) EIKHOLT.traer({ k: "arcon_lindes", ancla: "lindes", dx: -4, dy: 5, asset: "arconPuesto", o: () => arcon.o, r: 45 });
   }
 
   // ---------- la pestaña ----------
@@ -164,6 +158,10 @@ window.ARCON = (function () {
       // se ubica recién acá, con los muebles de todos los sistemas ya puestos (el poste de contratos)
       if (!arcon) ubicar();
     },
+    // el arcón está en la Casa de las Lindes de Eikholt: la tapa se cierra igual en la ciudad
+    enCiudad() {
+      sistema.actualizar();
+    },
     actualizar() {
       if (abierto && !INVENTARIO.abierta()) {
         abierto = false;
@@ -171,7 +169,7 @@ window.ARCON = (function () {
       }
     },
     cercanos(dar) {
-      if (J.dentro || !arcon) return;
+      if ((J.dentro && !(window.EIKHOLT && EIKHOLT.asomando())) || !arcon) return;
       const d = Math.hypot(arcon.x - jug.x, arcon.y - jug.y);
       if (d < 130) dar(d, t("ac.abrir"), abrir, arcon.x, arcon.y - 110);
     },

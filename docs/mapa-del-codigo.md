@@ -118,7 +118,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **enseres.js**: lo chico de la ciudad en volumen (módulo ENSERES25)
   - la huerta: canteros bajos con sus plantas, el cerco de mimbre; va en el piso · los carros: la carreta con lona, el carro de caravana (más grande) y el carro abierto de la cuadrilla · la leñera: la pila de leños partidos con las puntas a la vista y su techito de un agua · la forja de Ása: el cobertizo abierto con la fragua, la chimenea, el yunque y las herramientas · la chimenea de la herrería: alta, de piedra, angostándose, con la boca encendida · el tablón: dos postes, el tablero con papeles de los dos lados y su alero · la mesa con sus dos bancos · el estante: armas apoyadas, o manojos de hierbas colgados (el secadero) · el tendedero: dos postes, la soga y la ropa colgada · el ahumadero: casita baja de tablas con techo a dos aguas y humo · la lona de la cuadrilla: una carpa en caballete · leños: el tronco caído (asiento) y la pila de troncos del aserradero · un fardo de heno atado · la diana del campo de tiro: el caballete y el disco de paja con sus anillos · la campana de la plaza: el pórtico de dos postes con su techito y la campana colgada · la cama de pieles del patio de Sanación: un catre bajo con las pieles · el estandarte de la cornamenta: el asta y la tela verde con el Ciervo, a lo ancho (u) · el poste del Hongo Dorado: el poste, el brazo y el cartel con el hongo dorado, y su farol · el farol de poste: el poste, el brazo a lo largo (u) y la caja colgada con la luz · una roca: un prisma bajo y desparejo, gris con musgo arriba · el muñeco de práctica: el poste, los brazos de palo a lo ancho, el cuerpo de paja y el escudo al frente · lo que cuenta algo de la ciudad (revisión 7)
 - **juego.js**: Eikholt en el juego (sistema EIKHOLT)
-  - el plano y el bosque · la gente · lo que se puede hacer cerca · Eromash camina · la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) · armar la ciudad (la primera vez que se entra) · entrar y salir · el cuadro · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
+  - el plano y el bosque · lo que los sistemas mudan a la ciudad · la gente · lo que se puede hacer cerca · Eromash camina · la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) · armar la ciudad (la primera vez que se entra) · entrar y salir · el cuadro · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
 - **luces.js**: la luz de la capital (módulo LUCES25)
   - el color de cada hora
 - **mundo.js**: la ciudad viva (módulo MUNDO25)
@@ -217,7 +217,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
 - **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
   - en la mano · dibujo · el sistema
-- **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
+- **arcon.js**: el arcón de la Casa de las Lindes y el filtro del botín (sistema ARCON)
   - el filtro · el arcón · la pestaña · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
