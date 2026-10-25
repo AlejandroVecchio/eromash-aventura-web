@@ -34,7 +34,6 @@ I18N.textos({
   "hj.de_arbol": { es: "Árbol de habilidades", en: "Skill tree" },
   "hj.de_cocina": { es: "Comida", en: "Meal" },
   "hj.de_conjuntos": { es: "Conjuntos", en: "Sets" },
-  "hj.de_descanso": { es: "Bien descansado", en: "Well rested" },
   "hj.de_alquimia": { es: "Pociones", en: "Potions" },
   "hj.de_companero": { es: "Skuggi", en: "Skuggi" },
   "hj.de_instructores": { es: "Lecciones de los instructores", en: "Instructors' lessons" },

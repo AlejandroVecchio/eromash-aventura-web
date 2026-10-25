@@ -102,7 +102,7 @@ window.RPG = (function () {
     }
     J.textos.push({ x: x != null ? x : jug.x, y: (y != null ? y : jug.y) - 120, n: t("rp.xp_mas", [n]), t: 0, col: "#73D5DB", palabra: true, xp: true, suma: n });
   }
-  // dar experiencia: se multiplica por lo que suman los sistemas (s.xp: el descanso, los signos)
+  // dar experiencia: se multiplica por lo que suman los sistemas (s.xp: los signos, la casa)
   function dar(n, x, y) {
     if (!st || !(n > 0)) return;
     n = Math.max(1, Math.round(n * (S.xp || 1)));
