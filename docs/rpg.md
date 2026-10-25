@@ -632,6 +632,15 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
 - **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
 
+## Los desafíos del mundo (`motor/desafios.js`, `DESAFIOS`; textos `df.` en `textos/desafios.js`; estado `E.extra.desafios`)
+
+La versión difícil de lo que ya se hizo. Una **guarida vaciada** (todo el grupo caído, salvo los únicos), una **piedra del rito despierta** o un **hörgr encontrado** ofrecen «Desafío» una vez por día de juego:
+
+- Vuelve un **eco**: un grupo de 4 con líder, de la familia de la guarida (o de la zona, en piedras y hörgar), con la fuerza del grupo +0,5, que RPG nivela como a cualquiera (unos 4 niveles más que lo que había ahí).
+- Hay **2 minutos** para vencerlo sin alejarse más de 43 m. El rastreador cuenta los que quedan y los segundos.
+- **Ganar**: 60 + 12 × nivel del líder de plata, un fragmento, una pieza rara o mejor y el 30 % de la experiencia del nivel. **Perder** (tiempo, alejarse o caer) solo deshace el eco.
+- Los ecos se arman con `HORDAS.crearGrupo` y se sacan de `HORDAS.grupos` y de los enemigos al terminar, así no vuelven solos. La saga suma la entrada «Los desafíos» (10).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

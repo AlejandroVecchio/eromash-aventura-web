@@ -24,6 +24,7 @@ window.SAGA = (function () {
     ["holmr", "pelea", "tiwaz", "#FFD98A", "HOLMR", () => [HOLMR.estado().vencidos, HOLMR.KEMPUR.length]],
     ["jotunn", "pelea", "isa", "#C8F2F4", "JOTUNN", () => [JOTUNN.estado().vencido ? 1 : 0, 1]],
     ["caceria", "pelea", "eihwaz", "#9A6BD8", "CACERIA", () => [Math.min(3, CACERIA.estado().vencidas + CACERIA.estado().sobrevividas), 3]],
+    ["desafios", "pelea", "tiwaz", "#FF8D71", "DESAFIOS", () => [Math.min(10, DESAFIOS.estado().hechos), 10]],
     ["instructores", "oficios", "ansuz", "#FFD98A", "INSTRUCTORES", () => [Object.keys(INSTRUCTORES.LECCIONES).reduce((m, id) => m + INSTRUCTORES.aprendidas(id), 0), Object.keys(INSTRUCTORES.LECCIONES).reduce((m, id) => m + INSTRUCTORES.LECCIONES[id].length, 0)]],
     ["alquimia", "oficios", "berkano", "#7BC86C", "ALQUIMIA", () => [Object.keys(ALQUIMIA.HIERBAS).filter((h) => ALQUIMIA.estado().cosechadas[h] || ALQUIMIA.estado().hierbas[h]).length, largo(ALQUIMIA.HIERBAS)]],
     ["cocina", "oficios", "jera", "#F5A524", "COCINA", () => [Math.min(10, COCINA.estado().platos), 10]],
