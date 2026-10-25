@@ -17,7 +17,8 @@ tener que leer el código para balancear.
 ## Ganchos del motor que usan estos sistemas
 
 - `RPG.aporte(fn(s, nivel))`: suma estadísticas. `s` trae `vida, estamina, dano (multiplicador), crit (0..1),
-  critMult, velAtq, velMov, runico, armadura, regen, xp, plata, botin, lampara`. `RPG.recalcular()` junta la base de
+  critMult, velAtq, velMov, runico, armadura, regen, regenRunica, xp, plata, botin, lampara` (el equipo suma además
+  `robo` y `fuego`). `RPG.recalcular()` junta la base de
   PODERES (forja de Ása, manzanas, poder rúnico) con todos los aportes y lo deja en `jug.hpMax`, `jug.staMax`,
   `J.mulDano`, `J.critProb`, `J.critMult`, `J.velAtq`, `J.velMov`, `J.armadura`, `J.poderRunico`, `J.lampara`.
 - En un sistema: `modDano(dano, criatura, info)` cambia el daño de cada golpe de Eromash (`info = { d, critico,
@@ -53,6 +54,33 @@ tener que leer el código para balancear.
 - Pestaña Atributos de la mochila (U la abre directo; `INVENTARIO.pestana(def)` deja sumar pestañas): lo repartido
   queda en borrador hasta Confirmar; Reacomodar todo devuelve los puntos (gratis la primera vez, después
   `40 × nivel` de plata, se toca dos veces). Un rombo dorado sobre la casilla de la mochila avisa que hay puntos.
+
+## Objetos y botín (`equipo/objetos.js`, `equipo/arte.js`, `motor/botin.js`, textos `ob.`, estado `E.extra.equipo`)
+
+- Una pieza: `{ u, b (base), r (rareza 0-3), n (nivel de objeto), a: [[estadística, valor]], nm (nombre), tema, v,
+  d (daño, armas), ar (armadura) }`. `OBJETOS.generar({ n, r, base, slot, min, hallazgo, tema, rnd })` la arma;
+  `OBJETOS.azar(semilla)` da un azar repetible.
+- Rarezas como en el Diablo: **común** (#F2ECEC, sin afijos), **mágica** (#4A78D0, 1 o 2: a lo sumo un prefijo y un
+  sufijo), **rara** (#FFD98A, 3 o 4, nombre propio «Colmillo del Invierno»), **legendaria** (#F5A524, 5 en la parte
+  alta de su rango). Chances base 70 / 24 / 5,4 / 0,6; «botín mejor» (`s.botin`) multiplica las tres de arriba.
+- Daño del arma: `base × (1 + 0,04 · (n − 1)) × rareza` (×1 / 1,08 / 1,16 / 1,3); el golpe de Eromash se multiplica
+  por `daño / 10` (la Espada del forastero es 10) y su velocidad por la de la base. Armadura de una pieza:
+  `base × (1 + 0,07 · (n − 1)) × rareza`.
+- Afijos (valores al nivel de objeto *n*, mín–máx): daño +4+0,4n–9+0,9n % · fuego por golpe · crítico · velocidad de
+  golpe · armadura · vida 6+1,5n–12+3n · poder rúnico · robo de vida · Fuerza/Destreza/Vigor/Espíritu 1–(2+n/6) ·
+  estamina · vida que vuelve · velocidad al andar (solo botas) · daño crítico · energía rúnica · plata · experiencia
+  · botín mejor. Cada base tiene dónde puede salir cada afijo (`AFIJOS[k].en`) y algunas traen uno fijo (`implicito`).
+- Qué cae: una criatura común 7 %, un líder 55 % (×1,8 de botín mejor), un único siempre y rara o mejor, un semijefe
+  dos piezas raras o mejores, el Custodio, el oso y los troles 80 %. Los cofres: 40 % (los importantes siempre, mágica
+  o mejor), y la pieza vuela sola a la bolsa. El nivel de objeto es el de la criatura; el de un cofre, el del lugar
+  sin quedar más de un nivel debajo de Eromash.
+- Lo tirado queda en el piso (plano, gira con la cámara) con un haz del color de la rareza y su nombre; los nombres se
+  apilan sin pisarse. Se junta con E. La bolsa guarda 30 piezas; desarmar da el 30 % de su valor
+  (`(4 + 1,6n) × [1, 2,5, 6, 15] × (1 + 0,15 por afijo)`) en plata.
+- El dibujo: espadas, escudos, cascos, pecheras, pantalones y botas con el arte de la arena (`juego/js/equipo/`,
+  `juego/img/cascos/`), en el tema del lugar donde cayó (cerca del Puesto el bosque; al norte Helheim, al este la
+  costa, al oeste el volcán y al sur la arena). Amuletos y anillos propios en `arte.js`.
+- Los atributos del equipo suman con `ATRIBUTOS.bono(fn)`; lo demás con `RPG.aporte`.
 
 ## Pruebas
 

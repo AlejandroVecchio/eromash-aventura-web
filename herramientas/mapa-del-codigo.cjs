@@ -18,6 +18,7 @@ const CARPETAS = {
   enemigos: "el dibujo de las criaturas",
   historia: "el guion (igual al de Godot)",
   motor: "el motor y los sistemas que se le enchufan",
+  equipo: "las piezas de equipo (bases, rarezas, afijos) y su dibujo",
   interfaz: "HUD, mochila, mapa, opciones y el prólogo del mago",
   eikholt: "la capital en 3D (es del hilo «Construir la ciudad de Eikholt»)",
   editor: "el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)",

@@ -36,7 +36,15 @@ window.ATRIBUTOS = (function () {
   const puestos = (b) => CLAVES.reduce((n, k) => n + st[k] + (b ? borrador[k] : 0), 0);
   const total = () => POR_NIVEL * ((window.RPG ? RPG.nivel() : 1) - 1) + (st.extra || 0);
   const libres = (b) => total() - puestos(b);
-  const valor = (k, b) => BASE + st[k] + (b ? borrador[k] : 0);
+  // lo que suman otros sistemas (el equipo): fn() → { fue, des, vig, esp }
+  const bonos = [];
+  const bonoDe = (k) => bonos.reduce((n, f) => n + (f()[k] || 0), 0);
+  const conBonos = (p) => {
+    const q = {};
+    CLAVES.forEach((k) => (q[k] = p[k] + bonoDe(k)));
+    return q;
+  };
+  const valor = (k, b) => BASE + st[k] + (b ? borrador[k] : 0) + bonoDe(k);
   const costoReacomodo = () => (st.reacomodos ? 40 * (window.RPG ? RPG.nivel() : 1) : 0);
 
   // ---------- la pestaña ----------
@@ -179,7 +187,7 @@ window.ATRIBUTOS = (function () {
       J = A.J;
       jug = A.jug;
       if (window.RPG) {
-        RPG.aporte((s) => efecto(s, st));
+        RPG.aporte((s) => efecto(s, conBonos(st)));
         RPG.alSubir(() => [t("at.sube", [POR_NIVEL, CONTROLES.glifo("personaje")])]);
       }
       if (window.INVENTARIO && INVENTARIO.pestana) INVENTARIO.pestana({ id: "atributos", antes: "bolsa", nombre: () => t("at.tab") + (libres(true) > 0 ? " ·" + libres(true) : ""), pintar });
@@ -200,5 +208,5 @@ window.ATRIBUTOS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { estado: () => st, libres: () => libres(false), valor: (k) => valor(k, false), sumarPuntos: (n) => ((st.extra = (st.extra || 0) + n), INVENTARIO.repintar()), BASE, POR_NIVEL };
+  return { estado: () => st, libres: () => libres(false), valor: (k) => valor(k, false), sumarPuntos: (n) => ((st.extra = (st.extra || 0) + n), INVENTARIO.repintar()), bono: (f) => bonos.push(f), BASE, POR_NIVEL };
 })();

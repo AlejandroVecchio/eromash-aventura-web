@@ -43,9 +43,9 @@ window.INVENTARIO = (function () {
     return PE().PECHERAS.find((p) => p.id === id) || null;
   };
   // la espada en la mano del vikingo, como la pone la mochila de la arena (eromash-armadura.js, dibujoEspada)
-  function manoEspada(n) {
+  function manoEspada(n, arma) {
     if (!ES()) return "";
-    const s = ES().svg(espadaId(n), { vista: "vertical", sinEstilo: true }),
+    const s = (arma && window.ARTE_OBJ && ARTE_OBJ.svgEspada(arma, { vista: "vertical", sinEstilo: true })) || ES().svg(espadaId(n), { vista: "vertical", sinEstilo: true }),
       m = s.match(/viewBox="([^"]+)"/);
     if (!m) return "";
     const [x, y, w, h] = m[1].split(/\s+/);
@@ -69,6 +69,13 @@ window.INVENTARIO = (function () {
   // el vikingo entero con la cota o la pechera y la espada que lleva
   function vikingoEquipado(pe) {
     if (!PE()) return null;
+    // con el equipo nuevo (botin.js): la pechera y el arma que lleva puestas
+    if (window.BOTIN && BOTIN.estado()) {
+      const pecho = BOTIN.puesta("pecho"),
+        arma = BOTIN.puesta("arma"),
+        p = pecho ? ARTE_OBJ.pechera(pecho) : null;
+      return arte("vik" + (p ? p.id : "-") + (arma ? arma.b + arma.r : "-"), () => PE().vikingo(p, "rojo", "tranquilo", "", "", arma ? manoEspada(0, arma) : ""));
+    }
     const p = pecheraDe(pe.cota, pe.pechera);
     return arte("vik" + (p ? p.id : "") + espadaId(pe.espada), () => PE().vikingo(p, "rojo", "tranquilo", "", "", manoEspada(pe.espada)));
   }
@@ -252,7 +259,7 @@ window.INVENTARIO = (function () {
       const tiene = pe.runas.includes(r);
       return { id: "runa_" + r, runa: r, nombre: t("pj.runa_" + r), desc: tiene ? t("pj.runa_" + r + "_toma") + " " + (pe.runa === r ? t("inv.elegida") + "." : t("inv.elegir_runa")) : t("inv.runa_falta"), falta: !tiene, elegida: pe.runa === r, fn: tiene ? () => PODERES.elegirRuna(r) : null };
     });
-    return { lados, runas };
+    return { lados: window.BOTIN ? BOTIN.lados(pe, lados) : lados, runas };
   }
   function bolsa(pe) {
     const l = [
@@ -261,7 +268,8 @@ window.INVENTARIO = (function () {
     ];
     const llevas = window.SECUNDARIAS ? SECUNDARIAS.llevas() : [];
     llevas.forEach((o) => l.push({ id: o.id, icono: o.icono, nombre: t("sc.obj_" + o.id), desc: t("sc.obj_" + o.id + "_d"), cant: o.cant }));
-    return { l, encargos: llevas.length };
+    const piezas = window.BOTIN ? BOTIN.celdasBolsa() : [];
+    return { l, piezas, encargos: llevas.length };
   }
   function stats(pe) {
     const renombre = window.SECUNDARIAS ? SECUNDARIAS.renombre() : 0;
@@ -305,7 +313,7 @@ window.INVENTARIO = (function () {
   function celda(item, fila, col, clase) {
     const el = document.createElement("button");
     el.type = "button";
-    el.className = "inv-celda" + (clase ? " " + clase : "") + (item.falta ? " falta" : "") + (item.elegida ? " elegida" : "");
+    el.className = "inv-celda" + (clase ? " " + clase : "") + (item.falta ? " falta" : "") + (item.elegida ? " elegida" : "") + (item.obj ? " rar-" + item.obj.r : "") + (item.nuevo ? " nuevo" : "");
     const cv = document.createElement("canvas");
     cv.width = 128;
     cv.height = 128;
@@ -321,6 +329,10 @@ window.INVENTARIO = (function () {
       c.closePath();
       c.fill();
       FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : COL_RUNA[item.runa], 7);
+    } else if (item.obj || item.fantasma) {
+      // una pieza de equipo, con el dibujo de la arena (arte.js); si no cargó, se repinta sola al cargar. Una casilla
+      // vacía muestra la silueta de lo que va ahí
+      ARTE_OBJ.icono(c, item.obj || item.fantasma, 64, 64, 104);
     } else {
       icono(c, item.icono, 64, 64, 1.5, item.nivel);
       // si la pieza real todavía no cargó, se vuelve a pintar cuando esté
@@ -401,12 +413,15 @@ window.INVENTARIO = (function () {
       if (!vikingoEquipado(pe)) setTimeout(dib, 200);
       lados.der.forEach((it, k) => der.appendChild(celda(it, k, 2)));
       fig.append(izq, centro, der);
+      if (lados.abajo) fig.classList.add("con-equipo");
       const rr = document.createElement("div");
       rr.className = "inv-runas";
       rr.innerHTML = `<div class="rotulo">${t("inv.runas")}</div>`;
       const fila = document.createElement("div");
       fila.className = "fila";
       runas.forEach((it, k) => fila.appendChild(celda(it, 3, k, "runa")));
+      // con el equipo nuevo, la lámpara, la Lente y las manzanas van en la misma fila que las runas
+      if (lados.abajo) lados.abajo.forEach((it, k) => fila.appendChild(celda(it, 3, 4 + k)));
       rr.appendChild(fila);
       const izqCol = document.createElement("div");
       izqCol.className = "inv-col";
@@ -416,12 +431,21 @@ window.INVENTARIO = (function () {
       st.innerHTML = `<div class="rotulo">${t("inv.stats")}</div>` + stats(pe).map(([k, v]) => `<div class="st"><span>${k}</span><b>${v}</b></div>`).join("");
       cuerpo.append(izqCol, st);
     } else if (pestana === "bolsa") {
-      const { l, encargos } = bolsa(pe);
+      const { l, piezas, encargos } = bolsa(pe);
       const g = document.createElement("div");
       g.className = "inv-rejilla";
       l.forEach((it, k) => g.appendChild(celda(it, Math.floor(k / 6), k % 6)));
       cuerpo.appendChild(g);
       if (!encargos) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("inv.bolsa_vacia")}</p>`);
+      // las piezas de equipo que lleva (botin.js), con su cuenta
+      if (window.BOTIN) {
+        cuerpo.insertAdjacentHTML("beforeend", `<div class="rotulo inv-piezas">${t("ob.bolsa_titulo", [piezas.length, BOTIN.MAX_BOLSA])}</div>`);
+        const g2 = document.createElement("div");
+        g2.className = "inv-rejilla";
+        piezas.forEach((it, k) => g2.appendChild(celda(it, 10 + Math.floor(k / 8), k % 8)));
+        cuerpo.appendChild(g2);
+        if (!piezas.length) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("ob.bolsa_vacia")}</p>`);
+      }
     } else if (EXTRA[pestana]) {
       EXTRA[pestana].pintar(cuerpo, { celda, enfocable, pe });
     } else {
@@ -454,7 +478,29 @@ window.INVENTARIO = (function () {
   function detalle(it) {
     const d = raiz.querySelector(".inv-detalle");
     d.querySelector("b").textContent = it ? it.nombre : "";
-    d.querySelector("p").textContent = it ? it.desc : "";
+    d.querySelector("b").style.color = (it && it.col) || "";
+    const p = d.querySelector("p");
+    // las piezas de equipo traen su detalle armado (líneas de color y la comparación con lo puesto)
+    if (it && it.html) p.innerHTML = it.html;
+    else p.textContent = it ? it.desc : "";
+    if (it && it.alt) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "inv-alt";
+      b.textContent = it.alt.texto;
+      b.addEventListener("click", usarAlt);
+      p.appendChild(b);
+    }
+    if (it && it.visto) it.visto();
+  }
+  // la otra acción de una casilla (desarmar una pieza): R / △ o su botón
+  function usarAlt() {
+    const q = celdas[foco];
+    if (q && q.item.alt) {
+      const quedo = !q.item.alt.fn();
+      pintar();
+      if (quedo) enfocar(foco);
+    }
   }
   function usar() {
     const q = celdas[foco];
@@ -502,6 +548,7 @@ window.INVENTARIO = (function () {
     if (dir && dir !== ejeAntes && celdas.length) mover(dir);
     ejeAntes = dir;
     if (CONTROLES.recien("interactuar") || CONTROLES.recien("seguir")) usar();
+    if (CONTROLES.recien("lente")) usarAlt();
     return true;
   }
   // moverse por las casillas: a la más cercana en esa dirección (según dónde están en la pantalla)

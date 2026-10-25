@@ -5,21 +5,29 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 2,
-    titulo: { es: "Atributos", en: "Attributes" },
+    pr: 3,
+    titulo: { es: "Botín y equipo", en: "Loot and gear" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
-    usa: [{ pr: 1, es: "niveles: los puntos salen de subir de nivel", en: "levels: points come from levelling up" }],
+    usa: [
+      { pr: 1, es: "niveles: el nivel de cada pieza sale del de la criatura o el lugar", en: "levels: each item's level comes from the creature or the place" },
+      { pr: 2, es: "atributos: anillos y amuletos suman Fuerza, Destreza, Vigor y Espíritu", en: "attributes: rings and amulets add Strength, Dexterity, Vigour and Spirit" },
+    ],
     mirar: [
-      { es: "Cada nivel da 3 puntos. Con puntos libres la casilla de la mochila lleva un rombo dorado.", en: "Each level gives 3 points. With free points the backpack slot shows a gold diamond." },
-      { es: "U abre la pestaña Atributos: Fuerza, Destreza, Vigor y Espíritu, con lo que da cada punto. Se arma un borrador y se confirma.", en: "U opens the Attributes tab: Strength, Dexterity, Vigour and Spirit, with what each point gives. Build a draft, then confirm." },
-      { es: "Reacomodar es gratis la primera vez; después cuesta plata y pide apretar dos veces.", en: "Respec is free the first time; after that it costs silver and needs a double press." },
-      { es: "Fijate que la vida, el daño y el crítico cambian en «Cómo está Eromash».", en: "Check that life, damage and critical change under 'How Eromash is doing'." },
+      { es: "Las criaturas y los cofres sueltan piezas: tiradas en el piso con su haz de color (azul mágica, dorado rara, naranja legendaria) y el nombre arriba. Se juntan con E.", en: "Creatures and chests drop gear: lying on the ground with a coloured beam (blue magic, gold rare, orange legendary) and its name above. Pick up with E." },
+      { es: "Mochila (I): nueve casillas de equipo con el arte de la arena. En Bolsa, tocar una pieza la pone y dice cuánto cambia comparada con lo puesto (verde sube, rojo baja).", en: "Backpack (I): nine gear slots with the arena's art. In Bag, pressing a piece wears it and shows how it compares with what you wear (green up, red down)." },
+      { es: "R (△) o el botón del pie desarma una pieza por plata; las raras piden confirmar.", en: "R (△) or the footer button salvages a piece for silver; rare ones ask to confirm." },
+      { es: "El arma puesta se ve en la mano de Eromash y en el vikingo de la mochila; la pechera también.", en: "The worn weapon shows in Eromash's hand and on the backpack viking; so does the chest piece." },
     ],
     botones: [
-      { es: "Dar un nivel (+3 puntos)", en: "Give a level (+3 points)", fn: (A) => RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp) },
-      { es: "Subir a nivel 10 y abrir Atributos", en: "Jump to level 10 and open Attributes", fn: (A) => { while (RPG.nivel() < 10) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp); INVENTARIO.abrir("atributos"); } },
-      { es: "Dar 500 de plata (para reacomodar)", en: "Give 500 silver (to respec)", fn: (A) => PODERES.darPlata(500) },
-      { es: "Ir a Skarnholt a probar el daño", en: "Go to Skarnholt to test damage", fn: (A) => ir(A, A.W.LUGARES.skarnholt.p, 0, 360) },
+      { es: "Lluvia de botín a tus pies (todas las rarezas)", en: "Loot shower at your feet (all rarities)", fn: (A) => {
+        ["espadaAncha", "sable", "yelmo", "cotaMalla", "grebas", "botasHerradas", "talisman", "sortija"].forEach((b, i) => BOTIN.tirar(A.jug.x - 200 + i * 55, A.jug.y + 80 + (i % 2) * 50, OBJETOS.generar({ base: b, n: Math.max(3, RPG.nivel()), r: i % 4, tema: ARTE_OBJ.temaEn(A.W, A.jug.x, A.jug.y) })));
+      } },
+      { es: "Llenar la bolsa con 12 piezas y abrirla", en: "Fill the bag with 12 pieces and open it", fn: (A) => {
+        for (let i = 0; i < 12; i++) BOTIN.dar(OBJETOS.generar({ n: Math.max(5, RPG.nivel()), hallazgo: 4, tema: i % 5 }), { silencio: true });
+        INVENTARIO.abrir("bolsa");
+      } },
+      { es: "Ir con un grupo y su líder (suelta seguro)", en: "Go to a group and its leader (sure drop)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160) },
+      { es: "Subir a nivel 12 (piezas más fuertes)", en: "Jump to level 12 (stronger gear)", fn: (A) => { while (RPG.nivel() < 12) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp); } },
     ],
   };
   // ---------- ayuda para los botones ----------
@@ -95,9 +103,11 @@
     d.querySelector(".np-cabeza").addEventListener("click", () => plegar(!plegada));
     plegar(plegada);
     const css = document.createElement("style");
-    css.textContent = `#notaPr{position:fixed;left:16px;top:16px;z-index:60;width:330px;max-height:calc(100vh - 200px);overflow:auto;padding:10px 14px;border-left:3px solid #73D5DB;font-size:12px;color:#F2ECEC}#notaPr .np-cabeza{all:unset;cursor:pointer;display:grid;grid-template-columns:1fr auto;width:100%}#notaPr .np-cabeza small{grid-column:1;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#73D5DB;font-weight:800}#notaPr .np-cabeza b{grid-column:1;font-size:15px;color:#FFD98A}#notaPr .np-cabeza i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:20px;color:#73D5DB}#notaPr.plegada .np-cuerpo{display:none}#notaPr ul{margin:8px 0;padding-left:16px;line-height:1.4}#notaPr li{margin-bottom:4px}#notaPr .np-botones{display:flex;flex-direction:column;gap:5px}#notaPr .np-botones button{font:inherit;font-weight:700;text-align:left;color:#F2ECEC;background:#221B18;border:1px solid #3A2A26;padding:6px 10px;cursor:pointer}#notaPr .np-botones button:hover{background:#3A1A14;border-color:#FFD98A}#notaPr .np-usa{margin:8px 0 0;font-size:11px;color:#E0B2B2}#notaPr .np-pie{margin:8px 0 0;font-size:10px;color:#8A8080}`;
+    css.textContent = `#notaPr{position:fixed;left:16px;top:16px;z-index:60;width:330px;max-height:calc(100vh - 200px);overflow:auto;padding:10px 14px;border-left:3px solid #73D5DB;font-size:12px;color:#F2ECEC}#notaPr .np-cabeza{all:unset;cursor:pointer;display:grid;grid-template-columns:1fr auto;width:100%}#notaPr .np-cabeza small{grid-column:1;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#73D5DB;font-weight:800}#notaPr .np-cabeza b{grid-column:1;font-size:15px;color:#FFD98A}#notaPr .np-cabeza i{grid-column:2;grid-row:1/3;align-self:center;font-style:normal;font-size:20px;color:#73D5DB}#notaPr.plegada .np-cuerpo{display:none}#notaPr ul{margin:8px 0;padding-left:16px;line-height:1.4}#notaPr li{margin-bottom:4px}#notaPr .np-botones{display:flex;flex-direction:column;gap:5px}#notaPr .np-botones button{font:inherit;font-weight:700;text-align:left;color:#F2ECEC;background:#221B18;border:1px solid #3A2A26;padding:6px 10px;cursor:pointer}#notaPr .np-botones button:hover{background:#3A1A14;border-color:#FFD98A}#notaPr .np-usa{margin:8px 0 0;font-size:11px;color:#E0B2B2}#notaPr .np-pie{margin:8px 0 0;font-size:10px;color:#8A8080}#notaPr.en-menu{opacity:.55}#notaPr.en-menu .np-cuerpo{display:none}`;
     document.head.appendChild(css);
     document.body.appendChild(d);
+    // con la mochila o un menú abierto, la nota se pliega sola para no taparlo
+    setInterval(() => d.classList.toggle("en-menu", !!(window.JUEGO && JUEGO.J.modo !== "juego" && JUEGO.J.modo !== "titulo")), 250);
   }
   armar();
 })();

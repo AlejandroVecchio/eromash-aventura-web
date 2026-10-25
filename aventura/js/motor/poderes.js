@@ -310,7 +310,7 @@ window.PODERES = (function () {
           b.y += ((jug.y - b.y) / d) * v * dt;
         }
         if (listo && d < 26) {
-          if (b.tipo === "plata") darPlata(b.cant);
+          if (b.tipo === "plata") darPlata(Math.max(1, Math.round(b.cant * ((window.RPG && RPG.stats().plata) || 1))));
           else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
           if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           botin.splice(i, 1);
