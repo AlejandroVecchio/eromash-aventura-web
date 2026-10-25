@@ -225,12 +225,6 @@ window.ICONOS = (function () {
       pol(c, [x - 4 * u, y, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], "#E0C88A");
       pol(c, [x + 2.6 * u, y - 1.4 * u, x + 3.4 * u, y - 1.4 * u, x + 3.4 * u, y - 0.6 * u, x + 2.6 * u, y - 0.6 * u], "#111111");
     },
-    // una mesa de dados (dados.js): un dado de hueso con sus puntos
-    dados(c, x, y, u, col) {
-      pol(c, [x - 4.5 * u, y - 4.5 * u, x + 4.5 * u, y - 4.5 * u, x + 4.5 * u, y + 4.5 * u, x - 4.5 * u, y + 4.5 * u], col);
-      pol(c, [x - 4.5 * u, y + 3 * u, x + 4.5 * u, y + 3 * u, x + 4.5 * u, y + 4.5 * u, x - 4.5 * u, y + 4.5 * u], "#C8BCA8");
-      [[-2, -2], [2, -2], [0, 0.4], [-2, 2], [2, 2]].forEach(([a, b]) => pol(c, [x + (a - 0.7) * u, y + (b - 1.2) * u, x + (a + 0.7) * u, y + (b - 1.2) * u, x + (a + 0.7) * u, y + (b + 0.2) * u, x + (a - 0.7) * u, y + (b + 0.2) * u], "#3A2A1C"));
-    },
     // un atril con un libro (libros.js): el libro abierto, la hoja izquierda en sombra
     libro(c, x, y, u, col) {
       pol(c, [x - 5.5 * u, y - 3.5 * u, x, y - 2.5 * u, x + 5.5 * u, y - 3.5 * u, x + 5.5 * u, y + 3.5 * u, x, y + 4.5 * u, x - 5.5 * u, y + 3.5 * u], "#5E130D");
