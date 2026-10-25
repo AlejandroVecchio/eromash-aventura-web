@@ -18,7 +18,8 @@ window.TABLON = (function () {
   ];
   let st = { pedido: null, hechos: 0 },
     tablon = null;
-  const paga = (h) => Math.min(130, 40 + h * 12);
+  // el renombre en Eikholt suma un 10 % por rango a lo que paga
+  const paga = (h) => Math.round(Math.min(130, 40 + h * 12) * (1 + 0.1 * (window.SECUNDARIAS && SECUNDARIAS.renombre ? SECUNDARIAS.renombre() : 0)));
   const listo = () => st.pedido && st.pedido.hechas >= st.pedido.n;
   // la presa del próximo pedido: la que toca por turno entre las que de verdad andan por el bosque
   function proximo() {
@@ -106,5 +107,5 @@ window.TABLON = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { estado: () => st };
+  return { estado: () => st, paga };
 })();

@@ -71,16 +71,33 @@ window.COMERCIO = (function () {
     for (let r = 0; r < p.length; r++) if ((u -= p[r]) < 0) return r;
     return 0;
   }
+  // el renombre en Eikholt mejora lo que traen: una pieza más por rango y la suerte corre de común a rara (y a legendaria desde el 3)
+  const renombre = () => (window.SECUNDARIAS && SECUNDARIAS.renombre ? SECUNDARIAS.renombre() : 0);
+  function rarezaCon(p, rn) {
+    const q = p.slice(),
+      pasa = Math.min(q[0], 0.06 * rn);
+    q[0] -= pasa;
+    q[1] += pasa * 0.4;
+    q[2] += pasa * 0.6;
+    if (rn >= 3) {
+      const l = Math.min(q[1], 0.015 * (rn - 2));
+      q[1] -= l;
+      q[3] += l;
+    }
+    return q;
+  }
   function armarStock(id) {
     const M = MERCADERES[id],
+      rn = renombre(),
+      pr = rarezaCon(M.rareza, rn),
       dia = diaDeHoy(),
       rnd = DIB.azar(dia * 7919 + (id === "ingrid" ? 13 : 71)),
       n = nivelObjeto(),
       tema = ARTE_OBJ.temaEn(W, jug.x, jug.y);
     const piezas = [];
-    for (let i = 0; i < M.piezas; i++) {
+    for (let i = 0; i < M.piezas + rn; i++) {
       const slot = M.slots[i % M.slots.length];
-      const it = OBJETOS.generar({ n: n + (rnd() < 0.3 ? 1 : 0), slot, r: rareza(rnd, M.rareza), tema, rnd });
+      const it = OBJETOS.generar({ n: n + (rnd() < 0.3 ? 1 : 0), slot, r: rareza(rnd, pr), tema, rnd });
       piezas.push(it);
     }
     const mats = {};
@@ -88,11 +105,12 @@ window.COMERCIO = (function () {
       const [a, b] = M.mats[k];
       mats[k] = a + Math.floor(rnd() * (b - a + 1));
     }
-    return { dia, piezas, mats, envueltas: (M.envueltas || []).slice() };
+    return { dia, rn, piezas, mats, envueltas: (M.envueltas || []).slice() };
   }
   function stock(id) {
     const s = st.stock[id];
-    if (!s || s.dia !== diaDeHoy()) st.stock[id] = armarStock(id);
+    // al subir el renombre el mercader trae lo nuevo enseguida, sin esperar al otro día
+    if (!s || s.dia !== diaDeHoy() || (s.rn || 0) < renombre()) st.stock[id] = armarStock(id);
     return st.stock[id];
   }
 
@@ -330,6 +348,7 @@ window.COMERCIO = (function () {
     precioCompraSin,
     precioVentaSin,
     modPrecio: (f) => mods.push(f),
+    rarezaCon,
     altCasilla: (f) => alts.push(f),
     kolbrun: () => kolbrun,
     posIngrid,
