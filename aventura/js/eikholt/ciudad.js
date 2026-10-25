@@ -1291,10 +1291,11 @@ window.EIKHOLT = (function () {
       st.dentro = true;
       zonaAvisada = "";
       rigAntes = "";
-      if (H.descubrir) H.descubrir("eikholt");
+      if (window.CARTEL) CARTEL.entra("eikholt");
+      else if (H.descubrir) H.descubrir("eikholt");
       ubicarNombrados();
       ubicarHistoria();
-      HUD.aviso(t("ek.nombre"), "#FFD98A");
+      if (!window.CARTEL) HUD.aviso(t("ek.nombre"), "#FFD98A");
       setTimeout(() => {
         HUD.fundido(false);
         J.modo = "juego";
@@ -1320,6 +1321,7 @@ window.EIKHOLT = (function () {
     setTimeout(() => {
       activo = false;
       st.dentro = false;
+      if (window.CARTEL) CARTEL.sale("eikholt");
       if (edificioDentro) cortar(edificioDentro, false);
       edificioDentro = null;
       lienzo3d.style.display = "none";

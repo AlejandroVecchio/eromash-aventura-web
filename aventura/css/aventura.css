@@ -132,6 +132,8 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .boton small { display: block; font-weight: 500; font-size: 12px; color: var(--rosa); margin-top: 2px; }
 .diario-lista { max-height: 50vh; overflow: auto; }
 .diario-lista p { margin: 0 0 12px; padding-left: 12px; border-left: 2px solid var(--runico); }
+/* el cartel dorado de lugar (interfaz/cartel.js): encima del juego y de la ciudad, debajo del prólogo, los menús y el fundido */
+.cartel-lugar { position: fixed; inset: 0; width: 100vw; height: 100vh; display: none; pointer-events: none; z-index: 40; }
 #fundido { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.8s; z-index: 70; }
 /* el prólogo del mago: la escena a pantalla completa, el título a la izquierda y las preguntas abajo */
 .prologo-lienzo { position: fixed; inset: 0; width: 100vw; height: 100vh; display: none; z-index: 50; }

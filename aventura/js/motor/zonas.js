@@ -454,7 +454,11 @@ window.ZONAS = (function () {
   function entrar(Z) {
     if (!Z.llegada) return;
     A.teletransportar(Z.llegada.x, Z.llegada.y);
-    setTimeout(() => HUD.aviso(Z.d.nombre, "lugar", t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
+    // el cartel dorado con su nombre (una tierra: «Tierra nueva»; una mazmorra: «Lugar descubierto») y la pista abajo
+    if (window.CARTEL) {
+      CARTEL.llegar("zona:" + Z.id, { nombre: Z.d.nombre, tipo: Z.d.tipo === "mazmorra" ? "lugar" : "tierra" });
+      setTimeout(() => HUD.aviso(t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
+    } else setTimeout(() => HUD.aviso(Z.d.nombre, "lugar", t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
   }
   // a dónde vuelve: a su entrada del bosque o a la cueva de la tierra de la que sale
   function salir(Z) {
