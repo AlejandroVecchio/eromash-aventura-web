@@ -261,6 +261,7 @@ window.SECUNDARIAS = (function () {
       if (rn > st.renombre) {
         st.renombre = rn;
         J.retrasar(3.4, () => HUD.aviso(t("sc.renombre_sube", [t("sc.renombre_" + rn)]), "#FFD98A"));
+        J.retrasar(5.4, () => HUD.aviso(t("sc.renombre_abre", [t("sc.renombre_abre_" + rn)]), "#FFD98A"));
       }
     },
     cercanos(dar) {
@@ -507,7 +508,7 @@ window.SECUNDARIAS = (function () {
       }).join("");
       const pz = PROEZAS.map((f, i) => `<span style="opacity:${f() ? 1 : 0.45}">${f() ? "✓" : "○"} ${t("sc.proeza_" + i)}</span>`).join("<br>");
       const rn = nivelRenombre();
-      let html = `<div class="diario-resumen"><p><b>${t("sc.renombre")}</b> · ${t("sc.renombre_" + rn)}${rn ? " · " + t("sc.descuento", [rn * 5]) : ""}</p></div>`;
+      let html = `<div class="diario-resumen"><p><b>${t("sc.renombre")}</b> · ${t("sc.renombre_" + rn)}${rn ? " · " + t("sc.descuento", [rn * 5]) : ""}</p>${[1, 2, 3, 4].map((k) => `<p style="opacity:${k <= rn ? 1 : 0.45}">${k <= rn ? "✓" : "○"} <b>${t("sc.renombre_" + k)}</b> · ${t("sc.renombre_abre_" + k)}</p>`).join("")}</div>`;
       if (filas) html += `<div class="diario-resumen"><p><b>${t("sc.encargos")}</b></p>${filas}</div>`;
       html += `<div class="diario-resumen"><p><b>${t("sc.proezas", [proezas()])}</b></p><p>${pz}</p></div>`;
       return html;
