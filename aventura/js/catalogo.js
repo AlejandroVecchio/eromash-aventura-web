@@ -5,6 +5,11 @@
   const fichas = [];
   const params = new URLSearchParams(location.search);
   if (params.get("lang")) I18N.setLang(params.get("lang"));
+  // la norma de giro: si algún asset no se puede ver con la cámara girada, se avisa acá (ver ASSETS.sinGiro)
+  if (ASSETS.sinGiro) {
+    const faltan = ASSETS.sinGiro();
+    if (faltan.length) console.warn("Assets sin giro (sumarles fv + vol, figura o caras):", faltan.join(", "));
+  }
   function ficha(grupoEl, nombre, w, h, dibujar) {
     const f = document.createElement("div");
     f.className = "ficha";

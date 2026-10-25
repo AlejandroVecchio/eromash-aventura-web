@@ -259,15 +259,9 @@
     if (o.x2 !== undefined) [o.x2, o.y2] = def && def.vol ? [x + o.x2 - d.x, y + o.y2 - d.y] : V(o.x2, o.y2);
     // lo que apunta a un punto del mundo (o.hacia: las cadenas de las ataduras) igual: relativo al pie
     if (o.hacia && def && def.vol) o.hacia = [x + o.hacia[0] - d.x, y + o.hacia[1] - d.y];
-    // lo que tiene caras se arma como volumen; lo demás que tiene frente (puertas, empalizadas, carros, puestos) se
-    // gira de mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
-    // postes, torres: choque redondo) y la naturaleza se ven igual de cualquier lado y quedan como están
-    const md = d.choque || (def && def.choque);
-    // lo armado con caras (vol) mira solo la cámara (VOL.cam.g)
-    if (def && def.vol) {
-      // nada
-    } else if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
-    else if (def && o.x2 === undefined && !(md && md.r) && def.grupo !== "naturaleza" && !def.piso) o.giroCam = cam.g;
+    // lo armado con caras (vol) mira solo la cámara (VOL.cam.g); lo que tiene todas sus caras a mano (caras) se gira
+    // con o.giro; lo redondo o plano de frente (figura) y lo del piso quedan como están (ASSETS.sinGiro: la norma)
+    if (def && def.caras && !def.vol) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
     return Object.assign({}, d, { x, y, o, mundo: d });
   }
   const croquis = new Image();
