@@ -55,6 +55,8 @@ tener que leer el código para balancear.
   queda en borrador hasta Confirmar; Reacomodar todo devuelve los puntos (gratis la primera vez, después
   `40 × nivel` de plata, se toca dos veces). Un rombo dorado sobre la casilla de la mochila avisa que hay puntos.
 
+- **Umbrales** (`UMBRAL`, textos `at.u_*`): al llegar a 20, 30, 40 y 50 en un atributo (con todo: base, repartido y equipo) se suma algo de más. Fuerza: +5 % de daño, +0,1 al crítico, +10 de armadura y +5 % de daño, +10 % de daño. Destreza: +2 % de crítico, +5 % de velocidad de golpe, +3 % de crítico, +5 % de velocidad de golpe y de paso. Vigor: +20 de vida, +15 de estamina, +30 de vida y +10 % de regeneración, +10 % de vida. Espíritu: +5 % de poder rúnico, +10 % de energía rúnica, +8 % y +15 % de poder rúnico. La pestaña muestra los rombos alcanzados y el próximo; confirmar puntos que cruzan uno lo anuncia.
+
 ## Objetos y botín (`equipo/objetos.js`, `equipo/arte.js`, `motor/botin.js`, textos `ob.`, estado `E.extra.equipo`)
 
 - Una pieza: `{ u, b (base), r (rareza 0-3), n (nivel de objeto), a: [[estadística, valor]], nm (nombre), tema, v,

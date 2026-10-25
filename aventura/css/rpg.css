@@ -21,6 +21,7 @@
 
 /* ---------- atributos: la pestaña de la mochila ---------- */
 .inv-cuerpo.atributos { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; }
+.at-txt small.at-umbral { display: block; margin-top: 2px; color: #F5A524; letter-spacing: 0.04em; }
 .at-lista { display: flex; flex-direction: column; gap: 10px; }
 .at-libres { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: var(--rosa); }
 .at-libres b { font-size: 28px; color: #8A8080; font-family: "Eromash Display", system-ui, sans-serif; }
