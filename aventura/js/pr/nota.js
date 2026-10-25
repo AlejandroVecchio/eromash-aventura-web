@@ -5,38 +5,38 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 13,
-    titulo: { es: "Comercio con Ingrid y Kolbrun", en: "Trading with Ingrid and Kolbrun" },
+    pr: 14,
+    titulo: { es: "Regatear con la balanza", en: "Haggling on the scale" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín y mochila: lo que se compra y se vende son piezas de equipo, y se comercia en una pestaña de la mochila", en: "loot and backpack: what you buy and sell are gear pieces, traded in a backpack tab" },
-      { pr: 12, es: "materiales: Ingrid vende hierro y cuero; Kolbrun ámbar, esquirlas y a veces una brasa", en: "materials: Ingrid sells iron and leather; Kolbrun amber, shards and sometimes an ember" },
-      { pr: 4, es: "tipos de arma: en la venta aparecen todos los tipos de esta rama", en: "weapon types: every type in this branch shows up for sale" },
+      { pr: 13, es: "comercio: se regatea lo que venden Ingrid y Kolbrun y lo que les vendés", en: "trading: you haggle over what Ingrid and Kolbrun sell and what you sell them" },
+      { pr: 2, es: "atributos: el Espíritu ensancha la zona del trato", en: "attributes: Spirit widens the deal zone" },
     ],
     mirar: [
-      { es: "Ingrid comercia en su mostrador del Puesto (al lado de donde está ella: hablarle sigue igual). Vende armas, armaduras y escudos de todos los días, y hierro y cuero.", en: "Ingrid trades at her stall in the Outpost (next to where she stands: talking to her is unchanged). She sells everyday weapons, armour and shields, plus iron and leather." },
-      { es: "Kolbrun, la buhonera, ahora tiene su alfombra y su fardo cerca del Refugio: amuletos, anillos, alguna rara, ámbar, esquirlas y las piezas envueltas (se paga sin ver; puede salir hasta una legendaria).", en: "Kolbrun the peddler now has her rug and pack near the Refuge: amulets, rings, the odd rare, amber, shards and wrapped pieces (pay without looking; even a legendary can come out)." },
-      { es: "Se comercia en una pestaña de la mochila con el nombre del mercader, que aparece solo mientras se comercia. Tocar lo suyo compra, tocar lo de tu bolsa vende (lo raro pide dos toques) y lo vendido queda para recomprar al mismo precio.", en: "You trade in a backpack tab named after the merchant, shown only while trading. Tapping their goods buys, tapping your bag sells (rares need two taps) and what you sold stays for buyback at the same price." },
-      { es: "Lo que venden cambia cada día del juego y se guarda. Los dos están en el mapa grande con la bolsa de plata (clase «Mercaderes» en la leyenda).", en: "Their goods change every in-game day and are saved. Both are on the big map with the silver pouch (class «Merchants» in the legend)." },
+      { es: "En la pestaña del mercader, elegí una pieza (suya o de tu bolsa) y apretá R (△) o el botón «Regatear» del pie.", en: "In the merchant tab, pick a piece (theirs or from your bag) and press R (△) or the «Haggle» button at the bottom." },
+      { es: "Elegís cuánto pedir: comprando −10/−20/−30 %, vendiendo +15/+30/+45 %. Después una aguja corre por la balanza: pará adentro de la zona roja (E, ✕ o tocando). En el dorado es trato redondo (un poco más).", en: "Choose how much to ask: buying −10/−20/−30 %, selling +15/+30/+45 %. Then a needle runs along the scale: stop it inside the red zone (E, ✕ or tap). On the gold it's a perfect deal (a bit more)." },
+      { es: "Más pedís, zona más chica y aguja más rápida. Errar gasta paciencia (la barra roja); sin paciencia, por hoy no regatea más. Cada uno tiene su carácter: Ingrid paciente y firme, Kolbrun impaciente y generosa si acertás.", en: "The more you ask, the smaller the zone and faster the needle. Missing costs patience (the red bar); out of patience, no more haggling today. Each has a temper: Ingrid patient and firm, Kolbrun impatient but generous if you nail it." },
+      { es: "El trato vale para esa pieza todo el día y se ve en el precio de la casilla.", en: "The deal holds for that piece all day and shows in the slot's price." },
     ],
     botones: [
-      { es: "Ir al mostrador de Ingrid (con 3000 de plata)", en: "Go to Ingrid's stall (with 3000 silver)", fn: (A) => {
+      { es: "Comerciar con Ingrid (3000 de plata)", en: "Trade with Ingrid (3000 silver)", fn: (A) => {
         PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
-        const p = COMERCIO.posIngrid();
-        ir(A, [p[0], p[1] + 60]);
+        COMERCIO.abrir("ingrid");
       } },
-      { es: "Ir a Kolbrun (con 3000 de plata)", en: "Go to Kolbrun (with 3000 silver)", fn: (A) => {
-        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
-        const k = COMERCIO.kolbrun();
-        ir(A, [k.x, k.y + 80]);
-      } },
-      { es: "Comerciar con Kolbrun ya", en: "Trade with Kolbrun now", fn: (A) => {
+      { es: "Regatear la primera pieza de Kolbrun ya", en: "Haggle over Kolbrun's first piece now", fn: (A) => {
         PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
         COMERCIO.abrir("kolbrun");
+        const it = COMERCIO.stock("kolbrun").piezas[0];
+        if (it) REGATEO.abrir("compra", it, "kolbrun");
       } },
-      { es: "Pasar al día siguiente (otra mercadería)", en: "Skip to the next day (new goods)", fn: (A) => {
-        A.H.E.tiempo += LUZ.DIA;
-        HUD.aviso("+1 día / day", "#FFD98A");
+      { es: "+10 de Espíritu (zona más ancha)", en: "+10 Spirit (wider zone)", fn: (A) => {
+        ATRIBUTOS.estado().esp += 10;
+        RPG.recalcular();
+        HUD.aviso("+10 Espíritu / Spirit", "#73D5DB");
+      } },
+      { es: "Devolverles la paciencia", en: "Restore their patience", fn: (A) => {
+        REGATEO.estado().paciencia = {};
+        HUD.aviso("Paciencia / Patience 100", "#FFD98A");
       } },
     ],
   };

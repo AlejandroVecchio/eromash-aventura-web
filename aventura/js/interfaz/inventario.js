@@ -553,8 +553,11 @@ window.INVENTARIO = (function () {
   }
   // un paso con el teclado o el mando mientras está abierta (lo llama el motor cada cuadro)
   let ejeAntes = "";
+  // otro sistema puede tomar el teclado y el mando mientras muestra algo encima (el regateo): fn() → true si lo usó
+  let captura = null;
   function paso() {
     if (!abierta) return false;
+    if (captura && captura()) return true;
     if (CONTROLES.recien("inventario") || CONTROLES.recien("pausa") || CONTROLES.recien("diario")) {
       cerrar();
       return true;
@@ -611,5 +614,5 @@ window.INVENTARIO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { icono, iconoDe, abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
+  return { icono, iconoDe, capturar: (fn) => (captura = fn), abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
 })();

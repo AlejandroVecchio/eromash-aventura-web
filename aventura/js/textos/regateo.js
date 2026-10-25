@@ -1,0 +1,22 @@
+// Textos del regateo (motor/regateo.js): prefijo rg.
+I18N.textos({
+  "rg.regatear": { es: "Regatear ({0})", en: "Haggle ({0})" },
+  "rg.tratado": { es: "Trato hecho: {0} de plata", en: "Deal struck: {0} silver" },
+  "rg.ya_trato": { es: "Esa ya la trataste hoy.", en: "You already haggled over that one today." },
+  "rg.titulo": { es: "Regatear con {0}: {1}", en: "Haggle with {0}: {1}" },
+  "rg.pide": { es: "{0} pide {1} de plata. ¿Cuánto le querés sacar?", en: "{0} asks {1} silver. How much do you want off?" },
+  "rg.ofrece": { es: "{0} ofrece {1} de plata. ¿Cuánto más le pedís?", en: "{0} offers {1} silver. How much more do you ask?" },
+  "rg.por": { es: "por {0}", en: "for {0}" },
+  "rg.paciencia": { es: "Paciencia", en: "Patience" },
+  "rg.ayuda_pedir": { es: "Elegí cuánto pedir (izquierda y derecha, {0}) · más pedís, más difícil · {1} deja", en: "Pick how much to ask (left and right, {0}) · the more you ask, the harder · {1} leaves" },
+  "rg.ayuda_aguja": { es: "Pará la aguja en la zona roja con {0} o tocando la balanza · en el dorado, trato redondo", en: "Stop the needle in the red zone with {0} or by tapping the scale · on the gold, a perfect deal" },
+  "rg.ayuda_fin": { es: "{0} vuelve a la mercadería", en: "{0} back to the goods" },
+  "rg.trato_ingrid": { es: "«Está bien. {0}, y no se lo digas a nadie.»", en: "«Fine. {0}, and don't tell anyone.»" },
+  "rg.trato_kolbrun": { es: "«¡Ja! {0}. Me robaste, pero me caés bien.»", en: "«Ha! {0}. You robbed me, but I like you.»" },
+  "rg.redondo_ingrid": { es: "«…Sabés lo que hacés. {0}, trato redondo.»", en: "«…You know what you're doing. {0}, a perfect deal.»" },
+  "rg.redondo_kolbrun": { es: "«*toca madera* {0}. Que el Ciervo no nos vea.»", en: "«*knocks on wood* {0}. May the Stag not see us.»" },
+  "rg.erro_ingrid": { es: "«No. Pensalo de nuevo.»", en: "«No. Think again.»" },
+  "rg.erro_kolbrun": { es: "«¿Me ves cara de tonta? Otra vez, y mejor.»", en: "«Do I look like a fool? Again, and better.»" },
+  "rg.sin_paciencia_ingrid": { es: "«Por hoy no regateo más. Lo que dice el cartel.»", en: "«No more haggling today. The price is the price.»" },
+  "rg.sin_paciencia_kolbrun": { es: "«Me cansaste. Mañana, si el viento cambia.»", en: "«You've worn me out. Tomorrow, if the wind turns.»" },
+});
