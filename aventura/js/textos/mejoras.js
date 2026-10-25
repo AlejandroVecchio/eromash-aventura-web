@@ -46,6 +46,7 @@ I18N.textos({
   "op.temblor": { es: "Temblor de la pantalla", en: "Screen shake" },
   "op.numeros": { es: "Números de daño", en: "Damage numbers" },
   "op.flechas": { es: "Flechas de amenaza en el borde", en: "Threat arrows at the edge" },
+  "op.aura": { es: "Ver entre los árboles cerca de Eromash", en: "See through trees near Eromash" },
   "op.apuntar": { es: "Apuntar solo con mando", en: "Gamepad aim assist" },
   "op.correr": { es: "Correr con Shift", en: "Run with Shift" },
   "op.correr_mantener": { es: "Mantener apretado", en: "Hold" },
