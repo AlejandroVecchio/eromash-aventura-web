@@ -59,6 +59,12 @@ window.OBJETOS = (function () {
     lanzaRunica: { slot: "arma", tipo: "lanza", g: "f", dano: 10, vel: 1, desde: 10, implicito: [["runico", 8]], arte: { lib: "arma", forma: "lanza", fam: 2 } },
     lanzaHueso: { slot: "arma", tipo: "lanza", g: "f", dano: 11, vel: 1, desde: 13, implicito: [["robo", 1]], arte: { lib: "arma", forma: "lanza", fam: 3 } },
     atgeir: { slot: "arma", tipo: "lanza", g: "m", dano: 12, vel: 0.95, desde: 17, arte: { lib: "arma", forma: "lanza", fam: 4 } },
+    // martillos y mazas (motor/martillo.js): lentos, quiebran a la criatura y cargados llaman al trueno; con escudo
+    mazo: { slot: "arma", tipo: "martillo", g: "m", dano: 11, vel: 0.9, desde: 1, arte: { lib: "arma", forma: "martillo", fam: 0 } },
+    mazaPestanas: { slot: "arma", tipo: "martillo", g: "f", dano: 12, vel: 0.88, desde: 6, arte: { lib: "arma", forma: "martillo", fam: 1 } },
+    martilloRunico: { slot: "arma", tipo: "martillo", g: "m", dano: 12, vel: 0.9, desde: 11, implicito: [["runico", 10]], arte: { lib: "arma", forma: "martillo", fam: 2 } },
+    quijada: { slot: "arma", tipo: "martillo", g: "f", dano: 13, vel: 0.88, desde: 14, implicito: [["robo", 1]], arte: { lib: "arma", forma: "martillo", fam: 3 } },
+    mazoPiedra: { slot: "arma", tipo: "martillo", g: "m", dano: 14, vel: 0.82, desde: 18, arte: { lib: "arma", forma: "martillo", fam: 4 } },
     escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
     escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },

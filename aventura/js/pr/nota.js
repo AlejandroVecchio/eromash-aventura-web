@@ -5,30 +5,30 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 7,
-    titulo: { es: "Lanza", en: "Spear" },
+    pr: 8,
+    titulo: { es: "Martillo", en: "Hammer" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: la lanza es un tipo más con sus golpes; a puño limpio mientras está arrojada, como el hacha", en: "weapon types: the spear is one more type with its moves; fists while it's thrown, like the axe" },
-      { pr: 3, es: "botín y equipo: las lanzas caen como cualquier pieza y se llevan con escudo", en: "loot and gear: spears drop like any piece and go with a shield" },
+      { pr: 4, es: "tipos de arma: el martillo es un tipo más con sus golpes", en: "weapon types: the hammer is one more type with its moves" },
+      { pr: 3, es: "botín y equipo: los martillos caen como cualquier pieza y se llevan con escudo", en: "loot and gear: hammers drop like any piece and go with a shield" },
     ],
     mirar: [
-      { es: "Estocadas rectas y largas (más alcance que cualquier arma): la lanza va hacia atrás y sale derecho. El tercer golpe barre todo delante y empuja lejos.", en: "Straight, long thrusts (more reach than any weapon): the spear pulls back and shoots out. The third hit sweeps everything ahead and knocks far." },
-      { es: "Pegando con la punta (al final del alcance) hace ×1,3 y dice «¡Punta!». Conviene pelear a distancia.", en: "Hitting with the tip (at the end of the reach) deals ×1.3 and says «Tip!». Fight at a distance." },
-      { es: "Manteniendo atacar se arroja: atraviesa hasta tres, aturde al primero y se clava. Un anillo rúnico cuenta 4 s y vuelve sola con una estela; o se junta pasando por encima.", en: "Hold attack to throw it: pierces up to three, stuns the first and sticks. A rune ring counts 4 s and it returns with a trail; or walk over it." },
-      { es: "Corriendo, la embestida avanza lejos atravesando la fila. Se lleva con una mano: el escudo se queda.", en: "Running, the lunge travels far through the line. One-handed: the shield stays." },
+      { es: "Golpes lentos y pesados (Eromash se inclina más). Al tercer golpe la criatura queda «¡Quebrada!»: un rombo partido sobre la cabeza y recibe ×1,25 de todo durante 4 s, también de flechas, lanzas y runas.", en: "Slow, heavy hits (Eromash leans more). On the third hit the creature is «Shattered!»: a split diamond over its head and it takes ×1.25 from everything for 4 s, arrows, spears and runes too." },
+      { es: "El remate baja desde arriba y hace temblar el piso alrededor.", en: "The finisher comes down from above and shakes the ground around." },
+      { es: "Manteniendo atacar, el trueno: golpea el piso y caen rayos rúnicos sobre las cuatro criaturas más cercanas, que quedan aturdidas y quebradas.", en: "Hold attack for thunder: he slams the ground and rune lightning strikes the four closest creatures, stunning and shattering them." },
+      { es: "Corriendo, un empujón con el hombro que aturde. Cinco martillos: mazo, maza de pestañas, martillo rúnico, quijada de jötunn y mazo de piedra.", en: "Running, a shoulder bash that stuns. Five hammers: maul, flanged mace, rune hammer, jötunn jawbone and stone maul." },
     ],
     botones: [
-      { es: "Darme las cinco lanzas y abrir la Bolsa", en: "Give me the five spears and open the Bag", fn: (A) => {
-        ["lanzaHoja", "lanzaAlada", "lanzaRunica", "lanzaHueso", "atgeir"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
+      { es: "Darme los cinco martillos y abrir la Bolsa", en: "Give me the five hammers and open the Bag", fn: (A) => {
+        ["mazo", "mazaPestanas", "martilloRunico", "quijada", "mazoPiedra"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme un atgeir legendario", en: "Equip a legendary atgeir", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "atgeir", n: Math.max(17, RPG.nivel()), r: 3 }), { silencio: true });
+      { es: "Ponerme el martillo rúnico legendario", en: "Equip the legendary rune hammer", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "martilloRunico", n: Math.max(11, RPG.nivel()), r: 3 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ir con un grupo a probarla", en: "Go to a group to try it", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -300, 0);
+      { es: "Ir con un grupo a probarlo (estamina llena)", en: "Go to a group to try it (full stamina)", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -200, 120);
         A.jug.sta = A.jug.staMax;
       } },
       { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {
