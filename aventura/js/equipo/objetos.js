@@ -17,9 +17,11 @@ window.OBJETOS = (function () {
     { id: "magico", col: "#4A78D0", mult: 1.08, afijos: [1, 2] },
     { id: "raro", col: "#FFD98A", mult: 1.16, afijos: [3, 4] },
     { id: "legendario", col: "#F5A524", mult: 1.3, afijos: [5, 5] },
+    // de conjunto (verde, motor/conjuntos.js): nunca sale sola en la tirada, sus afijos son fijos
+    { id: "conjunto", col: "#7BC86C", mult: 1.2, afijos: [0, 0] },
   ];
   // el color del nombre en paneles oscuros (el azul maná se lee mal sobre negro: se aclara un poco)
-  const COL_TEXTO = ["#F2ECEC", "#8FB0F0", "#FFD98A", "#F5A524"];
+  const COL_TEXTO = ["#F2ECEC", "#8FB0F0", "#FFD98A", "#F5A524", "#9BE08C"];
 
   // ---------- bases ----------
   // g: género en español (m, f, mp, fp) para que concuerde el adjetivo. dano y vel (armas), arm (armaduras), desde: el
@@ -204,6 +206,8 @@ window.OBJETOS = (function () {
         s = it.a.find((q) => !AFIJOS[q[0]].p);
       it.nm = [p ? p[0] : "", s ? s[0] : ""];
     } else if (r >= 2) it.nm = [Math.floor(rnd() * SUST.length), Math.floor(rnd() * DE.length)];
+    // las muescas para las tallas (motor/engarces.js)
+    if (window.ENGARCES && !op.sinMuescas) ENGARCES.alGenerar(it, rnd);
     return it;
   }
 
@@ -219,6 +223,8 @@ window.OBJETOS = (function () {
   function nombre(it) {
     if (!it) return "";
     if (it.fijo) return t(it.fijo);
+    if (it.pr && window.ENGARCES) return ENGARCES.nombre(it);
+    if (it.cj && window.CONJUNTOS) return CONJUNTOS.nombre(it);
     const B = BASES[it.b],
       base = nombreBase(it),
       en = I18N.lang === "en";
@@ -254,6 +260,8 @@ window.OBJETOS = (function () {
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
     if (it.forja != null) l.push({ txt: t("fg.l_forjada", [it.forja]), col: "#FFD98A" });
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
+    if (it.e && window.ENGARCES) ENGARCES.lineas(it).forEach((q) => l.push(q));
+    if (it.cj && window.CONJUNTOS) CONJUNTOS.lineas(it).forEach((q) => l.push(q));
     return l;
   }
   // qué tipo de pieza es y su nivel: «Espada ancha · rara · nivel 7»
@@ -269,7 +277,7 @@ window.OBJETOS = (function () {
       if (!it) return;
       const B = BASES[it.b];
       if (it.ar) s.armadura = (s.armadura || 0) + it.ar;
-      (B.implicito || []).concat(it.a).forEach(([k, v]) => (s[k] = (s[k] || 0) + v));
+      (B.implicito || []).concat(it.a, it.ex || []).forEach(([k, v]) => (s[k] = (s[k] || 0) + v));
     });
     return s;
   }
@@ -300,7 +308,7 @@ window.OBJETOS = (function () {
   }
   // cuánto vale (para desarmar, y más adelante para el comercio)
   function valor(it) {
-    return Math.round((4 + it.n * 1.6) * [1, 2.5, 6, 15][it.r] * (1 + it.a.length * 0.15));
+    return Math.round((4 + it.n * 1.6) * [1, 2.5, 6, 15, 10][it.r] * (1 + it.a.length * 0.15));
   }
 
   return { RAREZAS, COL_TEXTO, BASES, SLOTS, AFIJOS, slotDe, generar, rarezaAl, basesPara, nombre, nombreBase, lineas, rotulo, sumar, aportar, valor, azar, fmt };

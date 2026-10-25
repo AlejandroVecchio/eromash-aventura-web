@@ -30,10 +30,10 @@ window.ARTE_OBJ = (function () {
   // ---------- qué dibujo de la arena le toca ----------
   function comoEspada(it) {
     const B = OBJETOS.BASES[it.b];
-    return { weaponFamily: B.arte.fam, rarity: ["comun", "comun", "rara", "legendaria"][it.r] || "comun", forja: it.r === 1 ? 2 : 0 };
+    return { weaponFamily: B.arte.fam, rarity: ["comun", "comun", "rara", "legendaria", "rara"][it.r] || "comun", forja: it.r === 1 ? 2 : 0 };
   }
   function comoEscudo(it) {
-    return { slot: "escudo", rarity: ["comun", "comun", "rara", "legendaria"][it.r] || "comun", forja: it.r === 1 ? 2 : 0, mapa: TEMAS[it.tema] || "bosque" };
+    return { slot: "escudo", rarity: ["comun", "comun", "rara", "legendaria", "rara"][it.r] || "comun", forja: it.r === 1 ? 2 : 0, mapa: TEMAS[it.tema] || "bosque" };
   }
   function unoDe(lista, it) {
     const t = TIER[it.r] || 0;

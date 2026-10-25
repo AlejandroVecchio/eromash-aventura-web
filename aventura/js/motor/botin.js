@@ -266,7 +266,7 @@ window.BOTIN = (function () {
       col = O().RAREZAS[s.it.r].col,
       r = s.it.r,
       late = 0.7 + Math.sin(J.t * 3 + s.x) * 0.15,
-      alto = [0, 60, 220, 340][r];
+      alto = [0, 60, 220, 340, 280][r];
     if (alto && (!window.CALIDAD || CALIDAD.nivel !== "baja" || r >= 2)) {
       c.save();
       c.globalAlpha = (r >= 2 ? 0.32 : 0.22) * late;

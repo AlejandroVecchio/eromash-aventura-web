@@ -337,6 +337,37 @@ tener que leer el código para balancear.
   `efectosHud()` → `[{ texto, n, col }]` suma a la tira de efectos sobre el retrato (alquimia.js).
 - Estado en `E.extra.cocina`.
 
+## Muescas, tallas y palabras rúnicas (`motor/engarces.js`, `ENGARCES`; textos `en.` en `textos/engarces.js`)
+
+- Muescas (`it.e`, `it.g` = tallas puestas): al generar (`OBJETOS.generar` llama a `ENGARCES.alGenerar`; `sinMuescas`
+  lo evita) salen en común 30 % (1 al máximo), mágica 14 % (hasta máximo − 1), rara 6 % (1); legendarias nunca. Máximo
+  por casilla (`MAX`): arma, escudo, pecho y casco 3; piernas, botas y amuleto 2; anillos 0.
+- Tallas (`TALLAS`, de común a rara: Fehu, Uruz, Thurisaz, Jera, Algiz, Ansuz, Hagalaz, Tiwaz): cada una suma
+  `arma` en un arma y `otro` en lo demás. Caen 3,5 % de cualquier criatura, 22 % de un líder, siempre de un único y
+  dos de un semijefe (`alMorir`), y 25 % de los cofres (siempre de los importantes). `sortear(nivel)` deja salir las
+  raras recién desde nivel 3 en adelante (3 + nivel/3 tallas posibles). Tres iguales se unen en la siguiente (`unir`).
+- Encastrar (`engarzar`) es en orden y para siempre; `vaciar` devuelve todo por 20 de plata por talla.
+- Palabras (`PALABRAS`): pieza **común**, casilla de la lista, muescas = largo de la receta y tallas en ese orden. Suman
+  su `da` además de las tallas; nombre «…» (`OBJETOS.nombre` pregunta `it.pr`) y el detalle suma sus líneas
+  (`ENGARCES.lineas`). Lo que suman las tallas y la palabra queda en `it.ex`, que `OBJETOS.sumar` lee.
+- Ása (hook nuevo de forja.js: `botonesAsa()` → `[{ texto, sub, fn }]`): abre muescas en una pieza sin muescas que no
+  sea legendaria (común: el máximo, mágica: máximo − 1, rara: 1) por 40 + 10 × nivel de plata, 2 de hierro y 1 esquirla.
+- Pestaña «Tallas» de la mochila (visible con piezas con muescas o tallas) y las tallas en la Bolsa.
+- Estado en `E.extra.engarces = { tallas, hechas }`.
+
+## Conjuntos de equipo (`motor/conjuntos.js`, `CONJUNTOS`; textos `cj.` en `textos/conjuntos.js`)
+
+- Rareza nueva en `OBJETOS.RAREZAS[4]` (`conjunto`, verde, mult 1,2, sin afijos al azar): la tirada normal nunca la da,
+  solo `CONJUNTOS.crear(juego, casilla, n)`, que pone `it.cj`, `it.cs` y dos afijos fijos al 80 % de su tirada del nivel.
+- `JUEGOS`: guardia (casco, pecho, escudo, botas), fenrir (arma, casco, piernas, amuleto), odin (arma, anillo, amuleto,
+  pecho). Bonos de 2 y 3 piezas (`bonos`) por `RPG.aporte` con `OBJETOS.aportar`; las 4: guardia `modRecibido` × 0,85,
+  fenrir al matar (`alPegar` con `murio`) +30 % de velocidad de ataque y movimiento 3 s, odin +3 de energía rúnica por
+  crítico.
+- Caen: único 25 %, semijefe 35 %, líder 2 % (`alMorir`), cofre importante 15 %.
+- `OBJETOS.nombre` y `OBJETOS.lineas` preguntan `it.cj`. Pestaña «Conjuntos» (visible con algo visto), anotado una vez
+  por segundo de lo puesto y la bolsa.
+- Estado en `E.extra.conjuntos = { vistos, completos }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

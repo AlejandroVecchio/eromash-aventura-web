@@ -49,6 +49,8 @@ I18N.textos({
   "as.grupo.puesto": { es: "El puesto de Eydis", en: "Eydis's outpost" },
   "as.grupo.refugio": { es: "La senda del Refugio", en: "The Shelter path" },
   "as.grupo.eikholt": { es: "Eikholt", en: "Eikholt" },
+  "as.grupo.guaridas": { es: "Guaridas de los semijefes", en: "Lesser boss lairs" },
+  "as.grupo.norte": { es: "El norte", en: "The north" },
   "as.grupo.paso": { es: "El Paso del Guardián", en: "The Guardian's Pass" },
   "as.grupo.claro": { es: "El Claro del Ciervo", en: "The Stag's Glade" },
   "as.grupo.este": { es: "El este del bosque", en: "The eastern forest" },

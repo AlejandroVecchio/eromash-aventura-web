@@ -1,5 +1,6 @@
 // Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
 I18N.textos({
+  "as.grupo.hierbas": { es: "Hierbas y alquimia", en: "Herbs and alchemy" },
   "as.hierbaMusgo": { es: "El musgo de linde", en: "Boundary moss" },
   "as.hierbaSerbal": { es: "El serbal", en: "The rowan" },
   "as.hierbaAbedul": { es: "La raíz de abedul", en: "Birch root" },
