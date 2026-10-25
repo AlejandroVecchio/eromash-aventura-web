@@ -270,8 +270,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
-- **facciones.js**: las facciones y la reputación (sistema FACCIONES)
-  - grados y bonos · sumar · la ventana · los estandartes · el sistema
 - **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
   - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
 - **frasco.js**: el frasco de Thora (sistema FRASCO)
