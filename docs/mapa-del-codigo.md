@@ -266,6 +266,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
+- **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
+  - empezar y terminar · cada juego · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
   - en la mano · dibujo · el sistema
 - **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
@@ -416,6 +418,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
+- **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.

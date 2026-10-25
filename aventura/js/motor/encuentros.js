@@ -1,10 +1,13 @@
 // ---------- encuentros en el camino (sistema ENCUENTROS) ----------
 // Como los encuentros al azar del Skyrim y del Witcher: andando por los caminos de Eldervald (fuera de los pueblos y
 // sin pelea), cada tanto aparece alguien más adelante, al costado del camino. Cinco encuentros con gente propia:
-//   Brandr el buhonero   vende una pieza envuelta a mitad de precio (puede salir cualquier cosa)
+//   Brandr el buhonero   vende una pieza envuelta a mitad de precio (puede salir cualquier cosa), o te la juega a las
+//                        parejas de runas: si las encontrás todas, es gratis
 //   Ragna, herida        pide un trago del frasco; si se lo das, paga y te cuenta dónde hay un cofre con candado
-//   Hallvard, peregrino  señala el hörgr que todavía no encontraste más cercano (se destapa en el mapa)
-//   Sigrun la escalda    canta la saga de Eromash: inspirado unos minutos (más daño y más experiencia)
+//   Hallvard, peregrino  reza con vos (Simón dice con runas: más experiencia cuanto más larga la plegaria) y señala el
+//                        hörgr que todavía no encontraste más cercano (se destapa en el mapa)
+//   Sigrun la escalda    te hace adivinar las runas de su verso (Mastermind) y canta la saga de Eromash: inspirado
+//                        unos minutos (más daño y más experiencia), más tiempo si lo adivinás rápido
 //   Toki el carrero      grita por ayuda: lo rodean lobos; si caen, paga con plata y una pieza
 // Un encuentro por vez; se va si Eromash se aleja mucho. Estado en E.extra.encuentros = { n, hechos: { tipo: n },
 // inspirado }. Textos `ec.` (y los nombres en av.nombre_).
@@ -18,7 +21,7 @@ window.ENCUENTROS = (function () {
     CHANCE = 0.45,
     LEJOS = 2600, // a esta distancia el encuentro se va
     ENVUELTA = 45, // la pieza envuelta del buhonero
-    INSPIRA = 240, // segundos inspirado
+    INSPIRA = 240, // segundos inspirado (si se adivina el verso, 30 más por intento que sobre; si no, la mitad)
     RADIO = 130;
   const PUEBLOS = ["puesto", "refugio", "casa_lindes", "eikholt", "brunvik", "skarnholt", "aserradero", "entrada_sur"];
   const base = () => ({ n: 0, hechos: {}, inspirado: 0 });
@@ -100,6 +103,7 @@ window.ENCUENTROS = (function () {
     if (tp === "buhonero") {
       A.menu(`<h2>${t("av.nombre_brandr")}</h2><div class="sub">${t("ec.buhonero_sub")}</div>`, [
         { texto: t("ec.buhonero_comprar", [ENVUELTA]), sub: t("ec.buhonero_comprar_d"), fn: () => (comprarEnvuelta(), A.cerrarMenu()) },
+        ...(enc.jugado ? [] : [{ texto: t("ec.buhonero_jugar"), sub: t("ec.buhonero_jugar_d", [JUEGOS_RUNAS.VUELTAS]), fn: () => (A.cerrarMenu(), jugarBuhonero()) }]),
         { texto: t("ui.cerrar"), fn: A.cerrarMenu },
       ]);
     } else if (tp === "herida") {
@@ -108,14 +112,32 @@ window.ENCUENTROS = (function () {
         { texto: t("ec.herida_dar"), sub: puede ? t("ec.herida_dar_d") : t("ec.herida_sin"), fn: () => (puede ? (A.cerrarMenu(), ayudarHerida()) : HUD.aviso(t("ec.herida_sin"), "#C8402D")) },
         { texto: t("ec.dejar"), fn: A.cerrarMenu },
       ]);
-    } else if (tp === "peregrino") hablar("ec.peregrino_1", () => (señalarHorgr(), hecho()));
-    else if (tp === "escalda") hablar("ec.escalda_1", () => inspirar());
+    } else if (tp === "peregrino") hablar("ec.peregrino_1", () => jugar("simon", (res) => rezar(res)));
+    else if (tp === "escalda") hablar("ec.escalda_1", () => jugar("mente", (res) => inspirar(res.gano ? INSPIRA + (JUEGOS_RUNAS.INTENTOS - res.intentos) * 30 : INSPIRA / 2)));
     else if (tp === "carrero" && !enc.lobos) emboscada();
   }
-  function comprarEnvuelta() {
+  // los juegos de runas (juegos-runas.js): se juega cerca de quien lo pide
+  const jugar = (tipo, fin) => JUEGOS_RUNAS.empezar(tipo, { quien: t("av.nombre_" + QUIEN[enc.tipo]), x: enc.x, y: enc.y, fin });
+  function jugarBuhonero() {
+    enc.jugado = true;
+    jugar("parejas", (res) => {
+      if (!enc) return;
+      if (res.gano) return hablar("ec.buhonero_gano", () => comprarEnvuelta(true));
+      hablar("ec.buhonero_perdio");
+    });
+  }
+  function rezar(res) {
+    if (!enc) return;
+    if (window.RPG && res.ronda) RPG.dar(12 * res.ronda, enc.x, enc.y);
+    if (res.gano) PODERES.darPlata(30);
+    HUD.aviso(t("ec.peregrino_rezo", [res.ronda || 0]), res.gano ? "#FFD98A" : "#E0B2B2");
+    señalarHorgr();
+    hecho();
+  }
+  function comprarEnvuelta(gratis) {
     const pj = PODERES.pj();
-    if (pj.plata < ENVUELTA) return HUD.aviso(t("ec.sin_plata", [ENVUELTA]), "#C8402D"), false;
-    pj.plata -= ENVUELTA;
+    if (!gratis && pj.plata < ENVUELTA) return HUD.aviso(t("ec.sin_plata", [ENVUELTA]), "#C8402D"), false;
+    if (!gratis) pj.plata -= ENVUELTA;
     const it = OBJETOS.generar({ n: window.RPG ? RPG.nivel() : 1, min: 1, hallazgo: 1.6 });
     BOTIN.dar(it, { silencio: true });
     HUD.aviso(t("ec.buhonero_salio", [OBJETOS.nombre(it)]), OBJETOS.COL_TEXTO[it.r]);
@@ -148,8 +170,8 @@ window.ENCUENTROS = (function () {
     HUD.aviso(t("ec.peregrino_senala", [t("sn.d_" + id)]), "#FFD98A");
     if (window.RPG) RPG.dar(40, enc.x, enc.y);
   }
-  function inspirar() {
-    st.inspirado = INSPIRA;
+  function inspirar(seg = INSPIRA) {
+    st.inspirado = seg;
     hecho();
     RPG.recalcular();
     HUD.aviso(t("ec.inspirado_d"), "lugar", t("ec.inspirado"));
@@ -188,6 +210,7 @@ window.ENCUENTROS = (function () {
       J = A.J;
       jug = A.jug;
       W = A.W;
+      JUEGOS_RUNAS.iniciar(api);
       if (window.RPG) RPG.aporte((s) => st.inspirado > 0 && ((s.dano *= 1.1), (s.xp *= 1.1)));
     },
     alEmpezar(extra) {
@@ -256,5 +279,5 @@ window.ENCUENTROS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, aparecer, irse, usar, actual: () => enc, comprarEnvuelta, ayudarHerida, TIPOS, QUIEN, CADA, ENVUELTA, INSPIRA };
+  return { sistema, estado: () => st, aparecer, irse, usar, actual: () => enc, comprarEnvuelta, jugarBuhonero, ayudarHerida, TIPOS, QUIEN, CADA, ENVUELTA, INSPIRA };
 })();
