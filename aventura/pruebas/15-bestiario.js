@@ -35,7 +35,7 @@
       INVENTARIO.abrir("bestiario");
       igual(document.querySelectorAll(".bs-rejilla .inv-celda").length, BESTIARIO.LISTA.length, "una casilla por criatura:");
       si(document.querySelectorAll(".bs-rejilla .inv-celda.falta").length > 0, "hay desconocidas");
-      igual(document.querySelectorAll(".bs-unico").length, 4, "cuatro únicos:");
+      igual(document.querySelectorAll(".bs-unico").length, BESTIARIO.UNICOS.length, "todos los únicos:");
       INVENTARIO.cerrar();
       A.H.guardar(9);
       const m = BESTIARIO.muertes("draugr");

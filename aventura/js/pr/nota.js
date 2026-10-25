@@ -5,30 +5,36 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 36,
-    titulo: { es: "Nidos de arañas: tela, veneno y seda", en: "Spider nests: webs, poison and silk" },
+    pr: 37,
+    titulo: { es: "Hrímnir, el jötunn de la escarcha (jefe)", en: "Hrímnir, the frost jötunn (boss)" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 12, es: "materiales: la seda es un material nuevo", en: "materials: silk is a new material" },
-      { pr: 15, es: "bestiario: araña y tejedora suman sus páginas", en: "bestiary: spider and weaver add their pages" },
-      { pr: 20, es: "frasco: un trago cura el veneno", en: "flask: a sip cures poison" },
-      { pr: 22, es: "cocina: en la fogata se tejen las vendas", en: "cooking: bandages are woven at the campfire" },
+      { pr: 1, es: "niveles: vencerlo da 1500 de experiencia", en: "levels: defeating him gives 1500 experience" },
+      { pr: 3, es: "botín: deja una pieza épica o mejor", en: "loot: he drops an epic or better item" },
+      { pr: 15, es: "bestiario: su página y su lugar entre los únicos", en: "bestiary: his page and his place among the uniques" },
     ],
     mirar: [
-      { es: "Tres nidos en lo hondo del bosque, lejos de los caminos (en el mapa, clase Nidos de arañas): el nido de la tejedora, sacos de huevos colgando y tela en el piso. La tela frena mucho al que la pisa; saltarla no.", en: "Three nests deep in the forest, away from the roads (on the map, Spider nests class): the weaver's nest, hanging egg sacs and webs on the ground. Webs slow you a lot when you walk on them; jumping over doesn't." },
-      { es: "Las arañas de musgo se agachan y saltan en línea; su mordida envenena (3 de vida por segundo, 5 s, nunca mata; burbujas verdes y «Envenenado» en el HUD). La tejedora escupe tela donde estás: queda 8 s en el piso.", en: "Moss spiders crouch and leap in a line; their bite poisons (3 life per second, 5 s, never kills; green bubbles and «Poisoned» on the HUD). The weaver spits webbing where you stand: it stays on the ground for 8 s." },
-      { es: "Con E se cortan los sacos de huevos: dan seda y a veces salen dos arañitas. En cualquier fogata se teje una venda con 2 de seda; desde la Bolsa cura el veneno y 30 de vida. Un trago del frasco también cura el veneno.", en: "Press E to cut the egg sacs: they give silk and sometimes two little spiders come out. At any campfire you can weave a bandage from 2 silk; from the Bag it cures poison and restores 30 life. A sip from the flask also cures poison." },
+      { es: "En el norte hay un anillo de nueve menhires con la runa Isa (en el mapa, clase El jötunn). Hrímnir duerme sentado en su trono; al acercarte se levanta, ruge, la vista se abre y aparece la barra de jefe con el nombre de cada ataque.", en: "In the north there's a ring of nine standing stones with the Isa rune (on the map, The jötunn class). Hrímnir sleeps on his throne; as you approach he rises, roars, the view widens and the boss bar appears with each attack's name." },
+      { es: "Rotación fija por fase: barrido, pisotón y línea de hielo; desde el 66 % suma granizo de rocas y desde el 33 % el grito de escarcha. Avisos exactos en el piso, saltar evita todo, nada saca más del 35 % y nunca repite un ataque tres veces. Al pasar de fase llama hasta tres hrímthursar.", en: "Fixed rotation per phase: sweep, stomp and ice line; from 66% he adds rock hail and from 33% the frost roar. Exact ground warnings, jumping avoids everything, nothing takes more than 35% and no attack repeats three times. On each phase change he calls up to three hrímthursar." },
+      { es: "Después del pisotón y del grito queda expuesto (se agacha, runas en la cabeza): recibe un 30 % más. Si te alejás del anillo vuelve a su trono y se cura. Vencerlo paga 320 de plata, 1500 de experiencia, dos fragmentos y una pieza épica o mejor.", en: "After the stomp and the roar he's exposed (crouches, runes over his head): he takes 30% more. If you leave the ring he returns to his throne and heals. Defeating him pays 320 silver, 1500 experience, two shards and an epic or better item." },
     ],
     botones: [
-      { es: "Llevarme al nido más cercano", en: "Take me to the nearest nest", fn: (A) => {
-        const nd = ARANAS.nidos.slice().sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
-        ir(A, nd.centro, 0, 900);
+      { es: "Llevarme frente al anillo", en: "Take me in front of the ring", fn: (A) => {
+        const j = JOTUNN.jefe();
+        ir(A, j.centro, 0, 1150);
       } },
-      { es: "Darme 6 de seda y 2 vendas", en: "Give me 6 silk and 2 bandages", fn: () => {
-        MATERIALES.dar("seda", 6);
-        ARANAS.estado().vendas += 2;
+      { es: "Llevarme y dejarlo al 40 % (fase 2)", en: "Take me there with him at 40% (phase 2)", fn: (A) => {
+        const j = JOTUNN.jefe();
+        ir(A, j.centro, 0, 1150);
+        setTimeout(() => {
+          j.e.vida = j.e.d.vida * 0.4;
+          j.fase = 1;
+          j.llamo = 1;
+        }, 400);
       } },
-      { es: "Envenenarme", en: "Poison me", fn: () => (ARANAS.estado().veneno = ARANAS.VENENO) },
+      { es: "Subirme a nivel 12 para pelearlo", en: "Raise me to level 12 to fight him", fn: () => {
+        while (RPG.nivel() < 12) RPG.dar(500);
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

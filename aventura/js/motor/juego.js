@@ -1074,6 +1074,10 @@
     if (ciervo.activo) {
       fx = (jug.x * 2 + ciervo.x) / 3;
       fy = (jug.y * 2 + ciervo.y) / 3 - 30;
+    } else if (J.camFoco) {
+      // un jefe de un sistema (el jötunn) pide entrar en cuadro mientras pelea: [x, y], pedido cada cuadro
+      fx = (jug.x * 2 + J.camFoco[0]) / 3;
+      fy = (jug.y * 2 + J.camFoco[1]) / 3 - 30;
     }
     // la cámara se adelanta un poco hacia donde va Eromash (más si corre), así se ve lo que viene
     const adel = jug.muerto || J.modo !== "juego" ? 0 : [0, 40, 70, 120][jug.paso || 0];
@@ -2031,6 +2035,7 @@
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
       alejarMeta = zoomJug;
+      J.camFoco = null;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
       J.ambZona = null; // y cambiar el aire del lugar: { tono: [r, g, b] de la oscuridad, osc, niebla, sombra } (las mazmorras)
       cadaSis("actualizar", dt);
