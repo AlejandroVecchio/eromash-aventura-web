@@ -60,7 +60,8 @@
       si(DADOS.seguir(true), "se planta");
       igual(m.yo, 100, "sumó 100:");
       // el rival juega solo hasta que vuelve el turno
-      for (let i = 0; i < 500 && !(m.turno === "yo" && m.fase === "elegir") && !m.fin; i++) await esperar(50);
+      // (el rival no puede llegar a la meta mientras se espera)
+      for (let i = 0; i < 500 && !(m.turno === "yo" && m.fase === "elegir") && !m.fin; i++) (m.el = Math.min(m.el, 500)), (m.turnoPts = Math.min(m.turnoPts, 400)), await esperar(50);
       igual(m.turno, "yo", "volvió el turno:");
       si(m.el >= 0, "el rival jugó: " + m.el);
       // una tirada sin nada: se pierde lo del turno
@@ -70,7 +71,7 @@
       m.t = 0.6;
       await esperar(100);
       igual(m.turnoPts, 0, "nada: perdió lo del turno:");
-      for (let i = 0; i < 500 && !(m.turno === "yo" && m.fase === "elegir") && !m.fin; i++) await esperar(50);
+      for (let i = 0; i < 500 && !(m.turno === "yo" && m.fase === "elegir") && !m.fin; i++) (m.el = Math.min(m.el, 500)), (m.turnoPts = Math.min(m.turnoPts, 400)), await esperar(50);
       // ganar
       m.yo = DADOS.META - 50;
       m.el = 0;

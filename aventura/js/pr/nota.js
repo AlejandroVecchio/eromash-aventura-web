@@ -5,33 +5,34 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 42,
-    titulo: { es: "Los libros de Eldervald", en: "The books of Eldervald" },
+    pr: 43,
+    titulo: { es: "Facciones y reputación", en: "Factions and reputation" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: cada libro nuevo da experiencia", en: "levels: each new book gives experience" },
-      { pr: 2, es: "atributos: los libros de oficio dan un punto", en: "attributes: craft books give a point" },
-      { pr: 17, es: "árbol de habilidades: la saga entera y el cuaderno del maestro dan un punto", en: "skill tree: the full saga and the master's notebook give a point" },
+      { pr: 13, es: "comercio: Ingrid y Kolbrun cobran menos según la reputación", en: "trade: Ingrid and Kolbrun charge less by reputation" },
+      { pr: 16, es: "contratos: cada trofeo cobrado suma a la Guardia", en: "contracts: each trophy collected counts for the Guard" },
+      { pr: 35, es: "bandidos: cada bandido y cada guarida suman a la Guardia", en: "bandits: each bandit and lair counts for the Guard" },
+      { pr: 39, es: "vættir: el favor suma al Pueblo Oculto", en: "vættir: favor counts for the Hidden Folk" },
+      { pr: 40, es: "pesca y PR 41 dados: suman al Gremio de Brunvik", en: "fishing and PR 41 dice: count for the Brunvik Guild" },
     ],
     mirar: [
-      { es: "Hay nueve atriles de piedra a un costado de los caminos, cada uno con un libro abierto y la runa Ansuz encendida (el más cercano al Puesto tiene la Crónica breve de Eldervald). Al verlos van al mapa (clase Libros); con E se leen en una ventana de dos páginas: izquierda/derecha o tocar la hoja pasan, pausa cierra.", en: "There are nine stone lecterns beside the roads, each with an open book and the Ansuz rune lit (the one nearest the Outpost holds A Short Chronicle of Eldervald). Once seen they go on the map (Books class); press E to read them in a two-page window: left/right or tapping the page turns, pause closes." },
-      { es: "Cada libro deja algo la primera vez: los de oficio un punto de atributo (o de habilidad), los de caza +10 % de daño contra lobos, muertos o arañas, los de saber experiencia, y la saga de Sigrun Mano de Hierro (cuatro tomos) un punto de habilidad y dos fragmentos al terminarla. Leer los quince da un punto de atributo y un fragmento.", en: "Each book gives something the first time: craft books an attribute point (or a skill point), hunting books +10% damage against wolves, the dead or spiders, lore books experience, and the saga of Sigrun Iron-Hand (four volumes) a skill point and two fragments once finished. Reading all fifteen gives an attribute point and a fragment." },
-      { es: "Seis libros los llevan encima los líderes de los grupos (40 %, un semijefe siempre): quedan tirados brillando donde cayó y se juntan con E. Los leídos se releen desde la Bolsa (casilla Libros) y el diario los lista.", en: "Six books are carried by group leaders (40%, a mini-boss always): they lie glowing where it fell and are picked up with E. Read books can be reread from the Bag (Books slot) and the journal lists them." },
+      { es: "Cuatro facciones con su estandarte: la Guardia del Roble (rojo con la cornamenta de Eikholt, afuera de la Puerta del Sur), los Guardasendas de Eydis (en el Puesto), el Gremio de Brunvik y el Pueblo Oculto (junto al primer vættr). Con E se ve la reputación; también desde la casilla Reputación de la Bolsa y en el mapa (clase Facciones).", en: "Four factions with their banners: the Oak Guard (red with Eikholt's antlers, outside the South Gate), Eydis's Waywardens (at the Outpost), the Brunvik Guild and the Hidden Folk (beside the first vættr). Press E to see your reputation; also from the Reputation slot in the Bag and on the map (Factions class)." },
+      { es: "La reputación sale de lo que ya hacés: bandidos, contratos y némesis para la Guardia; misiones, lugares, el tablón y los encuentros para los Guardasendas; peces, platos y dados para el Gremio; vættir, piedras, ritos y hörgr para el Pueblo Oculto. Sale «+N» sobre Eromash y una partida vieja cobra lo hecho al cargar.", en: "Reputation comes from what you already do: bandits, contracts and nemeses for the Guard; quests, places, the board and encounters for the Waywardens; fish, dishes and dice for the Guild; vættir, stones, rites and hörgr for the Hidden Folk. A “+N” shows over Eromash and an old save is credited on load." },
+      { es: "Cinco grados (Desconocido, Conocido, Amigo, Honrado, Exaltado). Cada uno regala plata, Honrado un fragmento y Exaltado una pieza rara o mejor de la armería de la facción. Bonos: daño contra bandidos, Ingrid más barata, Kolbrun más barata y mejor precio al vender, más energía rúnica.", en: "Five ranks (Unknown, Known, Friend, Honored, Exalted). Each gives silver, Honored a fragment and Exalted a rare-or-better piece from the faction's armory. Bonuses: damage against bandits, cheaper Ingrid, cheaper Kolbrun and better selling prices, more rune energy." },
     ],
     botones: [
-      { es: "Llevarme al atril de la crónica", en: "Take me to the chronicle lectern", fn: (A) => {
-        const a = LIBROS.atriles[0];
-        ir(A, [a.x, a.y], 0, 90);
+      { es: "Llevarme al estandarte de la Guardia", en: "Take me to the Guard's banner", fn: (A) => {
+        const s = FACCIONES.estandartes.find((q) => q.f === "guardia");
+        ir(A, [s.x, s.y], 0, 90);
       } },
-      { es: "Tirar a mis pies el próximo libro de un líder", en: "Drop the next leader's book at my feet", fn: (A) => {
-        LIBROS.soltar({ x: A.jug.x + 70, y: A.jug.y - 10, tipo: "lobo", d: {}, lider: { nombre: "—" } });
+      { es: "+500 de reputación con cada facción", en: "+500 reputation with each faction", fn: () => {
+        FACCIONES.IDS.forEach((f) => FACCIONES.dar(f, 500));
       } },
-      { es: "Darme los tomos I a III de la saga", en: "Give me volumes I to III of the saga", fn: () => {
-        ["sigrun1", "sigrun2", "sigrun3"].forEach((k) => LIBROS.aprender(k));
+      { es: "Dejarme a un paso de Exaltado con el Gremio", en: "Put me one step from Exalted with the Guild", fn: () => {
+        FACCIONES.estado().rep.gremio = Math.max(FACCIONES.rep("gremio"), 3780);
+        FACCIONES.dar("gremio", 1);
       } },
-      { es: "Mostrar todos los atriles en el mapa", en: "Show every lectern on the map", fn: () => {
-        LIBROS.atriles.forEach((a, i) => (LIBROS.estado().vistos[i] = 1));
-      } },
+      { es: "Abrir la ventana de reputación", en: "Open the reputation window", fn: () => FACCIONES.ventana() },
     ],
   };
   // ---------- ayuda para los botones ----------
