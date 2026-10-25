@@ -815,6 +815,7 @@ window.ZONAS = (function () {
     // las que vienen con el juego (el editor las muestra y deja retocarlas guardando una copia con el mismo id)
     bases: (w) => ((W = W || w), base()),
     aqui: () => aqui,
+    estado: () => st,
     zonas: () => armadas,
     entrar: (id) => zonaDe(id) && entrar(zonaDe(id)),
     ir: (x, y) => A.teletransportar(x, y),
