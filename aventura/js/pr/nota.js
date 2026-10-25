@@ -5,34 +5,36 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 43,
-    titulo: { es: "Facciones y reputación", en: "Factions and reputation" },
+    pr: 44,
+    titulo: { es: "Los remates", en: "Finishers" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 13, es: "comercio: Ingrid y Kolbrun cobran menos según la reputación", en: "trade: Ingrid and Kolbrun charge less by reputation" },
-      { pr: 16, es: "contratos: cada trofeo cobrado suma a la Guardia", en: "contracts: each trophy collected counts for the Guard" },
-      { pr: 35, es: "bandidos: cada bandido y cada guarida suman a la Guardia", en: "bandits: each bandit and lair counts for the Guard" },
-      { pr: 39, es: "vættir: el favor suma al Pueblo Oculto", en: "vættir: favor counts for the Hidden Folk" },
-      { pr: 40, es: "pesca y PR 41 dados: suman al Gremio de Brunvik", en: "fishing and PR 41 dice: count for the Brunvik Guild" },
+      { pr: 4, es: "tipos de arma: cada arma (y la PR 5 a 9) tiene su remate", en: "weapon types: each weapon (and PRs 5 to 9) has its finisher" },
+      { pr: 18, es: "furia: cada remate da furia", en: "fury: each finisher gives fury" },
+      { pr: 1, es: "niveles: un 25 % más de experiencia", en: "levels: 25% more experience" },
     ],
     mirar: [
-      { es: "Cuatro facciones con su estandarte: la Guardia del Roble (rojo con la cornamenta de Eikholt, afuera de la Puerta del Sur), los Guardasendas de Eydis (en el Puesto), el Gremio de Brunvik y el Pueblo Oculto (junto al primer vættr). Con E se ve la reputación; también desde la casilla Reputación de la Bolsa y en el mapa (clase Facciones).", en: "Four factions with their banners: the Oak Guard (red with Eikholt's antlers, outside the South Gate), Eydis's Waywardens (at the Outpost), the Brunvik Guild and the Hidden Folk (beside the first vættr). Press E to see your reputation; also from the Reputation slot in the Bag and on the map (Factions class)." },
-      { es: "La reputación sale de lo que ya hacés: bandidos, contratos y némesis para la Guardia; misiones, lugares, el tablón y los encuentros para los Guardasendas; peces, platos y dados para el Gremio; vættir, piedras, ritos y hörgr para el Pueblo Oculto. Sale «+N» sobre Eromash y una partida vieja cobra lo hecho al cargar.", en: "Reputation comes from what you already do: bandits, contracts and nemeses for the Guard; quests, places, the board and encounters for the Waywardens; fish, dishes and dice for the Guild; vættir, stones, rites and hörgr for the Hidden Folk. A “+N” shows over Eromash and an old save is credited on load." },
-      { es: "Cinco grados (Desconocido, Conocido, Amigo, Honrado, Exaltado). Cada uno regala plata, Honrado un fragmento y Exaltado una pieza rara o mejor de la armería de la facción. Bonos: daño contra bandidos, Ingrid más barata, Kolbrun más barata y mejor precio al vender, más energía rúnica.", en: "Five ranks (Unknown, Known, Friend, Honored, Exalted). Each gives silver, Honored a fragment and Exalted a rare-or-better piece from the faction's armory. Bonuses: damage against bandits, cheaper Ingrid, cheaper Kolbrun and better selling prices, more rune energy." },
+      { es: "Una criatura malherida (menos del 22 %; las pesadas y los líderes, del 12 %) o aturdida con el doble de margen lleva un rombo rojo sobre la cabeza. Acercate y con E Eromash salta junto a ella, carga y la remata: cámara lenta, pausa, temblor y el trazo de su arma. Mientras dura nada lo toca.", en: "A badly wounded creature (under 22%; heavy ones and leaders, under 12%) or a stunned one with double that margin wears a red rhombus over its head. Get close and press E: Eromash leaps to it, winds up and finishes it: slow motion, a pause, a shake and the trail of his weapon. Nothing hits him while it lasts." },
+      { es: "Cada arma tiene el suyo: tajo cruzado (espada), hachazo al cuello (hacha), partir en dos (mandoble), aplastar (martillo), empalar (lanza), a quemarropa (arco), estallido rúnico (bastón) y puño de hierro (sin arma). Deja vida, estamina, energía rúnica, furia y más experiencia, y las criaturas de cerca se asustan un instante.", en: "Each weapon has its own: cross cut (sword), neck chop (axe), cleave in two (greatsword), crush (hammer), impale (spear), point blank (bow), rune burst (staff) and iron fist (no weapon). It gives health, stamina, rune energy, fury and extra experience, and nearby creatures flinch for a moment." },
+      { es: "Verdugo: a los 10, 50 y 150 remates, +5, +10 y +15 % de daño contra las criaturas malheridas. Los jefes de las zonas, el jötunn y el custodio no se rematan; los únicos con nombre, solo con menos del 6 %. El diario cuenta los remates y tu favorito.", en: "Executioner: at 10, 50 and 150 finishers, +5, +10 and +15% damage against badly wounded creatures. Zone bosses, the jötunn and the guardian can't be finished; named uniques only under 6%. The journal counts your finishers and your favorite." },
     ],
     botones: [
-      { es: "Llevarme al estandarte de la Guardia", en: "Take me to the Guard's banner", fn: (A) => {
-        const s = FACCIONES.estandartes.find((q) => q.f === "guardia");
-        ir(A, [s.x, s.y], 0, 90);
+      { es: "Traer tres criaturas, una ya malherida", en: "Bring three creatures, one already badly wounded", fn: (A) => {
+        [[110, 0, "draugr", 0.12], [-80, -140, "lobo", 0.6], [160, 120, "lobo", 0.6]].forEach(([dx, dy, tipo, v]) => {
+          const e = A.CB.crear(tipo, A.jug.x + dx, A.jug.y + dy, {});
+          e.activo = true;
+          e.estado = "persigue";
+          e.vida = e.d.vida * v;
+          A.enemigos.push(e);
+        });
       } },
-      { es: "+500 de reputación con cada facción", en: "+500 reputation with each faction", fn: () => {
-        FACCIONES.IDS.forEach((f) => FACCIONES.dar(f, 500));
+      { es: "Dejar malheridas a las de cerca", en: "Badly wound everything nearby", fn: (A) => {
+        A.enemigos.forEach((e) => e.activo && !e.muerto && Math.hypot(e.x - A.jug.x, e.y - A.jug.y) < 900 && (e.vida = Math.min(e.vida, e.d.vida * 0.1)));
       } },
-      { es: "Dejarme a un paso de Exaltado con el Gremio", en: "Put me one step from Exalted with the Guild", fn: () => {
-        FACCIONES.estado().rep.gremio = Math.max(FACCIONES.rep("gremio"), 3780);
-        FACCIONES.dar("gremio", 1);
+      { es: "Darme hacha, mandoble, martillo, lanza, arco y bastón", en: "Give me axe, greatsword, hammer, spear, bow and staff", fn: () => {
+        ["hachaMano", "mandoble", "mazo", "lanzaHoja", "arcoCorto", "varaFresno"].forEach((b) => BOTIN.dar(OBJETOS.generar({ base: b, n: 3, r: 1 }), { silencio: true }));
       } },
-      { es: "Abrir la ventana de reputación", en: "Open the reputation window", fn: () => FACCIONES.ventana() },
+      { es: "Ser verdugo (10 remates)", en: "Become an executioner (10 finishers)", fn: () => (REMATES.estado().n = Math.max(REMATES.estado().n, 10)) },
     ],
   };
   // ---------- ayuda para los botones ----------

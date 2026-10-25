@@ -670,6 +670,14 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 - **Estandartes**: la Guardia afuera de la Puerta del Sur de Eikholt (con la cornamenta pálida de la capital), los Guardasendas en el Puesto, el Gremio en Brunvik y el Pueblo Oculto junto al primer vættr. Con E abren la ventana de esa facción; la casilla Reputación de la Bolsa abre las cuatro. Mapa: clase `facciones`.
 - **Estado** (`E.extra.facciones`): rep y cont. Va al diario.
 
+## Los remates (`motor/remates.js`, `REMATES`; textos `rm.`)
+
+- **Quién**: una criatura con menos del 22 % de la vida (`UMBRAL`; las pesadas, los líderes y los semijefes, 12 %, `UMBRAL_DURO`; los únicos con nombre, 6 %), o aturdida con el doble de ese margen. No se rematan el dreki, el jötunn, el custodio ni el muñeco (`NO_SE_REMATAN`). Lleva un rombo rojo sobre la barra (`sobreLuz`) y la primera vez sale un cartel que lo explica.
+- **Cómo**: con E (en `cercanos`, adelante de todo lo demás) a menos de 110 + su radio. Eromash salta junto a ella (0,12 s), carga (0,12 s) y pega: la criatura muere (`CB.golpear` con su vida entera), hay cámara lenta, una pausa breve, temblor, chispas (menos en calidad media y baja) y el trazo del arma (`REMATES`: cruz, baja, parte, aplasta, empala, flecha, runa, puños) durante medio segundo. Mientras dura, `jug.inv` y la criatura quieta.
+- **Qué deja**: 8 % de la vida, 30 de estamina, 15 de energía rúnica (`PODERES.darEnergia`), 20 de furia (`FURIA.ponerFuria`) y un 25 % más de la experiencia de la criatura. Las de a menos de 9 m se frenan (aturdidas 1,1 s; las pesadas y los líderes, 0,6 s).
+- **Verdugo** (`VERDUGO`): a los 10, 50 y 150 remates, +5, +10 y +15 % de daño (`modDano`) contra criaturas con menos del 30 %.
+- **Estado** (`E.extra.remates`): n, porTipo, ayuda. Va al diario.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
