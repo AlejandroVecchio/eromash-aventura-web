@@ -586,7 +586,7 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 |---|---|---|
 | La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
 | Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
-| El Gremio de Brunvik | pez 6, plato 8, partida de dados ganada 35 | −4 % con Kolbrun, +3 % al vender |
+| El Gremio de Brunvik | pez 6, plato 8 | −4 % con Kolbrun, +3 % al vender |
 | El Pueblo Oculto | piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
 
 - **Cómo suma**: cada medio segundo `mirar` cuenta lo hecho en los estados guardados de los otros sistemas y suma la diferencia (`E.extra.facciones.cont`); no hay que tocar esos sistemas. Al cargar, lo ya hecho se cobra en silencio. Los bandidos suman por `alMorir`.
