@@ -411,6 +411,9 @@ window.HUD = (function () {
     if (menu.foco !== undefined && menu.foco !== (i + menu.botones.length) % menu.botones.length && window.SONIDO) SONIDO.tocar("clic", { vol: 0.18, tono: 1.3 });
     menu.foco = (i + menu.botones.length) % menu.botones.length;
     menu.botones.forEach((b, k) => b.el.classList.toggle("foco", k === menu.foco));
+    // con teclado o mando, la fila elegida queda a la vista en las listas largas (Teclas)
+    const el = menu.botones[menu.foco].el;
+    if (el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
   }
   function elegir(i) {
     const b = menu && menu.botones[i];
