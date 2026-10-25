@@ -519,6 +519,26 @@ Como los encuentros al azar del Skyrim y del Witcher.
   plata y una pieza r ≥ 1.
 - Estado en `E.extra.encuentros = { n, hechos: { tipo: n }, inspirado }`. `aparecer(tipo)` lo fuerza (pruebas y nota).
 
+## Los Sin Linde (`motor/bandidos.js`, `BANDIDOS`; dibujos en `enemigos/bandidos.js`; assets `tiendaSinLinde`, `estacaSinLinde`, `botinSinLinde` en `mundo/assets-bandidos.js`; textos `bd.`)
+
+Como los campamentos de bandidos del Skyrim y del Gothic.
+- Tipos nuevos en `COMBATE.TIPOS`: `bandido` (85 de vida, 15 de daño, abanico corto) y `arquero` (55 de vida, 13 de
+  daño, forma `lejos` con aviso dorado `d.rgb`: marca el piso donde está Eromash y retrocede si se le acercan). Tres
+  variantes de color (trapos rojos, piel de lobo, verde de monte). Sueltan hierro o cuero y a veces ganzúas
+  (`MATERIALES.CRIATURAS`). Suman sus páginas al bestiario (`BESTIARIO.LISTA`).
+- Guaridas: hasta `N` = 4, buscadas a 720 del borde de un camino, cada 500 a lo largo de cada uno, lejos de los
+  lugares (r + 1200), del Puesto (4500), de la ciudad, de los grupos del bosque (1700), de las lagunas y entre ellas
+  (5000), sin nada construido cerca. Hoy salen tres. Cada una abre un claro (más hacia adelante) y pone dos tiendas, la
+  estaca, un `fogonOlla` (se cocina) y el botín.
+- Cada guarida es un grupo de HORDAS (`HORDAS.crearGrupo("bandidos", …, { conLider: true })`, armado después de los del
+  bosque): vuelve a los 7 minutos, el jefe tiene nombre y afijos, y cuenta para las némesis. `mas` sube con la
+  distancia al Puesto.
+- La flecha: combate.js deja `a.de` en el aviso `lejos`; `sobreLuz` dibuja la flecha en arco en el último 45 % del
+  aviso.
+- El botín (`saquear`) solo con toda la guarida caída y una vez: plata (70 + 30 × mas × (i + 1)), fragmento, una pieza
+  (botin.js), dos ganzúas y 120 de experiencia.
+- Estado en `E.extra.bandidos = { saqueados: { i: 1 } }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

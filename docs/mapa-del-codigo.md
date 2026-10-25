@@ -152,6 +152,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/enemigos/ · el dibujo de las criaturas
 
+- **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
+  - Bandido · Arquero
 - **criaturas-bosque.js**: las criaturas del bosque profundo (se suman a CRIATURAS)
   - Draugr del túmulo · Jabalí de musgo · Cuervo de Hel · Fuego fatuo · Trol de musgo · Oso de zarzal
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
@@ -207,6 +209,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
+- **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)
+  - dónde: cerca de los caminos, lejos de los pueblos, de los grupos y entre ellas · la flecha de los arqueros: vuela en arco al final del aviso · el sistema
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
@@ -302,6 +306,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
 - **assets-arcon.js**: el arcón de Eromash en el Puesto (asset de ARCON)
   - assets: arconPuesto
+- **assets-bandidos.js**: el campamento de los Sin Linde (assets de BANDIDOS)
+  - assets: tiendaSinLinde, estacaSinLinde, botinSinLinde
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casas.js**: las casas de varios cuartos
@@ -383,6 +389,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
+- **bandidos.js**: Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **cerraduras.js**: Textos de los cofres con candado y las ganzúas (motor/cerraduras.js): prefijo gz. (y as.cofreCandado, mt.ganzua)

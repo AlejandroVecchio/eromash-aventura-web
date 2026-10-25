@@ -5,47 +5,34 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 34,
-    titulo: { es: "Encuentros en el camino", en: "Encounters on the road" },
+    pr: 35,
+    titulo: { es: "Los Sin Linde: guaridas de bandidos", en: "The Lawless: bandit hideouts" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: la experiencia que dan y la inspiración de la escalda", en: "levels: the experience they give and the skald's inspiration" },
-      { pr: 3, es: "botín: la pieza envuelta del buhonero y la paga de Toki", en: "loot: the pedlar's wrapped piece and Toki's reward" },
-      { pr: 20, es: "frasco: Ragna pide una carga", en: "flask: Ragna asks for a charge" },
-      { pr: 30, es: "santuarios: el peregrino señala un hörgr", en: "shrines: the pilgrim points to a hörgr" },
-      { pr: 32, es: "cerraduras: Ragna marca un cofre con candado", en: "locks: Ragna marks a locked chest" },
+      { pr: 3, es: "botín: el botín robado trae una pieza", en: "loot: the stolen loot holds an item" },
+      { pr: 15, es: "bestiario: bandido y arquero suman sus páginas", en: "bestiary: bandit and archer add their pages" },
+      { pr: 12, es: "materiales: sueltan hierro y cuero", en: "materials: they drop iron and leather" },
+      { pr: 32, es: "cerraduras: sueltan ganzúas y el botín trae dos", en: "locks: they drop lockpicks and the loot holds two" },
+      { pr: 22, es: "cocina: el fogón de la guarida sirve para cocinar", en: "cooking: the hideout's fire can be cooked on" },
+      { pr: 33, es: "némesis: un bandido que te mata puede volverse némesis", en: "nemesis: a bandit who kills you can become a nemesis" },
     ],
     mirar: [
-      { es: "Andá por los caminos lejos de los pueblos y sin pelear: cada tanto aparece alguien más adelante, al costado del camino, con un «!» dorado. Hay cinco, cada uno con su dibujo propio.", en: "Walk the roads away from towns and out of fights: every so often someone appears ahead, by the roadside, with a golden «!». There are five, each with their own drawing." },
-      { es: "Brandr vende una pieza envuelta (poco común o mejor) por 45 de plata. Ragna, herida, pide un trago del frasco y a cambio paga y te marca un cofre con candado. Hallvard te señala el hörgr más cercano que no encontraste.", en: "Brandr sells a wrapped piece (uncommon or better) for 45 silver. Ragna, wounded, asks for a sip from the flask and in return pays and marks a locked chest. Hallvard points to the nearest hörgr you haven't found." },
-      { es: "Sigrun canta tu saga: Inspirado 4 minutos (+10 % de daño y experiencia, en el HUD). Toki grita cuando te acercás: tres lobos rodean su carro; vencelos y te paga con plata y una pieza.", en: "Sigrun sings your saga: Inspired for 4 minutes (+10% damage and experience, on the HUD). Toki shouts as you approach: three wolves surround his cart; beat them and he pays silver and an item." },
+      { es: "Hay guaridas de los Sin Linde cerca de los caminos (en el mapa, clase Guaridas de bandidos): dos tiendas de cueros, la estaca con la linde partida, un fogón y el botín robado. Al acercarte te avisa.", en: "There are Lawless hideouts near the roads (on the map, Bandit hideouts class): two hide tents, the stake with the broken boundary, a fire and the stolen loot. You're warned as you approach." },
+      { es: "Bandidos con hacha y escudo, arqueros y un jefe con nombre. Los arqueros marcan en el piso dónde estás y la flecha cae en arco al final del aviso: moverte o saltar alcanza. De cerca retroceden.", en: "Bandits with axe and shield, archers and a named chief. Archers mark where you stand on the ground and the arrow drops in an arc at the end of the warning: moving or jumping is enough. Up close they back off." },
+      { es: "Cuando cae toda la guarida, el botín se saquea una vez: plata, un fragmento, una pieza y dos ganzúas. Los dos son nuevos en el bestiario. La guarida se vuelve a poblar con el tiempo, el botín no.", en: "When the whole hideout falls, the loot can be taken once: silver, a shard, an item and two lockpicks. Both are new in the bestiary. The hideout repopulates over time, the loot doesn't." },
     ],
-    botones: ((camino) => [
-      { es: "Brandr el buhonero (y 100 de plata)", en: "Brandr the pedlar (and 100 silver)", fn: (A) => (PODERES.darPlata(100), camino(A, "buhonero")) },
-      { es: "Ragna, herida", en: "Ragna, wounded", fn: (A) => camino(A, "herida") },
-      { es: "Hallvard el peregrino", en: "Hallvard the pilgrim", fn: (A) => camino(A, "peregrino") },
-      { es: "Sigrun la escalda", en: "Sigrun the skald", fn: (A) => camino(A, "escalda") },
-      { es: "Toki y los lobos", en: "Toki and the wolves", fn: (A) => camino(A, "carrero") },
-    ])((A, tipo) => {
-      // el punto de camino más cercano que quede lejos de todo pueblo, mirando hacia adelante; el encuentro aparece al llegar
-      const L = A.W.LUGARES,
-        lejos = (x, y) => Object.keys(L).every((k) => Math.hypot(x - L[k].p[0], y - L[k].p[1]) > L[k].r + 1500);
-      let p = null,
-        q = null,
-        mejor = 1e9;
-      A.W.CAMINOS.forEach((c) => !c.sinPiso && c.p.forEach((a, i) => {
-        const b = c.p[i + 1],
-          d = Math.hypot(a[0] - A.jug.x, a[1] - A.jug.y);
-        if (b && d < mejor && lejos(a[0], a[1])) (mejor = d), (p = a), (q = b);
-      }));
-      ENCUENTROS.irse();
-      ir(A, p);
-      setTimeout(() => {
-        const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
-        A.jug.dir = [(q[0] - p[0]) / d, (q[1] - p[1]) / d];
-        ENCUENTROS.aparecer(tipo);
-      }, 2600);
-    }),
+    botones: [
+      { es: "Llevarme a la guarida más cercana", en: "Take me to the nearest hideout", fn: (A) => {
+        const gu = BANDIDOS.guaridas.slice().sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
+        ir(A, gu.centro, 0, 900);
+      } },
+      { es: "Vencer la guarida más cercana y dejarme junto al botín", en: "Defeat the nearest hideout and leave me by the loot", fn: (A) => {
+        const gu = BANDIDOS.guaridas.filter((q) => !BANDIDOS.estado().saqueados[q.i]).sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
+        if (!gu) return;
+        gu.g.miembros.forEach((e) => (e.muerto = 1));
+        ir(A, [gu.botin.x, gu.botin.y], 0, 90);
+      } },
+    ],
   };
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {

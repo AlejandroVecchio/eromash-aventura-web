@@ -56,7 +56,7 @@ window.HORDAS = (function () {
       const e = CB.crear(tipo, centro[0] + Math.cos(a) * r, centro[1] + Math.sin(a) * r * 0.7, { pal, grupo: lista, mas: g.mas });
       lista.push(e);
     }
-    if (op.lider !== false && (op.unico || rnd() < 0.75)) {
+    if (op.lider !== false && (op.unico || op.conLider || rnd() < 0.75)) {
       const l = op.unico ? { unico: op.unico, afijos: op.afijos || ["piedra"] } : lider(op.afijos ? { afijos: op.afijos } : {});
       rotular(l);
       const e = CB.crear(op.tipoLider || F.lider, centro[0], centro[1] + 30, { pal: op.palLider != null ? op.palLider : pal, grupo: lista, lider: l, mas: g.mas });
@@ -187,5 +187,5 @@ window.HORDAS = (function () {
     rotular(l);
     return l;
   };
-  return { grupos, liderNuevo };
+  return { grupos, liderNuevo, crearGrupo, FAMILIAS };
 })();
