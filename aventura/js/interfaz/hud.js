@@ -15,6 +15,7 @@ window.HUD = (function () {
         <div class="datos panel">
           <div class="nombre"><span id="hNombre">Eromash</span><small id="hTitulo"></small></div>
           <div class="barra" id="bVida"><u></u><i></i><span><b>${t("ui.vida")}</b><em></em></span></div>
+          <div class="piedras oculto" id="hPiedras"></div>
           <div class="barra est" id="bEst"><i></i><span><b>${t("ui.estamina")}</b><em></em></span></div>
           <div class="chips"><span class="chip"><canvas id="hIcPlata" width="36" height="36"></canvas><b id="hPlata">0</b></span><span class="chip frag"><canvas id="hIcFrag" width="36" height="36"></canvas><b id="hFrag">0</b><em id="hNivelR"></em></span></div>
         </div>
@@ -41,9 +42,10 @@ window.HUD = (function () {
   function retrato(nombre, titulo, ojos) {
     if (cambia("nom", nombre)) $("hNombre").textContent = nombre;
     if (cambia("tit", titulo)) $("hTitulo").textContent = titulo;
-    if (caraClave === ojos && caraImg && caraImg.complete) return;
-    caraClave = ojos;
-    caraImg = VIKINGO.imagen("R", "S", ojos);
+    const col = VIKINGO.color || "R";
+    if (caraClave === ojos + col && caraImg && caraImg.complete) return;
+    caraClave = ojos + col;
+    caraImg = VIKINGO.imagen(col, "S", ojos);
     const pintar = () => {
       const cv = $("hRetrato"),
         c = cv.getContext("2d");
@@ -177,6 +179,15 @@ window.HUD = (function () {
       if (cambia("ca" + q.id, q.cant == null ? "" : String(q.cant))) d.querySelector(".cant").textContent = q.cant == null ? "" : q.cant;
       if (q.energia != null && cambia("en" + q.id, Math.round(q.energia * 100))) d.querySelector(".poder i").style.width = Math.round(q.energia * 100) + "%";
     });
+  }
+  // las piedras de Berkano debajo de la vida (berkano.js): un rombo por piedra con la runa, que se llena de luz rúnica
+  // de abajo arriba; cura = la vida que guarda cada una (sale al señalarlas)
+  function piedras(p, cura) {
+    if (!cambia("piedras", p.map((v) => Math.round(v * 24)).join(",") + ":" + cura)) return;
+    const el = $("hPiedras");
+    el.classList.toggle("oculto", !p.length);
+    el.title = t("bk.piedras") + " · " + cura;
+    el.innerHTML = p.map((v) => `<span class="piedra${v >= 0.999 ? " llena" : v < 0.01 ? " vacia" : ""}" style="--f:${Math.round(v * 100)}%"><i></i><b>ᛒ</b></span>`).join("");
   }
   function jugador(hp, hpMax, sta, staMax, cansado) {
     if (cambia("cansado", !!cansado)) $("bEst").classList.toggle("cansado", !!cansado);
@@ -364,7 +375,9 @@ window.HUD = (function () {
 
   // ---------- menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando ----------
   let menu = null;
+  let menuAntes = null;
   function abrir(html, botones, op) {
+    menuAntes = { html, botones, op };
     const clase = (op && op.clase) || "";
     $("capa").classList.remove("oculto");
     $("capa").className = "capa" + (clase ? " " + clase : "");
@@ -401,6 +414,9 @@ window.HUD = (function () {
     if (menu.foco !== undefined && menu.foco !== (i + menu.botones.length) % menu.botones.length && window.SONIDO) SONIDO.tocar("clic", { vol: 0.18, tono: 1.3 });
     menu.foco = (i + menu.botones.length) % menu.botones.length;
     menu.botones.forEach((b, k) => b.el.classList.toggle("foco", k === menu.foco));
+    // con teclado o mando, la fila elegida queda a la vista en las listas largas (Teclas)
+    const el = menu.botones[menu.foco].el;
+    if (el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
   }
   function elegir(i) {
     const b = menu && menu.botones[i];
@@ -425,5 +441,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, canal, herido, guardado, hayMenu: () => !!menu };
+  return { armar, jugador, piedras, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, canal, herido, guardado, hayMenu: () => !!menu, ultimo: () => menuAntes };
 })();

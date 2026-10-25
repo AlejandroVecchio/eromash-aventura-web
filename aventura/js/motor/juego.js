@@ -126,6 +126,8 @@
     }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
+    for (const s0 of SIS) if (s0.modRecibido) dano = s0.modRecibido(dano, tipo, ox, oy); // bloqueo, pociones, bendiciones
+    if (J.armadura) dano = Math.round(dano * (100 / (100 + J.armadura))); // la armadura de lo que lleva puesto
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
     if (tipo === "helado") jug.lento = 2;
     if (dano <= 0) {
@@ -408,7 +410,7 @@
     for (const r of REVELA)
       if (r.cond() && dist(jug, r.p) <= r.radio) {
         algo = true;
-        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0 }, m)));
+        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0, dura: 33 }, m)));
         setTimeout(r.al, 450);
       }
     SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
@@ -425,7 +427,12 @@
     mostrarLinea();
   }
   // diálogo armado por un sistema: lineas = [[quien, clave completa, variables]], alFin al cerrar
+  // si se abre desde un menú (las charlas de un maestro, unas reglas), el menú se esconde para que la charla quede adelante
+  // y sin alFin vuelve al terminar
   function dialogoLibre(lineas, alFin) {
+    const volver = HUD.hayMenu() ? HUD.ultimo() : null;
+    if (volver) HUD.cerrar();
+    if (volver && !alFin) alFin = () => J.modo === "juego" && (J.modo = "menu", HUD.abrir(volver.html, volver.botones, volver.op));
     dlg = { id: "_libre", d: { lineas, libre: true, alFin }, i: 0 };
     J.modo = "dialogo";
     mostrarLinea();
@@ -515,6 +522,8 @@
 
   // ---------- muerte y reaparición ----------
   function morir() {
+    // una piedra de Berkano cargada se rompe y Eromash vuelve en vez de caer (berkano.js)
+    if (window.BERKANO && BERKANO.salvar()) return;
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
@@ -571,6 +580,15 @@
     GOLPE_CARRERA = { wind: 0.04, swing: 0.16, rec: 0.26, arc: 1.1, reach: 112, dano: 24, avanza: 420, empuje: 1.4 },
     GOLPE_CAIDA = { wind: 0, swing: 0.1, rec: 0.24, arc: Math.PI * 2, reach: 92, dano: 22, empuje: 1.3, giro: true, caida: true },
     CARGA_GIRO = 0.6;
+  // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
+  const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
+  const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
+  // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
+  function dirGolpe() {
+    const dir = Math.atan2(jug.dir[1], jug.dir[0]);
+    if (mouse.usado && !CONTROLES.mando()) return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
+    return apuntar(dir);
+  }
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
     if (window.SONIDO) SONIDO.tocar(d.caida ? "caida" : "tajo", { vol: d.giro || d.remate ? 0.55 : 0.4, tono: d.giro ? 0.8 : d.remate ? 0.88 : 1.05 });
@@ -611,7 +629,7 @@
   function columnaRunica(x, y) {
     if (window.SONIDO) SONIDO.runa(x, y);
     J.ondas.push({ tipo: "pulso", x, y, t: 0 });
-    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0 });
+    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0, dura: 2.4 }); // breve: no es una marca de la Lente
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < 26; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 50, y: y - Math.random() * 30, vx: (Math.random() - 0.5) * 30, vy: -260 - Math.random() * 320, t: 0.5 + Math.random() * 0.4, c: Math.random() < 0.5 ? "#73D5DB" : "#C8F2F4", s: 4 + Math.random() * 5, g: -0.1 });
   }
@@ -687,8 +705,8 @@
     jug.canalAntes = jug.interactuando;
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
-    // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
-    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + (jug.pelea ? 3 : 12) * dt);
+    // la vida vuelve sola cuando ya no hay nada cerca; en pelea no (para eso están las piedras de Berkano y las hierbas)
+    if (jug.sinGolpe > 4 && !jug.muerto && !jug.pelea) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);
@@ -768,7 +786,7 @@
     if (jug.saltoAntes > 0 && jug.salto <= 0) {
       polvareda(jug.x, jug.y, 6);
       if (window.SONIDO && !jug.golpeAire) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
-      if (jug.golpeAire) atacarCon(GOLPE_CAIDA, Math.atan2(jug.dir[1], jug.dir[0]));
+      if (jug.golpeAire) atacarCon(golpesAhora().caida, Math.atan2(jug.dir[1], jug.dir[0]));
       jug.golpeAire = false;
     }
     jug.saltoAntes = jug.salto;
@@ -779,7 +797,7 @@
     if (jug.atk) {
       const a = jug.atk,
         d = a.d;
-      a.t += dt;
+      a.t += dt * (J.velAtq || 1);
       if (d.avanza && a.t < d.wind + d.swing) moverJugador(Math.cos(a.dir) * d.avanza * dt, (Math.sin(a.dir) * d.avanza * dt) / 1.25);
       if (a.t >= d.wind && a.t <= d.wind + d.swing && !a.pego) golpear(a);
       if (a.t >= d.wind + d.swing + d.rec) {
@@ -789,12 +807,13 @@
     }
     if (CONTROLES.pulsado("atacar") && !jug.salto) jug.carga = (jug.carga || 0) + dt;
     else if (jug.carga) {
-      const listo = jug.carga >= CARGA_GIRO && jug.sta >= 15;
+      const G = golpesAhora(),
+        listo = jug.carga >= G.carga && jug.sta >= G.coste;
       jug.carga = 0;
       if (listo) {
-        jug.sta -= 15;
+        jug.sta -= G.coste;
         jug.staEspera = 0.6;
-        atacarCon(GOLPE_GIRO, 0);
+        atacarCon(G.giro, G.giro.giro ? 0 : dirGolpe());
         jug.pedido = null;
       }
     }
@@ -803,14 +822,13 @@
       jug.golpeAire = true;
     } else if (pide("atacar") && !jug.atk) {
       jug.pedido = null;
-      let dir = Math.atan2(jug.dir[1], jug.dir[0]);
-      if (mouse.usado && !CONTROLES.mando()) dir = Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-      else dir = apuntar(dir);
-      if (jug.correr) atacarCon(GOLPE_CARRERA, dir);
+      const dir = dirGolpe(),
+        G = golpesAhora();
+      if (jug.correr) atacarCon(G.carrera, dir);
       else {
-        const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
+        const n = jug.comboT > 0 ? (jug.combo + 1) % G.combo.length : 0;
         jug.combo = n;
-        atacarCon(GOLPES[n], dir, n % 2 ? -1 : 1);
+        atacarCon(G.combo[n], dir, n % 2 ? -1 : 1);
       }
     }
     // los caminos son más rápidos; fuera de pelea correr no cansa
@@ -820,7 +838,7 @@
       jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
       jug.pelea = enPelea();
     }
-    const vel = VEL_PASO[jug.paso] * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
+    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? jug.atk.d.mueve || 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.agachado ? 0.55 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -897,12 +915,16 @@
       if (!e.activo || e.muerto || Math.abs(e.x - jug.x) > 300 || !enArco(e.x, e.y, e.d.radio)) continue;
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
       const sorpresa = e.estado === "quieto",
-        critico = Math.random() < 0.1;
-      const dano = Math.round(d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? 1.6 : 1));
+        critico = Math.random() < (J.critProb != null ? J.critProb : 0.1);
+      let dano = d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? J.critMult || 1.6 : 1);
+      const info = { d, critico, sorpresa, contra };
+      for (const s0 of SIS) if (s0.modDano) dano = s0.modDano(dano, e, info); // debilidades, sigilo, reacciones
+      dano = Math.round(dano);
       chispa(e.x, e.y - 30);
       numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
       if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
       const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      cadaSis("alPegar", e, dano, info, murio);
       if (window.SONIDO) {
         SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });
         if (murio) SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
@@ -1059,6 +1081,10 @@
     if (ciervo.activo) {
       fx = (jug.x * 2 + ciervo.x) / 3;
       fy = (jug.y * 2 + ciervo.y) / 3 - 30;
+    } else if (J.camFoco) {
+      // un jefe de un sistema (el jötunn) pide entrar en cuadro mientras pelea: [x, y], pedido cada cuadro
+      fx = (jug.x * 2 + J.camFoco[0]) / 3;
+      fy = (jug.y * 2 + J.camFoco[1]) / 3 - 30;
     }
     // la cámara se adelanta un poco hacia donde va Eromash (más si corre), así se ve lo que viene
     const adel = jug.muerto || J.modo !== "juego" ? 0 : [0, 40, 70, 120][jug.paso || 0];
@@ -1077,6 +1103,7 @@
   VIKINGO.OJOS.forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
   let animaT = 0;
   function dibujarEspada(x, y, ang, s, brillo) {
+    if (window.BOTIN && BOTIN.dibujarArma(c, x, y, ang, s, brillo)) return; // el arma puesta, con su dibujo
     c.save();
     c.translate(x, y);
     c.rotate(ang + Math.PI / 2);
@@ -1139,9 +1166,20 @@
     sp.x += po.dx;
     sp.y += po.dy + (1 - po.sy) * 40;
     if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
-    const detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
-    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
-    if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
+    let detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
+    // cada tipo de arma se lleva a su manera (las de dos manos al hombro, barridos largos, el golpe desde arriba)
+    const poseArma = window.ARMAS && ARMAS.pose(sp, p, { face, lado: miraV.vista === "N" ? -face : face, jp, bob, gC });
+    if (poseArma) {
+      sp = poseArma.sp;
+      sp.x += po.dx;
+      sp.y += po.dy;
+      detras = poseArma.detras || (!p.atk && miraV.vista === "N");
+    }
+    // el escudo (motor/escudo.js): de espaldas o al costado va detrás del cuerpo, de frente o levantado, delante
+    const ctxEsc = { face, lado: miraV.vista === "N" ? -face : face, jp, bob, vista: miraV.vista, po };
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, true);
+    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
+    if (p.atk && !p.atk.d.sinEstela && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
         d = a.d,
         pr = Math.min(1, (a.t - d.wind) / d.swing);
@@ -1161,7 +1199,9 @@
     const ojos = po.ojos || (p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm");
     // hacia dónde mira en el mundo, visto con la cámara (VOL.relativa: la cámara puede estar girada)
     const { vista, espejo } = VOL.relativa(po.vista || p.mira.vista, po.vista ? po.espejo : p.mira.espejo);
-    const img = VK[vista + ojos] || VK[vista + "calm"];
+    // con un tinte en el casco (motor/tintes.js) sale de VIKINGO, que guarda cada imagen una vez
+    const col = VIKINGO.color || "R",
+      img = col === "R" ? VK[vista + ojos] || VK[vista + "calm"] : VIKINGO.imagen(col, vista, VK[vista + ojos] ? ojos : "calm");
     // la estela de la esquiva: copias claras que quedan atrás
     if (!enSilueta && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
       const bl = ANIMA.blanco(img);
@@ -1193,7 +1233,8 @@
       }
     }
     c.restore();
-    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, false);
+    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();
   }
   function dibujarNpc(n) {
@@ -1201,7 +1242,10 @@
     if (J.modo === "juego" && !n.hablando) dibujarSenal(n);
   }
   function dibujarMarca(m) {
-    const a = Math.min(1, m.t * 2) * (m.t > 30 ? Math.max(0, 1 - (m.t - 30) / 3) : 1);
+    // las de la Lente (REVELA) duran 33 s; los anillos de un efecto (columna rúnica, viaje, cofre, piedra) se apagan solos en un par de segundos
+    const dura = m.dura || 2.4,
+      fin = Math.min(3, dura / 3);
+    const a = Math.min(1, m.t * 2) * (m.t > dura - fin ? Math.max(0, (dura - m.t) / fin) : 1);
     if (a <= 0) return;
     DIB.alfa(c, a, () => {
       const pulso = 0.75 + Math.sin(J.t * 3 + m.x) * 0.25;
@@ -1407,6 +1451,7 @@
     W.girarVista(g);
     const baseT = () => c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc),
       pisoT = () => (baseT(), VOL.piso(c, cx, cy, g));
+    J.baseT = baseT; // para que un sistema dibuje derecho (en la vista) desde un hook del piso
     pisoT();
     W.dibujarPiso(c, wx0, wy0, wx1, wy1, escBase);
     cadaSis("fondo", c, wx0, wy0, wx1, wy1);
@@ -1461,14 +1506,17 @@
       });
     }
     lista.sort((a, b) => a.y - b.y);
+    prepararAura(lista);
     lista.forEach((d) => {
+      if (aura) auraAntes(d); // el claro de Eromash
       // las cosas del mundo no llevan función propia (menos basura por cuadro)
-      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa);
+      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa, d);
       c.save();
       c.translate(d.dx, d.dy);
-      d.f ? d.f() : dibujarCosa(d.cosa);
+      d.f ? d.f() : dibujarCosa(d.cosa, d);
       c.restore();
     });
+    if (aura) auraVolcar();
     siluetaJugador(lista);
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
     pisoT();
@@ -1692,7 +1740,13 @@
     // solo lo que de verdad se cruza con el encuadre de Eromash (redibujar todo lo de adelante era lo más caro del
     // cuadro); los assets se dibujan siempre de frente a la cámara, así que sus bordes valen igual con la vista girada
     const tapan = lista.filter((d) => {
-      if (!d.cosa || d.y <= claveV || d.cosa.o.piso) return false;
+      // lo que un sistema dibuja con su función y marca con `tapa` (su caja en el mundo: x0, y0, x1, y1) también tapa;
+      // su función recibe el contexto donde dibujar (las paredes de las mazmorras)
+      if (d.tapa && d.y > claveV) {
+        const q = d.tapa;
+        return q.y0 + (d.dy || 0) < by + bh && q.y1 + (d.dy || 0) > by && q.x0 + (d.dx || 0) < bx + bw && q.x1 + (d.dx || 0) > bx;
+      }
+      if (!d.cosa || d.y <= claveV || d.cosa.o.piso || d.enAura) return false; // lo del claro ya deja verlo
       const vy = d.cosa.y + (d.dy || 0),
         b = bordes(d.cosa);
       return vy - d.cosa.alto * 1.3 < jy - zj && vy - b.alto < by + bh && Math.abs(d.cosa.x + (d.dx || 0) - jx) < bw / 2 + b.ancho;
@@ -1708,7 +1762,13 @@
     tapaC.setTransform(1, 0, 0, 1, 0, 0);
     tapaC.clearRect(0, 0, w, h);
     tapaC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
-    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o));
+    tapan.forEach((d) => {
+      if (!d.tapa) return ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o);
+      tapaC.save();
+      tapaC.translate(d.dx || 0, d.dy || 0);
+      d.f(tapaC);
+      tapaC.restore();
+    });
     // Eromash solo, sin su sombra
     silC.setTransform(1, 0, 0, 1, 0, 0);
     silC.globalCompositeOperation = "source-over";
@@ -1735,8 +1795,140 @@
     c.drawImage(silCv, bx, by, w / esc, h / esc);
     c.restore();
   }
-  // árboles y casas que tapan a Eromash se vuelven transparentes
-  function dibujarCosa(o) {
+  // ---------- el claro de Eromash: lo que lo rodea se vuelve transparente ----------
+  // Como en Diablo, Path of Exile o Los Sims: un óvalo del tamaño de lo que alumbra su lámpara alrededor de Eromash
+  // donde árboles, troncos y casas se ven casi transparentes (los que quedan delante de él mucho, los de atrás un
+  // poco), así se ve lo que pasa y con qué va a chocar. El centro es lo más claro y el borde queda opaco: no se nota
+  // dónde empieza. Cómo, sin recortar cada árbol (recortar era lo caro): al llegar la primera cosa que se cruza con el
+  // óvalo se copia lo que hay en el lienzo dentro del óvalo (fondo); esas cosas se dibujan enteras en el lienzo y
+  // además en una capa; al terminar la tanda, la capa pasa por una máscara hecha una sola vez, se pinta sobre el fondo
+  // y el fondo vuelve al lienzo dentro del óvalo. La tanda se cierra cuando viene algo que no es del mundo (Eromash,
+  // la gente, las criaturas), así se respeta el orden. Está todo en la vista: vale con la cámara girada. Calidad baja
+  // y la opción apagada vuelven a lo de antes (solo se aclara lo que lo tapa).
+  const AURA_K = 0.85; // alto del óvalo / ancho (como el círculo de luz, aplastado por el piso)
+  function mascaraAura(min) {
+    const L = 256,
+      m = L / 2,
+      cv = document.createElement("canvas");
+    cv.width = cv.height = L;
+    const g2 = cv.getContext("2d"),
+      g = g2.createRadialGradient(m, m, 0, m, m, m);
+    // transparente hasta un tercio, después sube suave (smoothstep) hasta opaco en el borde
+    g.addColorStop(0, "rgba(0,0,0," + min + ")");
+    for (let i = 0; i <= 8; i++) {
+      const q = i / 8;
+      g.addColorStop(0.32 + q * 0.66, "rgba(0,0,0," + (min + (1 - min) * q * q * (3 - 2 * q)).toFixed(3) + ")");
+    }
+    g.addColorStop(1, "rgba(0,0,0,1)");
+    g2.fillStyle = g;
+    g2.beginPath();
+    g2.arc(m, m, m, 0, DIB.TAU);
+    g2.fill();
+    return cv;
+  }
+  const MASCARA_ADELANTE = mascaraAura(0.07),
+    MASCARA_ATRAS = mascaraAura(0.3),
+    OVALO = mascaraAura(1), // el óvalo lleno: lo que del fondo vuelve al lienzo
+    auraCv = document.createElement("canvas"),
+    auraC = auraCv.getContext("2d"),
+    fondoCv = document.createElement("canvas"),
+    fondoC = fondoCv.getContext("2d");
+  // en cada cuadro: { x, y, rx, ry, clave, px, py, pw, ph } (el óvalo en la vista y en píxeles del lienzo), o null;
+  // capa = la tanda abierta (con qué máscara va)
+  let aura = null;
+  function prepararAura(lista) {
+    aura = null;
+    if (J.modo === "titulo" || jug.muerto || (window.CALIDAD && CALIDAD.nivel === "baja") || (window.OPCIONES && OPCIONES.v("aura") === false)) return;
+    const yo = lista.find((d) => d.jugador),
+      [jx, jy] = J.vista(jug.x, jug.y),
+      rx = 210 * (J.lampara || 1),
+      ry = rx * AURA_K,
+      y = jy - (jug.z || 0) - 45,
+      m = c.getTransform(),
+      r = window.CALIDAD && CALIDAD.nivel === "media" ? 0.5 : 1; // en media la capa va a media resolución
+    aura = { x: jx, y, rx, ry, clave: yo ? yo.y : jy, capa: null, r };
+    aura.px = Math.floor(m.a * (jx - rx) + m.e);
+    aura.py = Math.floor(m.d * (y - ry) + m.f);
+    aura.pw = Math.ceil(m.a * rx * 2) + 2;
+    aura.ph = Math.ceil(m.d * ry * 2) + 2;
+    aura.k = m.a;
+    const cw2 = Math.ceil(aura.pw * r),
+      ch2 = Math.ceil(aura.ph * r);
+    if (fondoCv.width !== aura.pw || fondoCv.height !== aura.ph) {
+      fondoCv.width = aura.pw;
+      fondoCv.height = aura.ph;
+    }
+    if (auraCv.width !== cw2 || auraCv.height !== ch2) {
+      auraCv.width = cw2;
+      auraCv.height = ch2;
+    }
+  }
+  // si el dibujo de una cosa del mundo se cruza con el óvalo (todo en la vista)
+  function cruzaAura(d) {
+    const o = d.cosa,
+      b = bordes(o),
+      ox = o.x + (d.dx || 0),
+      oy = o.y + (d.dy || 0),
+      px = Math.max(ox - b.ancho, Math.min(aura.x, ox + b.ancho)),
+      py = Math.max(oy - b.alto, Math.min(aura.y, oy + 20)),
+      ex = (px - aura.x) / aura.rx,
+      ey = (py - aura.y) / aura.ry;
+    return ex * ex + ey * ey < 1;
+  }
+  // cierra la tanda: capa con su máscara sobre el fondo, y el fondo (solo el óvalo) de vuelta al lienzo
+  function auraVolcar() {
+    if (!aura.capa) return;
+    const { pw, ph } = aura;
+    auraC.setTransform(1, 0, 0, 1, 0, 0);
+    auraC.globalCompositeOperation = "destination-in";
+    auraC.drawImage(aura.capa, 0, 0, auraCv.width, auraCv.height);
+    auraC.globalCompositeOperation = "source-over";
+    fondoC.drawImage(auraCv, 0, 0, pw, ph);
+    fondoC.globalCompositeOperation = "destination-in";
+    fondoC.drawImage(OVALO, 0, 0, pw, ph);
+    fondoC.globalCompositeOperation = "source-over";
+    c.save();
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.drawImage(fondoCv, aura.px, aura.py);
+    c.restore();
+    aura.capa = null;
+  }
+  // antes de dibujar cada cosa de la lista
+  function auraAntes(d) {
+    if (!d.cosa) {
+      // Eromash, la gente y las criaturas cerca del óvalo van enteras encima de lo de antes: se cierra la tanda
+      const vx = d.x + (d.dx || 0);
+      if (aura.capa && Math.abs(vx - aura.x) < aura.rx + 160 && d.y > aura.y - aura.ry - 40 && d.y < aura.y + aura.ry + 320) auraVolcar();
+      return;
+    }
+    const cruza = !d.cosa.o.piso && cruzaAura(d);
+    d.corte = cruza && d.cosa.alto >= 55; // árboles, troncos quebrados, casas
+    if (!d.corte) {
+      if (cruza) auraVolcar(); // lo bajo (piedras, matas, tocones) que toca el óvalo queda como está
+      return; // lo que no toca el óvalo no cambia nada
+    }
+    const masc = d.y > aura.clave ? MASCARA_ADELANTE : MASCARA_ATRAS;
+    if (aura.capa && aura.capa !== masc) auraVolcar();
+    if (!aura.capa) {
+      // se abre la tanda: lo que hay ahora en el lienzo dentro del óvalo es el fondo
+      fondoC.globalCompositeOperation = "copy";
+      fondoC.drawImage(c.canvas, aura.px, aura.py, aura.pw, aura.ph, 0, 0, aura.pw, aura.ph);
+      fondoC.globalCompositeOperation = "source-over";
+      auraC.setTransform(1, 0, 0, 1, 0, 0);
+      auraC.clearRect(0, 0, auraCv.width, auraCv.height);
+      aura.capa = masc;
+    }
+    if (masc === MASCARA_ADELANTE) d.enAura = true;
+  }
+  // árboles y casas que tapan a Eromash se vuelven transparentes (con el claro de arriba, o si está apagado, de a uno)
+  function dibujarCosa(o, d) {
+    if (d && d.corte) {
+      ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o); // entero en el lienzo (adentro del óvalo lo tapa el fondo)
+      const k = aura.k * aura.r,
+        m = c.getTransform();
+      auraC.setTransform(k, 0, 0, k, (m.e - aura.px) * aura.r, (m.f - aura.py) * aura.r);
+      return ASSETS.dibujar(auraC, o.id, o.x, o.y, J.t, o.o);
+    }
     let a = 1;
     if (o.alto > 90 && o.y > jug.y && o.y - jug.y < o.alto * 0.9) {
       const ancho = o.o.ancho || (o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20);
@@ -1943,6 +2135,10 @@
       if (CONTROLES.recien("pausa") && H.E && J.cam.x) {
         if (document.querySelector("#capaCaja h1") == null) cerrarMenu();
       }
+    } else if (J.modo === "forja") {
+      if (window.FORJA) FORJA.paso(dt); // la forja al ritmo del yunque (motor/forja.js)
+    } else if (J.modos && J.modos[J.modo]) {
+      J.modos[J.modo](dt); // los modos propios de los sistemas (la cocina en la fogata): J.modos[nombre] = fn(dt)
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
       else if (dlg && dlg.solo && (dlg.solo -= dt) <= 0) seguirDialogo();
@@ -1988,6 +2184,7 @@
       });
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
       alejarMeta = zoomJug;
+      J.camFoco = null;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
       J.ambZona = null; // y cambiar el aire del lugar: { tono: [r, g, b] de la oscuridad, osc, niebla, sombra } (las mazmorras)
       cadaSis("actualizar", dt);
@@ -2000,7 +2197,7 @@
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));
-      J.marcas = J.marcas.filter((m) => m.t < 33);
+      J.marcas = J.marcas.filter((m) => m.t < (m.dura || 2.4));
       J.ondas.forEach((o) => (o.t += dt));
       J.ondas = J.ondas.filter((o) => o.t < (o.tipo === "pulso" ? 0.8 : 8));
       J.fx.forEach((f) => {
@@ -2029,6 +2226,12 @@
 
   // ---------- arranque ----------
   HUD.armar();
+  // tocar afuera de un menú lo cierra, igual que Esc (no en el título ni mientras se espera una tecla nueva)
+  document.getElementById("capa").addEventListener("pointerdown", (e) => {
+    if (e.target.id !== "capa" || J.modo !== "menu" || !H.E || !J.cam.x) return;
+    if (document.querySelector("#capaCaja h1") || (CONTROLES.capturando && CONTROLES.capturando())) return;
+    cerrarMenu();
+  });
   addEventListener("beforeunload", () => J.modo !== "titulo" && H.guardar());
   // si se va a otra ventana o pestaña en plena partida, el juego se pausa solo (y guarda)
   const alIrse = () => {
@@ -2051,13 +2254,14 @@
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
   // lo que los sistemas pueden usar del motor
   const A = {
-    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn,
+    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn, columnaRunica, textoFlotante, polvareda, dirGolpe,
     avisar: (k, col) => HUD.aviso(t(k), col),
     menu: (html, botones) => {
       J.modo = "menu";
       HUD.abrir(html, botones);
     },
     cerrarMenu,
+    seguirDialogo,
     usarLente,
     lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
@@ -2095,6 +2299,7 @@
     if (ok && J.modo !== "titulo") HUD.guardado();
     return ok;
   };
+  window.JUEGO.A = A; // para las pruebas (aventura/pruebas)
   cadaSis("iniciar", A);
   if (q.get("jugar")) {
     empezar(Number(q.get("jugar")) || 1, true);

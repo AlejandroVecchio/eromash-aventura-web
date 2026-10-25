@@ -175,6 +175,78 @@ window.ICONOS = (function () {
       pol(c, [x - 5 * u, y - 1 * u, x - 4 * u, y - 4.5 * u, x + 4 * u, y - 4.5 * u, x + 5 * u, y - 1 * u], ROSA);
       pol(c, [x - 0.9 * u, y - 1.5 * u, x + 0.9 * u, y - 1.5 * u, x + 0.9 * u, y + 1.5 * u, x - 0.9 * u, y + 1.5 * u], OSCURO);
     },
+    // un mercader (comercio.js): la bolsa de plata atada con la runa Fehu
+    mercader(c, x, y, u, col) {
+      pol(c, [x - 4.5 * u, y + 4.5 * u, x - 5 * u, y, x - 2 * u, y - 3 * u, x + 2 * u, y - 3 * u, x + 5 * u, y, x + 4.5 * u, y + 4.5 * u], col);
+      pol(c, [x - 2 * u, y - 3 * u, x - 3 * u, y - 5.5 * u, x + 3 * u, y - 5.5 * u, x + 2 * u, y - 3 * u], ROSA);
+      linea(c, [x - 1 * u, y + 3 * u, x - 1 * u, y - 1 * u, x + 1.5 * u, y - 0.5 * u], OSCURO, 0.9 * u);
+      linea(c, [x - 1 * u, y + 1 * u, x + 1.5 * u, y + 1.5 * u], OSCURO, 0.9 * u);
+    },
+    // un contrato de caza (contratos.js): el pergamino clavado con las tres rayas de la garra
+    contrato(c, x, y, u, col) {
+      pol(c, [x - 4 * u, y - 5 * u, x + 4 * u, y - 5 * u, x + 4.5 * u, y + 5 * u, x - 4.5 * u, y + 5 * u], CLARO);
+      for (let k = -1; k <= 1; k++) linea(c, [x + (k * 2 - 1) * u, y - 3 * u, x + (k * 2 + 1) * u, y + 3 * u], col, 1 * u);
+    },
+    // un instructor (instructores.js): dos espadas de práctica cruzadas sobre un escudo redondo
+    instructor(c, x, y, u, col) {
+      c.fillStyle = col;
+      c.beginPath();
+      c.arc(x, y, 4.2 * u, 0, Math.PI * 2);
+      c.fill();
+      linea(c, [x - 4 * u, y - 4 * u, x + 4 * u, y + 4 * u], CLARO, 1.2 * u);
+      linea(c, [x + 4 * u, y - 4 * u, x - 4 * u, y + 4 * u], CLARO, 1.2 * u);
+    },
+    // una guarida de los Sin Linde (bandidos.js): la linde partida, un rombo cortado por una raya
+    bandidos(c, x, y, u, col) {
+      pol(c, [x, y - 6 * u, x + 4.8 * u, y, x, y + 6 * u, x - 4.8 * u, y], col);
+      pol(c, [x, y - 6 * u, x + 4.8 * u, y, x, y + 6 * u], "#FF8D71");
+      linea(c, [x - 5.5 * u, y + 3 * u, x + 5.5 * u, y - 3 * u], "#111111", 1.6 * u);
+    },
+    // un nido de arañas (aranas.js): la araña de ocho patas con la marca roja
+    nido(c, x, y, u, col) {
+      for (let k = 0; k < 4; k++) {
+        const a = -0.9 + k * 0.6;
+        linea(c, [x - 2 * u, y, x - 5 * u, y - 3 * u + k * 2 * u, x - 7 * u, y + 2 * u + k * 1.4 * u], col, 0.9 * u);
+        linea(c, [x + 2 * u, y, x + 5 * u, y - 3 * u + k * 2 * u, x + 7 * u, y + 2 * u + k * 1.4 * u], col, 0.9 * u);
+      }
+      pol(c, [x - 3.4 * u, y + 1 * u, x - 2.4 * u, y - 3 * u, x + 2.4 * u, y - 3 * u, x + 3.4 * u, y + 1 * u, x, y + 5 * u], col);
+      pol(c, [x - 1 * u, y - 1 * u, x + 1 * u, y - 1 * u, x, y + 2.4 * u], "#C8402D");
+    },
+    // el asiento del jötunn (jotunn.js): el trono de granito con la runa Isa
+    jotunn(c, x, y, u, col) {
+      pol(c, [x - 5.5 * u, y + 5 * u, x - 5.5 * u, y - 4 * u, x - 2.5 * u, y - 6 * u, x + 5.5 * u, y - 5 * u, x + 5.5 * u, y + 5 * u], col);
+      pol(c, [x - 5.5 * u, y + 5 * u, x - 5.5 * u, y - 4 * u, x - 2.5 * u, y - 6 * u, x - 1.5 * u, y + 5 * u], "#5E5A56");
+      linea(c, [x + 1 * u, y - 3.6 * u, x + 1 * u, y + 2.4 * u], "#C8F2F4", 1.4 * u);
+    },
+    // el puesto de pesca de Sverri (pesca.js): un pez de costado
+    pesca(c, x, y, u, col) {
+      pol(c, [x - 4 * u, y, x - 1 * u, y - 3 * u, x + 3 * u, y - 2.6 * u, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], col);
+      pol(c, [x - 4 * u, y, x - 6.5 * u, y - 3 * u, x - 6.5 * u, y + 3 * u], col);
+      pol(c, [x - 4 * u, y, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], "#E0C88A");
+      pol(c, [x + 2.6 * u, y - 1.4 * u, x + 3.4 * u, y - 1.4 * u, x + 3.4 * u, y - 0.6 * u, x + 2.6 * u, y - 0.6 * u], "#111111");
+    },
+    // el hólmr (holmr.js): el escudo redondo de un kempa con su cruz y el umbo
+    holmr(c, x, y, u, col) {
+      pol(c, Array.from({ length: 10 }, (_, k) => [x + Math.cos((k / 10) * Math.PI * 2) * 5.5 * u, y + Math.sin((k / 10) * Math.PI * 2) * 5.5 * u]).flat(), col);
+      pol(c, [x - 5.4 * u, y, x - 1.7 * u, y - 5.2 * u, x, y - 5.5 * u, x, y + 5.5 * u, x - 1.7 * u, y + 5.2 * u], "#9C2315");
+      pol(c, [x - 0.8 * u, y - 5.4 * u, x + 0.8 * u, y - 5.4 * u, x + 0.8 * u, y + 5.4 * u, x - 0.8 * u, y + 5.4 * u], "#FFD98A");
+      pol(c, [x - 5.4 * u, y - 0.8 * u, x + 5.4 * u, y - 0.8 * u, x + 5.4 * u, y + 0.8 * u, x - 5.4 * u, y + 0.8 * u], "#FFD98A");
+      pol(c, [x - 1.6 * u, y - 1.6 * u, x + 1.6 * u, y - 1.6 * u, x + 1.6 * u, y + 1.6 * u, x - 1.6 * u, y + 1.6 * u], "#8E8A86");
+    },
+    // un atril con un libro (libros.js): el libro abierto, la hoja izquierda en sombra
+    libro(c, x, y, u, col) {
+      pol(c, [x - 5.5 * u, y - 3.5 * u, x, y - 2.5 * u, x + 5.5 * u, y - 3.5 * u, x + 5.5 * u, y + 3.5 * u, x, y + 4.5 * u, x - 5.5 * u, y + 3.5 * u], "#5E130D");
+      pol(c, [x - 5 * u, y - 2.8 * u, x, y - 1.8 * u, x, y + 3.6 * u, x - 5 * u, y + 2.8 * u], "#D8CCB4");
+      pol(c, [x, y - 1.8 * u, x + 5 * u, y - 2.8 * u, x + 5 * u, y + 2.8 * u, x, y + 3.6 * u], col);
+      pol(c, [x + 0.4 * u, y - 1.8 * u, x + 1.2 * u, y - 1.8 * u, x + 1.2 * u, y - 5 * u, x + 0.4 * u, y - 4.6 * u], "#9C2315");
+    },
+    // un hörgr de los dioses (santuarios.js): dos lajas y la estela con la marca del dios
+    horgr(c, x, y, u, col) {
+      pol(c, [x - 6 * u, y + 5 * u, x + 6 * u, y + 5 * u, x + 5 * u, y + 2.5 * u, x - 5 * u, y + 2.5 * u], "#8E8A86");
+      pol(c, [x - 2.6 * u, y + 2.5 * u, x - 2.2 * u, y - 5 * u, x, y - 6.2 * u, x + 2.2 * u, y - 5 * u, x + 2.6 * u, y + 2.5 * u], "#B4B0AA");
+      linea(c, [x, y + 1 * u, x, y - 4 * u], col, 1.2 * u);
+      linea(c, [x - 1.4 * u, y - 2.6 * u, x + 1.4 * u, y - 0.6 * u], col, 1 * u);
+    },
     manzano(c, x, y, u, col) {
       c.fillStyle = col;
       c.beginPath();
@@ -208,6 +280,16 @@ window.ICONOS = (function () {
         pol(c, [x, y - 4.6 * u, x + 1.2 * u, y - 2.6 * u, x, y - 0.6 * u, x - 1.2 * u, y - 2.6 * u], CLARO);
       }
     },
+    // el manantial rúnico (berkano.js): la pila de piedra con el agua celeste y Berkano en la estela de atrás
+    manantial(c, x, y, u, col) {
+      pol(c, [x - 2.4 * u, y - 7 * u, x + 2.4 * u, y - 7 * u, x + 2.4 * u, y + 1 * u, x - 2.4 * u, y + 1 * u], "#6A7470");
+      FUTHARK.dibujar(c, "berkano", x, y - 1.6 * u, 4.6 * u, col, 1 * u);
+      pol(c, [x - 6 * u, y + 1 * u, x + 6 * u, y + 1 * u, x + 5 * u, y + 5.5 * u, x - 5 * u, y + 5.5 * u], "#8A8478");
+      c.fillStyle = col;
+      c.beginPath();
+      c.ellipse(x, y + 1.4 * u, 4.6 * u, 1.4 * u, 0, 0, Math.PI * 2);
+      c.fill();
+    },
     puente(c, x, y, u, col) {
       pol(c, [x - 7 * u, y - 1 * u, x + 7 * u, y - 1 * u, x + 7 * u, y + 1 * u, x - 7 * u, y + 1 * u], col);
       for (let k = -6; k <= 6; k += 3) linea(c, [x + k * u, y + 1 * u, x + k * u, y + 4.5 * u], col, 1 * u);
@@ -215,7 +297,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", libro: "#F2ECEC", holmr: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

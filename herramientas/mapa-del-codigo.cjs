@@ -18,6 +18,7 @@ const CARPETAS = {
   enemigos: "el dibujo de las criaturas",
   historia: "el guion (igual al de Godot)",
   motor: "el motor y los sistemas que se le enchufan",
+  equipo: "las piezas de equipo (bases, rarezas, afijos) y su dibujo",
   interfaz: "HUD, mochila, mapa, opciones y el prólogo del mago",
   eikholt: "la capital en 3D (es del hilo «Construir la ciudad de Eikholt»)",
   editor: "el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)",
@@ -41,7 +42,7 @@ function armar() {
   const errores = [];
   let out = [DESDE, "", "## Todos los archivos", ""];
   out.push("Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.", "");
-  for (const dir of fs.readdirSync(JS).filter((d) => fs.statSync(path.join(JS, d)).isDirectory() && d !== "vendor").sort()) {
+  for (const dir of fs.readdirSync(JS).filter((d) => fs.statSync(path.join(JS, d)).isDirectory() && d !== "vendor" && d !== "pr").sort()) {
     out.push(`### js/${dir}/ · ${CARPETAS[dir] || ""}`, "");
     for (const f of fs.readdirSync(path.join(JS, dir)).filter((f) => f.endsWith(".js")).sort()) {
       const a = archivo(path.join(dir, f));

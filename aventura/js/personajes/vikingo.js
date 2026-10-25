@@ -45,6 +45,8 @@ window.VIKINGO = (function () {
 
   // tonos de cada vikingo: R, W, B, V salen de VIKINGOS; G es el dorado del set legendario
   function tonos(c) {
+    // los tintes de la aventura (motor/tintes.js) traen sus propios tonos
+    if (window.TINTES && TINTES.tonos(c)) return TINTES.tonos(c);
     if (c === "G") return { domo: "#C98A1A", linea: "#8A5A0E", cara: "#0A0707", e1: "#FFD98A", e2: "#F5A524" };
     const v = (window.VIKINGOS && VIKINGOS.L[c]) || VIKINGOS.L.R;
     return v;
@@ -129,5 +131,6 @@ window.VIKINGO = (function () {
     if (Math.abs(dx) > Math.abs(dy) * 0.75) return { vista: "E", espejo: dx < 0 };
     return { vista: dy < 0 ? "N" : "S", espejo: false };
   }
-  return { svg, imagen, vista, OJOS: Object.keys(OJOS_FRENTE) };
+  // color: el de Eromash ahora (lo cambia el tinte del casco)
+  return { svg, imagen, vista, OJOS: Object.keys(OJOS_FRENTE), color: "R" };
 })();

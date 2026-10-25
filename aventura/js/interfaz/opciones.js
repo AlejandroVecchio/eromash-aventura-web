@@ -6,7 +6,7 @@ window.OPCIONES = (function () {
   "use strict";
   const t = (k, v) => I18N.t(k, v);
   const CLAVE = "eromash.aventura.opciones";
-  const v = { brujula: true, temblor: true, numeros: true, flechas: true, apuntar: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
+  const v = { brujula: true, temblor: true, numeros: true, flechas: true, apuntar: true, aura: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
   try {
     Object.assign(v, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
@@ -42,10 +42,12 @@ window.OPCIONES = (function () {
     lista.push({ texto: t("op.temblor"), valor: siNo(v.temblor), fn: alternar("temblor") });
     lista.push({ texto: t("op.numeros"), valor: siNo(v.numeros), fn: alternar("numeros") });
     lista.push({ texto: t("op.flechas"), valor: siNo(v.flechas), fn: alternar("flechas") });
+    lista.push({ texto: t("op.aura"), valor: siNo(v.aura), fn: alternar("aura") });
     lista.push({ texto: t("op.apuntar"), valor: siNo(v.apuntar), fn: alternar("apuntar") });
     lista.push({ texto: t("op.correr"), valor: t("op.correr_" + v.correr), fn: () => (v.correr = v.correr === "mantener" ? "alternar" : "mantener") });
     lista.push({ texto: t("op.dialogos"), valor: t("op.dialogos_" + v.dialogos), fn: () => (v.dialogos = v.dialogos === "manual" ? "solos" : "manual") });
     lista.push({ texto: t("op.interfaz"), valor: t("op.interfaz_" + v.interfaz), fn: () => (v.interfaz = v.interfaz === "normal" ? "grande" : "normal") });
+    lista.push({ texto: t("tc.titulo"), valor: t("tc.fila"), abre: (volver) => teclas(volver) });
     lista.push({ texto: t("op.idioma"), valor: I18N.lang === "es" ? "Español" : "English", fn: () => {
       // el idioma cambia del todo al rearmar la pantalla: se guarda la partida y se vuelve al título
       I18N.setLang(I18N.lang === "es" ? "en" : "es");
@@ -58,6 +60,7 @@ window.OPCIONES = (function () {
   function abrir(cerrar, foco = 0) {
     const lista = filas();
     const botones = lista.map((f, i) => ({ texto: f.texto, sub: f.valor, fn: () => {
+      if (f.abre) return f.abre(() => abrir(cerrar, i));
       f.fn();
       guardar();
       aplicar();
@@ -68,5 +71,29 @@ window.OPCIONES = (function () {
     HUD.abrir(`<h2>${t("op.titulo")}</h2><div class="sub">${t("op.sub")}</div>`, botones, { clase: "opciones" });
     if (foco) HUD.enfocar(foco);
   }
-  return { abrir, v: (k) => v[k] };
+  // ---------- teclas propias ----------
+  // una fila por acción con su tecla de ahora; al tocarla se aprieta la tecla nueva (CONTROLES.capturar). grupo =
+  // "juego" o "forja" (sin grupo, las dos listas). volver() vuelve a donde estaba.
+  function teclas(volver, grupo, foco = 0) {
+    const C = window.CONTROLES;
+    const grupos = grupo ? [grupo] : ["juego", "forja"];
+    const acciones = grupos.flatMap((g) => C.GRUPOS[g]);
+    const botones = acciones.map((a, i) => ({
+      texto: t("tc.a_" + a),
+      sub: C.teclaDe(a) + (C.propia(a) ? " ·" : ""),
+      fn: () => {
+        HUD.abrir(`<h2>${t("tc.a_" + a)}</h2><div class="sub">${t("tc.apreta", [C.teclaDe(a)])}</div>`, []);
+        C.capturar((code) => {
+          if (code) C.asignar(a, code);
+          C.soltar();
+          teclas(volver, grupo, i);
+        });
+      },
+    }));
+    botones.push({ texto: t("tc.restaurar"), fn: () => (C.restaurar(grupo), teclas(volver, grupo, acciones.length)) });
+    botones.push({ texto: t("ui.volver"), fn: volver });
+    HUD.abrir(`<h2>${t(grupo === "forja" ? "tc.forja" : "tc.titulo")}</h2><div class="sub">${t("tc.sub")}</div>`, botones, { clase: "opciones" });
+    if (foco) HUD.enfocar(foco);
+  }
+  return { abrir, teclas, v: (k) => v[k] };
 })();

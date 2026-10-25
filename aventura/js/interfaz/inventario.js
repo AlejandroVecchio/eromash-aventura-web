@@ -43,9 +43,9 @@ window.INVENTARIO = (function () {
     return PE().PECHERAS.find((p) => p.id === id) || null;
   };
   // la espada en la mano del vikingo, como la pone la mochila de la arena (eromash-armadura.js, dibujoEspada)
-  function manoEspada(n) {
+  function manoEspada(n, arma) {
     if (!ES()) return "";
-    const s = ES().svg(espadaId(n), { vista: "vertical", sinEstilo: true }),
+    const s = (arma && window.ARTE_OBJ && ARTE_OBJ.svgEspada(arma, { vista: "vertical", sinEstilo: true })) || ES().svg(espadaId(n), { vista: "vertical", sinEstilo: true }),
       m = s.match(/viewBox="([^"]+)"/);
     if (!m) return "";
     const [x, y, w, h] = m[1].split(/\s+/);
@@ -69,6 +69,13 @@ window.INVENTARIO = (function () {
   // el vikingo entero con la cota o la pechera y la espada que lleva
   function vikingoEquipado(pe) {
     if (!PE()) return null;
+    // con el equipo nuevo (botin.js): la pechera y el arma que lleva puestas
+    if (window.BOTIN && BOTIN.estado()) {
+      const pecho = BOTIN.puesta("pecho"),
+        arma = BOTIN.puesta("arma"),
+        p = pecho ? ARTE_OBJ.pechera(pecho) : null;
+      return arte("vik" + (p ? p.id : "-") + (arma ? arma.b + arma.r : "-"), () => PE().vikingo(p, "rojo", "tranquilo", "", "", arma ? manoEspada(0, arma) : ""));
+    }
     const p = pecheraDe(pe.cota, pe.pechera);
     return arte("vik" + (p ? p.id : "") + espadaId(pe.espada), () => PE().vikingo(p, "rojo", "tranquilo", "", "", manoEspada(pe.espada)));
   }
@@ -103,6 +110,17 @@ window.INVENTARIO = (function () {
       case "esquivar":
         for (let k = 0; k < 3; k++) L(c, -26 + k * 6, 14 - k * 12, 20 + k * 4, 6 - k * 14, k ? "#E0B2B2" : "#F2ECEC", 5 - k);
         P(c, [12, -20, 28, -14, 14, -4], "#F2ECEC");
+        break;
+      case "bloquear":
+        // el escudo redondo de tablas con su umbo
+        E(c, 0, 0, 26, 26, "#7A5634");
+        P(c, [-26, 0, 0, -26, 0, 26], "#553A22");
+        c.lineWidth = 4;
+        c.strokeStyle = "#8A8478";
+        c.beginPath();
+        c.arc(0, 0, 25, 0, Math.PI * 2);
+        c.stroke();
+        E(c, 0, 0, 8, 8, "#C9A45A");
         break;
       case "saltar":
         P(c, [0, -28, 18, -6, 7, -6, 7, 16, -7, 16, -7, -6, -18, -6], "#F2ECEC");
@@ -234,6 +252,16 @@ window.INVENTARIO = (function () {
         R(c, -10, 10, 20, 7, "#9C2315");
         R(c, -10, 10, 8, 7, "#5E130D");
         break;
+      // el brebaje de Berkano: frasco de barro con el líquido rúnico y la runa en la panza (objeto de la barra)
+      case "brebaje":
+        E(c, 0, 28, 18, 5, "rgba(0,0,0,0.4)");
+        P(c, [-6, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, -8, 28, -16, 22, -18, 0, -6, -12], "#7A5634");
+        P(c, [0, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, 0, 28], "#9A7048");
+        P(c, [-14, 4, 14, 4, 13, 20, 7, 25, -7, 25, -13, 20], "#3E9AA0");
+        P(c, [-14, 4, 14, 4, 12, 9, -12, 9], "#73D5DB");
+        R(c, -7, -30, 14, 8, "#5E4430");
+        FUTHARK.dibujar(c, "berkano", 0, 22, 14, "#E6FBFC", 2.6);
+        break;
       // viajar con las runas: una piedra parada con Raidho y la luz rúnica alrededor (herramienta de la barra)
       case "viajar":
         E(c, 0, 26, 22, 6, "rgba(0,0,0,0.4)");
@@ -267,14 +295,19 @@ window.INVENTARIO = (function () {
         c.stroke();
         break;
       default:
-        E(c, 0, 0, 20, 20, "#3A3634");
+        if (EXTRA_ICONO[tipo]) EXTRA_ICONO[tipo](c);
+        else E(c, 0, 0, 20, 20, "#3A3634");
     }
     c.restore();
   }
+  // íconos que suman otros sistemas (materiales, hierbas…): fn(c) dibuja alrededor de (0, 0), unos 60 de alto
+  const EXTRA_ICONO = {};
+  const iconoDe = (tipo, fn) => (EXTRA_ICONO[tipo] = fn);
 
   // ---------- el contenido de cada pestaña ----------
-  const RUNAS = ["kenaz", "isa", "algiz", "sowilo"];
-  const COL_RUNA = { kenaz: "#FF8D71", isa: "#C8F2F4", algiz: "#FFD98A", sowilo: "#F5A524" };
+  // las cuatro de los altares siempre; las que suman otros sistemas (PODERES.ORDEN) solo cuando ya se tienen
+  const RUNAS_ALTAR = ["kenaz", "isa", "algiz", "sowilo"];
+  const colRuna = (r) => (PODERES.RUNAS[r] ? PODERES.RUNAS[r].col : "#3A3634");
   const tieneLente = () => A.H.tiene("lente") || A.H.tiene("lente_prestada");
   function equipo(pe) {
     const lados = {
@@ -289,11 +322,11 @@ window.INVENTARIO = (function () {
         { id: "manzanas", icono: "manzana", nombre: t("inv.st_manzanas"), desc: t("inv.manzanas_d", [pe.manzanas]), cant: pe.manzanas, falta: !pe.manzanas },
       ],
     };
-    const runas = RUNAS.map((r) => {
+    const runas = PODERES.ORDEN.filter((r) => RUNAS_ALTAR.includes(r) || pe.runas.includes(r)).map((r) => {
       const tiene = pe.runas.includes(r);
       return { id: "runa_" + r, runa: r, nombre: t("pj.runa_" + r), desc: tiene ? t("pj.runa_" + r + "_toma") + " " + t("bar.runa_ir") : t("inv.runa_falta"), falta: !tiene, fn: tiene ? () => irABarra("runa_" + r) : null };
     });
-    return { lados, runas };
+    return { lados: window.BOTIN ? BOTIN.lados(pe, lados) : lados, runas };
   }
   // la pestaña Barra: las seis casillas arriba y abajo todo lo que puede ir en ellas, por tipo. Se elige una casilla
   // y después lo que va en ella; tocar lo que ya está en la casilla elegida la vacía.
@@ -306,7 +339,7 @@ window.INVENTARIO = (function () {
   function barraItems() {
     const b = BARRA.estado(),
       C = BARRA.COSAS;
-    const item = (id) => ({ id, runa: C[id].runa, icono: C[id].icono, nombre: C[id].nombre(), desc: C[id].desc(), cant: C[id].cant ? C[id].cant() : null });
+    const item = (id) => ({ id, runa: C[id].runa, icono: typeof C[id].icono === "function" ? C[id].icono() : C[id].icono, nombre: C[id].nombre(), desc: C[id].desc(), cant: C[id].cant ? C[id].cant() : null });
     const ranuras = b.r.map((id, i) => {
       const lleno = id && C[id] && C[id].tiene();
       const it = lleno ? item(id) : { id: "vacia" + i, icono: "vacia", nombre: t("bar.vacia"), falta: true };
@@ -342,16 +375,23 @@ window.INVENTARIO = (function () {
     ];
     const llevas = window.SECUNDARIAS ? SECUNDARIAS.llevas() : [];
     llevas.forEach((o) => l.push({ id: o.id, icono: o.icono, nombre: t("sc.obj_" + o.id), desc: t("sc.obj_" + o.id + "_d"), cant: o.cant }));
-    return { l, encargos: llevas.length };
+    if (window.MATERIALES) l.push(...MATERIALES.celdas());
+    if (window.CONTRATOS) l.push(...CONTRATOS.celdas());
+    // lo que suman otros sistemas a la Bolsa: celdasBolsa() → [{ id, icono, nombre, desc | html, cant, fn, alt }]
+    window.SISTEMAS.forEach((s0) => s0.celdasBolsa && l.push(...s0.celdasBolsa()));
+    const piezas = window.BOTIN ? BOTIN.celdasBolsa() : [];
+    return { l, piezas, encargos: llevas.length };
   }
   function stats(pe) {
     const renombre = window.SECUNDARIAS ? SECUNDARIAS.renombre() : 0;
     return [
+      ...(window.RPG ? RPG.filas().slice(0, 1) : []),
       [t("inv.st_vida"), Math.round(jug.hpMax)],
       [t("inv.st_dano"), "×" + (J.mulDano || 1).toFixed(2)],
       [t("inv.st_poder"), "×" + (pe.poder || 1).toFixed(2)],
       [t("inv.st_estamina"), jug.staMax],
       [t("inv.st_luz"), "×" + (J.lampara || 1).toFixed(2)],
+      ...(window.RPG ? RPG.filas().slice(1) : []),
       [t("inv.st_renombre"), t("sc.renombre_" + renombre)],
       [t("inv.st_proezas"), (window.SECUNDARIAS ? SECUNDARIAS.proezas() : 0) + " / 12"],
     ];
@@ -364,6 +404,16 @@ window.INVENTARIO = (function () {
     foco = 0;
   const PESTANAS = ["equipo", "barra", "bolsa", "diario"];
   let ranuraInv = 0; // la casilla de la barra que se está llenando en la pestaña Barra
+  // las pestañas que suman otros sistemas: { id, antes (la pestaña delante de la que va), nombre(), pintar(cuerpo, api),
+  // visible() opcional: si devuelve false la pestaña no se muestra (la del mercader, solo mientras se comercia) }
+  const EXTRA = {};
+  const vistas = () => PESTANAS.filter((p) => !EXTRA[p] || !EXTRA[p].visible || EXTRA[p].visible());
+  function pestanaNueva(def) {
+    EXTRA[def.id] = def;
+    const i = def.antes ? PESTANAS.indexOf(def.antes) : -1;
+    if (i >= 0) PESTANAS.splice(i, 0, def.id);
+    else PESTANAS.push(def.id);
+  }
   let raiz = null;
   function armar() {
     raiz = document.createElement("div");
@@ -377,7 +427,7 @@ window.INVENTARIO = (function () {
   function celda(item, fila, col, clase) {
     const el = document.createElement("button");
     el.type = "button";
-    el.className = "inv-celda" + (clase ? " " + clase : "") + (item.falta ? " falta" : "") + (item.elegida ? " elegida" : "");
+    el.className = "inv-celda" + (clase ? " " + clase : "") + (item.falta ? " falta" : "") + (item.elegida ? " elegida" : "") + (item.obj ? " rar-" + item.obj.r : "") + (item.nuevo ? " nuevo" : "");
     const cv = document.createElement("canvas");
     cv.width = 128;
     cv.height = 128;
@@ -392,7 +442,11 @@ window.INVENTARIO = (function () {
       c.lineTo(8, 64);
       c.closePath();
       c.fill();
-      FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : COL_RUNA[item.runa], 7);
+      FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : colRuna(item.runa), 7);
+    } else if (item.obj || item.fantasma) {
+      // una pieza de equipo, con el dibujo de la arena (arte.js); si no cargó, se repinta sola al cargar. Una casilla
+      // vacía muestra la silueta de lo que va ahí
+      ARTE_OBJ.icono(c, item.obj || item.fantasma, 64, 64, 104);
     } else {
       icono(c, item.icono, 64, 64, 1.5, item.nivel);
       // si la pieza real todavía no cargó, se vuelve a pintar cuando esté
@@ -421,11 +475,12 @@ window.INVENTARIO = (function () {
     caja.querySelector(".inv-cerrar").textContent = t("inv.cerrar");
     const nav = caja.querySelector("nav");
     nav.innerHTML = "";
-    PESTANAS.forEach((p) => {
+    if (!vistas().includes(pestana)) pestana = "equipo";
+    vistas().forEach((p) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "inv-tab" + (p === pestana ? " activa" : "");
-      b.textContent = t("inv.tab_" + p);
+      b.textContent = EXTRA[p] ? EXTRA[p].nombre() : t("inv.tab_" + p);
       b.addEventListener("click", () => cambiar(p));
       nav.appendChild(b);
     });
@@ -465,7 +520,7 @@ window.INVENTARIO = (function () {
           const k = Math.min(280 / v.naturalWidth, 330 / v.naturalHeight);
           cx.drawImage(v, 150 - (v.naturalWidth * k) / 2, 345 - v.naturalHeight * k, v.naturalWidth * k, v.naturalHeight * k);
         } else {
-          const img = VIKINGO.imagen("R", "S", "calm");
+          const img = VIKINGO.imagen(VIKINGO.color || "R", "S", "calm");
           if (img.complete) cx.drawImage(img, 40, 40, 220, 264);
         }
       };
@@ -473,12 +528,15 @@ window.INVENTARIO = (function () {
       if (!vikingoEquipado(pe)) setTimeout(dib, 200);
       lados.der.forEach((it, k) => der.appendChild(celda(it, k, 2)));
       fig.append(izq, centro, der);
+      if (lados.abajo) fig.classList.add("con-equipo");
       const rr = document.createElement("div");
       rr.className = "inv-runas";
       rr.innerHTML = `<div class="rotulo">${t("inv.runas")}</div>`;
       const fila = document.createElement("div");
       fila.className = "fila";
       runas.forEach((it, k) => fila.appendChild(celda(it, 3, k, "runa")));
+      // con el equipo nuevo, la lámpara, la Lente y las manzanas van en la misma fila que las runas
+      if (lados.abajo) lados.abajo.forEach((it, k) => fila.appendChild(celda(it, 3, 4 + k)));
       rr.appendChild(fila);
       const izqCol = document.createElement("div");
       izqCol.className = "inv-col";
@@ -509,17 +567,40 @@ window.INVENTARIO = (function () {
         caja.appendChild(sec);
       });
     } else if (pestana === "bolsa") {
-      const { l, encargos } = bolsa(pe);
+      const { l, piezas, encargos } = bolsa(pe);
       const g = document.createElement("div");
       g.className = "inv-rejilla";
       l.forEach((it, k) => g.appendChild(celda(it, Math.floor(k / 6), k % 6)));
       cuerpo.appendChild(g);
       if (!encargos) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("inv.bolsa_vacia")}</p>`);
+      // las piezas de equipo que lleva (botin.js), con su cuenta
+      if (window.BOTIN) {
+        cuerpo.insertAdjacentHTML("beforeend", `<div class="rotulo inv-piezas">${t("ob.bolsa_titulo", [piezas.length, BOTIN.MAX_BOLSA])}</div>`);
+        const g2 = document.createElement("div");
+        g2.className = "inv-rejilla";
+        piezas.forEach((it, k) => g2.appendChild(celda(it, 10 + Math.floor(k / 8), k % 8)));
+        cuerpo.appendChild(g2);
+        if (!piezas.length) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("ob.bolsa_vacia")}</p>`);
+      }
+    } else if (EXTRA[pestana]) {
+      EXTRA[pestana].pintar(cuerpo, { celda, enfocable, pe });
     } else {
       cuerpo.innerHTML = J.htmlDiario ? J.htmlDiario() : "";
     }
     foco = Math.min(foco, Math.max(0, celdas.length - 1));
     enfocar(foco);
+  }
+  // un elemento cualquiera que se recorre con flechas o palanca como una casilla (item: { nombre, desc, fn })
+  function enfocable(el, item) {
+    const i = celdas.length;
+    celdas.push({ el, item });
+    el.addEventListener("pointerenter", () => enfocar(i));
+    el.addEventListener("focus", () => enfocar(i));
+    el.addEventListener("click", () => {
+      enfocar(i);
+      usar();
+    });
+    return el;
   }
   function enfocar(i) {
     if (!celdas.length) {
@@ -533,7 +614,29 @@ window.INVENTARIO = (function () {
   function detalle(it) {
     const d = raiz.querySelector(".inv-detalle");
     d.querySelector("b").textContent = it ? it.nombre : "";
-    d.querySelector("p").textContent = it ? it.desc : "";
+    d.querySelector("b").style.color = (it && it.col) || "";
+    const p = d.querySelector("p");
+    // las piezas de equipo traen su detalle armado (líneas de color y la comparación con lo puesto)
+    if (it && it.html) p.innerHTML = it.html;
+    else p.textContent = it ? it.desc : "";
+    if (it && it.alt) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "inv-alt";
+      b.textContent = it.alt.texto;
+      b.addEventListener("click", usarAlt);
+      p.appendChild(b);
+    }
+    if (it && it.visto) it.visto();
+  }
+  // la otra acción de una casilla (desarmar una pieza): R / △ o su botón
+  function usarAlt() {
+    const q = celdas[foco];
+    if (q && q.item.alt) {
+      const quedo = !q.item.alt.fn();
+      pintar();
+      if (quedo) enfocar(foco);
+    }
   }
   function usar() {
     const q = celdas[foco];
@@ -567,20 +670,25 @@ window.INVENTARIO = (function () {
   }
   // un paso con el teclado o el mando mientras está abierta (lo llama el motor cada cuadro)
   let ejeAntes = "";
+  // otro sistema puede tomar el teclado y el mando mientras muestra algo encima (el regateo): fn() → true si lo usó
+  let captura = null;
   function paso() {
     if (!abierta) return false;
+    if (captura && captura()) return true;
     if (CONTROLES.recien("inventario") || CONTROLES.recien("pausa") || CONTROLES.recien("diario")) {
       cerrar();
       return true;
     }
-    const i = PESTANAS.indexOf(pestana);
-    if (CONTROLES.recien("esquivar") || CONTROLES.recien("runa")) cambiar(PESTANAS[(i + (CONTROLES.recien("runa") ? 1 : PESTANAS.length - 1)) % PESTANAS.length]);
-    if (CONTROLES.recien("cambiarRuna")) cambiar(PESTANAS[(i + 1) % PESTANAS.length]);
+    const V = vistas(),
+      i = V.indexOf(pestana);
+    if (CONTROLES.recien("esquivar") || CONTROLES.recien("runa")) cambiar(V[(i + (CONTROLES.recien("runa") ? 1 : V.length - 1)) % V.length]);
+    if (CONTROLES.recien("cambiarRuna")) cambiar(V[(i + 1) % V.length]);
     const e = CONTROLES.eje(),
       dir = e.x > 0.5 ? "d" : e.x < -0.5 ? "i" : e.y > 0.5 ? "b" : e.y < -0.5 ? "a" : "";
     if (dir && dir !== ejeAntes && celdas.length) mover(dir);
     ejeAntes = dir;
     if (CONTROLES.recien("interactuar") || CONTROLES.recien("seguir")) usar();
+    if (CONTROLES.recien("lente")) usarAlt();
     return true;
   }
   // moverse por las casillas: a la más cercana en esa dirección (según dónde están en la pantalla)
@@ -623,5 +731,5 @@ window.INVENTARIO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { icono, abrir, cerrar, paso, abierta: () => abierta, version: () => version };
+  return { icono, iconoDe, capturar: (fn) => (captura = fn), abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
 })();

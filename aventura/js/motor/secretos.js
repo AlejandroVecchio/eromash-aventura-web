@@ -302,6 +302,11 @@ window.SECRETOS = (function () {
       if (p === desde || !st.piedras[p.id]) return;
       dest.push({ texto: t("sx.piedra_de", [t("av.lugar_" + p.cerca)]), p: [p.cosa.x, p.cosa.y + 70], lugar: p.cerca });
     });
+    // otros sistemas suman destinos: destinoViaje() → { texto, p, lugar } | null (la casa propia)
+    window.SISTEMAS.forEach((s0) => {
+      const d = s0.destinoViaje && s0.destinoViaje();
+      if (d) dest.push(d);
+    });
     dest.forEach((d) => (d.d = Math.hypot(d.p[0] - jug.x, d.p[1] - jug.y)));
     // lo que queda a un paso no vale la pena
     const lejos = dest.filter((d) => d.d > 25 * W.M);

@@ -14,6 +14,9 @@ window.PODERES = (function () {
     sowilo: { coste: 50, col: "#F5A524" },
   };
   const ORDEN = ["kenaz", "isa", "algiz", "sowilo"];
+  // runas que suman otros sistemas: RUNAS[r] = { coste, col }, ORDEN.push(r) y LANZAR[r] = (h) => …, con
+  // h = { golpe, pr, apuntar, vivos, efectos, avisar }
+  const LANZAR = {};
   const COSTO_ESPADA = [30, 70, 130, 220, 350],
     COSTO_COTA = [25, 60, 110, 190, 300],
     COSTO_LAMPARA = [40, 120];
@@ -28,12 +31,18 @@ window.PODERES = (function () {
 
   const base = () => ({ plata: 0, runas: [], sel: 0, frag: 0, nivel: 0, espada: 0, cota: 0, lampara: 0, manzanas: 0, hierbas: 0 });
   const poder = () => 1 + (pj ? pj.nivel : 0) * 0.15;
+  // lo que dan la forja, las manzanas y el poder rúnico: la base que después junta RPG con lo demás
+  function valores() {
+    return { vida: 100 + pj.cota * 12 + pj.manzanas * 15 + (pj.pechera ? 40 : 0), dano: 1 + pj.espada * 0.12, lampara: 1 + pj.lampara * 0.35 + (sol > 0 ? 1.6 : 0), runico: poder() };
+  }
   function aplicar() {
-    jug.hpMax = 100 + pj.cota * 12 + pj.manzanas * 15 + (pj.pechera ? 40 : 0);
+    const v = valores();
+    jug.hpMax = v.vida;
     jug.hp = Math.min(jug.hp, jug.hpMax);
-    J.mulDano = 1 + pj.espada * 0.12;
-    J.lampara = 1 + pj.lampara * 0.35 + (sol > 0 ? 1.6 : 0);
-    J.poderRunico = poder();
+    J.mulDano = v.dano;
+    J.lampara = v.lampara;
+    J.poderRunico = v.runico;
+    if (window.RPG) RPG.recalcular();
   }
 
   // ---------- la gente de Eikholt que no está en la historia ----------
@@ -75,7 +84,8 @@ window.PODERES = (function () {
       A.dialogoLibre([["asa", "pj.asa_hola"]], forja);
     } else if (n.id === "thora") {
       jug.hp = jug.hpMax;
-      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]]);
+      // después de curarte, su mesa: enciende las piedras de Berkano, prepara brebajes y vende piedras (berkano.js)
+      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]], window.BERKANO ? BERKANO.thora : null);
     } else {
       const k = rumor++ % 4;
       A.dialogoLibre([[n.id, "pj." + n.id + "_" + k]]);
@@ -109,6 +119,10 @@ window.PODERES = (function () {
       linea("pj.forja_lampara", pj.lampara, COSTO_LAMPARA, () => pj.lampara++),
       // la pechera de escamas, con las escamas de Góinn
       ...(window.GOINN && GOINN.vencido() ? [linea("pj.forja_pechera", pj.pechera ? 1 : 0, [200], () => ((pj.pechera = 1), (jug.hp += 40)))] : []),
+      // forjar una pieza nueva al ritmo del yunque (motor/forja.js)
+      ...(window.FORJA ? [{ texto: t("fg.desde_asa"), sub: t("fg.desde_asa_sub"), fn: FORJA.abrir }] : []),
+      // tallar Berkano más hondo: cada piedra cura más (berkano.js)
+      ...(window.BERKANO ? [BERKANO.lineaForja(rebaja, forja)] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }
@@ -217,7 +231,7 @@ window.PODERES = (function () {
     const def = RUNAS[r];
     if (energia < def.coste) return A.avisar("pj.sin_energia");
     energia -= def.coste;
-    const pr = poder();
+    const pr = J.poderRunico || poder();
     const golpe = (e, dano) => {
       A.numero(e.x, e.y - 60, Math.round(dano));
       A.chispa(e.x, e.y - 30);
@@ -265,7 +279,7 @@ window.PODERES = (function () {
       efectos.push({ tipo: "sol", x: jug.x, y: jug.y, radio, t: 0, dur: 0.9 });
       avisarSistemas("sowilo", zona);
       aplicar();
-    }
+    } else if (LANZAR[r]) LANZAR[r]({ golpe, pr, apuntar, vivos, efectos, avisar: avisarSistemas });
   }
   const avisarSistemas = (r, zona) => (window.SISTEMAS || []).forEach((s) => s.alRuna && s.alRuna(r, zona));
 
@@ -297,7 +311,7 @@ window.PODERES = (function () {
     },
     actualizar(dt) {
       if (!pj) return;
-      energia = Math.min(100, energia + 6 * dt);
+      energia = Math.min(100, energia + 6 * (J.regenRunica || 1) * dt);
       escudoT = Math.max(0, escudoT - dt);
       if (escudoT <= 0) escudo = 0;
       if (sol > 0) {
@@ -331,8 +345,13 @@ window.PODERES = (function () {
           b.y += ((jug.y - b.y) / d) * v * dt;
         }
         if (listo && d < 26) {
-          if (b.tipo === "plata") darPlata(b.cant);
-          else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+          if (b.tipo === "plata") darPlata(Math.max(1, Math.round(b.cant * ((window.RPG && RPG.stats().plata) || 1))));
+          else {
+            // lo que sobra de vida va a las piedras de Berkano (berkano.js)
+            const sobra = jug.hp + b.cant - jug.hpMax;
+            jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+            if (sobra > 0 && window.BERKANO) BERKANO.cargar(sobra);
+          }
           if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           botin.splice(i, 1);
         } else if (b.t > 90) botin.splice(i, 1);
@@ -341,7 +360,7 @@ window.PODERES = (function () {
     cercanos(dar) {
       for (const n of GENTE_CIUDAD) {
         const d = Math.hypot(n.x - jug.x, n.y - jug.y);
-        if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablarCon(n));
+        if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => window.PODERES.hablarCon(n)); // por window: otros sistemas la envuelven (el frasco de Thora)
       }
     },
     cuerpos(f) {
@@ -456,5 +475,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { estado, elegirRuna, lanzar, darHierbas, comerHierbas, MAX_HIERBAS, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, lanzar, darHierbas, comerHierbas, MAX_HIERBAS, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, LANZAR, pj: () => pj };
 })();

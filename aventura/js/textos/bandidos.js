@@ -1,0 +1,22 @@
+// Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
+I18N.textos({
+  "as.grupo.bandidos": { es: "Los Sin Linde", en: "The Lawless" },
+  "mp.ley_bandidos": { es: "Guaridas de bandidos", en: "Bandit hideouts" },
+  "cr.bandido": { es: "Bandido Sin Linde", en: "Lawless bandit" },
+  "cr.arquero": { es: "Arquero Sin Linde", en: "Lawless archer" },
+  "as.tiendaSinLinde": { es: "La tienda de los Sin Linde", en: "The Lawless tent" },
+  "as.estacaSinLinde": { es: "La estaca de la linde partida", en: "The stake of the broken boundary" },
+  "as.botinSinLinde": { es: "El botín robado", en: "The stolen loot" },
+  "bd.guarida": { es: "Guarida de los Sin Linde", en: "Lawless hideout" },
+  "bd.guarida_d": { es: "Gente echada de la ley por el Ting. No te van a dejar pasar.", en: "Folk cast out of the law by the Thing. They won't let you pass." },
+  "bd.saquear": { es: "Saquear el botín robado", en: "Loot the stolen goods" },
+  "bd.vigilan": { es: "Los Sin Linde todavía cuidan su botín.", en: "The Lawless still guard their loot." },
+  "bd.botin": { es: "Botín de los Sin Linde", en: "Lawless loot" },
+  "bd.diario": { es: "{0} de {1} guaridas saqueadas.", en: "{0} of {1} hideouts looted." },
+  "bs.bandido_d": { es: "Útlagi: los que el Ting echó fuera de la ley. Pintan una linde partida en el pecho: para ellos no hay lindes.", en: "Outlaws: those the Thing cast out of the law. They paint a broken boundary on their chest: for them there are no boundaries." },
+  "bs.bandido_tactica": { es: "El hachazo es un abanico corto y rápido. Pegale cuando termina: tarda en volver a levantar el escudo.", en: "The axe swing is a short, quick fan. Hit them as it ends: they're slow to raise the shield again." },
+  "bs.bandido_saga": { es: "En el Puesto dicen que el primer Sin Linde fue un guardasendas que robó la plata del peaje y nunca volvió a cruzar una linde.", en: "At the Outpost they say the first Lawless was a pathwarden who stole the toll silver and never crossed a boundary again." },
+  "bs.arquero_d": { es: "Tiran desde lejos y en arco: la flecha cae donde estabas cuando tensaron.", en: "They shoot from afar in an arc: the arrow lands where you stood when they drew." },
+  "bs.arquero_tactica": { es: "Moverte basta, pero mejor ir por ellos: de cerca retroceden y no tiran.", en: "Moving is enough, but better to go for them: up close they back away and don't shoot." },
+  "bs.arquero_saga": { es: "Sus arcos son de tejo robado del bosque sagrado de Ullr. Por eso, dicen, nunca les falta una flecha.", en: "Their bows are yew stolen from Ullr's sacred grove. That's why, they say, they never run short of arrows." },
+});
