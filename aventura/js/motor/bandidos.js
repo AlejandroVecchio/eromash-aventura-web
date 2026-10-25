@@ -3,7 +3,7 @@
 // bosque, fuera de toda linde. Cuatro guaridas cerca de los caminos, cada una con su tienda de cueros, la estaca con la
 // linde partida, un fogón (se puede cocinar en él) y el botín robado. Cada guarida es un grupo de HORDAS (familia
 // `bandidos`: bandidos con hacha y escudo, arqueros que tiran desde lejos, y un jefe con nombre y afijos), así que
-// vuelve a poblarse con el tiempo, cuenta para las némesis y para el bestiario. El botín se saquea una sola vez, cuando
+// vuelve a poblarse con el tiempo, cuenta para el bestiario. El botín se saquea una sola vez, cuando
 // cae toda la guarida: plata, un fragmento, una pieza y ganzúas. Los bandidos sueltan a veces ganzúas o hierro.
 // Los arqueros avisan en el piso donde está Eromash (forma `lejos`) y la flecha vuela en arco al final del aviso.
 // Estado en E.extra.bandidos = { saqueados: { i: 1 } }. Textos `bd.` (cr.bandido, cr.arquero, bs.bandido_*, as.*).
@@ -20,7 +20,7 @@ window.BANDIDOS = (function () {
     arquero: { vida: 55, dano: 13, vel: 2.3 * M, alcance: 10 * M, aviso: 1.1, forma: "lejos", radioGolpe: 1.4 * M, radio: 14, espera: 2.3, barra: 106, plata: 7, rgb: [255, 217, 138] },
   });
   if (window.BESTIARIO) BESTIARIO.LISTA.push("bandido", "arquero");
-  if (window.MATERIALES) Object.assign(MATERIALES.CRIATURAS, { bandido: [["hierro", 0.25, 1], ["ganzua", 0.18, 1]], arquero: [["cuero", 0.3, 1], ["ganzua", 0.12, 1]] });
+  if (window.MATERIALES) Object.assign(MATERIALES.CRIATURAS, { bandido: [["hierro", 0.25, 1]], arquero: [["cuero", 0.3, 1]] });
   const base = () => ({ saqueados: {} });
   let st = base();
   const guaridas = []; // { i, centro, g, botin, mas }
@@ -105,7 +105,6 @@ window.BANDIDOS = (function () {
     gu.botin.o.abierto = true;
     const b = gu.botin;
     PODERES.botinCofre(b.x, b.y - 20, t("bd.botin"), { plata: Math.round(70 + 30 * gu.mas * (gu.i + 1)), frag: true }, true);
-    if (window.MATERIALES) MATERIALES.dar("ganzua", 2);
     if (window.RPG) RPG.dar(120, b.x, b.y);
     return true;
   }
