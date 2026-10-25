@@ -128,13 +128,13 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **porton.js**: las puertas de la empalizada (módulo PORTON25)
 - **puestos.js**: los puestos del Mercado de los Toldos (módulo PUESTOS25)
 - **recorrer.js**: recorrer la capital con Eromash (módulo RECORRER25)
-  - los barrios: el más cercano dentro de su radio pone su nombre al entrar · quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio · la tarjeta de lo que se mira (HTML: se lee mejor y se adapta a la pantalla) · cada cuadro · la gente reacciona a Eromash · los animales, el humo, las chispas y las hojas · dibujar
+  - los barrios: el más cercano dentro de su radio pone su nombre al entrar · quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio · la tarjeta de lo que se mira (HTML: se lee mejor y se adapta a la pantalla) · cada cuadro · la gente reacciona a Eromash · los animales, el humo, las chispas y las hojas · dibujar · la silueta de Eromash detrás de las cosas
 - **roble.js**: las raíces del Roble de Eikholt (módulo RAIZ25)
 - **sombras.js**: las sombras de la capital (módulo SOMBRAS25)
   - las sombras horneadas en el piso
 - **ting.js**: las piedras del Ting en volumen (módulo TING25)
 - **vista.js**: cómo se ve la capital (módulo VISTA25)
-  - el piso · el piso entero en un lienzo que se corre · la cámara
+  - el piso · el piso entero en un lienzo que se corre · la cámara · el claro de Eromash: las copas que lo tapan se vuelven transparentes alrededor de él
 
 ### js/comun/ · lo compartido: dibujo, runas, controles y sonido
 

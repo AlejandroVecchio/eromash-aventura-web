@@ -273,27 +273,42 @@ window.EIKHOLT = (function () {
     }
     return false;
   }
+  // los pasos suenan como en el bosque: en las calles empedradas a piedra, en la tierra de afuera a tierra
+  let pasoAcum = 0;
+  function pasos(dt, er) {
+    if (!window.SONIDO || !SONIDO.listo || !SONIDO.listo()) return;
+    if (!jug.paso || jug.salto > 0 || jug.esq > 0 || jug.muerto) return void (pasoAcum = 40);
+    pasoAcum += VEL[jug.paso] * dt;
+    if (pasoAcum < [0, 93, 111, 132][jug.paso]) return;
+    pasoAcum = 0;
+    const calle = !(Math.hypot(er.x, er.y) > plano.plaza + 200 && plano.aCalle(er.x, er.y) > 40);
+    SONIDO.tocar(calle ? "pasoPiedra" : "paso", { vol: [0, 0.18, 0.25, 0.34][jug.paso], var: 0.1, filtro: calle ? null : 2200 });
+  }
+  // igual que en el bosque (motor/juego.js, actualizarJugador): en la ciudad no hay pelea, así que correr no cansa,
+  // la estamina vuelve rápido, la vida vuelve sola a los 4 s, dos toques de Shift dejan corriendo (o un toque con
+  // «correr: alternar»), lo apretado un instante antes queda guardado, la esquiva quieta es un paso atrás y el salto
+  // corriendo llega más lejos
   function jugadorPaso(dt) {
     jug.inv = Math.max(0, (jug.inv || 0) - dt);
+    jug.sinGolpe = (jug.sinGolpe || 0) + dt;
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
-    if (!jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 4 * dt);
+    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
+    jug.pelea = false;
     const libre = J.modo === "juego";
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
     jug.staEspera = Math.max(0, (jug.staEspera || 0) - dt);
     if (CONTROLES.mando() && libre && CONTROLES.recien("correr")) jug.sprintFijo = !jug.sprintFijo;
-    if (!mov || jug.cansado || !CONTROLES.mando()) jug.sprintFijo = false;
-    jug.correr = libre && mov && (CONTROLES.pulsado("correr") || jug.sprintFijo) && !jug.cansado;
-    if (jug.correr) {
-      jug.sta -= 20 * dt;
-      jug.staEspera = 0.6;
-    } else if ((jug.esq || 0) <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * dt;
-    if (jug.sta <= 0) {
-      jug.sta = 0;
-      jug.cansado = true;
-      jug.correr = false;
+    if (!CONTROLES.mando() && libre && CONTROLES.recien("correr")) {
+      if (window.OPCIONES && OPCIONES.v("correr") === "alternar") jug.sprintFijo = !jug.sprintFijo;
+      else if (J.t - (jug.shiftT || -9) < 0.3) jug.sprintFijo = true;
+      jug.shiftT = J.t;
     }
+    const alterna = !CONTROLES.mando() && window.OPCIONES && OPCIONES.v("correr") === "alternar";
+    if ((!mov && !alterna) || jug.cansado) jug.sprintFijo = false;
+    jug.correr = libre && mov && ((CONTROLES.pulsado("correr") && !alterna) || jug.sprintFijo) && !jug.cansado;
+    if ((jug.esq || 0) <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * 1.6 * dt;
     if (jug.cansado && jug.sta > jug.staMax * 0.35) jug.cansado = false;
     jug.sta = Math.min(jug.staMax, jug.sta);
     jug.paso = !mov ? 0 : jug.correr ? 3 : jug.cansado || mag < 0.6 ? 1 : 2;
@@ -301,28 +316,44 @@ window.EIKHOLT = (function () {
     // las flechas van relativas a la cámara: arriba es hacia el fondo de la pantalla, gire como gire
     const co = Math.cos(cam.g),
       si = Math.sin(cam.g),
-      er = ero();
+      er = ero(),
+      aMundo = (x, y) => [x * co + y * si, -x * si + y * co];
+    if (libre) for (const k of ["esquivar", "saltar"]) if (CONTROLES.recien(k)) jug.pedido = { k, t: 0.18 };
+    if (jug.pedido && (jug.pedido.t -= dt) <= 0) jug.pedido = null;
+    const pide = (k) => jug.pedido && jug.pedido.k === k;
     if (jug.esq > 0) {
       jug.esq -= dt;
       moverA(er.x + jug.esqMundo[0] * VEL_ESQ * dt, er.y + jug.esqMundo[1] * VEL_ESQ * dt);
     } else if (libre) {
       if (mov) {
         const l = Math.hypot(e.x, e.y),
-          dx = (e.x * co + e.y * si) / l,
-          dy = (-e.x * si + e.y * co) / l;
+          [dx, dy] = aMundo(e.x / l, e.y / l),
+          v = VEL[jug.paso] * (J.velMov || 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
         jug.dirMundo = [dx, dy];
         jug.dir = [e.x / l, e.y / l];
         jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
-        moverA(er.x + dx * VEL[jug.paso] * dt, er.y + dy * VEL[jug.paso] * dt);
+        moverA(er.x + dx * v * dt, er.y + dy * v * dt);
       }
-      if (CONTROLES.recien("esquivar") && jug.sta >= 20 && jug.salto <= 0) {
+      if (pide("esquivar") && jug.sta >= 20 && jug.salto <= 0) {
+        jug.pedido = null;
         jug.sta -= 20;
         jug.staEspera = 0.6;
         jug.esq = 0.3;
-        jug.esqMundo = (jug.dirMundo || [0, 1]).slice();
+        jug.inv = Math.max(jug.inv, 0.26);
+        const d0 = jug.dirMundo || [0, 1];
+        jug.esqMundo = mov ? d0.slice() : [-d0[0], -d0[1]];
+        if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.25 });
       }
-      if (CONTROLES.recien("saltar") && jug.salto <= 0) jug.salto = 0.42;
+      if (pide("saltar") && jug.salto <= 0) {
+        jug.pedido = null;
+        jug.salto = 0.42;
+        jug.saltoLargo = jug.correr;
+        if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.35, tono: 0.9 });
+      }
     }
+    if (jug.saltoAntes > 0 && jug.salto <= 0 && window.SONIDO) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
+    jug.saltoAntes = jug.salto;
+    pasos(dt, er);
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
     er.anda = jug.anda;
     // el motor ve a Eromash en el lugar del bosque que corresponde (mapa, misiones, guardado)

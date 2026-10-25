@@ -685,12 +685,90 @@ window.VISTA25 = (function () {
     }
     // lo pintado en el piso (losas, charcos) va primero, debajo de todo lo parado
     lista.sort((a, b) => b.piso - a.piso || a.y - b.y);
+    const cl = claro(lista, cam);
     for (const d of lista) {
       if (d.e) d.e.f(c, d.x, d.y);
+      else if (d.enClaro) dibujarEnClaro(c, d, cl, cam, V, t);
       else dibujarCosa(c, d.cosa, d.x, d.y, cam, V, t);
     }
     ultima = lista;
     return { V, lista };
+  }
+  // ---------- el claro de Eromash: las copas que lo tapan se vuelven transparentes alrededor de él ----------
+  // Como en el bosque (prepararAura en motor/juego.js): un óvalo alrededor de Eromash donde los árboles que se dibujan
+  // después de él (el Roble, los pinos, los abedules) se ven casi transparentes; el centro es lo más claro y el borde
+  // sube por escalones hasta opaco. Cada árbol se dibuja recortado: afuera del óvalo entero y adentro por anillos.
+  // Calidad baja lo apaga (queda la silueta).
+  const COPAS = { robleGigante: 1, pino: 1, abedul: 1 };
+  // la máscara del óvalo, hecha una sola vez: casi transparente en el centro, sube suave (smoothstep) hasta opaco
+  const MASCARA = (() => {
+    const L = 256,
+      m = L / 2,
+      cv = document.createElement("canvas");
+    cv.width = cv.height = L;
+    const g2 = cv.getContext("2d"),
+      g = g2.createRadialGradient(m, m, 0, m, m, m);
+    g.addColorStop(0, "rgba(0,0,0,0.12)");
+    for (let i = 0; i <= 8; i++) {
+      const q = i / 8;
+      g.addColorStop(0.3 + q * 0.68, "rgba(0,0,0," + (0.12 + 0.88 * q * q * (3 - 2 * q)).toFixed(3) + ")");
+    }
+    g.addColorStop(1, "rgba(0,0,0,1)");
+    g2.fillStyle = g;
+    g2.beginPath();
+    g2.arc(m, m, m, 0, Math.PI * 2);
+    g2.fill();
+    return cv;
+  })();
+  const capaCv = document.createElement("canvas"),
+    capaC = capaCv.getContext("2d");
+  function claro(lista, cam) {
+    if (window.CALIDAD && CALIDAD.nivel === "baja") return null;
+    const i = lista.findIndex((d) => d.e && d.e.ero);
+    if (i < 0) return null;
+    const ero = lista[i],
+      cl = { x: ero.x, y: ero.y - 80, rx: 300, ry: 255 };
+    for (let j = i + 1; j < lista.length; j++) {
+      const d = lista[j];
+      if (!d.cosa || d.piso || !COPAS[d.cosa.id]) continue;
+      const o = d.cosa,
+        r = o.radio * (o.id === "robleGigante" ? 0.75 : 0.9);
+      // su copa (de su pie hacia arriba, con su ancho) se cruza con el óvalo
+      if (d.x + r < cl.x - cl.rx || d.x - r > cl.x + cl.rx || d.y - o.alto > cl.y + cl.ry || d.y < cl.y - cl.ry) continue;
+      d.enClaro = true;
+    }
+    return cl;
+  }
+  function elipse(c, cl, k) {
+    c.ellipse(cl.x, cl.y, cl.rx * k, cl.ry * k, 0, 0, Math.PI * 2);
+  }
+  function dibujarEnClaro(c, d, cl, cam, V, t) {
+    // afuera del óvalo, entero
+    c.save();
+    c.beginPath();
+    c.rect(cl.x - 1e5, cl.y - 1e5, 2e5, 2e5);
+    elipse(c, cl, 1);
+    c.clip("evenodd");
+    dibujarCosa(c, d.cosa, d.x, d.y, cam, V, t);
+    c.restore();
+    // adentro: el árbol aparte (así sus partes no se ven unas a través de otras) y pasado por la máscara
+    const e = cam.esc,
+      w = Math.max(2, Math.ceil(cl.rx * 2 * e)),
+      h = Math.max(2, Math.ceil(cl.ry * 2 * e));
+    if (capaCv.width !== w || capaCv.height !== h) {
+      capaCv.width = w;
+      capaCv.height = h;
+    }
+    capaC.setTransform(1, 0, 0, 1, 0, 0);
+    capaC.globalCompositeOperation = "source-over";
+    capaC.clearRect(0, 0, w, h);
+    capaC.setTransform(e, 0, 0, e, -(cl.x - cl.rx) * e, -(cl.y - cl.ry) * e);
+    dibujarCosa(capaC, d.cosa, d.x, d.y, cam, V, t);
+    capaC.setTransform(1, 0, 0, 1, 0, 0);
+    capaC.globalCompositeOperation = "destination-in";
+    capaC.drawImage(MASCARA, 0, 0, w, h);
+    capaC.globalCompositeOperation = "source-over";
+    c.drawImage(capaCv, cl.x - cl.rx, cl.y - cl.ry, cl.rx * 2, cl.ry * 2);
   }
   // ¿algo parado tapa este punto de la vista? (una casa o un árbol que se dibuja después y sube por encima)
   let ultima = [];
@@ -702,7 +780,15 @@ window.VISTA25 = (function () {
     }
     return false;
   }
+  // lo que tapa a Eromash (con la misma regla que tapado) y cómo redibujarlo en otro lienzo, para recortar su silueta
+  function tapas(sx, sy, alto = 150) {
+    return ultima.filter((d) => d.cosa && !d.piso && !d.enClaro && d.y > sy && Math.abs(d.x - sx) < d.cosa.radio * 0.8 && d.y - d.cosa.alto < sy - alto * 0.4);
+  }
+  function dibujarTapas(c, l, cam, t) {
+    const V = proyector(cam);
+    for (const d of l) dibujarCosa(c, d.cosa, d.x, d.y, cam, V, t);
+  }
 
   const estadoPiso = () => ({ ok: frente.ok, armando: armando && [armando.i, armando.l.length], entero: frente.entero, esc: escCache });
-  return { iniciar, dibujar, tapado, estadoPiso, proyector, aVista, aPiso, TROZO, LEJOS };
+  return { iniciar, dibujar, tapado, tapas, dibujarTapas, estadoPiso, proyector, aVista, aPiso, TROZO, LEJOS };
 })();
