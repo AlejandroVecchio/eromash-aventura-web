@@ -5,27 +5,43 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 15,
-    titulo: { es: "El bestiario", en: "The bestiary" },
+    pr: 16,
+    titulo: { es: "Contratos de caza y trofeos", en: "Hunting contracts and trophies" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "mochila: el bestiario es una pestaña más", en: "backpack: the bestiary is one more tab" },
-      { pr: 12, es: "materiales: cada página dice qué deja la criatura", en: "materials: each page says what the creature drops" },
+      { pr: 1, es: "niveles y estadísticas: los trofeos suman con RPG y cada contrato da experiencia", en: "levels and stats: trophies add through RPG and each contract gives experience" },
+      { pr: 3, es: "mochila: los trofeos están en la Bolsa y se cuelgan desde ahí", en: "backpack: trophies sit in the Bag and are hung from there" },
     ],
     mirar: [
-      { es: "Mochila (I) → pestaña Bestiario: las diez criaturas de Eldervald. Las que no viste son siluetas oscuras con «???».", en: "Backpack (I) → Bestiary tab: Eldervald's ten creatures. Ones you haven't seen are dark silhouettes with «???»." },
-      { es: "Verla de cerca la anota. Vencer una abre su página: qué es, vida, golpe, cómo avisa y qué deja.", en: "Seeing one up close records it. Defeating one opens its page: what it is, life, hit, how it telegraphs and what it drops." },
-      { es: "A las 10 vencidas aprendés su punto débil (un consejo y +8 % de daño contra ella); a las 30, la maestría (otro +8 % y −10 % de lo que te pega) y su saga.", en: "At 10 defeats you learn its weak spot (a tip and +8% damage against it); at 30, mastery (another +8% and −10% from its hits) and its saga." },
-      { es: "Abajo, los cuatro únicos con nombre: un rumor, vivos con su manada o tachados al caer.", en: "Below, the four named uniques: a rumour, alive with their pack, or crossed out once fallen." },
+      { es: "Frente al Puesto hay un poste nuevo con pedidos clavados (E: «Leer los contratos»). Seis bestias con nombre, cada una con su pedido escrito por alguien de Eldervald.", en: "In front of the Outpost there's a new post with requests nailed to it (E: «Read the contracts»). Six named beasts, each with a request written by someone in Eldervald." },
+      { es: "Tomado uno, la brújula y el mapa marcan la zona. Hay tres rastros para examinar con E (la Lente los hace brillar); cada uno cuenta algo y lleva al siguiente.", en: "Once taken, the compass and map mark the zone. There are three tracks to examine with E (the Lens makes them glow); each tells you something and leads to the next." },
+      { es: "El tercero marca la guarida: la bestia es un líder con afijos y escolta. Vencida, se vuelve al poste a cobrar plata y su trofeo.", en: "The third marks the lair: the beast is a leader with affixes and an escort. Once defeated, return to the post for silver and its trophy." },
+      { es: "Los trofeos se cuelgan del cinto (uno por vez) desde el poste o la Bolsa, y cada uno da lo suyo. El contrato vuelve al poste más tarde por la mitad de plata.", en: "Trophies hang from your belt (one at a time) from the post or the Bag, and each grants its own bonus. The contract returns to the post later for half the silver." },
     ],
     botones: [
-      { es: "Abrir el bestiario", en: "Open the bestiary", fn: (A) => INVENTARIO.abrir("bestiario") },
-      { es: "Darme una página de cada tipo (1, 10 y 30)", en: "Give me one page of each kind (1, 10 and 30)", fn: (A) => {
-        BESTIARIO.LISTA.forEach((tp, i) => BESTIARIO.anotar(tp, [1, 10, 30, 0][i % 4] || 0));
-        BESTIARIO.estado().vistas.dreki = 1;
-        INVENTARIO.abrir("bestiario");
+      { es: "Ir al poste de los contratos", en: "Go to the contract post", fn: (A) => {
+        const p = CONTRATOS.poste();
+        ir(A, [p.x, p.y + 100]);
       } },
-      { es: "Ir a un grupo de draugr", en: "Go to a draugr group", fn: (A) => ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 400) },
+      { es: "Tomar Grisvarg e ir al primer rastro", en: "Take Grisvarg and go to the first track", fn: (A) => {
+        if (!CONTRATOS.estado().activo) CONTRATOS.tomar("grisvarg");
+        const id = CONTRATOS.estado().activo,
+          s = CONTRATOS.estado().c[id],
+          L = CONTRATOS.lugares()[id];
+        const r = L.rastros[Math.min(2, s.rastros)];
+        ir(A, [r[0], r[1] + 120]);
+      } },
+      { es: "Saltar a la guarida (contrato activo)", en: "Jump to the lair (active contract)", fn: (A) => {
+        const id = CONTRATOS.estado().activo || (CONTRATOS.tomar("grisvarg"), "grisvarg");
+        const s = CONTRATOS.estado().c[id];
+        if (s.fase === "rastros") (s.fase = "guarida"), (s.rastros = 3);
+        const g = CONTRATOS.lugares()[id].guarida;
+        ir(A, [g[0], g[1] + 500]);
+      } },
+      { es: "Darme todos los trofeos", en: "Give me every trophy", fn: (A) => {
+        CONTRATOS.estado().trofeos = Object.keys(CONTRATOS.TROFEOS);
+        INVENTARIO.abrir("bolsa");
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------
