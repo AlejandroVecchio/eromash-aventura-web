@@ -6,7 +6,9 @@
 //     las estadísticas; cada una sube la toxicidad (máximo 100, baja 1,5 por segundo) y con mucha no se puede tomar más;
 //   · aceites para el arma: +25 % de daño contra una familia de criaturas durante 40 golpes (uno por vez).
 // Estado en E.extra.alq = { hierbas: { id: n }, pociones: { id: n }, aceites: { id: n }, cosechadas: { i: hasta },
-// reloj, tox, efectos: { id: queda }, aceite: { id, golpes } | null, elegida }. Textos `aq.` en textos/alquimia.js.
+// reloj, tox, efectos: { id: queda }, efk: { id: k }, ef: { "pocion:id" | "aceite:id": [efectividades] },
+// aceite: { id, golpes, k } | null, elegida }. Destilar se juega en el matraz (motor/matraz.js): la efectividad
+// (20 a 100 %) queda con cada frasco y lo que suma va en proporción. Textos `aq.` en textos/alquimia.js.
 window.ALQUIMIA = (function () {
   "use strict";
   let A, J, jug, W;
@@ -21,11 +23,12 @@ window.ALQUIMIA = (function () {
   };
   // pociones: qué piden, cuánto duran, cuánta toxicidad y qué hacen mientras duran
   const POCIONES = {
+  // (k = la efectividad del matraz, de 0,2 a 1: lo que suma va en proporción)
     tonico: { pide: { serbal: 2, musgo: 1 }, dura: 30, tox: 25, col: "#C8402D", s: null, cura: 4 },
-    oso: { pide: { abedul: 1, serbal: 1, musgo: 2 }, dura: 60, tox: 35, col: "#7A5634", s: (s) => (s.armadura += 20) },
-    buho: { pide: { luna: 1, escarcha: 1 }, dura: 120, tox: 20, col: "#5E8EA8", s: (s) => (s.lampara *= 1.5) },
-    lobo: { pide: { escarcha: 1, abedul: 2 }, dura: 60, tox: 35, col: "#8E8A86", s: (s) => ((s.velMov *= 1.1), (s.velAtq *= 1.08)) },
-    mimir: { pide: { luna: 1, cardo: 1, escarcha: 1 }, dura: 60, tox: 40, col: "#73D5DB", s: (s) => (s.regenRunica *= 1.5) },
+    oso: { pide: { abedul: 1, serbal: 1, musgo: 2 }, dura: 60, tox: 35, col: "#7A5634", s: (s, k) => (s.armadura += 20 * k) },
+    buho: { pide: { luna: 1, escarcha: 1 }, dura: 120, tox: 20, col: "#5E8EA8", s: (s, k) => (s.lampara *= 1 + 0.5 * k) },
+    lobo: { pide: { escarcha: 1, abedul: 2 }, dura: 60, tox: 35, col: "#8E8A86", s: (s, k) => ((s.velMov *= 1 + 0.1 * k), (s.velAtq *= 1 + 0.08 * k)) },
+    mimir: { pide: { luna: 1, cardo: 1, escarcha: 1 }, dura: 60, tox: 40, col: "#73D5DB", s: (s, k) => (s.regenRunica *= 1 + 0.5 * k) },
   };
   // aceites: contra qué familia
   const ACEITES = {
@@ -40,7 +43,7 @@ window.ALQUIMIA = (function () {
     TOX_BAJA = 1.5,
     VUELVE = 480,
     RADIO = 110;
-  const base = () => ({ hierbas: {}, pociones: {}, aceites: {}, cosechadas: {}, reloj: 0, tox: 0, efectos: {}, aceite: null, elegida: "tonico" });
+  const base = () => ({ hierbas: {}, pociones: {}, aceites: {}, cosechadas: {}, reloj: 0, tox: 0, efectos: {}, efk: {}, ef: {}, aceite: null, elegida: "tonico" });
   let st = base();
   const plantas = []; // { i, tipo, cosa }
   let mesa = null,
@@ -149,14 +152,49 @@ window.ALQUIMIA = (function () {
     Object.keys(pide)
       .map((k) => `${pide[k]} ${t("aq.h_" + k)}${(st.hierbas[k] || 0) < pide[k] ? " ✗" : ""}`)
       .join(" · ");
-  function destilar(cual, id) {
-    const R = (cual === "pocion" ? POCIONES : ACEITES)[id];
+  const receta = (cual, id) => (cual === "pocion" ? POCIONES : ACEITES)[id];
+  const nombreDe = (cual, id) => t((cual === "pocion" ? "aq.p_" : "aq.a_") + id);
+  function gastar(cual, id) {
+    const R = receta(cual, id);
     if (!R || !alcanza(R.pide)) return HUD.aviso(t("aq.faltan")), false;
     Object.keys(R.pide).forEach((k) => (st.hierbas[k] -= R.pide[k]));
-    const bolsa = cual === "pocion" ? st.pociones : st.aceites;
+    return true;
+  }
+  // el frasco queda en la Bolsa con su efectividad (los mejores se usan primero)
+  function guardar(cual, id, ef) {
+    const bolsa = cual === "pocion" ? st.pociones : st.aceites,
+      l = (st.ef[cual + ":" + id] = st.ef[cual + ":" + id] || []);
     bolsa[id] = (bolsa[id] || 0) + 1;
-    HUD.aviso(t("aq.hecha", [t((cual === "pocion" ? "aq.p_" : "aq.a_") + id)]), R.col);
-    if (window.SONIDO) SONIDO.tocar("fogata", { vol: 0.4, tono: 1.3 });
+    l.push(ef);
+    l.sort((a, b) => b - a);
+    HUD.aviso(t("aq.hecha_ef", [nombreDe(cual, id), ef]), receta(cual, id).col);
+  }
+  // la efectividad del próximo frasco (los de antes del matraz, al 100 %)
+  const proxima = (cual, id) => {
+    const l = st.ef[cual + ":" + id] || [],
+      n = (cual === "pocion" ? st.pociones : st.aceites)[id] || 0;
+    return l.length >= n ? l[0] : 100;
+  };
+  function sacarEf(cual, id) {
+    const l = st.ef[cual + ":" + id] || [],
+      n = (cual === "pocion" ? st.pociones : st.aceites)[id] || 0;
+    return l.length >= n && l.length ? l.shift() : 100;
+  }
+  // destilar sin jugar (para otros sistemas y las pruebas): con la efectividad que se pase
+  function destilar(cual, id, ef = 100) {
+    if (!gastar(cual, id)) return false;
+    guardar(cual, id, ef);
+    if (window.SONIDO && mesa) SONIDO.burbujas(mesa.x, mesa.y);
+    return true;
+  }
+  // destilar en la mesa: el juego del matraz, y después vuelve a la mesa
+  function enMatraz(cual, id) {
+    if (!window.MATRAZ) return destilar(cual, id);
+    if (!alcanza(receta(cual, id).pide)) return HUD.aviso(t("aq.faltan")), false;
+    gastar(cual, id);
+    INVENTARIO.cerrar();
+    const R = receta(cual, id);
+    MATRAZ.empezar({ pide: R.pide, col: R.col, hierbas: HIERBAS, nombre: nombreDe(cual, id), x: mesa ? mesa.x : jug.x, y: mesa ? mesa.y : jug.y, fin: (ef) => (guardar(cual, id, ef), abrirMesa()) });
     return true;
   }
   function tomar(id) {
@@ -164,6 +202,7 @@ window.ALQUIMIA = (function () {
     if (!P || !(st.pociones[id] > 0)) return HUD.aviso(t("aq.no_tenes")), false;
     if (st.tox + P.tox > TOX_MAX) return HUD.aviso(t("aq.toxico")), false;
     if (jug.muerto) return false;
+    st.efk[id] = sacarEf("pocion", id) / 100;
     st.pociones[id]--;
     st.tox += P.tox;
     st.efectos[id] = P.dura;
@@ -174,9 +213,10 @@ window.ALQUIMIA = (function () {
   }
   function untar(id) {
     if (!(st.aceites[id] > 0)) return HUD.aviso(t("aq.no_tenes")), false;
+    const k = sacarEf("aceite", id) / 100;
     st.aceites[id]--;
-    st.aceite = { id, golpes: ACEITE_GOLPES };
-    HUD.aviso(t("aq.untado", [t("aq.a_" + id), ACEITE_GOLPES]), ACEITES[id].col);
+    st.aceite = { id, golpes: Math.round(ACEITE_GOLPES * (0.5 + 0.5 * k)), k };
+    HUD.aviso(t("aq.untado", [t("aq.a_" + id), st.aceite.golpes]), ACEITES[id].col);
     if (window.SONIDO) SONIDO.tocar("filo", { vol: 0.5 });
     return true;
   }
@@ -201,7 +241,7 @@ window.ALQUIMIA = (function () {
               html: `<span class="bs-texto">${t(pre + id + "_d")}</span><span class="ob-lineas"><span>${t("aq.pide", [pideTexto(R.pide)])}</span>${cual === "pocion" ? `<span>${t("aq.dura", [R.dura, R.tox])}</span>` : ""}</span>${ok ? `<span class="ob-pista">${t("aq.destilar_pista")}</span>` : ""}`,
               cant: tiene || "",
               falta: !ok,
-              fn: () => destilar(cual, id),
+              fn: () => enMatraz(cual, id),
             },
             f0,
             k,
@@ -227,8 +267,8 @@ window.ALQUIMIA = (function () {
   function celdasBolsa() {
     const l = [];
     Object.keys(HIERBAS).forEach((id) => st.hierbas[id] && l.push({ id: "aq_h_" + id, icono: "aq_h_" + id, nombre: t("aq.h_" + id), desc: t("aq.h_" + id + "_d"), cant: st.hierbas[id] }));
-    Object.keys(POCIONES).forEach((id) => st.pociones[id] && l.push({ id: "aq_p_" + id, icono: "aq_p_" + id, nombre: t("aq.p_" + id) + (st.elegida === id ? " ★" : ""), col: POCIONES[id].col, desc: t("aq.p_" + id + "_d") + " " + t("aq.tomar_pista", [Math.round(st.tox)]), cant: st.pociones[id], fn: () => tomar(id), alt: { texto: t("aq.elegir"), fn: () => ((st.elegida = id), false) } }));
-    Object.keys(ACEITES).forEach((id) => st.aceites[id] && l.push({ id: "aq_a_" + id, icono: "aq_a_" + id, nombre: t("aq.a_" + id), col: ACEITES[id].col, desc: t("aq.a_" + id + "_d") + " " + t("aq.untar_pista"), cant: st.aceites[id], fn: () => untar(id) }));
+    Object.keys(POCIONES).forEach((id) => st.pociones[id] && l.push({ id: "aq_p_" + id, icono: "aq_p_" + id, nombre: t("aq.p_" + id) + (st.elegida === id ? " ★" : ""), col: POCIONES[id].col, desc: t("aq.p_" + id + "_d") + " " + t("aq.ef_sig", [proxima("pocion", id)]) + " " + t("aq.tomar_pista", [Math.round(st.tox)]), cant: st.pociones[id], fn: () => tomar(id), alt: { texto: t("aq.elegir"), fn: () => ((st.elegida = id), false) } }));
+    Object.keys(ACEITES).forEach((id) => st.aceites[id] && l.push({ id: "aq_a_" + id, icono: "aq_a_" + id, nombre: t("aq.a_" + id), col: ACEITES[id].col, desc: t("aq.a_" + id + "_d") + " " + t("aq.ef_sig", [proxima("aceite", id)]) + " " + t("aq.untar_pista"), cant: st.aceites[id], fn: () => untar(id) }));
     return l;
   }
 
@@ -294,7 +334,8 @@ window.ALQUIMIA = (function () {
       armar();
       iconos();
       INVENTARIO.pestana({ id: "alquimia", antes: "equipo", nombre: () => t("aq.mesa"), visible: () => abierta, pintar });
-      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s)));
+      if (window.MATRAZ) MATRAZ.iniciar(api);
+      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s, st.efk[id] != null ? st.efk[id] : 1)));
     },
     alEmpezar(extra) {
       extra.alq = Object.assign(base(), extra.alq || {});
@@ -311,7 +352,7 @@ window.ALQUIMIA = (function () {
       st.tox = Math.max(0, st.tox - TOX_BAJA * dt);
       let cambio = false;
       for (const id in st.efectos) {
-        if (POCIONES[id] && POCIONES[id].cura && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + POCIONES[id].cura * dt);
+        if (POCIONES[id] && POCIONES[id].cura && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + POCIONES[id].cura * (st.efk[id] != null ? st.efk[id] : 1) * dt);
         if ((st.efectos[id] -= dt) <= 0) {
           delete st.efectos[id];
           cambio = true;
@@ -345,7 +386,7 @@ window.ALQUIMIA = (function () {
     modDano(dano, e) {
       if (!st.aceite || !e || !e.tipo) return dano;
       if (!ACEITES[st.aceite.id].contra.includes(e.tipo)) return dano;
-      return dano * (1 + ACEITE_BONO);
+      return dano * (1 + ACEITE_BONO * (st.aceite.k != null ? st.aceite.k : 1));
     },
     alPegar(e) {
       if (!st.aceite || !e || !e.tipo || e.d.blanco) return;
@@ -385,5 +426,5 @@ window.ALQUIMIA = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, plantas: () => plantas, mesa: () => mesa, juntar, destilar, tomar, untar, alcanza, abrirMesa, HIERBAS, POCIONES, ACEITES };
+  return { sistema, estado: () => st, plantas: () => plantas, mesa: () => mesa, juntar, destilar, enMatraz, tomar, untar, alcanza, abrirMesa, HIERBAS, POCIONES, ACEITES };
 })();
