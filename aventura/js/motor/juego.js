@@ -1497,14 +1497,17 @@
       });
     }
     lista.sort((a, b) => a.y - b.y);
+    prepararAura(lista);
     lista.forEach((d) => {
+      if (aura) auraAntes(d); // el claro de Eromash
       // las cosas del mundo no llevan función propia (menos basura por cuadro)
-      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa);
+      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa, d);
       c.save();
       c.translate(d.dx, d.dy);
-      d.f ? d.f() : dibujarCosa(d.cosa);
+      d.f ? d.f() : dibujarCosa(d.cosa, d);
       c.restore();
     });
+    if (aura) auraVolcar();
     siluetaJugador(lista);
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
     pisoT();
@@ -1728,7 +1731,13 @@
     // solo lo que de verdad se cruza con el encuadre de Eromash (redibujar todo lo de adelante era lo más caro del
     // cuadro); los assets se dibujan siempre de frente a la cámara, así que sus bordes valen igual con la vista girada
     const tapan = lista.filter((d) => {
-      if (!d.cosa || d.y <= claveV || d.cosa.o.piso) return false;
+      // lo que un sistema dibuja con su función y marca con `tapa` (su caja en el mundo: x0, y0, x1, y1) también tapa;
+      // su función recibe el contexto donde dibujar (las paredes de las mazmorras)
+      if (d.tapa && d.y > claveV) {
+        const q = d.tapa;
+        return q.y0 + (d.dy || 0) < by + bh && q.y1 + (d.dy || 0) > by && q.x0 + (d.dx || 0) < bx + bw && q.x1 + (d.dx || 0) > bx;
+      }
+      if (!d.cosa || d.y <= claveV || d.cosa.o.piso || d.enAura) return false; // lo del claro ya deja verlo
       const vy = d.cosa.y + (d.dy || 0),
         b = bordes(d.cosa);
       return vy - d.cosa.alto * 1.3 < jy - zj && vy - b.alto < by + bh && Math.abs(d.cosa.x + (d.dx || 0) - jx) < bw / 2 + b.ancho;
@@ -1744,7 +1753,13 @@
     tapaC.setTransform(1, 0, 0, 1, 0, 0);
     tapaC.clearRect(0, 0, w, h);
     tapaC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
-    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o));
+    tapan.forEach((d) => {
+      if (!d.tapa) return ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o);
+      tapaC.save();
+      tapaC.translate(d.dx || 0, d.dy || 0);
+      d.f(tapaC);
+      tapaC.restore();
+    });
     // Eromash solo, sin su sombra
     silC.setTransform(1, 0, 0, 1, 0, 0);
     silC.globalCompositeOperation = "source-over";
@@ -1771,8 +1786,140 @@
     c.drawImage(silCv, bx, by, w / esc, h / esc);
     c.restore();
   }
-  // árboles y casas que tapan a Eromash se vuelven transparentes
-  function dibujarCosa(o) {
+  // ---------- el claro de Eromash: lo que lo rodea se vuelve transparente ----------
+  // Como en Diablo, Path of Exile o Los Sims: un óvalo del tamaño de lo que alumbra su lámpara alrededor de Eromash
+  // donde árboles, troncos y casas se ven casi transparentes (los que quedan delante de él mucho, los de atrás un
+  // poco), así se ve lo que pasa y con qué va a chocar. El centro es lo más claro y el borde queda opaco: no se nota
+  // dónde empieza. Cómo, sin recortar cada árbol (recortar era lo caro): al llegar la primera cosa que se cruza con el
+  // óvalo se copia lo que hay en el lienzo dentro del óvalo (fondo); esas cosas se dibujan enteras en el lienzo y
+  // además en una capa; al terminar la tanda, la capa pasa por una máscara hecha una sola vez, se pinta sobre el fondo
+  // y el fondo vuelve al lienzo dentro del óvalo. La tanda se cierra cuando viene algo que no es del mundo (Eromash,
+  // la gente, las criaturas), así se respeta el orden. Está todo en la vista: vale con la cámara girada. Calidad baja
+  // y la opción apagada vuelven a lo de antes (solo se aclara lo que lo tapa).
+  const AURA_K = 0.85; // alto del óvalo / ancho (como el círculo de luz, aplastado por el piso)
+  function mascaraAura(min) {
+    const L = 256,
+      m = L / 2,
+      cv = document.createElement("canvas");
+    cv.width = cv.height = L;
+    const g2 = cv.getContext("2d"),
+      g = g2.createRadialGradient(m, m, 0, m, m, m);
+    // transparente hasta un tercio, después sube suave (smoothstep) hasta opaco en el borde
+    g.addColorStop(0, "rgba(0,0,0," + min + ")");
+    for (let i = 0; i <= 8; i++) {
+      const q = i / 8;
+      g.addColorStop(0.32 + q * 0.66, "rgba(0,0,0," + (min + (1 - min) * q * q * (3 - 2 * q)).toFixed(3) + ")");
+    }
+    g.addColorStop(1, "rgba(0,0,0,1)");
+    g2.fillStyle = g;
+    g2.beginPath();
+    g2.arc(m, m, m, 0, DIB.TAU);
+    g2.fill();
+    return cv;
+  }
+  const MASCARA_ADELANTE = mascaraAura(0.07),
+    MASCARA_ATRAS = mascaraAura(0.3),
+    OVALO = mascaraAura(1), // el óvalo lleno: lo que del fondo vuelve al lienzo
+    auraCv = document.createElement("canvas"),
+    auraC = auraCv.getContext("2d"),
+    fondoCv = document.createElement("canvas"),
+    fondoC = fondoCv.getContext("2d");
+  // en cada cuadro: { x, y, rx, ry, clave, px, py, pw, ph } (el óvalo en la vista y en píxeles del lienzo), o null;
+  // capa = la tanda abierta (con qué máscara va)
+  let aura = null;
+  function prepararAura(lista) {
+    aura = null;
+    if (J.modo === "titulo" || jug.muerto || (window.CALIDAD && CALIDAD.nivel === "baja") || (window.OPCIONES && OPCIONES.v("aura") === false)) return;
+    const yo = lista.find((d) => d.jugador),
+      [jx, jy] = J.vista(jug.x, jug.y),
+      rx = 210 * (J.lampara || 1),
+      ry = rx * AURA_K,
+      y = jy - (jug.z || 0) - 45,
+      m = c.getTransform(),
+      r = window.CALIDAD && CALIDAD.nivel === "media" ? 0.5 : 1; // en media la capa va a media resolución
+    aura = { x: jx, y, rx, ry, clave: yo ? yo.y : jy, capa: null, r };
+    aura.px = Math.floor(m.a * (jx - rx) + m.e);
+    aura.py = Math.floor(m.d * (y - ry) + m.f);
+    aura.pw = Math.ceil(m.a * rx * 2) + 2;
+    aura.ph = Math.ceil(m.d * ry * 2) + 2;
+    aura.k = m.a;
+    const cw2 = Math.ceil(aura.pw * r),
+      ch2 = Math.ceil(aura.ph * r);
+    if (fondoCv.width !== aura.pw || fondoCv.height !== aura.ph) {
+      fondoCv.width = aura.pw;
+      fondoCv.height = aura.ph;
+    }
+    if (auraCv.width !== cw2 || auraCv.height !== ch2) {
+      auraCv.width = cw2;
+      auraCv.height = ch2;
+    }
+  }
+  // si el dibujo de una cosa del mundo se cruza con el óvalo (todo en la vista)
+  function cruzaAura(d) {
+    const o = d.cosa,
+      b = bordes(o),
+      ox = o.x + (d.dx || 0),
+      oy = o.y + (d.dy || 0),
+      px = Math.max(ox - b.ancho, Math.min(aura.x, ox + b.ancho)),
+      py = Math.max(oy - b.alto, Math.min(aura.y, oy + 20)),
+      ex = (px - aura.x) / aura.rx,
+      ey = (py - aura.y) / aura.ry;
+    return ex * ex + ey * ey < 1;
+  }
+  // cierra la tanda: capa con su máscara sobre el fondo, y el fondo (solo el óvalo) de vuelta al lienzo
+  function auraVolcar() {
+    if (!aura.capa) return;
+    const { pw, ph } = aura;
+    auraC.setTransform(1, 0, 0, 1, 0, 0);
+    auraC.globalCompositeOperation = "destination-in";
+    auraC.drawImage(aura.capa, 0, 0, auraCv.width, auraCv.height);
+    auraC.globalCompositeOperation = "source-over";
+    fondoC.drawImage(auraCv, 0, 0, pw, ph);
+    fondoC.globalCompositeOperation = "destination-in";
+    fondoC.drawImage(OVALO, 0, 0, pw, ph);
+    fondoC.globalCompositeOperation = "source-over";
+    c.save();
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.drawImage(fondoCv, aura.px, aura.py);
+    c.restore();
+    aura.capa = null;
+  }
+  // antes de dibujar cada cosa de la lista
+  function auraAntes(d) {
+    if (!d.cosa) {
+      // Eromash, la gente y las criaturas cerca del óvalo van enteras encima de lo de antes: se cierra la tanda
+      const vx = d.x + (d.dx || 0);
+      if (aura.capa && Math.abs(vx - aura.x) < aura.rx + 160 && d.y > aura.y - aura.ry - 40 && d.y < aura.y + aura.ry + 320) auraVolcar();
+      return;
+    }
+    const cruza = !d.cosa.o.piso && cruzaAura(d);
+    d.corte = cruza && d.cosa.alto >= 55; // árboles, troncos quebrados, casas
+    if (!d.corte) {
+      if (cruza) auraVolcar(); // lo bajo (piedras, matas, tocones) que toca el óvalo queda como está
+      return; // lo que no toca el óvalo no cambia nada
+    }
+    const masc = d.y > aura.clave ? MASCARA_ADELANTE : MASCARA_ATRAS;
+    if (aura.capa && aura.capa !== masc) auraVolcar();
+    if (!aura.capa) {
+      // se abre la tanda: lo que hay ahora en el lienzo dentro del óvalo es el fondo
+      fondoC.globalCompositeOperation = "copy";
+      fondoC.drawImage(c.canvas, aura.px, aura.py, aura.pw, aura.ph, 0, 0, aura.pw, aura.ph);
+      fondoC.globalCompositeOperation = "source-over";
+      auraC.setTransform(1, 0, 0, 1, 0, 0);
+      auraC.clearRect(0, 0, auraCv.width, auraCv.height);
+      aura.capa = masc;
+    }
+    if (masc === MASCARA_ADELANTE) d.enAura = true;
+  }
+  // árboles y casas que tapan a Eromash se vuelven transparentes (con el claro de arriba, o si está apagado, de a uno)
+  function dibujarCosa(o, d) {
+    if (d && d.corte) {
+      ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o); // entero en el lienzo (adentro del óvalo lo tapa el fondo)
+      const k = aura.k * aura.r,
+        m = c.getTransform();
+      auraC.setTransform(k, 0, 0, k, (m.e - aura.px) * aura.r, (m.f - aura.py) * aura.r);
+      return ASSETS.dibujar(auraC, o.id, o.x, o.y, J.t, o.o);
+    }
     let a = 1;
     if (o.alto > 90 && o.y > jug.y && o.y - jug.y < o.alto * 0.9) {
       const ancho = o.o.ancho || (o.choque && o.choque.w ? o.choque.w / 2 + 30 : 40 * (o.o.s || 1) + 20);
