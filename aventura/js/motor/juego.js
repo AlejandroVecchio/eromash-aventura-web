@@ -1725,6 +1725,12 @@
     // solo lo que de verdad se cruza con el encuadre de Eromash (redibujar todo lo de adelante era lo más caro del
     // cuadro); los assets se dibujan siempre de frente a la cámara, así que sus bordes valen igual con la vista girada
     const tapan = lista.filter((d) => {
+      // lo que un sistema dibuja con su función y marca con `tapa` (su caja en el mundo: x0, y0, x1, y1) también tapa;
+      // su función recibe el contexto donde dibujar (las paredes de las mazmorras)
+      if (d.tapa && d.y > claveV) {
+        const q = d.tapa;
+        return q.y0 + (d.dy || 0) < by + bh && q.y1 + (d.dy || 0) > by && q.x0 + (d.dx || 0) < bx + bw && q.x1 + (d.dx || 0) > bx;
+      }
       if (!d.cosa || d.y <= claveV || d.cosa.o.piso || d.enAura) return false; // lo del claro ya deja verlo
       const vy = d.cosa.y + (d.dy || 0),
         b = bordes(d.cosa);
@@ -1741,7 +1747,13 @@
     tapaC.setTransform(1, 0, 0, 1, 0, 0);
     tapaC.clearRect(0, 0, w, h);
     tapaC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
-    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o));
+    tapan.forEach((d) => {
+      if (!d.tapa) return ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o);
+      tapaC.save();
+      tapaC.translate(d.dx || 0, d.dy || 0);
+      d.f(tapaC);
+      tapaC.restore();
+    });
     // Eromash solo, sin su sombra
     silC.setTransform(1, 0, 0, 1, 0, 0);
     silC.globalCompositeOperation = "source-over";

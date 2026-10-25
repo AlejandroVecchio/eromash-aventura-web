@@ -559,8 +559,9 @@ window.ZONAS = (function () {
       });
     }
   }
-  function objetosMazmorra(lista, c, Z, x0, y0, x1, y1) {
-    const d = Z.d,
+  function objetosMazmorra(lista, c0, Z, x0, y0, x1, y1) {
+    const c = c0,
+      d = Z.d,
       cx0 = Math.max(0, Math.floor((x0 - Z.x0) / C) - 1),
       cx1 = Math.min(d.ancho - 1, Math.floor((x1 - Z.x0) / C) + 1),
       cy0 = Math.max(0, Math.floor((y0 - Z.y0) / C) - 1),
@@ -579,8 +580,10 @@ window.ZONAS = (function () {
           x: X + C / 2,
           pie: Y + C,
           y: Y + C,
-          f: () => {
-            const h0 = hash(cx, cy);
+          tapa: { x0: X, y0: Y - H, x1: X + C, y1: Y + C }, // Eromash se ve en silueta detrás de la pared
+          f: (c2) => {
+            const c = c2 || c0,
+              h0 = hash(cx, cy);
             DIB.R(c, X - 1, Y - H, C + 2, C + 1, h0 < 0.5 ? "#161211" : "#141010");
             // el canto de arriba de la pared que tapa la sala (se lee dónde termina)
             if (g(cx, cy - 1) > 0) DIB.R(c, X - 1, Y - H, C + 2, 7, "#2A2420");
@@ -661,8 +664,17 @@ window.ZONAS = (function () {
     });
     c.lineCap = "butt";
   }
+  // lo alto de la zona va a la lista como una cosa del mundo (no como función): así el motor lo vuelve transparente en
+  // el claro de Eromash y dibuja su silueta cuando lo tapa (pilares, árboles, tótems). Se arma una vez y se guarda.
+  function comoCosa(q, o) {
+    if (!q._cosa) {
+      const m = ASSETS.medidas(q.id, o);
+      q._cosa = { id: q.id, x: q.x, y: q.y, o, alto: m.alto, choque: { r: q.r || 30 } };
+    }
+    return { x: q.x, y: q.y, cosa: q._cosa };
+  }
   function objetosTierra(lista, c, Z, visible) {
-    Z.arboles.forEach((a) => visible(a.x, a.y) && lista.push({ x: a.x, y: a.y, f: () => ASSETS.dibujar(c, a.id, a.x, a.y, J.t, { s: a.s, sem: a.sem }) }));
+    Z.arboles.forEach((a) => visible(a.x, a.y) && lista.push(comoCosa(a, { s: a.s, sem: a.sem })));
     if (Z.barca && visible(Z.barca.x, Z.barca.y)) lista.push({ x: Z.barca.x, y: Z.barca.y, f: () => ASSETS.dibujar(c, "barcaVikinga", Z.barca.x, Z.barca.y, J.t, { s: 1 }) });
   }
 
@@ -753,7 +765,7 @@ window.ZONAS = (function () {
         y1 = v.y + 1200;
       if (Z.d.tipo === "mazmorra") objetosMazmorra(lista, c, Z, x0, y0, x1, y1);
       else objetosTierra(lista, c, Z, visible);
-      Z.obst.forEach((o) => visible(o.x, o.y) && lista.push({ x: o.x, y: o.y, f: () => ASSETS.dibujar(c, o.id, o.x, o.y, J.t, { s: o.s || 1, runa: o.runa, tipo: o.tipo, luz: o.cosa && !!o.cosa.a }) }));
+      Z.obst.forEach((o) => visible(o.x, o.y) && lista.push(comoCosa(o, { s: o.s || 1, runa: o.runa, tipo: o.tipo, luz: o.cosa && !!o.cosa.a })));
       Z.fuegos.forEach((f) => visible(f.x, f.y) && lista.push({ x: f.x, y: f.y, f: () => ASSETS.dibujar(c, "brasero", f.x, f.y, J.t, { s: 1.2, encendido: !!st.fuegos[f.k] }) }));
       Z.cofres.forEach((cf) => visible(cf.x, cf.y) && lista.push({ x: cf.x, y: cf.y, f: () => ASSETS.dibujar(c, "cofreRunico", cf.x, cf.y, J.t, { s: 1.3, abierto: !!st.cofres[cf.k] }) }));
       if (Z.cosas) Z.cosas.forEach((c0) => c0.tipo === "muelle" && visible(c0.x, c0.y) && lista.push({ x: c0.x, pie: c0.y + 70, y: c0.y + 70, f: () => ASSETS.dibujar(c, "muelle", c0.x, c0.y + 70, J.t, { s: 0.8 }) }));
