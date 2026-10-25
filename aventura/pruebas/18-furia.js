@@ -42,7 +42,9 @@
       for (let i = 0; i < 60 && A.J.modo !== "juego"; i++) await esperar(100);
       const e = cerca(A, "jabali", 120, 0);
       FURIA.ponerFuria(100);
+      A.J.cam.sac = 0;
       si(FURIA.usar("rugido"), "ruge");
+      si(A.J.cam.sac <= 0.6, "el rugido sacude la cámara poco y corto (" + A.J.cam.sac + ")");
       si(e.aturdido > 1, "aturdido");
       igual(Math.round(FURIA.sistema.modDano(100, e)), 115, "expuesto +15 %:");
       igual(FURIA.furia(), 60, "gastó 40:");
