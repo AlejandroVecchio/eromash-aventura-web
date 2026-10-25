@@ -544,21 +544,6 @@ Un evento de noche como la Cacería Salvaje del Witcher y las noches de invasió
 - El Cuerno de la Cacería (`celdasBolsa`, ícono `cz_cuerno`): de noche y afuera la llama ya (`tocarCuerno`), una vez
   por noche. Estado en `E.extra.caceria = { avisada, corrida, cuerno, vencidas, sobrevividas, escondidas }`.
 
-## Los vættir (`motor/vaettir.js`, `VAETTIR`; assets `manantialVaettr`, `toconVaettr`, `piedraHoradada`, `tumuloChico`, `rocaLiquenes`, `huecoBuho`, `vaettrFigura` en `mundo/assets-vaettir.js`; textos `vt.`)
-
-Espíritus de la tierra como los landvættir de las sagas y los santuarios chicos del Ni No Kuni.
-- Seis hogares (`LISTA`: id, asset, lo que quiere y su don) a un costado de los caminos, con semilla fija, en tierra
-  firme, lejos de lugares, grupos, guaridas, nidos y del jötunn, separados 6000 (si no alcanza, 4500 o 3000). Cada
-  uno abre un claro chico y pone su figura (`vaettrFigura`, `o.a` la hace aparecer).
-- A `VE` = 900 se lo encuentra (aviso y marca `vaettr`, clase Vættir). Con E (`RADIO` = 160) se abre su hogar: la pista
-  (`vt.<id>_pista`) y un botón por cada `OFRENDAS` que se tenga. Lo que no quiere lo devuelve; lo que quiere sube el
-  favor. Con `FAVOR` = 3 se muestra (60 de plata, un fragmento, 300 de experiencia, sus palabras) y bendice su tierra.
-  De noche, con favor 1 o 2, se asoma a medias.
-- La tierra (`tierra()`): el hogar bendecido más cercano a menos de `TIERRA` = 4200. Dones: vida (+6/s fuera de pelea,
-  +1,5/s en pelea), aliento (+8 de estamina/s), escudo (`modRecibido` × 0,9), golpe (`modDano` × 1,1), botín (30 % de
-  un material de la criatura) y plata (45 % de 4 a 10). Se ve en `efectosHud`.
-- Los seis bendiciendo: amigo de los vættir (dos fragmentos). Estado en `E.extra.vaettir = { favor, vistos, amigo }`.
-
 ## La pesca (`motor/pesca.js`, `PESCA`, modo `pesca`; asset `canaSverri` y los peces en `mundo/assets-pesca.js`; textos `pe.`)
 
 Como la pesca del Stardew Valley y del Zelda.
@@ -599,7 +584,7 @@ Quince libros con tapa, autor y páginas (`lb.<id>_t`, `_a`, `_1`…), en cuatro
 
 Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez que se abre (`aprender`) y se anuncia al cerrar.
 
-- **Dónde**: nueve atriles de piedra a 150–240 de un camino (`EN_ATRIL`, semilla 8807, lejos de pueblos, grupos, guaridas, nidos y vættir; el más cercano al Puesto lleva la crónica). Van al mapa (clase `libros`) al verlos a menos de 900 y se apagan al leerlos. Los otros seis (`DE_LIDER`, en orden) los suelta un líder al morir (40 %, un semijefe siempre) y quedan en `extra.libros.caidos` hasta juntarlos con E.
+- **Dónde**: nueve atriles de piedra a 150–240 de un camino (`EN_ATRIL`, semilla 8807, lejos de pueblos, grupos, guaridas y nidos; el más cercano al Puesto lleva la crónica). Van al mapa (clase `libros`) al verlos a menos de 900 y se apagan al leerlos. Los otros seis (`DE_LIDER`, en orden) los suelta un líder al morir (40 %, un semijefe siempre) y quedan en `extra.libros.caidos` hasta juntarlos con E.
 - **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
 - **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
 
@@ -612,11 +597,11 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 | La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
 | Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
 | El Gremio de Brunvik | pez 6, plato 8, partida de dados ganada 35 | −4 % con Kolbrun, +3 % al vender |
-| El Pueblo Oculto | favor de vættr 60, piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
+| El Pueblo Oculto | piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
 
 - **Cómo suma**: cada medio segundo `mirar` cuenta lo hecho en los estados guardados de los otros sistemas y suma la diferencia (`E.extra.facciones.cont`); no hay que tocar esos sistemas. Al cargar, lo ya hecho se cobra en silencio. Los bandidos suman por `alMorir`.
 - **Regalos por grado**: 40 × grado de plata; Honrado, un fragmento; Exaltado, una pieza (rara o mejor) de la casilla de la facción (`PIEZA`: arma, botas, anillo, amuleto).
-- **Estandartes**: la Guardia afuera de la Puerta del Sur de Eikholt (con la cornamenta pálida de la capital), los Guardasendas en el Puesto, el Gremio en Brunvik y el Pueblo Oculto junto al primer vættr. Con E abren la ventana de esa facción; la casilla Reputación de la Bolsa abre las cuatro. Mapa: clase `facciones`.
+- **Estandartes**: la Guardia afuera de la Puerta del Sur de Eikholt (con la cornamenta pálida de la capital), los Guardasendas en el Puesto, el Gremio en Brunvik y el Pueblo Oculto junto al Santuario de las Raíces. Con E abren la ventana de esa facción; la casilla Reputación de la Bolsa abre las cuatro. Mapa: clase `facciones`.
 - **Estado** (`E.extra.facciones`): rep y cont. Va al diario.
 
 ## Los remates (`motor/remates.js`, `REMATES`; textos `rm.`)
