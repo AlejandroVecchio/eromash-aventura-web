@@ -78,7 +78,10 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 
 | Qué | Dónde |
 |---|---|
-| HUD (retrato, barras, plata, barra de acciones, rastreador, avisos) | `interfaz/hud.js` y `css/aventura.css` |
+| HUD (retrato, barras, plata, rastreador, avisos) | `interfaz/hud.js` y `css/aventura.css` |
+| La barra de abajo: qué puede ir (habilidades, objetos, herramientas, conocimientos), sus teclas y cómo se llena | `interfaz/barra.js` (`COSAS`, `ORDEN`); se acomoda en la pestaña Barra de `interfaz/inventario.js` |
+| Las hierbas de Thora (curan) | `motor/poderes.js` (`darHierbas`, `comerHierbas`) |
+| Las piedras de Berkano (vida de reserva), los manantiales rúnicos, el brebaje, la talla de Ása | `motor/berkano.js` (`BERKANO`); dibujo en `mundo/assets-berkano.js`; textos `bk.` en `textos/berkano.js` |
 | Mochila, equipo, bolsa y diario | `interfaz/inventario.js` |
 | Mapa grande, minimapa y su leyenda | `interfaz/mapa.js` (`CAT_DE`, `CATS`, `MUESTRA`); las miniaturas en `interfaz/iconos.js` |
 | Opciones | `interfaz/opciones.js` (`filas`) |
@@ -118,15 +121,21 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/editor/ · el editor de Eldervald (es del hilo «Seguir el editor de Eldervald»)
 
+- **boceto.js**: subir un boceto de mapa (tecla U): un dibujo en papel que se vuelve parte de Eldervald
+  - leer la hoja · manchas y líneas · de la hoja al mundo · de lo leído a los cambios del editor · el panel · con IA · con todas las IA a la vez: cada una arma su versión y se eligen una, dos o todas (cada una en su capa) · en el mapa: la hoja apoyada en el piso y lo que se va a hacer
+- **capas.js**: las capas del editor (pestaña Capas, L)
+  - las pestañas del costado · las capas del mundo: cada una prende o apaga su casilla · las capas propias
 - **comandos.js**: la paleta de comandos del editor (Ctrl+K)
 - **cuartos.js**: editar los interiores (tecla 9 o «Editar su interior» con una casa elegida)
   - el panel · elegir, mover, poner · dibujar · los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos · el dibujo del plano: un cuadro por cuarto, las puertas en dorado y los pasadizos en celeste · el generador de casas: texto o controles → un plano nuevo · abrir y cerrar
 - **editor.js**: el editor de Eldervald
-  - estado · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo
+  - estado · capas propias · lo que sigue: atajos según lo que se está haciendo y lo que se suele hacer después · el lienzo y la cámara · lo que se ve: el mundo con lo agregado y sin lo sacado · de lejos, liviano · elegir una estructura: tamaño, proporciones, espejado y cosas pegadas · los caminos: clic en cada punto, doble clic, Enter o Esc lo termina; el ancho sale del tamaño · el agua: ríos y lagunas · las notas (para Claude: qué hacer en ese lugar) · la lista de objetos · herramientas · el puntero · elegir con un rectángulo (y todos los iguales) · copiar, pegar y duplicar (Ctrl+C, Ctrl+V, Ctrl+D) · marcadores de cámara: Ctrl+Shift+número guarda la vista, Shift+número vuelve · modo foco (Tab): solo el mapa · revisar: avisos de cosas que pueden estar mal antes de subir · borradores con nombre · el plano en el que se trabaja: su nombre a la vista, duplicar, copiar y pegar · minimapa: dónde estás; un clic (o arrastrar) lleva la cámara ahí · arrastrar un objeto de la lista al mapa · la hoja de atajos (?) · ir a un lugar · archivo · capas propias (las usa js/editor/capas.js)
 - **historia.js**: la historia en el mapa
 - **ia.js**: hablar con una IA adentro del editor
-  - el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · en el mapa: la zona (celeste) y la vista previa de lo propuesto
+  - qué IA hace cada tarea · el panel · el pedido: qué es el mundo, la zona, qué hay ahí y qué objetos existen · llamar a cada IA · leer lo que contestó: el texto para Alejandro y el JSON con los cambios · «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado · en el mapa: la zona (celeste) y la vista previa de lo propuesto
 - **importar.js**: importar cosas propias: estructuras, pinturas, calcos y texturas (panel Importar, tecla N)
+- **menu.js**: la barra de menús del editor (Archivo, Editar, Ver, Herramientas, Crear, Mundo, IA, Ayuda)
+  - la barra · los desplegables
 - **mundo.js**: regiones, piezas y exportar el mundo
   - regiones · piezas · exportar el mundo entero en JSON
 - **npcs.js**: importar gente propia (tecla N)
@@ -178,6 +187,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/interfaz/ · HUD, mochila, mapa, opciones y el prólogo del mago
 
+- **barra.js**: la barra de abajo (sistema BARRA)
+  - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
 - **iconos.js**: miniaturas del mapa (ICONOS)
@@ -203,6 +214,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pestaña
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
+- **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
+  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
@@ -237,7 +250,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
-  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · lanzar runas · dibujo
+  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
   - el estado del día · abrir, pedir, parar · la ventana · el sistema
 - **regiones.js**: regiones con nombre (sistema REGIONES)
@@ -259,6 +272,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
 - **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor
+- **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
+  - el manantial rúnico · la piedra de Berkano tirada
+  - assets: manantialRunico, piedraBerkano
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casas.js**: las casas de varios cuartos
@@ -324,12 +340,13 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
+- **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
-  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas
+  - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
@@ -339,7 +356,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
-- **inventario.js**: Textos de la mochila (inventario) y de la barra de acciones del HUD (prefijo inv.), los dos idiomas.
+- **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
