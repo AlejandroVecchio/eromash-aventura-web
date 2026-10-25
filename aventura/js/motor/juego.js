@@ -238,7 +238,9 @@
     } else if (tipo === "mensaje" && dato === "mision_nueva") misionNueva();
     else if (tipo === "mensaje") avisar(dato);
     else if (tipo === "lugar") {
-      HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
+      // el cartel dorado de lugar (CARTEL): «Lugar descubierto», o «Capital descubierta» con el estandarte en Eikholt
+      if (window.CARTEL) CARTEL.pedir(dato, true);
+      else HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
       // descubrir un lugar paga un poco de plata (los vecinos le pagan al que trae noticias del camino)
       if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_LUGAR);
       // el lugar entero queda a la vista en el mapa
@@ -1049,7 +1051,13 @@
     }
     for (const k of ["puesto", "refugio", "eikholt", "casa_lindes", "paso", "claro", "aserradero", "santuario", "brunvik", "skarnholt", "tumulo", "caravana", "torre"]) {
       const L = W.LUGARES[k];
-      if (dist(jug, L.p) < L.r + 6 * W.M) H.descubrir(k);
+      const d = dist(jug, L.p);
+      // el cartel la primera vez que se entra y otro más chico al volver después de un rato afuera (con un margen para
+      // no entrar y salir en el borde)
+      if (!window.CARTEL) {
+        if (d < L.r + 6 * W.M) H.descubrir(k);
+      } else if (d < L.r + 6 * W.M) CARTEL.entra(k);
+      else if (d > L.r + 12 * W.M) CARTEL.sale(k);
     }
   }
 
@@ -2288,7 +2296,8 @@
         columnaRunica(x, y);
         J.modo = "juego";
         CONTROLES.soltar();
-        if (lugar) HUD.aviso(t("av.lugar_" + lugar), "lugar", t("sx.viaje_llegaste"));
+        if (lugar && window.CARTEL) CARTEL.regreso(lugar);
+        else if (lugar) HUD.aviso(t("av.lugar_" + lugar), "lugar", t("sx.viaje_llegaste"));
       }, 620);
     },
   };

@@ -82,6 +82,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | La barra de abajo: qué puede ir (habilidades, objetos, herramientas, conocimientos), sus teclas y cómo se llena | `interfaz/barra.js` (`COSAS`, `ORDEN`); se acomoda en la pestaña Barra de `interfaz/inventario.js` |
 | Las hierbas de Thora (curan) | `motor/poderes.js` (`darHierbas`, `comerHierbas`) |
 | Las piedras de Berkano (vida de reserva), los manantiales rúnicos, el brebaje, la talla de Ása | `motor/berkano.js` (`BERKANO`); dibujo en `mundo/assets-berkano.js`; textos `bk.` en `textos/berkano.js` |
+| El cartel dorado al llegar a un lugar (tierra nueva, lugar, capital con su estandarte, regreso): tiempos, tamaños y colores | `interfaz/cartel.js` (`CONFIG`, `paisajeEldervald`, `estandarte`, `INSIGNIAS`); cuándo sale: `CARTEL.entra`/`sale` en `zonas` de `motor/juego.js`, en `ciudad/juego.js`, `motor/regiones.js` y `motor/zonas.js`; `?cartel=tierra` lo repite |
 | Mochila, equipo, bolsa y diario | `interfaz/inventario.js` |
 | Mapa grande, minimapa y su leyenda | `interfaz/mapa.js` (`CAT_DE`, `CATS`, `MUESTRA`); las miniaturas en `interfaz/iconos.js` |
 | Opciones | `interfaz/opciones.js` (`filas`) |
@@ -183,6 +184,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **barra.js**: la barra de abajo (sistema BARRA)
   - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
+- **cartel.js**: el cartel de lugar (CARTEL): el cartel dorado que anuncia un lugar, una tierra nueva o la capital al llegar
+  - parámetros (los mismos de cartel_lugar.gd; tamaños a 1080 de alto, tiempos en segundos) · ayudas · el lienzo · estado · tiempos · disposición · dibujo · paisaje / estandarte en un solo trazo · dibujos de cada región y capital · la fila y cuándo sale cada uno
 - **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
