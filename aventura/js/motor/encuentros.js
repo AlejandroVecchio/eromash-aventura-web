@@ -128,8 +128,9 @@ window.ENCUENTROS = (function () {
     hablar("ec.herida_gracias", () => {
       PODERES.darPlata(30);
       if (window.RPG) RPG.dar(80, enc.x, enc.y);
-      // el cofre con candado sin abrir más cercano: se destapa en el mapa
-      const cs = window.CERRADURAS ? CERRADURAS.cofres().filter((c) => !CERRADURAS.estado().abiertos[c.i]) : [];
+      // el cofre sin abrir más cercano: se destapa en el mapa
+      const sx = window.SECRETOS ? SECRETOS.lista() : null;
+      const cs = sx ? sx.cofres.filter((c) => !sx.st.cofres[c.id]) : [];
       cs.sort((a, b) => Math.hypot(a.cosa.x - jug.x, a.cosa.y - jug.y) - Math.hypot(b.cosa.x - jug.x, b.cosa.y - jug.y));
       if (cs[0] && window.MAPA) {
         MAPA.descubrir(cs[0].cosa.x, cs[0].cosa.y, 900);
