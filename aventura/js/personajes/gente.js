@@ -133,6 +133,10 @@ window.GENTE = (function () {
       lanza: true,
       insignia: true,
     },
+    // Geir, el aprendiz de Ása: flaco, sin barba todavía, tiznado de hollín y con el delantal de cuero que le queda grande
+    geir: { nombre: "geir", alto: 0.94, ancho: 0.9, piel: "#D8B090", pielSombra: "#B89070", pelo: "#C8803A", ropa: "#6A5A4A", ropaSombra: "#52463A", delantal: "#4A3020", delantalSombra: "#3A2418", pantalon: "#3A3026", botas: "#2A2018", cinto: "#5E4430" },
+    // el guardia de la muralla que espera su punta de lanza en la herrería
+    hr_guardia: { nombre: "hr_guardia", alto: 1.04, ancho: 1.1, piel: "#D0A080", pielSombra: "#AE8064", pelo: "#3A2A1E", barba: "#3A2A1E", ropa: "#5A5E5A", ropaSombra: "#464A46", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", insignia: true },
     // El herido: el trabajador que no puede apoyar la pierna; se dibuja sentado con la venda.
     herido: {
       nombre: "trabajador",

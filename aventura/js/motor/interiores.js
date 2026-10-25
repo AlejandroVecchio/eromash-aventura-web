@@ -614,6 +614,8 @@ window.INTERIORES = (function () {
   function entrar(p) {
     // el Hongo Dorado es una sala grande aparte, pensada para la vista girada (motor/hongo.js)
     if (p.tipo === "taberna" && window.HONGO) return HONGO.entrar(p);
+    // la herrería de Ása también es un taller aparte, a 30° (motor/herreria.js)
+    if (p.tipo === "herreria" && window.HERRERIA) return HERRERIA.entrar(p);
     const cuarto = p.tipo === "plano" ? cuartoPlano(p, 0) : armarCuarto(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(cuarto, { tipo: p.tipo, puerta: p, ix: 240, iy: 830, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;

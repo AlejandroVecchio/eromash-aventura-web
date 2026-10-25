@@ -219,6 +219,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - los secretos de cada lugar · notar lo escondido · la brújula
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
+- **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
+  - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
 - **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
   - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
@@ -262,6 +264,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: ruedaAgua, compuerta, canal, galponSierra, pilaTroncos, tornoRampa, bueyBarro, bancoTaco, lenera, gradaQuilla, escalonesRaices, estela, arbolPortal, restosZarzas, selloPiedra, lomaMirador, cofreZarzas
 - **assets-guaridas.js**: las guaridas de los semijefes (se suma a ASSETS)
   - assets: puertaPiedra, bocaCueva, nidoZarzal
+- **assets-herreria.js**: lo de adentro de la herrería de Ása (assets armados con caras)
+  - La forja de Ása · El fuelle · La pila de templar · La muela de afilar · La pared de las herramientas · El armero de lo terminado · El banco de lo que está a medio hacer · El montón de carbón · Brasa, la gata de la forja
+  - assets: forjaGrande, fuelle, pilaTemplar, muelaAfilar, panopliaHerramientas, armeroForja, bancoForja, montonCarbon, gataForja
 - **assets-hongo.js**: lo de adentro del Hongo Dorado (assets armados con caras)
   - El fogón del Hongo Dorado · La barra de Ulf · El estante de jarras y cuernos · Los toneles de las aldeas · La mesa larga de los parroquianos · La mesa redonda de los forasteros · La rueda de velas · La tarima del skald · El estandarte de Eikholt · Los escudos de los que no volvieron · Los hongos dorados de las vigas
   - assets: fogonHongo, barraHongo, estanteJarras, tonelesHongo, mesaLarga, mesaRonda, lamparaRueda, tarimaSkald, estandarteEikholt, escudosPared, hongosDorados
@@ -322,6 +327,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
+- **herreria.js**: textos de la herrería de Ása por dentro (hr.) y de sus muebles (as.)
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **hongo.js**: Textos del Hongo Dorado por dentro (motor/hongo.js): la sala grande, la gente que la frecuenta, los forasteros de otras
   - arriba: la galería y los cuartos
