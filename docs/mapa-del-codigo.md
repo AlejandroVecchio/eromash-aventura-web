@@ -229,6 +229,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - en la mano · dibujo · el sistema
 - **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
   - quebrar · temblor (el remate) y trueno · el sistema
+- **materiales.js**: los materiales de la forja (sistema MATERIALES)
+  - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · lanzar runas · dibujo
@@ -267,6 +269,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-interiores.js**: los muebles de adentro (interiores)
   - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco
   - assets: escritorioRunico, hogarPiedra, camaPieles, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
+- **assets-materiales.js**: las vetas del bosque: de donde sale el material de la forja (assets de MATERIALES)
+  - la veta de hierro de pantano · el nódulo de ámbar · la vena rúnica
+  - assets: vetaHierro, vetaAmbar, vetaRunica
 - **assets-norte.js**: el corredor del norte: Paso del Guardián y Antigua tala (se suma a ASSETS)
   - assets: pilarAntiguo, lonaCuadrilla, tornoVigas, tablaPuente, pilaTablones, andamio, posteCruzaron, casetaPuentero, toconMarcado, muroRaices, granTocon, cabanaLenadores
 - **assets-piedras.js**: las piedras de Eldervald: las del camino y las del rito
@@ -324,6 +329,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario) y de la barra de acciones del HUD (prefijo inv.), los dos idiomas.
+- **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas

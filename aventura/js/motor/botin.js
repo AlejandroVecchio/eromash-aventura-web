@@ -3,7 +3,7 @@
 // siempre los únicos y los semijefes; los cofres también traen. Lo que cae queda tirado en el piso con su haz de luz
 // del color de la rareza y su nombre arriba, y se junta con E. La mochila tiene casillas de equipo (arma, escudo,
 // casco, pecho, piernas, botas, amuleto y dos anillos) y la bolsa guarda hasta 30 piezas: tocar una la equipa (lo
-// que tenía puesto vuelve a la bolsa), con R (△) se desarma por plata, y cada pieza dice cómo cambia a Eromash
+// que tenía puesto vuelve a la bolsa), con R (△) se desarma en materiales (MATERIALES) y algo de plata, y cada pieza dice cómo cambia a Eromash
 // comparada con la que tiene puesta. Lo puesto suma a las estadísticas con RPG.aporte y los atributos con
 // ATRIBUTOS.bono. Estado en E.extra.equipo = { puesto: { casilla: pieza }, bolsa: [pieza], suelo: [{ x, y, it }] }.
 window.BOTIN = (function () {
@@ -93,8 +93,9 @@ window.BOTIN = (function () {
     if (window.RPG) RPG.recalcular();
     return true;
   }
-  // desarmar: la pieza se deshace por plata (más adelante, por materiales: ver docs/rpg.md)
+  // desarmar: la pieza se deshace en materiales para la forja (MATERIALES) y un poco de plata
   let confirmar = null;
+  const plataDesarmar = (it) => Math.max(1, Math.round(O().valor(it) * (window.MATERIALES ? 0.15 : 0.3)));
   function desarmar(i) {
     const it = st.bolsa[i];
     if (!it) return false;
@@ -106,9 +107,10 @@ window.BOTIN = (function () {
     }
     confirmar = null;
     st.bolsa.splice(i, 1);
-    const plata = Math.max(1, Math.round(O().valor(it) * 0.3));
+    const plata = plataDesarmar(it);
     PODERES.darPlata(plata);
-    HUD.aviso(t("ob.desarmado", [O().nombre(it), plata]), "#FFD98A");
+    if (window.MATERIALES) HUD.aviso(t("mt.desarmado", [O().nombre(it), MATERIALES.texto(MATERIALES.alDesarmar(it)), plata]), "#FFD98A");
+    else HUD.aviso(t("ob.desarmado", [O().nombre(it), plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("golpe", { vol: 0.45, tono: 1.3 });
     return true;
   }
@@ -349,7 +351,7 @@ window.BOTIN = (function () {
       html: html(it, true) + `<span class="ob-pista">${t("ob.pista_equipar")}</span>`,
       desc: "",
       fn: () => equipar(st.bolsa.indexOf(it)),
-      alt: { texto: t("ob.desarmar", [Math.max(1, Math.round(O().valor(it) * 0.3)), CONTROLES.glifo("lente")]), fn: () => desarmar(st.bolsa.indexOf(it)) },
+      alt: { texto: window.MATERIALES ? t("mt.desarmar", [MATERIALES.texto(MATERIALES.deDesarmar(it)), plataDesarmar(it), CONTROLES.glifo("lente")]) : t("ob.desarmar", [plataDesarmar(it), CONTROLES.glifo("lente")]), fn: () => desarmar(st.bolsa.indexOf(it)) },
       visto: () => delete it.nuevo,
     }));
   }

@@ -25,6 +25,8 @@ window.FORJA = (function () {
   const MODOS = {
     calma: { bpm: 84, tope: 2, costo: 1, densidad: 0.25, acordes: 0 },
     fuego: { bpm: 112, tope: 3, costo: 1.6, densidad: 0.55, acordes: 0.12 },
+    // a fuego vivo con una brasa de Muspell (MATERIALES): igual de rápido, la nota sube
+    brasa: { bpm: 112, tope: 3, costo: 1.6, densidad: 0.55, acordes: 0.12, bono: 0.08 },
   };
   const VIAJE = 1.5; // segundos que tarda una nota en bajar hasta el yunque
   // qué se puede forjar: cada grupo elige la mejor base para el nivel
@@ -77,21 +79,28 @@ window.FORJA = (function () {
     );
   }
   function elegirModo(g, b) {
-    const pe = PODERES.estado();
+    const pe = PODERES.estado(),
+      M = window.MATERIALES;
     const linea = (modo) => {
-      const c = costo(modo);
+      const c = costo(modo),
+        mat = M ? M.costoForja(g, modo) : null,
+        falta = pe.plata < c || (mat && !M.alcanza(mat));
       return {
         texto: t("fg.modo_" + modo),
-        sub: t("fg.modo_" + modo + "_sub", [c]) + (pe.plata < c ? " · " + t("pj.forja_falta") : ""),
+        sub: t("fg.modo_" + modo + "_sub", [c]) + (mat ? " · " + M.texto(mat, true) : "") + (falta ? " · " + t("pj.forja_falta") : ""),
         fn: () => {
           if (pe.plata < c) return A.avisar("pj.forja_no");
+          if (mat && !M.alcanza(mat)) return A.avisar("mt.falta");
           if (window.BOTIN && BOTIN.estado().bolsa.length >= 30) return A.avisar("ob.bolsa_llena");
           PODERES.pj().plata -= c;
-          empezar(b, modo, c);
+          if (mat) M.gastar(mat);
+          empezar(b, modo, c, mat);
         },
       };
     };
-    A.menu(`<h2>${t("ob.b_" + b)}</h2><div class="sub">${t("fg.como")}</div>`, [linea("calma"), linea("fuego"), { texto: t("ui.volver"), fn: abrir }]);
+    const modos = [linea("calma"), linea("fuego")];
+    if (M && M.cuantos("brasa") > 0) modos.push(linea("brasa"));
+    A.menu(`<h2>${t("ob.b_" + b)}</h2><div class="sub">${t("fg.como")}</div>`, modos.concat([{ texto: t("ui.volver"), fn: abrir }]));
   }
 
   // ---------- la partitura ----------
@@ -162,7 +171,7 @@ window.FORJA = (function () {
       x0 = 800 - ancho * 1.5;
     return { ancho, x: (l) => x0 + l * ancho, arriba: 120, yunque: 720 };
   }
-  function empezar(base, modo, pagado) {
+  function empezar(base, modo, pagado, mat) {
     crearLienzo();
     HUD.cerrar();
     const semilla = Math.floor(Math.random() * 1e9);
@@ -170,6 +179,7 @@ window.FORJA = (function () {
       base,
       modo,
       pagado,
+      mat,
       p: partitura(modo, semilla),
       t0: performance.now() / 1000,
       ahora: -0.5,
@@ -295,8 +305,8 @@ window.FORJA = (function () {
     const base = S.puntos / maximo(),
       combo = (S.mejorCombo / Math.max(1, S.p.notas.length)) * 0.05,
       tem = { perfecto: 0.06, bien: 0.03, flojo: 0, falla: -0.06 }[S.temple || "falla"],
-      nota = Math.max(0, base + combo + tem),
-      M = MODOS[S.modo];
+      M = MODOS[S.modo],
+      nota = Math.max(0, base + combo + tem + (M.bono || 0));
     let r = nota < 0.55 ? 0 : nota < 0.78 ? 1 : nota < 0.93 ? 2 : 3;
     r = Math.min(r, M.tope);
     const calidad = Math.max(0, Math.min(1, (nota - 0.4) / 0.6));
@@ -329,6 +339,7 @@ window.FORJA = (function () {
   function abandonar() {
     // pausa a la mitad: Ása devuelve la plata y guarda el hierro
     PODERES.pj().plata += S.pagado;
+    if (S.mat && window.MATERIALES) MATERIALES.devolver(S.mat);
     lienzo.style.display = "none";
     S = null;
     J.modo = "juego";

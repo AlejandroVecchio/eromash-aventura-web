@@ -5,28 +5,39 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 11,
-    titulo: { es: "La forja al ritmo del yunque", en: "Forging to the anvil's beat" },
+    pr: 12,
+    titulo: { es: "Materiales, vetas y desarmar", en: "Materials, veins and salvage" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín y equipo: lo forjado es una pieza más, con rareza y afijos, que va a la bolsa", en: "loot and gear: what you forge is one more piece, with rarity and affixes, into the bag" },
-      { pr: 4, es: "tipos de arma: Ása forja cada tipo que exista en esta rama (espadas, hachas, a dos manos, arco, lanza, martillo, bastón) y escudos (PR 10)", en: "weapon types: Ása forges every type in this branch (swords, axes, two-handed, bow, spear, hammer, staff) and shields (PR 10)" },
-      { pr: 1, es: "niveles: la pieza sale un nivel por encima del de Eromash", en: "levels: the piece comes out one level above Eromash" },
+      { pr: 3, es: "botín y mochila: desarmar una pieza de la bolsa ahora da materiales", en: "loot and backpack: salvaging a piece from the bag now gives materials" },
+      { pr: 11, es: "forja: Ása cobra materiales además de plata, y la brasa abre un tercer modo", en: "forge: Ása charges materials as well as silver, and the ember opens a third mode" },
+      { pr: 8, es: "martillo: raja las vetas el doble de rápido", en: "hammer: cracks veins twice as fast" },
     ],
     mirar: [
-      { es: "Hablá con Ása (en la herrería) o tocá su yunque: «Forjar una pieza nueva». Elegís qué y cómo: con calma (más lento, a lo sumo rara) o a fuego vivo (más rápido, con acordes; la única que da legendarias).", en: "Talk to Ása (in the smithy) or use her anvil: «Forge a new piece». Pick what and how: steady (slower, rare at most) or roaring fire (faster, chords; the only way to legendaries)." },
-      { es: "Un juego de ritmo: runas que bajan por cuatro carriles hasta el yunque; se aprieta la dirección (WASD, flechas, cruceta o tocando el carril) justo cuando llegan. Música armada en el momento: tambor, bordón y una nota por carril.", en: "A rhythm game: runes fall down four lanes onto the anvil; press the direction (WASD, arrows, d-pad or tap the lane) right as they land. Music built live: drum, drone and a note per lane." },
-      { es: "Tres tramos: el fuelle (notas largas que se mantienen y calientan el hierro), el martillo (golpes cada vez más seguidos) y el temple (un golpe final con atacar cuando baja la barra dorada).", en: "Three parts: the bellows (long held notes that heat the iron), the hammer (faster and faster strikes) and the quench (one final strike with attack when the golden bar arrives)." },
-      { es: "La nota decide la rareza y qué tan altos salen los números; la pieza dice «Forjada por Ása · martillada al … %». Esc deja y Ása devuelve la plata.", en: "Your score decides rarity and how high the numbers roll; the piece says «Forged by Ása · hammered at …%». Esc leaves and Ása returns the silver." },
+      { es: "Cinco materiales con nombre en la Bolsa de la mochila (I), cada uno con su ícono: hierro de pantano, cuero curtido, ámbar, esquirla rúnica y brasa de Muspell.", en: "Five named materials in the backpack's Bag tab (I), each with its icon: bog iron, tanned leather, amber, rune shard and Muspell ember." },
+      { es: "Desarmar (R o △ sobre una pieza) dice antes qué deja: las armas dan hierro, las armaduras cuero, las joyas ámbar; lo raro suma esquirlas y lo legendario una brasa.", en: "Salvage (R or △ on a piece) tells you first what it gives: weapons give iron, armour leather, jewellery amber; rares add shards and legendaries an ember." },
+      { es: "Vetas en el bosque (la de hierro herrumbrada, el nódulo de ámbar, la vena rúnica que late): se pican con E o a golpes, se rajan tres veces y sueltan el material. Vuelven a crecer a los 10 minutos. Con martillo, el doble.", en: "Veins in the forest (the rusty iron one, the amber nodule, the pulsing rune vein): mine them with E or by hitting them, they crack three times and drop materials. They grow back after 10 minutes. A hammer counts double." },
+      { es: "Lobos, jabalíes y el oso dejan cuero; draugr y custodios hierro; los fuegos fatuos ámbar y esquirlas; los líderes el doble.", en: "Wolves, boars and the bear drop leather; draugr and wardens iron; will-o'-wisps amber and shards; leaders twice as much." },
+      { es: "En la forja cada modo dice qué materiales pide (lo que falta en rojo). Con una brasa aparece «Con la brasa de Muspell»: a fuego vivo y la nota sube.", en: "In the forge each mode lists the materials it needs (missing ones in red). With an ember you get «With the Muspell ember»: roaring fire and a higher score." },
     ],
     botones: [
-      { es: "Abrir la forja acá (con 2000 de plata)", en: "Open the forge here (with 2000 silver)", fn: (A) => {
+      { es: "Ir a la veta de hierro más cercana", en: "Go to the nearest iron vein", fn: (A) => {
+        const v = MATERIALES.vetas().filter((v) => v.tipo === "vetaHierro").sort((a, b) => Math.hypot(a.cosa.x - A.jug.x, a.cosa.y - A.jug.y) - Math.hypot(b.cosa.x - A.jug.x, b.cosa.y - A.jug.y))[0];
+        if (v) ir(A, [v.cosa.x, v.cosa.y + 70]);
+      } },
+      { es: "Ir a la vena rúnica más cercana", en: "Go to the nearest rune vein", fn: (A) => {
+        const v = MATERIALES.vetas().filter((v) => v.tipo === "vetaRunica").sort((a, b) => Math.hypot(a.cosa.x - A.jug.x, a.cosa.y - A.jug.y) - Math.hypot(b.cosa.x - A.jug.x, b.cosa.y - A.jug.y))[0];
+        if (v) ir(A, [v.cosa.x, v.cosa.y + 70]);
+      } },
+      { es: "Darme 6 piezas para desarmar (una legendaria)", en: "Give me 6 pieces to salvage (one legendary)", fn: (A) => {
+        [0, 0, 1, 1, 2, 3].forEach((r) => BOTIN.dar(OBJETOS.generar({ n: RPG.nivel(), r, tema: 1 }), { silencio: true }));
+        INVENTARIO.abrir("bolsa");
+      } },
+      { es: "Darme materiales y abrir la forja", en: "Give me materials and open the forge", fn: (A) => {
+        ["hierro", "cuero", "ambar", "esquirla"].forEach((k) => MATERIALES.dar(k, 12));
+        MATERIALES.dar("brasa", 2);
         PODERES.pj().plata = Math.max(PODERES.pj().plata, 2000);
         FORJA.abrir();
-      } },
-      { es: "Probar una espada a fuego vivo ya", en: "Try a sword at roaring fire now", fn: (A) => FORJA.empezar(FORJA.baseDe({ tipo: "espada" }), "fuego", 0) },
-      { es: "Subir a nivel 12 (bases mejores)", en: "Go to level 12 (better bases)", fn: (A) => {
-        while (RPG.nivel() < 12) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp + 1);
       } },
     ],
   };
