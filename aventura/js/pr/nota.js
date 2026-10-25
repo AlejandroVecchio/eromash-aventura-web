@@ -10,7 +10,7 @@
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
       { pr: 3, es: "mochila: la Bolsa muestra hierbas, pociones y aceites (con el hook nuevo celdasBolsa) y la mesa abre su pestaña", en: "backpack: the Bag shows herbs, potions and oils (with the new celdasBolsa hook) and the table opens its tab" },
-      { pr: 18, es: "Furia: la poción elegida tiene su casilla en la barra (5 o L2 + R1)", en: "Fury: the chosen potion has its bar slot (5 or L2 + R1)" },
+      { pr: 18, es: "Furia: la poción elegida se puede poner en una casilla de la barra (o L2 + R1)", en: "Fury: the chosen potion can go in a bar slot (or L2 + R1)" },
     ],
     mirar: [
       { es: "Por el bosque crecen seis hierbas, cada una donde le gusta: musgo, serbal y raíz de abedul en todos lados, la flor de escarcha junto al agua, el hongo de luna (alumbra de noche) y el cardo cerca de los túmulos y los draugr. Se juntan con E y vuelven a los 8 minutos; la Lente las marca.", en: "Six herbs grow in the forest, each where it likes: moss, rowan and birch root everywhere, frostflower by the water, moon mushroom (glows at night) and thistle near barrows and draugr. Gather them with E; they regrow after 8 minutes; the Lens marks them." },

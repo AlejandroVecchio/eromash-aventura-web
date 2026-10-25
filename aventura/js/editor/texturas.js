@@ -255,15 +255,36 @@ window.EDITOR_TEXTURAS = (function () {
       }, 120);
     }),
   );
+  // la IA de cada fuente: la receta y la imagen las elige el panel IA (8) según la tarea; ChatGPT y Gemini, fijas
   function claveDe(fuente) {
-    const ia = window.EDITOR_IA ? EDITOR_IA.elegida() : { claves: {} },
-      quien = fuente === "receta" ? ia.quien : fuente,
-      clave = fuente === "receta" ? ia.clave : ia.claves[fuente] || "";
-    if (quien === "otra" || !clave) {
-      estado(t("ed.tx_falta_clave", [fuente === "receta" ? $("iaQuien").selectedOptions[0].textContent : fuente === "chatgpt" ? "ChatGPT" : "Gemini"]), true);
+    const IA = window.EDITOR_IA;
+    if (fuente === "receta" || fuente === "imagen") {
+      const k = IA && IA.paraTarea(fuente);
+      if (!k) estado(t(fuente === "imagen" ? "ed.tx_falta_imagen" : "ed.ia_sin_ninguna"), true);
+      return k;
+    }
+    const clave = IA && ((IA.paraTarea("mapa") || {}).claves || {})[fuente];
+    if (!clave) {
+      estado(t("ed.tx_falta_clave", [fuente === "chatgpt" ? "ChatGPT" : "Gemini"]), true);
       return null;
     }
-    return { quien, clave, modelo: ia.modelo };
+    return { quien: fuente, clave };
+  }
+  // una imagen con la IA de la tarea «imagen»: si la primera falla, la siguiente
+  async function imagenTarea(pedido) {
+    const IA = window.EDITOR_IA,
+      l = IA.candidatas("imagen"),
+      claves = IA.paraTarea("imagen").claves;
+    let error = null;
+    for (const q of l) {
+      try {
+        estado(t("ed.tx_pensando_con", [IA.NOMBRES[q]]));
+        return await imagenDe(q, claves[q], pedido);
+      } catch (e) {
+        error = e;
+      }
+    }
+    throw error;
   }
   function leerReceta(txt) {
     const js = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)),
@@ -297,7 +318,8 @@ window.EDITOR_TEXTURAS = (function () {
     if (!k) return;
     E.usar("tx_generar");
     conIA(async () => {
-      if (fuente === "receta") leerReceta(await EDITOR_IA.llamar(k.quien, k.modelo, k.clave, [{ role: "user", content: pedido }], SISTEMA_RECETA()));
+      if (fuente === "receta") leerReceta((await EDITOR_IA.llamarTarea("receta", [{ role: "user", content: pedido }], SISTEMA_RECETA())).txt);
+      else if (fuente === "imagen") await desdeImagen(await imagenTarea(pedido));
       else await desdeImagen(await imagenDe(fuente, k.clave, pedido));
     });
   }
@@ -308,7 +330,7 @@ window.EDITOR_TEXTURAS = (function () {
     const k = claveDe("receta");
     if (!k) return;
     E.usar("tx_afinar");
-    conIA(async () => leerReceta(await EDITOR_IA.llamar(k.quien, k.modelo, k.clave, [{ role: "user", content: "Current recipe: " + JSON.stringify(actual.receta) + "\nChange it like this, keep the rest: " + pedido }], SISTEMA_RECETA())));
+    conIA(async () => leerReceta((await EDITOR_IA.llamarTarea("receta", [{ role: "user", content: "Current recipe: " + JSON.stringify(actual.receta) + "\nChange it like this, keep the rest: " + pedido }], SISTEMA_RECETA())).txt));
   }
   $("txGenerar").onclick = generar;
   $("txAfinar").onclick = afinar;

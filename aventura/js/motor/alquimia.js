@@ -2,7 +2,7 @@
 // Como la alquimia del Witcher: seis hierbas crecen por Eldervald (cada una donde le gusta: la flor de escarcha junto
 // al agua, el cardo cerca de los túmulos y los draugr, el hongo de luna bajo los árboles) y se juntan con E; vuelven a
 // crecer a los 8 minutos. En la mesa de alquimia del Puesto se destilan:
-//   · pociones (se toman desde la Bolsa o con la casilla de la poción elegida, 5 o L2 + R1): duran un rato y suman a
+//   · pociones (se toman desde la Bolsa o con la casilla de la poción elegida en la barra o L2 + R1): duran un rato y suman a
 //     las estadísticas; cada una sube la toxicidad (máximo 100, baja 1,5 por segundo) y con mucha no se puede tomar más;
 //   · aceites para el arma: +25 % de daño contra una familia de criaturas durante 40 golpes (uno por vez).
 // Estado en E.extra.alq = { hierbas: { id: n }, pociones: { id: n }, aceites: { id: n }, cosechadas: { i: hasta },
@@ -356,9 +356,23 @@ window.ALQUIMIA = (function () {
       for (const p of plantas) if (p.tipo === "luna" && p.cosa.o.noche && !p.cosa.o.cosechada) dar({ x: p.cosa.x, y: p.cosa.y - 14, r: 90, col: "#73D5DB", f: 0.5 });
     },
     celdasBolsa,
-    casillas() {
-      const id = st.elegida;
-      return st.pociones[id] > 0 ? [{ id: "pocion", icono: "aq_p_" + id, accion: "pocion", nombre: t("aq.p_" + id), listo: st.tox + POCIONES[id].tox <= TOX_MAX, espera: st.tox / TOX_MAX }] : [];
+    cosasBarra() {
+      // la poción elegida es un objeto de la barra (BARRA): con teclado, el número de su casilla; con mando L2 + R1
+      const P = () => POCIONES[st.elegida] || POCIONES.tonico;
+      return {
+        pocion: {
+          tipo: "objeto",
+          icono: () => "aq_p_" + st.elegida,
+          avisa: true,
+          nombre: () => t("aq.p_" + st.elegida),
+          desc: () => t("aq.p_" + st.elegida + "_d") + " " + t("aq.tomar_pista", [Math.round(st.tox)]),
+          tiene: () => Object.values(st.pociones).some((n) => n > 0),
+          listo: () => st.pociones[st.elegida] > 0 && st.tox + P().tox <= TOX_MAX,
+          espera: () => st.tox / TOX_MAX,
+          cant: () => st.pociones[st.elegida] || 0,
+          usar: () => tomar(st.elegida),
+        },
+      };
     },
     hud() {
       tira();
