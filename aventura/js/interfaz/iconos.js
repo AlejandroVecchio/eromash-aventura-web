@@ -246,11 +246,6 @@ window.ICONOS = (function () {
       pol(c, [x, y - 1.8 * u, x + 5 * u, y - 2.8 * u, x + 5 * u, y + 2.8 * u, x, y + 3.6 * u], col);
       pol(c, [x + 0.4 * u, y - 1.8 * u, x + 1.2 * u, y - 1.8 * u, x + 1.2 * u, y - 5 * u, x + 0.4 * u, y - 4.6 * u], "#9C2315");
     },
-    // el estandarte de una facción (facciones.js): su emblema en el escudo (op.f la elige)
-    faccion(c, x, y, u, col, op) {
-      if (window.FACCIONES_DIBUJO) FACCIONES_DIBUJO.emblema(c, op.f || "guardia", x, y, 5.5 * u);
-      else pol(c, [x - 4 * u, y - 5 * u, x + 4 * u, y - 5 * u, x + 4 * u, y + 1 * u, x, y + 5 * u, x - 4 * u, y + 1 * u], col);
-    },
     // un hörgr de los dioses (santuarios.js): dos lajas y la estela con la marca del dios
     horgr(c, x, y, u, col) {
       pol(c, [x - 6 * u, y + 5 * u, x + 6 * u, y + 5 * u, x + 5 * u, y + 2.5 * u, x - 5 * u, y + 2.5 * u], "#8E8A86");
