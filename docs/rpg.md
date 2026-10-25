@@ -411,6 +411,24 @@ tener que leer el código para balancear.
   `TINTES.tonos(c)` para las claves `T_…`.
 - Estado en `E.extra.tintes = { tiene, puesto }`.
 
+## Galdrar de Vör (`motor/signos.js`, `SIGNOS`; textos `sg.` en `textos/signos.js`)
+
+Magia rápida como las señales de The Witcher: va con cualquier arma, gasta estamina (30) y no energía rúnica, con 1,2 s
+entre cantos. Acción `signo` (Y, o L2 + L1) canta el elegido y `cambiarSigno` (N, o L2 + ▶) pasa al siguiente sabido.
+La fuerza es `J.poderRunico` × 1,35 en rango II.
+
+| Galdr | Runa | Nivel · plata | Efecto |
+|---|---|---|---|
+| viento | Ansuz | 1 · gratis | cono de 300 (±36°): 8 de daño, empuje 2,4 y volteo 1,3 s; corta el aviso que cargaban; las fuertes (líder, semijefe, jefe) solo 0,4 s |
+| fuego | Kenaz | 3 · 60 | cono de 260 (±27°): 14 de daño y quema 4 s (la quema de combate.js, 8/s por poder rúnico) |
+| escudo | Algiz | 5 · 100 | se come los golpes hasta el 30 % de la vida máxima por 12 s (`modRecibido`, antes de la armadura); en II estalla al romperse y empuja |
+| lazo | Naudiz | 7 · 140 | círculo de 160 por 8 s donde las criaturas van al 45 % (`e.lenta` = J.t + 0,25, `e.lentaK`) |
+| sueño | Isa | 9 · 200 | la más cercana delante (340) queda aturdida 4 s (fuertes 1,4 s), con zetas (`e.dormida`) |
+
+- Rango II: 150 de plata y una esquirla, en el menú de Vör («Aprender galdrar», por el hook `botonesInstructor(id)`).
+- Casilla de la barra con la runa del elegido (`sg_<id>`), el escudo en los efectos del HUD y los sabidos en el diario.
+- Estado en `E.extra.signos = { sabe: { id: rango }, activo, cantos }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

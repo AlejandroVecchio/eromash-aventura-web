@@ -5,32 +5,34 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 28,
-    titulo: { es: "Tintes para el casco", en: "Helmet dyes" },
+    pr: 29,
+    titulo: { es: "Galdrar de Vör: magia rápida", en: "Vör's galdrar: quick magic" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 21, es: "alquimia: los tintes se preparan con hierbas", en: "alchemy: dyes are made with herbs" },
-      { pr: 24, es: "palabras rúnicas o 26 poderes legendarios: ganan la luz de runa", en: "runewords or 26 legendary powers: earn rune light" },
-      { pr: 25, es: "conjuntos: uno entero gana el oro de Fáfnir", en: "sets: a full one earns Fáfnir's gold" },
-      { pr: 27, es: "arcón: la tina va al lado del arcón", en: "chest: the tub sits next to the chest" },
+      { pr: 1, es: "niveles: cada galdr pide un nivel", en: "levels: each galdr needs a level" },
+      { pr: 12, es: "materiales: el rango II pide una esquirla", en: "materials: rank II needs a shard" },
+      { pr: 19, es: "instructores: Vör los enseña desde su menú", en: "trainers: Vör teaches them from her menu" },
     ],
     mirar: [
-      { es: "Junto al arcón del Puesto está la tina de tintes (tina con el agua teñida, paños secándose, frascos de polvo): «Teñir el casco» abre la pestaña Tintes.", en: "Next to the Outpost chest stands the dye tub (tub with dyed water, cloths drying, powder jars): «Dye the helmet» opens the Dyes tab." },
-      { es: "Ocho colores con la cabeza de Eromash de muestra: rojo de Eikholt, azul de escarcha, verde de la linde, blanco de abedul, negro de cuervo, violeta de las ataduras (se preparan con plata y hierbas), luz de runa y oro de Fáfnir (se ganan).", en: "Eight colours with Eromash's head as a sample: Eikholt red, frost blue, boundary green, birch white, raven black, binding violet (made with silver and herbs), rune light and Fáfnir's gold (earned)." },
-      { es: "El color se ve en el mundo, en el retrato del HUD y en la mochila, y el agua de la tina toma el último color. Lo ya preparado se cambia gratis.", en: "The colour shows in the world, in the HUD portrait and in the backpack, and the tub's water takes the last colour. What you've already made changes for free." },
+      { es: "Hablá con Vör en el túmulo: «Aprender galdrar» lista los cinco cantos (viento, fuego, escudo, lazo y sueño) con nivel y plata; por plata y una esquirla cada uno sube a II.", en: "Talk to Vör at the barrow: «Learn galdrar» lists the five chants (wind, fire, shield, binding and sleep) with level and silver; for silver and a shard each one goes up to II." },
+      { es: "Y canta el galdr elegido (L2 + L1 en el mando) y N cambia de galdr (L2 + ▶). Gastan 30 de estamina, no energía rúnica, y van con cualquier arma. La casilla nueva de la barra muestra el elegido.", en: "Y chants the chosen galdr (L2 + L1 on a pad) and N switches galdr (L2 + ▶). They cost 30 stamina, not rune energy, and work with any weapon. The new action-bar slot shows the chosen one." },
+      { es: "Viento: un cono que empuja, voltea y corta el golpe que venían cargando. Fuego: abanico que deja quemando. Escudo: un óvalo dorado que se come los golpes (30 % de la vida). Lazo: círculo violeta con runas donde van lentas. Sueño: la de enfrente se duerme con zetas (las líderes, poco).", en: "Wind: a cone that pushes, knocks down and breaks the blow they were winding up. Fire: a fan that leaves them burning. Shield: a golden oval that soaks blows (30 % of life). Binding: a violet circle with runes where they slow down. Sleep: the one in front falls asleep with z's (leaders, briefly)." },
     ],
     botones: [
-      { es: "Ir a la tina con plata y hierbas para todos los colores", en: "Go to the tub with silver and herbs for every colour", fn: (A) => {
-        const tn = TINTES.tina();
-        ir(A, [tn.x, tn.y + 90]);
-        PODERES.pj().plata += 600;
-        const h = ALQUIMIA.estado().hierbas;
-        ["escarcha", "musgo", "abedul", "cardo", "luna"].forEach((k) => (h[k] = (h[k] || 0) + 3));
-        MATERIALES.dar("esquirla", 1);
+      { es: "Ir con Vör con nivel 10 y plata para aprenderlos", en: "Go to Vör at level 10 with silver to learn them", fn: (A) => {
+        const g = INSTRUCTORES.gente().vor;
+        ir(A, [g.x, g.y + 110]);
+        RPG.estado().nivel = Math.max(RPG.nivel(), 10);
+        RPG.recalcular();
+        PODERES.pj().plata += 1400;
+        MATERIALES.dar("esquirla", 5);
       } },
-      { es: "Ganar la luz de runa y el oro (un poder y un conjunto)", en: "Earn rune light and gold (a power and a set)", fn: () => {
-        LEGENDARIOS.aprender("hel");
-        CONJUNTOS.estado().completos.guardia = 1;
+      { es: "Saber los cinco e ir al grupo de criaturas más cercano", en: "Know all five and go to the nearest creature pack", fn: (A) => {
+        const st = SIGNOS.estado();
+        SIGNOS.LISTA && Object.keys(SIGNOS.LISTA).forEach((id) => (st.sabe[id] = Math.max(st.sabe[id] || 0, 1)));
+        st.activo = st.activo || "viento";
+        const p = cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y));
+        ir(A, p, 0, 380);
       } },
     ],
   };

@@ -353,7 +353,7 @@ window.COMBATE = (function () {
         const ml = Math.hypot(mx, my) || 1;
         // cerca de su líder vivo el grupo va más rápido
         const lid = e.grupo && !e.lider && e.grupo.find((o) => o.lider && !o.muerto && o.activo && Math.hypot(o.x - e.x, o.y - e.y) < 8 * M);
-        const vel = d.vel * (lid ? 1.15 : 1);
+        const vel = d.vel * (lid ? 1.15 : 1) * (e.lenta > J.t ? e.lentaK || 0.5 : 1); // el lazo de Vör las frena
         mover(e, (mx / ml) * vel * dt, (my / ml) * vel * dt, d.radio);
         e.mira = VIKINGO.vista(dx, dy, e.mira);
         e.mov = 1;

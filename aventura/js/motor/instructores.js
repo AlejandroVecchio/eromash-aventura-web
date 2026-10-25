@@ -131,6 +131,7 @@ window.INSTRUCTORES = (function () {
       const enCurso = st.prueba && st.prueba.quien === id;
       bot.push({ texto: enCurso ? t("ie.prueba_en_curso") : t("ie.pedir_prueba"), sub: t("ie.prueba_" + M.prueba, [M.meta[n], M.seg]), fn: () => A.dialogoLibre([[id, "ie." + id + "_prueba"]], () => (pedirPrueba(id), A.cerrarMenu())) });
     }
+    window.SISTEMAS.forEach((s0) => s0.botonesInstructor && s0.botonesInstructor(id).forEach((b) => bot.push(b))); // los galdrar de Vör…
     bot.push({ texto: t("ie.charlar"), fn: () => A.dialogoLibre([[id, "ie." + id + "_charla" + ((n % 3) + 1)]], () => menuMaestro(id)) });
     bot.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
     A.menu(`<h2>${t("av.nombre_" + id)}</h2><div class="sub">${t("ie." + id + "_sub")}</div>`, bot);
@@ -338,5 +339,5 @@ window.INSTRUCTORES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, muneco: () => muneco, gente: () => gente, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES };
+  return { sistema, estado: () => st, muneco: () => muneco, gente: () => gente, menuMaestro, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES };
 })();
