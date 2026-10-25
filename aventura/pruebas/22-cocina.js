@@ -14,30 +14,60 @@
       for (let i = 0; i < 60 && A.J.modo !== "juego"; i++) await esperar(100);
       si(COCINA.fogataCerca(), "la fogata está cerca");
     } },
-    { nombre: "cocina: sacar a punto rinde más, crudo la mitad y quemado nada", fn: async (A, { igual, si }) => {
+    { nombre: "cocina: la tabla de cortar: los cortes bien hechos dan el plato a punto, los huesos mellan y mal cortado se arruina", fn: async (A, { igual, si }) => {
       const st = COCINA.estado();
       st.carne.lobo = 5;
       const vida0 = RPG.stats().vida;
-      si(COCINA.empezar("asado"), "empieza el asado");
+      // corta todo lo que salta, en orden, y deja caer los huesos
+      const cortarTodo = (bien = true) => {
+        for (let n = 0; n < 40 && COCINA.asador() && !COCINA.asador().listo; n++) {
+          COCINA.asador().pausa = 0;
+          const q = COCINA.tiro();
+          if (q.k === "hueso") {
+            q.t = q.dura;
+            JUEGO.J.modos.cocina(0.01);
+            continue;
+          }
+          const d = bien ? q.dirs[q.hechos] : q.dirs[q.hechos] === "arriba" ? "abajo" : "arriba";
+          COCINA.cortar(d);
+          if (!bien) (q.t = q.dura), JUEGO.J.modos.cocina(0.01);
+        }
+      };
+      si(COCINA.empezar("asado"), "empieza la tabla");
       igual(A.J.modo, "cocina", "modo cocina:");
-      COCINA.asador().t = COCINA.VUELTA * 0.67;
-      COCINA.sacar();
+      const tiros = COCINA.asador().tiros;
+      si(tiros.some((q) => q.k === "hueso"), "salta algún hueso");
+      igual(tiros.find((q) => q.k === "lobo").n, 4, "el lobo pide cuatro cortes:");
+      cortarTodo(true);
+      igual(COCINA.precision(), 100, "todo bien cortado:");
       igual(st.comida.id, "asado", "comió el asado:");
       igual(Math.round(RPG.stats().vida - vida0), 42, "a punto: +42 de vida (30 × 1,4):");
-      await esperar(1700);
+      COCINA.asador().cierre = 0;
+      JUEGO.J.modos.cocina(0.01);
       igual(A.J.modo, "juego", "vuelve al juego:");
+      // un hueso cortado mella el cuchillo
       COCINA.empezar("asado");
-      COCINA.asador().t = 0.1;
-      COCINA.sacar();
-      igual(st.comida.k, 0.5, "crudo rinde la mitad:");
-      await esperar(1700);
+      const a = COCINA.asador();
+      a.pausa = 0;
+      while (COCINA.tiro().k !== "hueso") {
+        const q = COCINA.tiro();
+        while (q.hechos < q.n) COCINA.cortar(q.dirs[q.hechos]);
+        a.pausa = 0;
+      }
+      COCINA.cortar("abajo");
+      igual(a.mellas, 1, "cortar el hueso mella:");
+      cortarTodo(true);
+      igual(st.comida.k, 1, "con una mella sale bien (85 %):");
+      a.cierre = 0;
+      JUEGO.J.modos.cocina(0.01);
+      // todo mal: se arruina y no se come
       const antes = st.platos;
       COCINA.empezar("asado");
-      COCINA.asador().t = COCINA.VUELTA * 0.95;
-      COCINA.sacar();
-      igual(st.platos, antes, "quemado no se come:");
+      cortarTodo(false);
+      igual(COCINA.asador().listo, "arruinado", "todo mal cortado se arruina:");
+      igual(st.platos, antes, "no se come:");
       igual(st.carne.lobo, 2, "pero gastó la carne:");
-      await esperar(1700);
+      COCINA.cerrar();
     } },
     { nombre: "cocina: la comida se pasa con el tiempo y la carne aparece en la Bolsa", fn: async (A, { igual, si }) => {
       const st = COCINA.estado();
