@@ -5,33 +5,27 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 21,
-    titulo: { es: "Hierbas y alquimia", en: "Herbs and alchemy" },
+    pr: 22,
+    titulo: { es: "Cocina en la fogata", en: "Campfire cooking" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "mochila: la Bolsa muestra hierbas, pociones y aceites (con el hook nuevo celdasBolsa) y la mesa abre su pestaña", en: "backpack: the Bag shows herbs, potions and oils (with the new celdasBolsa hook) and the table opens its tab" },
-      { pr: 18, es: "Furia: la poción elegida tiene su casilla en la barra (5 o L2 + R1)", en: "Fury: the chosen potion has its bar slot (5 or L2 + R1)" },
+      { pr: 21, es: "alquimia: los platos llevan hierbas, la carne va a la Bolsa con celdasBolsa y la comida sale en la tira de efectos", en: "alchemy: dishes use herbs, meat goes to the Bag via celdasBolsa and the meal shows on the effects strip" },
     ],
     mirar: [
-      { es: "Por el bosque crecen seis hierbas, cada una donde le gusta: musgo, serbal y raíz de abedul en todos lados, la flor de escarcha junto al agua, el hongo de luna (alumbra de noche) y el cardo cerca de los túmulos y los draugr. Se juntan con E y vuelven a los 8 minutos; la Lente las marca.", en: "Six herbs grow in the forest, each where it likes: moss, rowan and birch root everywhere, frostflower by the water, moon mushroom (glows at night) and thistle near barrows and draugr. Gather them with E; they regrow after 8 minutes; the Lens marks them." },
-      { es: "La mesa de alquimia del Puesto (E) abre la pestaña Alquimia: cinco pociones y cuatro aceites. Tocar una receta la destila con lo que llevás.", en: "The Outpost's alchemy table (E) opens the Alchemy tab: five potions and four oils. Touching a recipe distills it with what you carry." },
-      { es: "Las pociones se toman desde la Bolsa (o la elegida con 5) y duran un rato; cada una suma toxicidad y con mucha no se puede tomar más. Arriba del retrato aparece una tira con lo que dura cada efecto.", en: "Potions are drunk from the Bag (or the chosen one with 5) and last a while; each adds toxicity and with too much you can't drink more. A strip above the portrait shows each effect's time left." },
-      { es: "Los aceites se untan en el arma: +25 % contra una familia (no-muertos, fatuos, bestias, troles) durante 40 golpes.", en: "Oils coat your weapon: +25 % against one family (undead, wisps, beasts, trolls) for 40 hits." },
+      { es: "Los lobos, jabalíes y el oso dejan carne (sale flotando y va a la Bolsa).", en: "Wolves, boars and the bear drop meat (it floats up and goes to your Bag)." },
+      { es: "Junto a un fogón encendido (el del Puesto, el del Aserradero, el del paso) o un brasero prendido aparece «Cocinar en la fogata»: cinco platos con carne y hierbas.", en: "Next to a lit hearth (the Outpost's, the Sawmill's, the pass's) or a lit brazier, «Cook at the campfire» appears: five dishes with meat and herbs." },
+      { es: "Cocinar es un asador que gira, como en Monster Hunter: la aguja corre y hay que sacarlo con E, clic o ✕. Crudo rinde la mitad, bien rinde normal, A PUNTO (lo dorado) rinde un 40 % más y dura un 50 % más, y quemado se pierde.", en: "Cooking is a turning spit, Monster Hunter-style: the needle runs and you take it off with E, click or ✕. Raw gives half, done gives normal, PERFECT (the gold) gives 40 % more and lasts 50 % longer, and burnt is lost." },
+      { es: "Se come al toque (llena la vida) y queda una comida por vez, con sus minutos en la tira sobre el retrato.", en: "It's eaten right away (fills your life) and there's one meal at a time, with its minutes on the strip above the portrait." },
     ],
     botones: [
-      { es: "Ir a la mesa de alquimia", en: "Go to the alchemy table", fn: (A) => {
-        const m = ALQUIMIA.mesa();
-        ir(A, [m.x + 30, m.y + 140]);
+      { es: "Ir al fogón del Puesto con carne y hierbas", en: "Go to the Outpost hearth with meat and herbs", fn: (A) => {
+        const f = A.W.COSAS.find((o) => o.id === "fogonOlla" && !o.o.apagado);
+        ir(A, [f.x + 40, f.y + 90]);
+        Object.assign(COCINA.estado().carne, { lobo: 4, jabali: 3, oso: 2 });
+        const h = ALQUIMIA.estado().hierbas;
+        ["serbal", "abedul", "musgo", "luna", "escarcha"].forEach((k) => (h[k] = (h[k] || 0) + 4));
       } },
-      { es: "Darme hierbas de todas", en: "Give me every herb", fn: () => Object.keys(ALQUIMIA.HIERBAS).forEach((k) => (ALQUIMIA.estado().hierbas[k] = (ALQUIMIA.estado().hierbas[k] || 0) + 8)) },
-      { es: "Ir a una flor de escarcha", en: "Go to a frostflower", fn: (A) => {
-        const p = ALQUIMIA.plantas().find((q) => q.tipo === "escarcha" && !q.cosa.o.cosechada) || ALQUIMIA.plantas()[0];
-        ir(A, [p.cosa.x, p.cosa.y + 110]);
-      } },
-      { es: "Ir a un cardo (cerca de draugr)", en: "Go to a thistle (near draugr)", fn: (A) => {
-        const p = ALQUIMIA.plantas().find((q) => q.tipo === "cardo" && !q.cosa.o.cosechada) || ALQUIMIA.plantas()[0];
-        ir(A, [p.cosa.x, p.cosa.y + 110]);
-      } },
+      { es: "Ir a cazar lobos", en: "Go hunt wolves", fn: (A) => ir(A, cercaDeGrupo(A, (g) => (g.fam === "lobos" || g.fam === "jabalies" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
     ],
   };
   // ---------- ayuda para los botones ----------

@@ -277,6 +277,8 @@ window.ALQUIMIA = (function () {
     }
     const partes = Object.keys(st.efectos).map((id) => `<span style="--col:${POCIONES[id].col}">${t("aq.p_" + id)} <b>${Math.ceil(st.efectos[id])}</b></span>`);
     if (st.aceite) partes.push(`<span style="--col:${ACEITES[st.aceite.id].col}">${t("aq.a_" + st.aceite.id)} <b>${st.aceite.golpes}</b></span>`);
+    // lo que suman otros sistemas: efectosHud() → [{ texto, n, col }] (la comida de la fogata…)
+    window.SISTEMAS.forEach((s0) => s0.efectosHud && s0.efectosHud().forEach((e) => partes.push(`<span style="--col:${e.col}">${e.texto} <b>${e.n}</b></span>`)));
     if (st.tox > 1) partes.push(`<span class="tox" style="--col:#7BC86C">${t("aq.tox")} <b>${Math.round(st.tox)}</b></span>`);
     const h = partes.join("");
     if (el._h !== h) el.innerHTML = el._h = h;
