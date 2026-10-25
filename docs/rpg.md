@@ -33,7 +33,7 @@ tener que leer el código para balancear.
   el 20). Un recorrido entero del bosque (todos los grupos una vez, misiones, lugares, cofres, piedras) deja cerca
   del nivel 17; lo demás sale de recompensas, jefes y grupos que vuelven.
 - Cada nivel: +6 de vida y +3 % de daño (los atributos y el equipo suman el resto).
-- **Saltos de poder** (`motor/saltos.js`, `SALTOS`, textos `sl.`): los niveles 5, 10, 15, 20, 25 y 30 dan un salto
+- **Saltos de poder** (`motor/saltos.js`, `SALTOS`, textos `sp.`): los niveles 5, 10, 15, 20, 25 y 30 dan un salto
   que se nota, en el núcleo (no se topa) y anunciado en el cartel como «Salto de poder»: Uruz despierta (+10 % de
   vida, +2 atributos), Sangre de lobo (+10 % de daño, +0,15 al crítico, +1 habilidad), Ojo de cuervo (+4 % de crítico,
   +6 % de velocidad de ataque, +2 atributos), Piel de oso (+25 de armadura, +10 % de vida, +1 habilidad), Voz de Ansuz

@@ -3,7 +3,7 @@
 // que se nota, cada uno con su runa y su nombre: un multiplicador grande en el núcleo (no se topa, como el nivel) y
 // puntos de atributo o de habilidad de más. El cartel de nivel lo anuncia como «Salto de poder», el diario dice cuál es
 // el próximo y la hoja de Eromash lo muestra como «Saltos de poder». Lo ya dado queda en E.extra.rpg.saltos (las
-// partidas viejas lo reciben al cargar). Textos `sl.`.
+// partidas viejas lo reciben al cargar). Textos `sp.`.
 window.SALTOS = (function () {
   "use strict";
   let A, J, jug;
@@ -19,12 +19,12 @@ window.SALTOS = (function () {
   const nivel = () => (window.RPG ? RPG.nivel() : 1);
   const de = (n) => LISTA.find((h) => h.n === n);
   const proximo = () => LISTA.find((h) => h.n > nivel()) || null;
-  const nombre = (h) => t("sl." + h.id);
+  const nombre = (h) => t("sp." + h.id);
   // lo que da en palabras: las líneas del cartel
   function lineas(h) {
-    const l = [t("sl." + h.id + "_d")];
-    if (h.atrib) l.push(t("sl.atrib", [h.atrib]));
-    if (h.arbol) l.push(t("sl.arbol", [h.arbol]));
+    const l = [t("sp." + h.id + "_d")];
+    if (h.atrib) l.push(t("sp.atrib", [h.atrib]));
+    if (h.arbol) l.push(t("sp.arbol", [h.arbol]));
     return l;
   }
   // los puntos de cada salto se dan una sola vez (estado en extra.rpg.saltos)
@@ -46,7 +46,7 @@ window.SALTOS = (function () {
       const el = document.getElementById("hudNivelSube");
       if (!el) return;
       el.classList.toggle("salto", !!h);
-      el.querySelector("small").textContent = h ? t("sl.salto", [nombre(h)]) : t("rp.subiste");
+      el.querySelector("small").textContent = h ? t("sp.salto", [nombre(h)]) : t("rp.subiste");
     }, 0);
   }
 
@@ -72,8 +72,8 @@ window.SALTOS = (function () {
     },
     diario() {
       const h = proximo();
-      if (!h) return `<div class="diario-resumen"><p><b>${t("sl.titulo")}</b> ${t("sl.todos")}</p></div>`;
-      return `<div class="diario-resumen"><p><b>${t("sl.titulo")}</b> ${t("sl.proximo", [h.n, nombre(h)])} ${lineas(h).join(" · ")}.</p></div>`;
+      if (!h) return `<div class="diario-resumen"><p><b>${t("sp.titulo")}</b> ${t("sp.todos")}</p></div>`;
+      return `<div class="diario-resumen"><p><b>${t("sp.titulo")}</b> ${t("sp.proximo", [h.n, nombre(h)])} ${lineas(h).join(" · ")}.</p></div>`;
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
