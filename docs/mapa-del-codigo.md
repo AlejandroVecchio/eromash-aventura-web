@@ -18,6 +18,8 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | Runas (Kenaz, Isa, Algiz, Sowilo), poder rúnico, plata y fragmentos | `motor/poderes.js` (`RUNAS`, `darPlata`, `botinCofre`) |
 | Nivel, experiencia, nivel de las criaturas y estadísticas (crítico, armadura, velocidad) | `motor/rpg.js` (`xpPara`, `nivelDe`, `recalcular`, `aporte`); reglas en `docs/rpg.md` |
 | Atributos (Fuerza, Destreza, Vigor, Espíritu) y su pestaña en la mochila | `motor/atributos.js` (`efecto`, `POR_NIVEL`); pestañas extra con `INVENTARIO.pestana` |
+| Piezas de equipo: bases, rarezas, afijos, nombres y cuánto suman | `equipo/objetos.js` (`BASES`, `AFIJOS`, `generar`, `aportar`); el dibujo en `equipo/arte.js` |
+| Qué sueltan las criaturas y los cofres, el botín en el piso, la bolsa y las casillas de equipo | `motor/botin.js` (`alMorir`, `envolverCofres`, `lados`, `celdasBolsa`) |
 
 ### El mundo
 
@@ -164,6 +166,13 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - Lobo del zarzal · Errante de Helheim · Custodio de corteza · Ciervo Hueco (jefe)
 - **dreki.js**: el dreki (se suma a CRIATURAS)
 
+### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
+
+- **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
+  - qué dibujo de la arena le toca · amuletos y anillos (propios) · dibujar
+- **objetos.js**: los objetos de equipo: bases, rarezas, afijos y nombres (módulo OBJETOS)
+  - rarezas · bases · afijos · nombres de las raras y legendarias · azar con semilla (las pruebas y el mundo fijo piden poder repetir una tirada) · la tirada · nombres · lo que se lee de cada pieza · lo que suma al jugador
+
 ### js/historia/ · el guion (igual al de Godot)
 
 - **guion.js**: el guion y el estado de la partida (módulo HISTORIA)
@@ -194,6 +203,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pestaña
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
   - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+- **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
+  - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
@@ -309,6 +320,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
+- **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
+  - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.

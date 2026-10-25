@@ -1085,6 +1085,7 @@
   VIKINGO.OJOS.forEach((o) => ["S", "E", "N"].forEach((v) => (VK[v + o] = VIKINGO.imagen("R", v, o))));
   let animaT = 0;
   function dibujarEspada(x, y, ang, s, brillo) {
+    if (window.BOTIN && BOTIN.dibujarArma(c, x, y, ang, s, brillo)) return; // el arma puesta, con su dibujo
     c.save();
     c.translate(x, y);
     c.rotate(ang + Math.PI / 2);
@@ -1418,6 +1419,7 @@
     W.girarVista(g);
     const baseT = () => c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc),
       pisoT = () => (baseT(), VOL.piso(c, cx, cy, g));
+    J.baseT = baseT; // para que un sistema dibuje derecho (en la vista) desde un hook del piso
     pisoT();
     W.dibujarPiso(c, wx0, wy0, wx1, wy1, escBase);
     cadaSis("fondo", c, wx0, wy0, wx1, wy1);

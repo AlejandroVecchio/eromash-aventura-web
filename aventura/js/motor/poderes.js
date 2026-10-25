@@ -340,7 +340,7 @@ window.PODERES = (function () {
           b.y += ((jug.y - b.y) / d) * v * dt;
         }
         if (listo && d < 26) {
-          if (b.tipo === "plata") darPlata(b.cant);
+          if (b.tipo === "plata") darPlata(Math.max(1, Math.round(b.cant * ((window.RPG && RPG.stats().plata) || 1))));
           else {
             // lo que sobra de vida va a las piedras de Berkano (berkano.js)
             const sobra = jug.hp + b.cant - jug.hpMax;
