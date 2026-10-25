@@ -584,6 +584,14 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
 - **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
 
+## La casa de Hrolf (`motor/casa.js`, `CASA`; assets `letreroVenta` y `huertaCasa` en `mundo/assets-casa.js`; textos `hg.`)
+
+- **Dónde**: una `casaNordica` (`entra: false`, `sinPlano`) junto a un camino que sale del Puesto, a menos de 27 m de su borde y en tierra firme (`buscarLugar`), con el letrero de «se vende» delante. Antes de comprarla la puerta no ofrece entrar (`INTERIORES.agregarPuerta(..., { puede })`).
+- **Comprar**: E en el letrero, 500 de plata (`PRECIO`). El letrero se da vuelta (`o.vendida`, la cornamenta tallada), la casa va al mapa (marca `casa`, con el ícono de casa de los lugares) y «Tu casa» queda entre los destinos de Viajar (hook nuevo `destinoViaje` de los sistemas, que lee `secretos.js`).
+- **Adentro**: cuarto propio `propia` armado por `INTERIORES.CUARTOS.propia` (sin sótano): cama, hogar, mesa y los planos. Lo construido se suma en vivo al cuarto.
+- **Mejoras** (`MEJORAS`, plata + materiales de la PR 12): arcón 150 + 4 cuero (guarda 30 piezas, `ARCON`), armero 250 + 6 hierro (+4 % de daño), estantería 200 + 2 ámbar (+5 % de experiencia), fogón del patio 120 + 3 hierro (un `fogonOlla` de verdad, se cocina), huerta 100 + 2 cuero (crece durante el día; una cosecha por día: 2 hierbas y 35 % una manzana) y cama de pieles de oso 300 + 6 cuero (dormir en ella: «Bien abrigado», +10 % de experiencia 600 s, `st.abrigo`).
+- **Estado** (`E.extra.casa`): tuya, hechas, arcon, cosecha (el día de la última). Va al diario.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

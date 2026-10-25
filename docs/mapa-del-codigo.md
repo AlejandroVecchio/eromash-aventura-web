@@ -241,6 +241,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **caceria.js**: la Cacería Salvaje (sistema CACERIA)
   - cuándo · sonidos armados · la llegada · los jinetes que cruzan · el final · el cuerno · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
+- **casa.js**: la casa propia (sistema CASA)
+  - dónde: junto al camino que sale del Puesto · comprar y mejorar · el arcón · la huerta · el cuarto · el sistema
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
   - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
@@ -340,6 +342,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: manantialRunico, piedraBerkano
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
+- **assets-casa.js**: la casa de Hrolf, la casa propia (assets de CASA)
+  - assets: letreroVenta, huertaCasa
 - **assets-casas.js**: las casas de varios cuartos
   - La puerta de adentro · El paso secreto · El tapiz de la pared · Las tablas flojas
   - assets: puertaInterior, pasoSecreto, tapizPared, tablasFlojas
@@ -428,6 +432,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
+- **casa.js**: Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.

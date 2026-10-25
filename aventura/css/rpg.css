@@ -196,3 +196,4 @@
 #libro .lb-botones button:not(:disabled):hover { background: #3A1A14; border-color: #FFD98A; }
 #libro .lb-pie { margin: 8px 0 0; color: #8A8080; font-size: 12px; }
 @media (max-width: 640px) { #libro .lb-hojas { grid-template-columns: 1fr; } #libro .lb-hoja { min-height: 0; } }
+

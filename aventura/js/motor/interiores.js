@@ -18,6 +18,8 @@ window.INTERIORES = (function () {
   const puertas = []; // { cosa, tipo, clave }
 
   const TIPO_DE = { casaEikholt: "casa", casaLindes: "lindes", herreriaAsa: "herreria", casaSanacion: "sanacion", hongoDorado: "taberna" };
+  // cuartos que arman otros sistemas (la casa propia de casa.js): CUARTOS[tipo](ayuda, edificio, clave) → { pared, ventana, estandarte, repisa }
+  const CUARTOS = {};
   // ---------- cómo es cada cuarto ----------
   // muebles: { id, x, y, o, r (medio ancho que choca), accion: clave de texto, fn }
   function armarCuarto(tipo, edificio, clave, editor) {
@@ -72,6 +74,12 @@ window.INTERIORES = (function () {
       g.push({ id: "ulf", x: 640, y: 650 });
       estandarte = 990;
       ventana = 560;
+    } else if (CUARTOS[tipo]) {
+      const r = CUARTOS[tipo]({ mueble, cama, hogar, examinar, dormir }, edificio, clave) || {};
+      if (r.pared) pared = r.pared;
+      if (r.ventana != null) ventana = r.ventana;
+      if (r.estandarte != null) estandarte = r.estandarte;
+      if (r.repisa != null) repisa = r.repisa;
     } else {
       // las casas de la gente: cinco maneras de vivir, y no todas tienen arcón
       const conArcon = editor || Math.floor(sem * 7) % 3 === 0,
@@ -117,7 +125,7 @@ window.INTERIORES = (function () {
     const lugarTrampilla = { lindes: [1120, 690], herreria: [1180, 850], sanacion: [770, 830], taberna: [800, 855] };
     const LT = [[480, 735], [620, 725], [900, 690], [760, 700], [960, 860]];
     const rs = DIB.azar(Math.round(sem * 1000) + 77);
-    const conSotano = editor || tipo !== "casa" || rs() < 0.7;
+    const conSotano = !CUARTOS[tipo] && (editor || tipo !== "casa" || rs() < 0.7);
     if (conSotano) {
       const [tx, ty] = lugarTrampilla[tipo] || LT[v % 5];
       const escondida = !editor && tipo === "casa" && rs() < 0.5;
@@ -1304,6 +1312,7 @@ window.INTERIORES = (function () {
     },
     cercanos(dar) {
       for (const p of puertas) {
+        if (p.puede && !p.puede()) continue;
         const d = Math.hypot(p.cosa.x - jug.x, p.cosa.y + 40 - jug.y);
         if (d < 140) dar(d, t("in.accion_entrar", [p.tipo === "plano" ? plano(p.plano).nombre : t("in.nombre_" + p.tipo)]), () => entrar(p));
       }
@@ -1346,5 +1355,11 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
+  // otro sistema suma una puerta (op.puede() dice si se puede entrar ahora) y cómo es su cuarto
+  function agregarPuerta(cosa, tipo, op = {}) {
+    const p = { cosa, tipo, clave: op.clave || tipo, puede: op.puede };
+    puertas.push(p);
+    return p;
+  }
+  return { puertas, agregarPuerta, CUARTOS, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();
