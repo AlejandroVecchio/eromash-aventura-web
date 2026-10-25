@@ -30,6 +30,12 @@ window.OBJETOS = (function () {
     sable: { slot: "arma", tipo: "espada", g: "m", dano: 9, vel: 1.12, desde: 5, arte: { lib: "espada", fam: "cimitarra" } },
     espadaRunica: { slot: "arma", tipo: "espada", g: "f", dano: 10, vel: 1, desde: 8, implicito: [["runico", 8]], arte: { lib: "espada", fam: "runica" } },
     espadaHueso: { slot: "arma", tipo: "espada", g: "f", dano: 11, vel: 1, desde: 12, implicito: [["robo", 1]], arte: { lib: "espada", fam: "huesos" } },
+    // hachas (motor/armas.js): más lentas y anchas, sangran y se lanzan cargando
+    hachaMano: { slot: "arma", tipo: "hacha", g: "f", dano: 10, vel: 1, desde: 1, arte: { lib: "arma", forma: "hacha", fam: 0 } },
+    hachaBarbuda: { slot: "arma", tipo: "hacha", g: "f", dano: 11, vel: 0.95, desde: 4, arte: { lib: "arma", forma: "hacha", fam: 1 } },
+    hachaRunica: { slot: "arma", tipo: "hacha", g: "f", dano: 10, vel: 1, desde: 9, implicito: [["runico", 8]], arte: { lib: "arma", forma: "hacha", fam: 2 } },
+    hachaHueso: { slot: "arma", tipo: "hacha", g: "f", dano: 11, vel: 1, desde: 13, implicito: [["robo", 1]], arte: { lib: "arma", forma: "hacha", fam: 3 } },
+    hachaDoble: { slot: "arma", tipo: "hacha", g: "f", dano: 12, vel: 0.92, desde: 16, arte: { lib: "arma", forma: "hacha", fam: 4 } },
     escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
     escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },
@@ -200,6 +206,8 @@ window.OBJETOS = (function () {
       l = [];
     if (it.d) l.push({ txt: t("ob.l_dano", [String(it.d).replace(".", I18N.lang === "en" ? "." : ","), String(B.vel).replace(".", I18N.lang === "en" ? "." : ",")]), col: "#F2ECEC", grande: true });
     if (it.ar) l.push({ txt: t("ob.l_armadura", [it.ar]), col: "#F2ECEC", grande: true });
+    // cómo pega cada tipo de arma (motor/armas.js)
+    if (B.tipo) l.push({ txt: t("ar.rasgo_" + B.tipo), col: "#E0B2B2" });
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
     return l;

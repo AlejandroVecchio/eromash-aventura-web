@@ -573,6 +573,15 @@
     GOLPE_CARRERA = { wind: 0.04, swing: 0.16, rec: 0.26, arc: 1.1, reach: 112, dano: 24, avanza: 420, empuje: 1.4 },
     GOLPE_CAIDA = { wind: 0, swing: 0.1, rec: 0.24, arc: Math.PI * 2, reach: 92, dano: 22, empuje: 1.3, giro: true, caida: true },
     CARGA_GIRO = 0.6;
+  // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
+  const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
+  const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
+  // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
+  function dirGolpe() {
+    const dir = Math.atan2(jug.dir[1], jug.dir[0]);
+    if (mouse.usado && !CONTROLES.mando()) return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
+    return apuntar(dir);
+  }
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
     if (window.SONIDO) SONIDO.tocar(d.caida ? "caida" : "tajo", { vol: d.giro || d.remate ? 0.55 : 0.4, tono: d.giro ? 0.8 : d.remate ? 0.88 : 1.05 });
@@ -770,7 +779,7 @@
     if (jug.saltoAntes > 0 && jug.salto <= 0) {
       polvareda(jug.x, jug.y, 6);
       if (window.SONIDO && !jug.golpeAire) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
-      if (jug.golpeAire) atacarCon(GOLPE_CAIDA, Math.atan2(jug.dir[1], jug.dir[0]));
+      if (jug.golpeAire) atacarCon(golpesAhora().caida, Math.atan2(jug.dir[1], jug.dir[0]));
       jug.golpeAire = false;
     }
     jug.saltoAntes = jug.salto;
@@ -791,12 +800,13 @@
     }
     if (CONTROLES.pulsado("atacar") && !jug.salto) jug.carga = (jug.carga || 0) + dt;
     else if (jug.carga) {
-      const listo = jug.carga >= CARGA_GIRO && jug.sta >= 15;
+      const G = golpesAhora(),
+        listo = jug.carga >= G.carga && jug.sta >= G.coste;
       jug.carga = 0;
       if (listo) {
-        jug.sta -= 15;
+        jug.sta -= G.coste;
         jug.staEspera = 0.6;
-        atacarCon(GOLPE_GIRO, 0);
+        atacarCon(G.giro, G.giro.giro ? 0 : dirGolpe());
         jug.pedido = null;
       }
     }
@@ -805,14 +815,13 @@
       jug.golpeAire = true;
     } else if (pide("atacar") && !jug.atk) {
       jug.pedido = null;
-      let dir = Math.atan2(jug.dir[1], jug.dir[0]);
-      if (mouse.usado && !CONTROLES.mando()) dir = Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-      else dir = apuntar(dir);
-      if (jug.correr) atacarCon(GOLPE_CARRERA, dir);
+      const dir = dirGolpe(),
+        G = golpesAhora();
+      if (jug.correr) atacarCon(G.carrera, dir);
       else {
-        const n = jug.comboT > 0 ? (jug.combo + 1) % GOLPES.length : 0;
+        const n = jug.comboT > 0 ? (jug.combo + 1) % G.combo.length : 0;
         jug.combo = n;
-        atacarCon(GOLPES[n], dir, n % 2 ? -1 : 1);
+        atacarCon(G.combo[n], dir, n % 2 ? -1 : 1);
       }
     }
     // los caminos son más rápidos; fuera de pelea correr no cansa
@@ -1147,7 +1156,7 @@
     sp.y += po.dy + (1 - po.sy) * 40;
     if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
     const detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
-    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
+    if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
         d = a.d,
@@ -1200,7 +1209,7 @@
       }
     }
     c.restore();
-    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
+    if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();
   }
   function dibujarNpc(n) {

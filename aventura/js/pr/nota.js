@@ -5,29 +5,33 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 3,
-    titulo: { es: "Botín y equipo", en: "Loot and gear" },
+    pr: 4,
+    titulo: { es: "Tipos de arma: hachas", en: "Weapon types: axes" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: el nivel de cada pieza sale del de la criatura o el lugar", en: "levels: each item's level comes from the creature or the place" },
-      { pr: 2, es: "atributos: anillos y amuletos suman Fuerza, Destreza, Vigor y Espíritu", en: "attributes: rings and amulets add Strength, Dexterity, Vigour and Spirit" },
+      { pr: 3, es: "botín y equipo: las hachas caen como cualquier pieza y van en la casilla del arma", en: "loot and gear: axes drop like any piece and go in the weapon slot" },
+      { pr: 1, es: "niveles: las hachas mejores salen desde cierto nivel de objeto", en: "levels: better axes start at a given item level" },
     ],
     mirar: [
-      { es: "Las criaturas y los cofres sueltan piezas: tiradas en el piso con su haz de color (azul mágica, dorado rara, naranja legendaria) y el nombre arriba. Se juntan con E.", en: "Creatures and chests drop gear: lying on the ground with a coloured beam (blue magic, gold rare, orange legendary) and its name above. Pick up with E." },
-      { es: "Mochila (I): nueve casillas de equipo con el arte de la arena. En Bolsa, tocar una pieza la pone y dice cuánto cambia comparada con lo puesto (verde sube, rojo baja).", en: "Backpack (I): nine gear slots with the arena's art. In Bag, pressing a piece wears it and shows how it compares with what you wear (green up, red down)." },
-      { es: "R (△) o el botón del pie desarma una pieza por plata; las raras piden confirmar.", en: "R (△) or the footer button salvages a piece for silver; rare ones ask to confirm." },
-      { es: "El arma puesta se ve en la mano de Eromash y en el vikingo de la mochila; la pechera también.", en: "The worn weapon shows in Eromash's hand and on the backpack viking; so does the chest piece." },
+      { es: "Con un hacha puesta los golpes son más lentos y anchos; el tercero es un hachazo que parte el piso.", en: "With an axe the hits are slower and wider; the third is a chop that cracks the ground." },
+      { es: "Uno de cada tres golpes hace sangrar: gotas rojas y números rojos que bajan la vida de a poco.", en: "One hit in three causes bleeding: red drops and red numbers that drain life." },
+      { es: "Manteniendo atacar se lanza el hacha: vuela girando, corta a la ida y a la vuelta y vuelve sola. Mientras vuela, Eromash pega con los puños.", en: "Hold attack to throw the axe: it spins, cuts on the way out and back and returns. Meanwhile Eromash punches." },
+      { es: "Cinco hachas dibujadas como las espadas de la arena, cada una con cinco escalones de rareza (mirá la Bolsa).", en: "Five axes drawn like the arena's swords, each with five rarity tiers (check the Bag)." },
     ],
     botones: [
-      { es: "Lluvia de botín a tus pies (todas las rarezas)", en: "Loot shower at your feet (all rarities)", fn: (A) => {
-        ["espadaAncha", "sable", "yelmo", "cotaMalla", "grebas", "botasHerradas", "talisman", "sortija"].forEach((b, i) => BOTIN.tirar(A.jug.x - 200 + i * 55, A.jug.y + 80 + (i % 2) * 50, OBJETOS.generar({ base: b, n: Math.max(3, RPG.nivel()), r: i % 4, tema: ARTE_OBJ.temaEn(A.W, A.jug.x, A.jug.y) })));
-      } },
-      { es: "Llenar la bolsa con 12 piezas y abrirla", en: "Fill the bag with 12 pieces and open it", fn: (A) => {
-        for (let i = 0; i < 12; i++) BOTIN.dar(OBJETOS.generar({ n: Math.max(5, RPG.nivel()), hallazgo: 4, tema: i % 5 }), { silencio: true });
+      { es: "Darme las cinco hachas y abrir la Bolsa", en: "Give me the five axes and open the Bag", fn: (A) => {
+        ["hachaMano", "hachaBarbuda", "hachaRunica", "hachaHueso", "hachaDoble"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 16, r: i % 4 }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ir con un grupo y su líder (suelta seguro)", en: "Go to a group and its leader (sure drop)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160) },
-      { es: "Subir a nivel 12 (piezas más fuertes)", en: "Jump to level 12 (stronger gear)", fn: (A) => { while (RPG.nivel() < 12) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp); } },
+      { es: "Ponerme un hacha legendaria", en: "Equip a legendary axe", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "hachaRunica", n: Math.max(9, RPG.nivel()), r: 3 }), { silencio: true });
+        BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
+      } },
+      { es: "Ir con un grupo a probarla", en: "Go to a group to try it", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160) },
+      { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {
+        const i = BOTIN.estado().bolsa.findIndex((it) => it.fijo === "ob.forastero");
+        if (i >= 0) BOTIN.equipar(i);
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

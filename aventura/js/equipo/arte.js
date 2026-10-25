@@ -190,6 +190,7 @@ window.ARTE_OBJ = (function () {
   function icono(c, it, x, y, lado) {
     const B = OBJETOS.BASES[it.b];
     if (!B) return false;
+    if (B.arte.lib === "arma" && window.DIB_ARMAS) return DIB_ARMAS.icono(c, B.arte.forma, B.arte.fam, TIER[it.r] || 0, x, y, lado);
     if (B.arte.lib === "amuleto" || B.arte.lib === "anillo") {
       c.save();
       c.translate(x, y);
@@ -212,6 +213,20 @@ window.ARTE_OBJ = (function () {
   // el arma en la mano de Eromash en el mundo (las espadas con el dibujo de la arena); false si no sabe dibujarla
   function dibujarArma(c, it, x, y, ang, s, brillo) {
     const B = it && OBJETOS.BASES[it.b];
+    if (B && B.arte.lib === "arma" && window.DIB_ARMAS) {
+      // las armas propias (hachas y las que vienen), en las coordenadas de la espada de siempre
+      c.save();
+      c.translate(x, y);
+      c.rotate(ang + Math.PI / 2);
+      c.scale(s, s);
+      if (brillo) {
+        c.shadowColor = "#FFD98A";
+        c.shadowBlur = 24;
+      }
+      DIB_ARMAS.dibujar(c, B.arte.forma, B.arte.fam, TIER[it.r] || 0);
+      c.restore();
+      return true;
+    }
     if (!B || B.arte.lib !== "espada" || !ES()) return false;
     return ES().dibujar(c, comoEspada(it), x, y, ang, s, brillo);
   }
@@ -237,5 +252,5 @@ window.ARTE_OBJ = (function () {
     return dx > 0 ? 4 : 2;
   }
 
-  return { icono, imagen, dibujarArma, svgEspada, pechera, temaEn, alCargar: (f) => avisos.push(f), version: () => version, TEMAS };
+  return { tier: (it) => TIER[it.r] || 0, icono, imagen, dibujarArma, svgEspada, pechera, temaEn, alCargar: (f) => avisos.push(f), version: () => version, TEMAS };
 })();
