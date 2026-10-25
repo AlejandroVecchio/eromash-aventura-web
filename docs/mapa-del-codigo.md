@@ -453,7 +453,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
-- **facciones.js**: Textos de las facciones (motor/facciones.js, mundo/assets-facciones.js): prefijo fc. (y as., mp.ley_facciones).
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
 - **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
