@@ -214,6 +214,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
+- **cerraduras.js**: cofres con candado y ganzúas (sistema CERRADURAS, modo "ganzua")
+  - empezar y terminar · el juego de la cerradura · ubicar · el sistema
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
   - lo que hace falta · el menú de la fogata · el asador · íconos · el sistema
@@ -301,6 +303,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-casas.js**: las casas de varios cuartos
   - La puerta de adentro · El paso secreto · El tapiz de la pared · Las tablas flojas
   - assets: puertaInterior, pasoSecreto, tapizPared, tablasFlojas
+- **assets-cerraduras.js**: el cofre con candado (asset de CERRADURAS)
+  - assets: cofreCandado
 - **assets-claro.js**: el Claro del Ciervo, versión épica (se suma a ASSETS)
   - assets: arcoAstas, paredRoca, manchaEnferma, camaMusgo, escaleraRaices, apostadero, fisura
 - **assets-comercio.js**: el puesto de Kolbrun, la buhonera de Eldrakar (assets de COMERCIO)
@@ -377,6 +381,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
+- **cerraduras.js**: Textos de los cofres con candado y las ganzúas (motor/cerraduras.js): prefijo gz. (y as.cofreCandado, mt.ganzua)
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.

@@ -24,7 +24,7 @@ window.COMERCIO = (function () {
       piezas: 9,
       slots: ["arma", "arma", "arma", "escudo", "casco", "pecho", "piernas", "botas"],
       rareza: [0.62, 0.3, 0.08, 0],
-      mats: { hierro: [4, 8, 16], cuero: [4, 8, 14] }, // [mín, máx, precio]
+      mats: { hierro: [4, 8, 16], cuero: [4, 8, 14], ganzua: [3, 6, 15] }, // [mín, máx, precio] (las ganzúas: cerraduras.js)
     },
     kolbrun: {
       piezas: 6,
