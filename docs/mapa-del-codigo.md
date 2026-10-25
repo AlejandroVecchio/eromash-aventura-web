@@ -312,8 +312,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **regateo.js**: el regateo (sistema REGATEO)
   - el estado del día · abrir, pedir, parar · la ventana · el sistema
 - **regiones.js**: regiones con nombre (sistema REGIONES)
-- **remates.js**: los remates (sistema REMATES)
-  - quién se puede rematar · rematar · los trazos · el sistema
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
@@ -491,7 +489,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
-- **remates.js**: Textos de los remates (motor/remates.js): prefijo rm.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
 - **saga.js**: Textos de la saga de Eromash (motor/saga.js): prefijo sg.
 - **santuarios.js**: Textos de los hörgar de los dioses (motor/santuarios.js): prefijo sn. (y as.horgr, mp.ley_dioses)
