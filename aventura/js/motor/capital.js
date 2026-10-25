@@ -170,5 +170,5 @@ window.CAPITAL = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { gente };
+  return { gente, hablar };
 })();

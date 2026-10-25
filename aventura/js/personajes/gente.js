@@ -539,5 +539,5 @@ window.GENTE = (function () {
     else VISTAS[o.vista || "S"](c, f, t, o);
     c.restore();
   }
-  return { LISTA, FICHAS, dibujar, vistaDe, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
+  return { LISTA, FICHAS, PROPIOS, VISTAS, dibujar, vistaDe, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
 })();

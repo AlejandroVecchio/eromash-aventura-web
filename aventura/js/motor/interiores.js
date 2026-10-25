@@ -551,6 +551,12 @@ window.INTERIORES = (function () {
   function subir() {
     const a = dentro.arriba;
     if (!a) return;
+    // bajó desde un cuarto que arma otro sistema (la sala del Hongo Dorado): le devuelve el mando
+    if (a.alSubir) {
+      dentro = null;
+      J.dentro = null;
+      return a.alSubir();
+    }
     a.ix = a.vuelta.x;
     a.iy = a.vuelta.y;
     a.fundido = 1;
@@ -558,6 +564,16 @@ window.INTERIORES = (function () {
     // la puerta de piedra se pudo abrir abajo
     dentro = a;
     jug.mira = { vista: "S", espejo: false };
+  }
+  // la trampilla de un cuarto que arma otro sistema (la sala del Hongo Dorado): baja a su sótano de siempre y, al subir
+  // la escalera, alSubir() lo vuelve a poner arriba
+  function bajarDesde(p, alSubir) {
+    const s0 = armarSotano(p.tipo, p.cosa, p.clave);
+    dentro = Object.assign(s0, { tipo: p.tipo, puerta: p, arriba: { alSubir }, ix: 380, iy: FONDO + 110, fundido: 1, saliendo: 0 });
+    J.dentro = sistemaDentro;
+    jug.atk = null;
+    jug.mira = { vista: "S", espejo: false };
+    HUD.aviso(t("in.sotano_" + s0.sotano), "#E0B2B2");
   }
   function abrirCofre(q, k, rico) {
     if (st.cofres[k]) return;
@@ -596,6 +612,8 @@ window.INTERIORES = (function () {
 
   // ---------- entrar y salir ----------
   function entrar(p) {
+    // el Hongo Dorado es una sala grande aparte, pensada para la vista girada (motor/hongo.js)
+    if (p.tipo === "taberna" && window.HONGO) return HONGO.entrar(p);
     const cuarto = p.tipo === "plano" ? cuartoPlano(p, 0) : armarCuarto(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(cuarto, { tipo: p.tipo, puerta: p, ix: 240, iy: 830, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;
@@ -1346,5 +1364,5 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
+  return { puertas, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();
