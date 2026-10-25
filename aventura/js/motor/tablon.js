@@ -106,5 +106,5 @@ window.TABLON = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { estado: () => st };
+  return { sistema, estado: () => st };
 })();

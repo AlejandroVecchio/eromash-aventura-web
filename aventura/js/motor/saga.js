@@ -34,6 +34,7 @@ window.SAGA = (function () {
     ["libros", "mundo", "ansuz", "#F2ECEC", "LIBROS", () => [cuenta(LIBROS.estado().leidos), LIBROS.IDS.length]],
     ["santuarios", "mundo", "algiz", "#C8402D", "SANTUARIOS", () => [cuenta(SANTUARIOS.estado().vistos), largo(SANTUARIOS.LISTA)]],
     ["elementos", "mundo", "thurisaz", "#B8A8F0", "ELEMENTOS", () => [(ELEMENTOS.estado().roble ? 1 : 0) + (ELEMENTOS.estado().fuente ? 1 : 0) + Math.min(6, cuenta(ELEMENTOS.estado().vistas)), 8]],
+    ["ruta", "mundo", "raidho", "#73D5DB", "RUTA", () => [RUTA.abiertos(), RUTA.total()]],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
   ];
   const HITOS = [25, 50, 75, 100];
