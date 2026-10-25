@@ -191,14 +191,20 @@ window.PODERES = (function () {
     pj.hierbas = Math.min(MAX_HIERBAS, (pj.hierbas || 0) + n);
     if (window.BARRA) BARRA.recibido("hierbas");
   }
+  // ---------- la cura que escala ----------
+  // Lo que cura en números fijos (hierbas, las bolitas de vida, las piedras de Berkano, la vida que vuelve sola) crece
+  // con la vida máxima: a 100 de vida es lo de siempre y a 300 cura unas 2,7 veces más (exponente 0,9, para que la
+  // vida de más igual pese). El frasco ya cura un porcentaje.
+  const escalaCura = () => Math.max(1, Math.pow((jug.hpMax || 100) / 100, 0.9));
   function comerHierbas() {
     if (!pj.hierbas) return A.avisar("bar.sin_hierbas", "#C8402D");
     if (jug.hp >= jug.hpMax && cura <= 0) return A.avisar("bar.hierbas_lleno", "#7BC86C");
     pj.hierbas--;
-    cura += 45;
+    const n = Math.round(45 * escalaCura());
+    cura += n;
     if (window.VIDA) VIDA.evento("sanar", jug.x, jug.y);
     if (window.SONIDO) SONIDO.tono("sine", 660, 880, 0.35, 0.04, { filtro: 2400 });
-    A.numero(jug.x, jug.y - 90, 45, "#7BC86C");
+    A.numero(jug.x, jug.y - 90, n, "#7BC86C");
   }
   function darManzana() {
     pj.manzanas++;
@@ -320,7 +326,7 @@ window.PODERES = (function () {
       }
       // las hierbas curan de a poco (las teclas de las runas y de las hierbas las mira la barra: interfaz/barra.js)
       if (cura > 0 && !jug.muerto) {
-        const d = Math.min(cura, 22 * dt);
+        const d = Math.min(cura, 22 * escalaCura() * dt); // siempre en unos 2 s
         cura -= d;
         jug.hp = Math.min(jug.hpMax, jug.hp + d);
       }
@@ -348,8 +354,9 @@ window.PODERES = (function () {
           if (b.tipo === "plata") darPlata(Math.max(1, Math.round(b.cant * ((window.RPG && RPG.stats().plata) || 1))));
           else {
             // lo que sobra de vida va a las piedras de Berkano (berkano.js)
-            const sobra = jug.hp + b.cant - jug.hpMax;
-            jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+            const cant = Math.round(b.cant * escalaCura()),
+              sobra = jug.hp + cant - jug.hpMax;
+            jug.hp = Math.min(jug.hpMax, jug.hp + cant);
             if (sobra > 0 && window.BERKANO) BERKANO.cargar(sobra);
           }
           if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
@@ -475,5 +482,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, lanzar, darHierbas, comerHierbas, MAX_HIERBAS, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, LANZAR, pj: () => pj };
+  return { escalaCura, valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, lanzar, darHierbas, comerHierbas, MAX_HIERBAS, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, LANZAR, pj: () => pj };
 })();

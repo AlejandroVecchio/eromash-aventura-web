@@ -44,6 +44,10 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## La cura que escala (`PODERES.escalaCura`)
+
+Lo que cura en números fijos crece con la vida máxima: `max(1, (vida máxima / 100)^0,9)`, ×2,7 a 300 de vida. Vale para las hierbas (45, siempre en unos 2 s), las bolitas de vida que sueltan las criaturas y los cofres, lo que guarda cada piedra de Berkano (60/80/100/120 según la talla) y la vida que vuelve sola fuera de pelea (12 por segundo). El frasco de Thora ya cura un porcentaje de la vida.
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos

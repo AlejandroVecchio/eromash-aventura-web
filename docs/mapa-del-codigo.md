@@ -303,7 +303,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
-  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
+  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · la cura que escala · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
   - el estado del día · abrir, pedir, parar · la ventana · el sistema
 - **regiones.js**: regiones con nombre (sistema REGIONES)

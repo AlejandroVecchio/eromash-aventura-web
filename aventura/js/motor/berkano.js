@@ -22,7 +22,8 @@ window.BERKANO = (function () {
     PRECIO_PIEDRA = [120, 200]; // las dos que vende Thora
   let st = null;
   const clave = (o) => Math.round(o.x) + "_" + Math.round(o.y);
-  const cura = () => CURA[Math.min(CURA.length - 1, st.talla)];
+  // lo que guarda cada piedra crece con la vida máxima (PODERES.escalaCura)
+  const cura = () => Math.round(CURA[Math.min(CURA.length - 1, st.talla)] * (window.PODERES && PODERES.escalaCura ? PODERES.escalaCura() : 1));
 
   // ---------- las piedras ----------
   const cargadas = () => st.p.filter((p) => p >= 0.999).length;
@@ -281,6 +282,7 @@ window.BERKANO = (function () {
     lineaForja,
     MAX_BREBAJES,
     estado: () => st,
+    cura: () => (st ? cura() : 0),
     brebajes: () => (st ? st.brebajes : 0),
     puedeBrebaje: () => !!st && st.brebajes > 0 && st.p.length > 0 && !llenas(),
     manantiales: () => (lista || []).map((m) => ({ x: m.cosa.x, y: m.cosa.y, luz: st ? estadoDe(m).luz : 1 })),
