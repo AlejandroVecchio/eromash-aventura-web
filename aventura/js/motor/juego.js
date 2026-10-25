@@ -348,9 +348,14 @@
   inter(P.pedestal, "accion_contactar", () => en("EL-06") && tiene("nucleo_puesto") && !tiene("runa_paso"), () => cineNucleo());
   inter(P.sello, "accion_tocar", () => en("EL-07") && tiene("sello_visto") && !tiene("voz_santuario"), () => dialogo("runa_santuario"), 150);
   inter(P.sello, "accion_calco", () => en("EL-07") && tiene("voz_santuario") && !tiene("calco"), () => {
-    jug.interactuando = 0.8;
-    H.anotar("diario_calco");
-    H.marcar("calco");
+    const calco = () => {
+      jug.interactuando = 0.8;
+      H.anotar("diario_calco");
+      H.marcar("calco");
+    };
+    // antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (MINIJ «rayo»)
+    if (!window.MINIJ || !MINIJ.JUEGOS.rayo) return calco();
+    MINIJ.empezar("rayo", { variante: "ataduras", semilla: 707, quien: t("mn.rayo_sello_quien"), fin: (r) => (r.gano ? calco() : !r.dejo && HUD.aviso(t("mn.rayo_sello_mal"), "#E0B2B2")) });
   }, 150);
   inter(P.nucleo, "accion_recoger", () => en("EL-05") && tiene("ciervo_vencido") && !tiene("nucleo") && !!nucleoSuelo, () => {
     jug.interactuando = 0.6;

@@ -60,9 +60,16 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 (próximamente)
 
-## El rayo de luz rúnica
+## El rayo de luz rúnica (`mj-rayo.js`)
 
-(próximamente)
+Una losa en grilla con una piedra que echa luz rúnica (Kenaz), piedras espejo talladas en diagonal y el sello (Othala) que hay que encender. Tocar un espejo lo da vuelta (de / a \). La luz rebota en cada espejo y se corta en las piedras ciegas y en las ataduras violeta. Con el teclado, las flechas mueven la marca y usar da vuelta el espejo.
+
+- **Variantes**: `base` (7 × 5, tres vueltas, dos señuelos), `ataduras` (casillas violeta que se tragan la luz y un espejo atado que no gira), `dos` (dos fuentes y dos sellos), `luna` (la luz pálida baja de arriba, con Sowilo) y `reloj` (8 × 6, 90 s).
+- **Siempre tiene solución**: se arma primero el camino de la luz (tramos rectos y una vuelta entre cada uno) y se ponen los espejos en sus vueltas; los demás son señuelos en lo que la luz no usa. Se revuelve y se asegura que no arranque resuelto.
+- **Dónde está**:
+  - **El rito de la luna** (`ritos.js`): de noche, tocar la piedra pide llevar la luz de la luna hasta ella (semilla por rito).
+  - **El sello del Santuario de las Raíces** en la misión principal EL-07 (`juego.js`): antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (`ataduras`, semilla fija). Dejarlo no hace el calco.
+  - `RITOS.tocar(r)` lo abre sin caminar (pruebas).
 
 ## Hnefatafl
 
