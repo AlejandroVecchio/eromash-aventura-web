@@ -254,8 +254,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
-- **dados.js**: los dados de hueso (sistema DADOS, modo "dados")
-  - los puntos · la partida · la capa del juego · las mesas · el sistema
 - **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
   - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
@@ -363,8 +361,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-contratos.js**: los contratos de caza (assets de CONTRATOS)
   - el poste de los contratos · los rastros de una bestia
   - assets: posteContratos, rastroContrato
-- **assets-dados.js**: la mesa de dados (assets de DADOS)
-  - assets: mesaDados
 - **assets-eikholt.js**: Eikholt, la capital (se suma a ASSETS)
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
 - **assets-elementos.js**: las runas de los elementos: Thurisaz y Laguz (assets de ELEMENTOS)
