@@ -125,9 +125,6 @@ window.SIGILO = (function () {
         }
       });
     },
-    casillas() {
-      return [{ id: "sigilo", icono: "sl_ojo", accion: "agacharse", nombre: t("sl.titulo"), listo: !J.dentro, espera: 0 }];
-    },
     efectosHud() {
       return jug.agachado ? [{ texto: t("sl.agachado"), n: Math.round((1 - J.sigilo) * 100) + " %", col: "#73D5DB" }] : [];
     },
