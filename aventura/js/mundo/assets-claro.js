@@ -33,7 +33,7 @@
     const s = o.s || 1,
       h = (o.viejo ? 300 : 200) * s,
       col = o.viejo ? HUESO[2] : HUESO[0];
-    sombra(c, x + 10 * s, y + 4 * s, 110 * s, 16 * s);
+    if (!o.sinSombra) sombra(c, x + 10 * s, y + 4 * s, 110 * s, 16 * s);
     if (o.caido) {
       asta(c, x - 90 * s, y + 6 * s, 140 * s, 1, s * 0.8, col);
       P(c, [x - 30 * s, y + 6 * s, x + 60 * s, y - 10 * s, x + 100 * s, y + 6 * s], C.troncoSombra);
@@ -206,16 +206,143 @@
       });
     }
   }
-  ASSETS.LISTA.soporteAtadura = Object.assign({}, ASSETS.LISTA.soporteAtadura, { f: menhirSoporte, alto: 540, choque: { r: 50 } });
+
+  // ======================================================================
+  //  ARMADOS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  const T = C.T,
+    TR = ROCA.slice(0, 3),
+    VIOL = ["#3E3A48", "#4E4A58", "#605A6C"];
+  // el menhir-soporte: la piedra de 8 m con tres runas adelante, las tres fajas violetas que la ciñen, el musgo y el
+  // haz de hilos hacia el Ciervo; rota, el muñón con los surcos y la mitad de arriba tirada
+  function menhirSoporteV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      VIO = DIB.VIOLETA,
+      h = 520;
+    VOL.sombra(c, pr, 10, 0, 80, 52);
+    if (o.roto) {
+      ASSETS.KIT.menhirV(c, pr, 50, 36, 230, VIOL, (cc, l, hh) => {
+        for (let k = 0; k < 4; k++) L(cc, l * 0.2 + k * 18, -40, l * 0.24 + k * 18, -hh + 20, "#3A3644", 3);
+        alfa(cc, 0.5, () => FUTHARK.dibujar(cc, "algiz", l / 2, -100, 70, DIB.RUNICO, 4));
+      });
+      VOL.prisma(c, pr, [[70, -20], [250, -10], [256, 26], [76, 30]], 0, 40, VIOL);
+      return;
+    }
+    const pulso = 0.6 + Math.sin(t * 3 + (o.sem || 0)) * 0.3,
+      fajas = (desde, hasta) =>
+        [0.3, 0.5, 0.72].forEach((u) =>
+          VOL.enPiso(c, pr, (cc) => {
+            cc.strokeStyle = VIO;
+            cc.lineWidth = 7;
+            cc.beginPath();
+            cc.ellipse(0, 0, 56 - u * 22, 42 - u * 16, 0, desde, hasta);
+            cc.stroke();
+          }, h * u),
+        );
+    if (o.visto) VOL.halo(c, pr, 0, 0, h * 0.55, 120, VIO, pulso);
+    fajas(Math.PI, TAU);
+    ASSETS.KIT.menhirV(c, pr, 54, 40, h, VIOL, (cc, l) => ["algiz", "eihwaz", "dagaz"].forEach((nom, i) => FUTHARK.dibujar(cc, nom, l / 2, -120 - i * 120, 80, "#34303E", 7)));
+    fajas(0, Math.PI);
+    VOL.elipse(c, pr, -30, 30, 2, 30, 14, C.musgo2);
+    if (o.hacia) {
+      const [hx, hy] = VOL.rel(x, y, o.hacia[0] - x, o.hacia[1] - y),
+        vib = Math.sin(t * 22) * (o.vibra || 0) * 10 * pr.s;
+      alfa(c, o.visto ? 0.9 : 0.45, () => {
+        for (let k = 0; k < 5; k++) {
+          const q = pr(0, 0, h * (0.45 + k * 0.06)),
+            ey = hy - 140 + k * 14,
+            mx = (q[0] + hx) / 2,
+            my = (q[1] + ey) / 2 + 30 * pr.s + vib * (k % 2 ? 1 : -1);
+          c.beginPath();
+          c.moveTo(q[0], q[1]);
+          c.quadraticCurveTo(mx, my, hx, ey);
+          c.strokeStyle = k % 2 ? VIO : "#6A4A98";
+          c.lineWidth = 3 * pr.s;
+          c.stroke();
+        }
+      });
+    }
+  }
+  // la pared de roca: columnas de piedra de distinto alto, una al lado de la otra, con musgo arriba y raíces que cuelgan
+  function paredRocaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      r = azar((o.sem || 1) * 131),
+      h0 = 240 + r() * 120;
+    VOL.sombra(c, pr, 0, 0, 240, 50);
+    const S = VOL.escena(pr);
+    for (let k = 0; k < 6; k++) {
+      const u = -230 + (k + 0.5) * (460 / 6),
+        w = (r() - 0.5) * 16,
+        hh = h0 * (0.7 + r() * 0.4),
+        planta = VOL.redonda(u, w, 44 + r() * 8, 6, r() * 2, 32);
+      S.poner(u, w, () => {
+        VOL.prisma(c, pr, planta, 0, hh, TR, { tapa: k % 2 ? C.musgo2 : "#3E5A30" });
+        VOL.palo(c, pr, u + 10, w + 30, hh - 4, u + 14, w + 31, hh - 60 - r() * 60, 3, C.troncoSombra);
+      });
+    }
+    S.dibujar();
+  }
+  // la fisura: dos peñas y la grieta negra entre ellas, por donde se pierde el hilo
+  function fisuraV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.prisma(c, pr, [[-120, -20], [-14, -30], [-6, 24], [-110, 30]], 0, 130, TR, { tapa: ROCA[2] });
+    VOL.plano(c, pr, -14, 14, -10, 0, 120, "#111111");
+    VOL.prisma(c, pr, [[14, -30], [128, -24], [124, 28], [8, 24]], 0, 140, TR, { tapa: ROCA[2] });
+  }
+  // la escalera de raíces: raíces acostadas que suben hacia el fondo como peldaños, con musgo, y dos raíces gruesas a
+  // los costados
+  function escaleraRaicesV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    const S = VOL.escena(pr);
+    for (let k = 0; k < 7; k++) {
+      const w = -k * 24,
+        z = k * 22;
+      S.poner(k * 10, w, () => {
+        VOL.prisma(c, pr, [[k * 10 - 70, w - 12], [k * 10 + 70, w - 12], [k * 10 + 70, w + 12], [k * 10 - 70, w + 12]], 0, z, [C.troncoSombra, "#3A2C20", "#4A3828"], { tapa: "#3A3022" });
+        VOL.rollo(c, pr, k * 10 - 70, k * 10 + 70, w + 8, z + 4, 7, k % 2 ? T.tronco : [C.troncoSombra, C.tronco, C.corteza], { n: 6 });
+        VOL.elipse(c, pr, k * 10 - 40, w + 4, z + 9, 14, 6, C.musgo2);
+      }, z);
+    }
+    S.poner(-60, -60, () => VOL.palo(c, pr, -90, 10, 0, -40, -150, 170, 16, C.troncoSombra));
+    S.poner(120, -60, () => VOL.palo(c, pr, 100, 0, 0, 140, -150, 160, 16, C.tronco));
+    S.dibujar();
+  }
+  // el apostadero: la plataforma vieja sobre postes, la diagonal, la baranda, el banco vencido con las muescas y el
+  // cofrecito abajo
+  function apostaderoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 10, 0, 120, 50);
+    const S = VOL.escena(pr);
+    if (!o.abierto)
+      S.poner(57, 10, () => VOL.caja(c, pr, 40, 0, 0, 74, 20, 20, T.oscura, { tapa: C.madera, frente: (cc, l, h) => R(cc, l / 2 - 3, -h + 4, 6, 6, "#FFD98A") }));
+    S.poner(0, 0, () => {
+      [[-80, -30], [80, -30], [-80, 30], [80, 30]].forEach(([u, w]) => VOL.cubo(c, pr, u, w, 8, 8, 90, T.oscura));
+      VOL.palo(c, pr, -80, 31, 20, 80, 31, 80, 4, C.maderaSombra);
+      VOL.caja(c, pr, -100, -40, 90, 110, 40, 104, T.vieja, { arriba: (cc, l, h) => { for (let k = 0; k < 8; k++) R(cc, (k * l) / 8, -h, 2, h, C.maderaSombra); } });
+      [-90, 110].forEach((u) => [-38, 38].forEach((w) => VOL.cubo(c, pr, u, w, 4, 4, 36, T.oscura, null, 104)));
+      VOL.palo(c, pr, -90, 38, 140, 110, 38, 140, 4, C.madera);
+      VOL.palo(c, pr, -90, -38, 140, 110, -38, 140, 4, C.madera);
+      VOL.caja(c, pr, -40, -20, 104, 34, -6, 112, T.madera, { frente: (cc) => { for (let k = 0; k < 9; k++) R(cc, 6 + k * 6, -8, 1.5, 8, "#2A1E14"); } });
+    }, 90);
+    S.dibujar();
+  }
+  // el arco de astas es una lámina (dos cornamentas en un mismo plano): se ve de frente y de espaldas, de canto no
+  const arcoAstasV = (c, x, y, t, o) => {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 110, 30);
+    ASSETS.cartaV((cc, xx, yy, tt, oo) => arcoAstas(cc, xx, yy, tt, Object.assign({}, oo, { sinSombra: true })), 360, 340)(c, x, y, t, o);
+  };
+
+  ASSETS.LISTA.soporteAtadura = Object.assign({}, ASSETS.LISTA.soporteAtadura, { f: menhirSoporte, fv: menhirSoporteV, vol: true, alto: 540, choque: { r: 50 } });
 
   Object.assign(ASSETS.LISTA, {
-    arcoAstas: { f: arcoAstas, alto: 300, choque: { r: 20 }, grupo: "claro" },
-    paredRoca: { f: paredRoca, alto: 360, choque: { w: 440, h: 60 }, grupo: "claro" },
-    manchaEnferma: { f: manchaEnferma, alto: 0, choque: null, grupo: "claro" },
-    camaMusgo: { f: camaMusgo, alto: 0, choque: null, grupo: "claro" },
-    escaleraRaices: { f: escaleraRaices, alto: 180, choque: null, grupo: "claro" },
-    apostadero: { f: apostadero, alto: 140, choque: { w: 200, h: 30 }, grupo: "claro" },
-    fisura: { f: fisura, alto: 140, choque: { w: 240, h: 40 }, grupo: "claro" },
+    arcoAstas: { f: arcoAstas, fv: arcoAstasV, vol: true, alto: 300, choque: { r: 20 }, grupo: "claro" },
+    paredRoca: { f: paredRoca, fv: paredRocaV, vol: true, alto: 360, choque: { w: 440, h: 60 }, grupo: "claro" },
+    manchaEnferma: { f: manchaEnferma, fv: ASSETS.calcoV(manchaEnferma), vol: true, alto: 0, choque: null, grupo: "claro" },
+    camaMusgo: { f: camaMusgo, fv: ASSETS.calcoV(camaMusgo), vol: true, alto: 0, choque: null, grupo: "claro" },
+    escaleraRaices: { f: escaleraRaices, fv: escaleraRaicesV, vol: true, alto: 180, choque: null, grupo: "claro" },
+    apostadero: { f: apostadero, fv: apostaderoV, vol: true, alto: 140, choque: { w: 200, h: 30 }, grupo: "claro" },
+    fisura: { f: fisura, fv: fisuraV, vol: true, alto: 140, choque: { w: 240, h: 40 }, grupo: "claro" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     arcoAstas: { viejo: true, cinta: true },

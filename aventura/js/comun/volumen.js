@@ -124,6 +124,12 @@ window.VOL = (function () {
   }
   // el de un asset con sus opciones (o.fi, o.s, o.esp, o.eu, o.ez)
   const pr = (x, y, o = {}, s) => proyector(x, y, fiDe(o), { esp: o.esp, s: s != null ? s : o.s || 1, su: o.eu, sz: o.ez });
+  // una parte del objeto con su propio marco: parada en (u, w, z) del objeto, girada df más y k veces su tamaño
+  // (las ruedas de un carro, el piso de arriba, lo que va encima de un pedestal)
+  function sub(p, u, w, z, df = 0, k = 1) {
+    const q = p(u, w, z);
+    return proyector(q[0], q[1], p.fi + df * p.e, { esp: p.e < 0, s: p.s * k, su: p.su / (p.s * p.e), sw: p.sw / p.s, sz: p.sz / p.s });
+  }
 
   // lo que va de punta a punta (empalizadas, murallas, puentes, cercas): (x, y) es el pie ya en la vista y (x2, y2)
   // la otra punta en el mundo (el anfitrión solo corre el pie), así que lo que va de una a otra se gira con la cámara.
@@ -439,6 +445,14 @@ window.VOL = (function () {
     fn(c);
     c.restore();
   }
+  // un dibujo hecho para el piso visto de frente (ya aplanado por K: charcos, manchas, alfombras, rastros), pintado en
+  // la planta del objeto: gira con él y con la cámara
+  function calco(c, pr, fn, z = 0) {
+    enPiso(c, pr, (cc) => {
+      cc.scale(1, 1 / K);
+      fn(cc);
+    }, z);
+  }
   // la sombra en el piso: una elipse en la planta del objeto (gira con él); a = opacidad
   function sombra(c, pr, u, w, ru, rw, a = 0.36) {
     enPiso(c, pr, (cc) => {
@@ -521,10 +535,10 @@ window.VOL = (function () {
     K, cam, TAU, rad,
     girar, desgirar, rel, matriz, piso, vista, mundo, fondo, fiDe,
     mezcla, tonos, tono,
-    proyector, pr, prSeg, prVista,
+    proyector, pr, sub, prSeg, prVista,
     area, cara, enCara, medida, normal, afuera,
     caja, cubo, prisma, cilindro, cono, rollo, techo, piramide, redonda, palo, plano, lamina, aguaUna, halo,
-    enPiso, sombra, elipse, punto, escena,
+    enPiso, calco, sombra, elipse, punto, escena,
     relativa, angulo, ejeMundo, sinSombra,
   };
 })();
