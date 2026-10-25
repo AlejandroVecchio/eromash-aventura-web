@@ -515,6 +515,8 @@
 
   // ---------- muerte y reaparición ----------
   function morir() {
+    // una piedra de Berkano cargada se rompe y Eromash vuelve en vez de caer (berkano.js)
+    if (window.BERKANO && BERKANO.salvar()) return;
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
@@ -687,8 +689,8 @@
     jug.canalAntes = jug.interactuando;
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
-    // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
-    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + (jug.pelea ? 3 : 12) * dt);
+    // la vida vuelve sola cuando ya no hay nada cerca; en pelea no (para eso están las piedras de Berkano y las hierbas)
+    if (jug.sinGolpe > 4 && !jug.muerto && !jug.pelea) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);

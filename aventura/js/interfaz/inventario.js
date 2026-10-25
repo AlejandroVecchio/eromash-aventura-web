@@ -234,6 +234,16 @@ window.INVENTARIO = (function () {
         R(c, -10, 10, 20, 7, "#9C2315");
         R(c, -10, 10, 8, 7, "#5E130D");
         break;
+      // el brebaje de Berkano: frasco de barro con el líquido rúnico y la runa en la panza (objeto de la barra)
+      case "brebaje":
+        E(c, 0, 28, 18, 5, "rgba(0,0,0,0.4)");
+        P(c, [-6, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, -8, 28, -16, 22, -18, 0, -6, -12], "#7A5634");
+        P(c, [0, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, 0, 28], "#9A7048");
+        P(c, [-14, 4, 14, 4, 13, 20, 7, 25, -7, 25, -13, 20], "#3E9AA0");
+        P(c, [-14, 4, 14, 4, 12, 9, -12, 9], "#73D5DB");
+        R(c, -7, -30, 14, 8, "#5E4430");
+        FUTHARK.dibujar(c, "berkano", 0, 22, 14, "#E6FBFC", 2.6);
+        break;
       // viajar con las runas: una piedra parada con Raidho y la luz rúnica alrededor (herramienta de la barra)
       case "viajar":
         E(c, 0, 26, 22, 6, "rgba(0,0,0,0.4)");

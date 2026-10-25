@@ -76,6 +76,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | HUD (retrato, barras, plata, rastreador, avisos) | `interfaz/hud.js` y `css/aventura.css` |
 | La barra de abajo: qué puede ir (habilidades, objetos, herramientas, conocimientos), sus teclas y cómo se llena | `interfaz/barra.js` (`COSAS`, `ORDEN`); se acomoda en la pestaña Barra de `interfaz/inventario.js` |
 | Las hierbas de Thora (curan) | `motor/poderes.js` (`darHierbas`, `comerHierbas`) |
+| Las piedras de Berkano (vida de reserva), los manantiales rúnicos, el brebaje, la talla de Ása | `motor/berkano.js` (`BERKANO`); dibujo en `mundo/assets-berkano.js`; textos `bk.` en `textos/berkano.js` |
 | Mochila, equipo, bolsa y diario | `interfaz/inventario.js` |
 | Mapa grande, minimapa y su leyenda | `interfaz/mapa.js` (`CAT_DE`, `CATS`, `MUESTRA`); las miniaturas en `interfaz/iconos.js` |
 | Opciones | `interfaz/opciones.js` (`filas`) |
@@ -187,6 +188,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
+  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
@@ -223,6 +226,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
 - **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor
+- **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
+  - el manantial rúnico · la piedra de Berkano tirada
+  - assets: manantialRunico, piedraBerkano
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casas.js**: las casas de varios cuartos
@@ -281,6 +287,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
+- **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.

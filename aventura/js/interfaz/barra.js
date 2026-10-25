@@ -43,6 +43,18 @@ window.BARRA = (function () {
       cant: () => pe().hierbas,
       usar: () => PODERES.comerHierbas(),
     },
+    // el brebaje de Berkano: carga una piedra apagada (berkano.js)
+    brebaje: {
+      tipo: "objeto",
+      icono: "brebaje",
+      nombre: () => t("bar.brebaje"),
+      corto: () => t("bar.brebaje_c"),
+      desc: () => t("bar.brebaje_d", [BERKANO.MAX_BREBAJES]),
+      tiene: () => !!window.BERKANO && (BERKANO.brebajes() > 0 || !!st.vistos.brebaje),
+      listo: () => BERKANO.puedeBrebaje(),
+      cant: () => BERKANO.brebajes(),
+      usar: () => BERKANO.tomarBrebaje(),
+    },
     lente: {
       tipo: "herramienta",
       icono: "lente",
@@ -78,7 +90,7 @@ window.BARRA = (function () {
   };
   const TIPOS = ["habilidad", "objeto", "herramienta", "conocimiento"];
   // en qué orden se llenan las casillas libres la primera vez
-  const ORDEN = ["runa_kenaz", "runa_isa", "runa_algiz", "runa_sowilo", "lente", "hierbas", "saber", "viajar"];
+  const ORDEN = ["runa_kenaz", "runa_isa", "runa_algiz", "runa_sowilo", "lente", "hierbas", "brebaje", "saber", "viajar"];
 
   // ---------- poner y sacar ----------
   function libre() {

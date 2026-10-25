@@ -75,7 +75,8 @@ window.PODERES = (function () {
       A.dialogoLibre([["asa", "pj.asa_hola"]], forja);
     } else if (n.id === "thora") {
       jug.hp = jug.hpMax;
-      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]]);
+      // después de curarte, su mesa: enciende las piedras de Berkano, prepara brebajes y vende piedras (berkano.js)
+      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]], window.BERKANO ? BERKANO.thora : null);
     } else {
       const k = rumor++ % 4;
       A.dialogoLibre([[n.id, "pj." + n.id + "_" + k]]);
@@ -109,6 +110,8 @@ window.PODERES = (function () {
       linea("pj.forja_lampara", pj.lampara, COSTO_LAMPARA, () => pj.lampara++),
       // la pechera de escamas, con las escamas de Góinn
       ...(window.GOINN && GOINN.vencido() ? [linea("pj.forja_pechera", pj.pechera ? 1 : 0, [200], () => ((pj.pechera = 1), (jug.hp += 40)))] : []),
+      // tallar Berkano más hondo: cada piedra cura más (berkano.js)
+      ...(window.BERKANO ? [BERKANO.lineaForja(rebaja, forja)] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }
@@ -332,7 +335,12 @@ window.PODERES = (function () {
         }
         if (listo && d < 26) {
           if (b.tipo === "plata") darPlata(b.cant);
-          else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+          else {
+            // lo que sobra de vida va a las piedras de Berkano (berkano.js)
+            const sobra = jug.hp + b.cant - jug.hpMax;
+            jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+            if (sobra > 0 && window.BERKANO) BERKANO.cargar(sobra);
+          }
           if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           botin.splice(i, 1);
         } else if (b.t > 90) botin.splice(i, 1);

@@ -26,6 +26,13 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 #hudJugador .nombre small { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--oro); font-weight: 700; }
 #hudJugador .barra.est { height: 10px; }
 #hudJugador .barra.est span { line-height: 10px; font-size: 8px; }
+/* las piedras de Berkano (berkano.js): rombos con la runa que se llenan de luz rúnica de abajo arriba */
+#hudJugador .piedras { display: flex; gap: 5px; margin: -2px 0 6px; pointer-events: auto; }
+#hudJugador .piedra { position: relative; width: 17px; height: 17px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: #3A3634; }
+#hudJugador .piedra i { position: absolute; left: 0; right: 0; bottom: 0; height: var(--f); background: var(--runico); opacity: 0.75; }
+#hudJugador .piedra b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #111; line-height: 1; }
+#hudJugador .piedra.vacia b { color: #6A6660; }
+#hudJugador .piedra.llena i { opacity: 1; box-shadow: 0 0 6px var(--runico); }
 #hudJugador .chips { display: flex; gap: 14px; margin-top: 7px; font-size: 13px; }
 #hudJugador .chip { display: flex; align-items: center; gap: 4px; }
 #hudJugador .chip canvas { width: 18px; height: 18px; }
