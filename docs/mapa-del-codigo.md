@@ -276,6 +276,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
   - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
+  - los rangos de los líderes
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
   - dónde está cada uno · las lecciones · el muñeco · el sistema

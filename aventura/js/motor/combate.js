@@ -193,10 +193,12 @@ window.COMBATE = (function () {
     }
     if (J.alMorir) J.alMorir(e);
   }
+  // cerca de un líder señor (rango 3, motor/hordas.js) los de su grupo pegan un 10 % más
+  const mando = (e) => (e.grupo && !e.lider && e.grupo.some((o) => o.lider && o.lider.rango >= 3 && !o.muerto && Math.hypot(o.x - e.x, o.y - e.y) < 8 * M) ? 1.1 : 1);
   // el golpe de la criatura llega: daño y lo que deja el líder (fuego en el piso, escarcha)
   function pega(J, e, a) {
     const p = J.jugador;
-    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
+    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(Math.round(e.d.dano * mando(e)), tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
     if (tiene(e, "igneo")) {
       const z = aviso("circulo", a.forma === "lejos" || a.forma === "circulo" ? a.x : p.x, a.forma === "circulo" ? a.y : p.y, 3, { radio: 1.6 * M, rgb: RGB.igneo, zona: true, dps: 9 });
       if (a.forma !== "circulo" && a.forma !== "lejos") {
