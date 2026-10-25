@@ -237,6 +237,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
   - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
+- **companero.js**: Skuggi, el perro compañero (sistema COMPANERO)
+  - dónde está herido: junto a un camino que sale del Puesto · el rescate · el vínculo · el perro anda · el sistema
 - **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
@@ -425,6 +427,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **animacion.js**: cómo se mueve Eromash (módulo ANIMA)
 - **gente.js**: la gente de Eldervald (módulo GENTE)
   - los espíritus, como en su hoja: la huldra y el nøkk
+- **perro.js**: Skuggi, el perro (CRIATURAS "perro")
 - **vikingo.js**: Eromash en cuatro vistas (módulo VIKINGO)
 
 ### js/textos/ · todos los textos del juego en los dos idiomas
@@ -444,6 +447,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
+- **companero.js**: Textos de Skuggi, el perro compañero (motor/companero.js, personajes/perro.js): prefijo cp. (y as., mp.ley_companero).
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
 - **dados.js**: Textos de los dados de hueso (motor/dados.js, mundo/assets-dados.js): prefijo dd. (y as., av.nombre_, mp.ley_dados).

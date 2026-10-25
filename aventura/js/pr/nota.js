@@ -5,41 +5,42 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 46,
-    titulo: { es: "Thurisaz, Laguz y las reacciones de los elementos", en: "Thurisaz, Laguz and elemental reactions" },
+    pr: 47,
+    titulo: { es: "Skuggi, el perro compañero", en: "Skuggi, the companion dog" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 29, es: "galdrar: el galdr de fuego también deja quemando y entra en las reacciones", en: "galdrar: the fire galdr also leaves things burning and joins the reactions" },
+      { pr: 1, es: "niveles: el mordisco crece con tu nivel", en: "levels: his bite grows with your level" },
+      { pr: 21, es: "alquimia: lo que escarba puede ser una hierba", en: "alchemy: what he digs up can be a herb" },
+      { pr: 12, es: "materiales: o un cuero curtido", en: "materials: or tanned leather" },
     ],
     mirar: [
-      { es: "Dos runas nuevas. Thurisaz (trueno) está tallada en el Roble del Trueno, al sur del Paso: con E empieza la prueba del trueno, ocho rayos marcados en el piso que hay que esquivar (saltar evita todo); el último cae en el roble y la runa es tuya. Laguz (agua) está en la Fuente de Laguz, seca en la orilla de la laguna del camino a Eikholt: tocá las tres piedras de la orilla con su marca y la fuente vuelve a manar.", en: "Two new runes. Thurisaz (thunder) is carved into the Thunder Oak, south of the Pass: press E to begin the trial of thunder, eight bolts marked on the ground to dodge (jumping avoids everything); the last one strikes the oak and the rune is yours. Laguz (water) is at the Spring of Laguz, dry on the shore of the lagoon by the Eikholt road: touch the three shore stones bearing its mark and the spring flows again." },
-      { es: "Thurisaz tira un rayo a la criatura de enfrente que salta a tres más y las deja crispadas. Laguz es una ola que empuja, empapa y cierra un 5 % de tus heridas. Las dos se eligen en la mochila como las otras runas.", en: "Thurisaz throws a bolt at the creature in front that leaps to three more and leaves them charged. Laguz is a wave that pushes, soaks and closes 5% of your wounds. Both are chosen in the backpack like the other runes." },
-      { es: "Fuego (Kenaz), hielo (Isa), agua (Laguz, el agua o la lluvia) y trueno (Thurisaz) sobre la misma criatura hacen una reacción: vapor (ciega), congelada (el próximo golpe la quiebra con +60 %), descarga (el rayo corre a todas las empapadas), deshielo (daño grande), estallido (explosión) y esquirlas. Cada una nueva paga plata y va al códice de la Bolsa; las seis dan un fragmento. Con lluvia el trueno pega más.", en: "Fire (Kenaz), ice (Isa), water (Laguz, standing water or rain) and thunder (Thurisaz) on the same creature cause a reaction: steam (blinds), frozen (the next hit shatters it for +60%), discharge (lightning runs to every soaked one), thaw (heavy damage), blast (explosion) and shards. Each new one pays silver and goes into the codex in the Bag; all six give a fragment. In the rain thunder hits harder." },
+      { es: "Junto a un camino que sale del Puesto (marcado en el mapa con una huella) hay un perro herido. Al acercarte aparecen tres lobos: vencelos y con E lo atendés. Skuggi va con vos: te sigue al costado, corre a morder a lo que te ataca, salta fuera de los avisos del piso y cuando se cansa vuelve jadeando. Nunca muere.", en: "By a road leaving the Outpost (marked on the map with a paw print) lies a wounded dog. Get close and three wolves appear: beat them and press E to tend him. Skuggi comes with you: follows at your side, runs to bite whatever attacks you, jumps out of the ground warnings and comes back panting when tired. He never dies." },
+      { es: "Con E cerca de él le hablás: acariciarlo (una vez por día), quedate acá / seguime (si lo dejás, el mapa marca dónde espera y desde la Bolsa lo llamás) y buscá. Si te vas lejos, entrás a una casa o viajás, vuelve solo.", en: "Press E near him to talk: pet him (once a day), stay here / follow me (if you leave him, the map marks where he waits and you can call him from the Bag) and search. If you go far, enter a house or travel, he comes back on his own." },
+      { es: "El vínculo crece con cada mordisco, cada criatura que caen juntos y cada caricia, y enseña cinco trucos: muerde, derriba (cada tercer mordisco tira a las chicas), olfato (ladra y marca con una huella dorada a lo que no te vio, y escarba algo una vez por día), aullido (con tu vida baja espanta a las chicas) y lealtad (+5 % de daño con él al lado).", en: "The bond grows with every bite, every creature you bring down together and every pat, and teaches five tricks: bite, takedown (every third bite knocks small ones down), nose (barks and marks with a golden paw print what hasn't seen you, and digs something up once a day), howl (when your health is low it scatters small ones) and loyalty (+5% damage with him at your side)." },
     ],
     botones: [
-      { es: "Llevarme al Roble del Trueno", en: "Take me to the Thunder Oak", fn: (A) => {
-        const r = ELEMENTOS.roble().cosa;
-        ir(A, [r.x, r.y], 170, 40);
+      { es: "Llevarme al perro herido", en: "Take me to the wounded dog", fn: (A) => {
+        const l = COMPANERO.lugar();
+        ir(A, l, 0, 420);
       } },
-      { es: "Llevarme a la Fuente de Laguz", en: "Take me to the Spring of Laguz", fn: (A) => {
-        const f = ELEMENTOS.fuente();
-        if (f) ir(A, [f.cosa.x, f.cosa.y], 0, 170);
+      { es: "Rescatarlo ya", en: "Rescue him now", fn: () => {
+        const ls = COMPANERO.lobos();
+        if (ls) ls.forEach((e) => (e.muerto = 1));
+        COMPANERO.atender();
       } },
-      { es: "Darme las seis runas", en: "Give me all six runes", fn: () => {
-        const pj = PODERES.pj();
-        PODERES.ORDEN.forEach((r) => !pj.runas.includes(r) && pj.runas.push(r));
-        PODERES.darEnergia(100);
-      } },
-      { es: "Traer criaturas empapadas", en: "Bring soaked creatures", fn: (A) => {
-        [[140, 0, "draugr"], [180, 90, "lobo"], [120, -100, "lobo"], [-150, 40, "lobo"]].forEach(([dx, dy, tipo]) => {
+      { es: "Vínculo al máximo (todos los trucos)", en: "Max bond (every trick)", fn: () => COMPANERO.sumar(600) },
+      { es: "Traer criaturas para pelear juntos", en: "Bring creatures to fight together", fn: (A) => {
+        [[200, 0, "lobo"], [220, 90, "jabali"], [160, -110, "lobo"]].forEach(([dx, dy, tipo]) => {
           const e = A.CB.crear(tipo, A.jug.x + dx, A.jug.y + dy, {});
           e.activo = true;
           e.estado = "persigue";
-          e.mojado = 12;
           A.enemigos.push(e);
         });
       } },
-      { es: "Energía rúnica llena", en: "Full rune energy", fn: () => PODERES.darEnergia(100) },
+      { es: "Que pueda volver a buscar y acariciarlo hoy", en: "Let him search and be petted again today", fn: () => {
+        COMPANERO.estado().buscado = -1;
+        COMPANERO.estado().acariciado = -1;
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

@@ -244,3 +244,7 @@
 .el-fila.apagada { opacity: 0.6; }
 .el-fila .el-par { margin-left: 8px; font-size: 0.9em; }
 .el-fila .el-d { margin-top: 3px; font-size: 0.88em; color: #C8C0B8; }
+/* Skuggi, el perro (motor/companero.js) */
+.cp-trucos { display: grid; gap: 3px; margin: 6px 0; text-align: left; }
+.cp-truco { padding: 3px 8px; background: #1A1513; font-size: 0.82em; line-height: 1.3; }
+.cp-truco.apagado { opacity: 0.45; }

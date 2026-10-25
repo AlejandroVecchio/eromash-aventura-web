@@ -703,6 +703,20 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 - **Códice**: cada reacción nueva paga 20 de plata y un cartel la explica; las seis, un fragmento. Celda en la Bolsa (`el_codice`) con la ventana de las seis (las no descubiertas solo muestran sus elementos) y una línea en el diario.
 - **Estado** (`E.extra.elementos`): roble, piedras, fuente, vistas, todas, ayuda, lluvia.
 
+## Skuggi, el perro compañero (`motor/companero.js`, `COMPANERO`; dibujo `CRIATURAS` «perro» y assets `skuggi`, `skuggiSentado`, `skuggiHerido` en `personajes/perro.js`; textos `cp.`)
+
+- **El rescate**: echado y herido junto a un camino que sale del Puesto (entre 24 y 52 m del borde, claro propio, nada armado cerca). A menos de 17 m aparecen tres lobos (`e.companero`, salen de la lista si Eromash se va o muere); con los tres muertos, E lo atiende y se suma. En el mapa, una huella (clase `companero`) mientras espera herido o donde se lo dejó quieto.
+- **Anda solo**: sigue a Eromash un poco atrás y al costado (270, corre 400; se sienta a los 3 s quieto); a más de 33 m, trabado 1,5 s o al salir de una casa o un viaje aparece al lado. Salta fuera de cualquier aviso del piso 0,4 s antes de que pegue. Nunca muere.
+- **Pelea**: muerde a la criatura más cerca de él de las que atacan a Eromash a menos de 15 m (cada 1 s, (4 + 1,6 × nivel) × (1 + 10 % por truco), la mitad a jefes, semijefes y únicos). Cada mordisco gasta 12 de aguante (vuelve 8/s); con menos de 12 se va a jadear hasta 70.
+- **Vínculo** (`NIVELES` 0 / 40 / 120 / 260 / 480): +1 por mordisco, +4 por criatura que cae cerca (+10 pesadas y líderes), +15 por caricia (una vez por día), +3 por hallazgo. Los trucos (`TRUCOS`):
+  1. muerde;
+  2. derriba: cada tercer mordisco aturde 0,8 s a las chicas;
+  3. olfato: ladra y deja una huella dorada 4 s sobre una criatura quieta que no vio a Eromash a menos de 22 m (cada 6 s); con «Buscá», una vez por día escarba plata, a veces una hierba o un cuero;
+  4. aullido: con menos del 30 % de vida espanta y empuja a las chicas a menos de 14 m (cada 60 s);
+  5. lealtad: +5 % de daño (`RPG.aporte`) mientras lo sigue.
+- **Órdenes** (E cerca, o su celda en la Bolsa): acariciar, quedate acá / seguime (de lejos, «Llamar a Skuggi» lo trae), buscá y la lista de trucos.
+- **Estado** (`E.extra.companero`): rescatado, vinculo, acariciado, buscado, mordiscos, hallazgos, quieto.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
