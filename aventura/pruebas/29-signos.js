@@ -14,7 +14,7 @@
       A.enemigos.forEach((q) => (q.activo = false));
       const st = SIGNOS.estado();
       si(SIGNOS.puede() === "sg.no_sabe", "sin galdrar no se canta");
-      igual(SIGNOS.sistema.casillas().length, 0, "sin casilla:");
+      si(!SIGNOS.sistema.cosasBarra().signo.tiene(), "sin galdr no va en la barra");
       si(SIGNOS.aprender("viento"), "el viento es gratis en nivel 1");
       igual(st.activo, "viento", "queda elegido:");
       si(!SIGNOS.aprender("fuego"), "el fuego pide nivel 3");
