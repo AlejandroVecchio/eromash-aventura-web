@@ -277,6 +277,21 @@ tener que leer el código para balancear.
 - Hooks nuevos: `cosasBarra()` de un sistema suma cosas que el jugador puede poner en la barra de abajo (`BARRA`: `{ id: { tipo, icono, nombre, desc, tiene, listo, espera, usar, avisa } }`); en `CONTROLES`,
   `COMBOS` son botones del mando que se aprietan juntos (mientras tanto, esos botones no hacen lo suyo).
 
+## Instructores y muñeco de práctica (`motor/instructores.js`, `INSTRUCTORES`; muñeco en `mundo/assets-instructores.js`; textos `ie.` en `textos/instructores.js`)
+
+- Tres maestros (fichas propias sumadas a `GENTE.FICHAS`): Hallbera en el patio del Puesto (Oso), Ulfar cerca del
+  refugio (Lobo) y Vör junto al túmulo (Cuervo). Tres lecciones cada uno (nivel 3/9/16, plata 60/180/420): cada una
+  suma por `RPG.aporte` (vida, armadura, daño · crítico, velocidad de golpe, daño de crítico · poder rúnico, energía
+  rúnica, experiencia) y da `ARBOL.sumarPuntos(1)`.
+- Antes de cada lección se pide su prueba en el muñeco (`st.prueba`): daño 250/600/1100 en 10 s, críticos 3/4/5 en
+  12 s, o esquivas justas 2/3/4 en 16 s al brazo del muñeco (aviso exacto en el piso con `piso`; al llenarse llama
+  `J.herir(0, …)`, que cuenta la esquiva justa del motor si Eromash salta o esquiva justo).
+- El muñeco es un blanco de CB: `CB.TIPOS.muneco` con `blanco: fn(e, dano)` (no muere, no se mueve, no piensa) y
+  `dibujo: "munecoPractica"` (combate.js lo dibuja con `ASSETS.dibujar` y `e.o`). Medir el daño: 10 s con un cartel
+  arriba (`#ieMuneco`) y el resultado; la mejor marca queda en `st.mejor`. Durante la sesión su estado es
+  `practica`, así no cuenta como golpe por sorpresa.
+- Estado en `E.extra.instruc = { lec, prueba, pasada, mejor }`. Mapa: clase `instructor`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

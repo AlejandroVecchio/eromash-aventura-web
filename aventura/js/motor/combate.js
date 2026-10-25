@@ -212,6 +212,11 @@ window.COMBATE = (function () {
   }
   function actualizar(J, e, dt) {
     if (!e.activo) return;
+    // un blanco de práctica (el muñeco de INSTRUCTORES): no piensa ni se mueve, solo se sacude
+    if (e.d.blanco) {
+      e.herido = Math.max(0, e.herido - dt * 4);
+      return;
+    }
     if (e.muerto > 0) {
       e.muerto += dt;
       return;
@@ -404,6 +409,11 @@ window.COMBATE = (function () {
   // recibe un golpe de Eromash: devuelve true si murió
   function golpear(J, e, dano, ox, oy, empuje = 1) {
     if (e.muerto || !e.activo) return false;
+    if (e.d.blanco) {
+      e.herido = 1;
+      e.d.blanco(e, dano, ox, oy);
+      return false;
+    }
     // un remate fuerte aturde a las criaturas chicas; las pesadas y los líderes juntan aguante y caen al tercero
     if (empuje >= 1.3) {
       e.aguante = (e.aguante || 0) + 1;
@@ -474,6 +484,7 @@ window.COMBATE = (function () {
       });
   }
   function dibujar(c, e, t) {
+    if (e.d.dibujo) return ASSETS.dibujar(c, e.d.dibujo, e.x, e.y, t, Object.assign({ herido: e.herido, sem: e.sem }, e.o));
     if (!e.activo || e.muerto > 0.8) return;
     alfa(c, e.muerto > 0 ? 1 - e.muerto / 0.8 : 1, () => {
       // el aura del líder: anillo del color de su primer afijo, que late
