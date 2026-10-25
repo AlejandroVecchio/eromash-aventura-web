@@ -440,7 +440,7 @@ window.COMBATE = (function () {
     }
     if (e.estado === "quieto" || e.estado === "vuelve") {
       e.estado = "persigue";
-      alertar(e);
+      if (!(e.vida <= 0 && J.silencioso)) alertar(e); // agachado, una muerte de un golpe no despierta al grupo
     }
     if (e.vida <= 0) {
       morir(J, e);

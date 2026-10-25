@@ -427,6 +427,18 @@ Santuarios como los del Diablo con la idea de las piedras guardianas del Skyrim:
 - El evento del bosque vivo es `sanar` y no `rito`, porque `rito` da experiencia (se podría repetir cada día).
 - Estado en `E.extra.santuarios = { vistos, dia, bend }`.
 
+## Sigilo (`motor/sigilo.js`, `SIGILO`; textos `sl.` en `textos/sigilo.js`)
+
+- Acción `agacharse` (X, o L2 + ▼): `jug.agachado`. El paso va × 0,55 (juego.js) y el dibujo se agacha (animacion.js).
+  Correr, saltar, esquivar, morir o entrar a algún lado lo levantan.
+- Detección: combate.js ya multiplicaba la distancia (13 m × ruido del paso) por `J.sigilo`. Agachado vale 0,45, × 0,8
+  de noche (20 a 5 h) y − 8 % por rango de maestría.
+- Golpe desde las sombras (`modDano`): agachado contra una en estado `quieto`, × 2 / 2,33 / 2,67 / 3 según el rango,
+  encima del × 1,5 por sorpresa. `J.silencioso` hace que una que muere del golpe no alerte al grupo (`golpear`).
+- Maestría: rangos a las 5, 15 y 30 muertes desde las sombras (aprendiz, rastreador, acechador, sombra de Eldervald).
+- El ojo (en `sobreLuz`): sale de la que está más cerca de verlo entre 1 y 1,7 veces su distancia de detección.
+- Estado en `E.extra.sigilo = { golpes, muertes }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

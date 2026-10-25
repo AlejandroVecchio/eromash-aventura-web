@@ -96,6 +96,13 @@ window.ANIMA = (function () {
       o.sy *= 1 - 0.2 * r;
       o.sx *= 1 + 0.16 * r;
     }
+    // agachado (sigilo.js): más bajo y ancho, tirado para adelante, con la cara concentrada
+    if (p.agachado && p.salto <= 0) {
+      o.sy *= 0.8;
+      o.sx *= 1.08;
+      o.rot += 0.07;
+      o.ojos = o.ojos || "concentrado";
+    }
     // el giro: se afina un instante, como si diera la vuelta
     if (st.giroT < 0.12) o.sx *= 0.78 + (st.giroT / 0.12) * 0.22;
     // esquivar: se estira hacia donde va
