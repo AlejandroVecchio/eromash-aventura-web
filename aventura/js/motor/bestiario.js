@@ -21,7 +21,13 @@ window.BESTIARIO = (function () {
     MAESTRIA = 0.08,
     RESISTE = 0.1,
     VER = 520;
-  const base = () => ({ vistas: {}, muertes: {} });
+  // conocerla también afina el golpe: el punto débil baja un 3 % los fallos contra ella y la maestría un 6 % (los
+  // fallos por diferencia de nivel son de motor/fallos.js, que pregunta FALLOS.precision); a las 100, la **leyenda**:
+  // otro +5 % de daño y −5 % de lo que pega. Se anota la más fuerte que venciste de cada una.
+  const PRECISION = [0, 0, 0.03, 0.06],
+    LEYENDA = 100,
+    LEYENDA_K = 0.05;
+  const base = () => ({ vistas: {}, muertes: {}, max: {} });
   let st = base();
   let mirar = 0;
 
@@ -33,9 +39,13 @@ window.BESTIARIO = (function () {
     NIVELES.forEach((u, i) => m >= u && (n = i + 1));
     return n; // -1 desconocida · 0 vista · 1 vencida · 2 punto débil · 3 maestría
   }
+  const leyenda = (tipo) => muertes(tipo) >= LEYENDA;
+  const precisionContra = (e) => (e && e.tipo && LISTA.includes(e.tipo) ? PRECISION[Math.max(0, nivel(e.tipo))] || 0 : 0);
   function anotar(tipo, cuantas) {
-    const antes = nivel(tipo);
+    const antes = nivel(tipo),
+      eraLeyenda = leyenda(tipo);
     st.muertes[tipo] = muertes(tipo) + (cuantas || 1);
+    if (!eraLeyenda && leyenda(tipo)) HUD.aviso(t("bs.leyenda_lograda", [t("cr." + tipo)]), "#F5A524");
     st.vistas[tipo] = 1;
     const ahora = nivel(tipo);
     if (ahora > antes && ahora >= 1) {
@@ -43,7 +53,7 @@ window.BESTIARIO = (function () {
       if (window.SONIDO) SONIDO.tocar(ahora >= 2 ? "mision" : "tela", { vol: ahora >= 2 ? 0.5 : 0.3 });
     }
   }
-  const bonoDano = (tipo) => (nivel(tipo) >= 2 ? DEBIL : 0) + (nivel(tipo) >= 3 ? MAESTRIA : 0);
+  const bonoDano = (tipo) => (nivel(tipo) >= 2 ? DEBIL : 0) + (nivel(tipo) >= 3 ? MAESTRIA : 0) + (leyenda(tipo) ? LEYENDA_K : 0);
   // quién pegó (el golpe trae solo de dónde vino)
   function quien(ox, oy) {
     let m = null,
@@ -125,6 +135,9 @@ window.BESTIARIO = (function () {
     else h += `<span class="ob-pista">${t("bs.falta", [NIVELES[1] - m, t("bs.punto_debil").replace(":", "")])}</span>`;
     if (n >= 3) h += `<span class="bs-saga"><b>${t("bs.maestria")}</b> ${t("bs." + tipo + "_saga")} <i>${t("bs.bono_maestria", [Math.round(MAESTRIA * 100), Math.round(RESISTE * 100)])}</i></span>`;
     else if (n >= 2) h += `<span class="ob-pista">${t("bs.falta", [NIVELES[2] - m, t("bs.maestria").replace(":", "")])}</span>`;
+    if (PRECISION[n]) h += `<span class="bs-texto">${t("bs.precision", [Math.round(PRECISION[n] * 100)])}</span>`;
+    if (n >= 3) h += leyenda(tipo) ? `<span class="bs-saga"><b>${t("bs.leyenda")}</b> <i>${t("bs.bono_leyenda", [Math.round(LEYENDA_K * 100)])}</i></span>` : `<span class="ob-pista">${t("bs.falta", [LEYENDA - m, t("bs.leyenda").replace(":", "")])}</span>`;
+    if (st.max && st.max[tipo]) h += `<span class="bs-texto">${t("bs.max_nivel", [st.max[tipo]])}</span>`;
     return h;
   }
   const minus = (s) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -172,6 +185,7 @@ window.BESTIARIO = (function () {
       J = A.J;
       jug = A.jug;
       iconos();
+      if (window.FALLOS && FALLOS.precision) FALLOS.precision(precisionContra);
       INVENTARIO.pestana({ id: "bestiario", antes: "diario", nombre: () => t("bs.tab"), pintar });
     },
     alEmpezar(extra) {
@@ -193,6 +207,7 @@ window.BESTIARIO = (function () {
     alMorir(e) {
       if (!e.tipo || !LISTA.includes(e.tipo)) return;
       anotar(e.tipo, 1);
+      if (e.nivel) (st.max = st.max || {}), (st.max[e.tipo] = Math.max(st.max[e.tipo] || 0, e.nivel));
     },
     modDano(dano, e) {
       const b = e && e.tipo ? bonoDano(e.tipo) : 0;
@@ -201,9 +216,9 @@ window.BESTIARIO = (function () {
     modRecibido(dano, tipo, ox, oy) {
       if (dano <= 0 || ox == null) return dano;
       const e = quien(ox, oy);
-      return e && nivel(e.tipo) >= 3 ? Math.round(dano * (1 - RESISTE)) : dano;
+      return e && nivel(e.tipo) >= 3 ? Math.round(dano * (1 - RESISTE - (leyenda(e.tipo) ? LEYENDA_K : 0))) : dano;
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, nivel, muertes, anotar, bonoDano, detalle, LISTA, UNICOS, NIVELES, DEBIL, MAESTRIA, RESISTE };
+  return { sistema, estado: () => st, nivel, leyenda, precisionContra, PRECISION, LEYENDA, muertes, anotar, bonoDano, detalle, LISTA, UNICOS, NIVELES, DEBIL, MAESTRIA, RESISTE };
 })();

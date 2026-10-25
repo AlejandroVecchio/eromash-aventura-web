@@ -236,6 +236,10 @@ tener que leer el código para balancear.
 - Los cuatro únicos con nombre salen de `E.extra.hd.unicos` (hordas.js). Estado en
   `E.extra.bestiario = { vistas, muertes }`.
 
+- **Conocerla afina el golpe**: el punto débil baja un 3 % los fallos contra ese tipo y la maestría un 6 % (`precisionContra`, que se suma a `FALLOS.precision` cuando están los fallos por nivel).
+- **Leyenda** a las 100 vencidas: otro +5 % de daño y −5 % de lo que pega, con su aviso.
+- Cada página dice la más fuerte que venciste (`E.extra.bestiario.max`).
+
 ## Contratos de caza (`motor/contratos.js`, `CONTRATOS`; poste y rastros en `mundo/assets-contratos.js`; textos `ct.` en `textos/contratos.js`)
 
 - El poste de los contratos (`posteContratos`) está frente al Puesto de Eydis. Seis bestias con nombre (`LISTA`), cada
