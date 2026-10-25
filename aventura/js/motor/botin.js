@@ -57,6 +57,21 @@ window.BOTIN = (function () {
     const it = st.bolsa[i];
     if (!it) return false;
     casilla = casilla || casillaPara(it);
+    // las armas a dos manos no dejan llevar escudo: el escudo vuelve a la bolsa (y un escudo no entra con un mandoble)
+    const dos = (p) => p && O().BASES[p.b].dosManos;
+    if (casilla === "escudo" && dos(st.puesto.arma)) {
+      HUD.aviso(t("ob.dos_manos_escudo"), "#FF8D71");
+      return false;
+    }
+    if (casilla === "arma" && dos(it) && st.puesto.escudo) {
+      if (st.bolsa.length >= MAX_BOLSA) {
+        HUD.aviso(t("ob.bolsa_llena"), "#C8402D");
+        return false;
+      }
+      st.bolsa.push(st.puesto.escudo);
+      delete st.puesto.escudo;
+      HUD.aviso(t("ob.dos_manos_guardas"), "#E0B2B2");
+    }
     const antes = st.puesto[casilla];
     st.bolsa.splice(i, 1);
     st.puesto[casilla] = it;

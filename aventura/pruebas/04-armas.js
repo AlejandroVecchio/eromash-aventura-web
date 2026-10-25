@@ -24,7 +24,7 @@ const esperarJuego = async (seg) => {
     let quito = 0;
     const orig = A.CB.golpear;
     A.CB.golpear = (J, q, dano, ...r) => ((q === e && (quito += dano)), orig(J, q, dano, ...r));
-    const s = window.SISTEMAS.find((q) => q.alPegar && q.alGolpear && q.sobreLuz && q.piso && !q.cercanos);
+    const s = ARMAS.sistema;
     s.alPegar(e, 30, { d: { hacha: true, remate: true } }, false);
     si(e.sangra, "sangra");
     await esperarJuego(3.2);

@@ -161,7 +161,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
 - **armas-dibujo.js**: el dibujo de las armas que la arena no tiene (módulo DIB_ARMAS)
-  - hachas de una mano
+  - hachas de una mano · a dos manos
 - **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
   - qué dibujo de la arena le toca · amuletos y anillos (propios) · dibujar
 - **objetos.js**: los objetos de equipo: bases, rarezas, afijos y nombres (módulo OBJETOS)
@@ -192,7 +192,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
-  - hachas · el hacha lanzada · el sangrado · las grietas del hachazo · el sistema
+  - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)

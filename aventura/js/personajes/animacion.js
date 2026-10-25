@@ -110,14 +110,16 @@ window.ANIMA = (function () {
       const a = p.atk,
         d = a.d,
         hacia = Math.cos(a.dir) * (p.mira.espejo ? -1 : 1);
+      // las armas pesadas (d.peso) se echan más atrás; el golpe desde arriba (d.piso) se estira y después se aplasta
+      const peso = d.peso || 1;
       if (a.t < d.wind) {
         const k = a.t / d.wind;
-        o.rot -= hacia * 0.14 * k;
-        o.sy *= 1 - 0.05 * k;
+        o.rot -= hacia * 0.14 * k * peso;
+        o.sy *= d.piso ? 1 + 0.09 * k : 1 - 0.05 * k;
       } else if (a.t < d.wind + d.swing + 0.08) {
-        o.rot += hacia * 0.16;
-        o.sx *= 1.07;
-        o.sy *= 0.95;
+        o.rot += hacia * 0.16 * Math.min(1.6, peso);
+        o.sx *= d.piso ? 1.16 : 1.07;
+        o.sy *= d.piso ? 0.84 : 0.95;
       }
     }
     // malherido: más caído, se tambalea y respira hondo; la cara floja (y por momentos de dolor)

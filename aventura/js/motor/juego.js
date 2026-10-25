@@ -831,7 +831,7 @@
       jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
       jug.pelea = enPelea();
     }
-    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
+    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? jug.atk.d.mueve || 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
@@ -1155,7 +1155,15 @@
     sp.x += po.dx;
     sp.y += po.dy + (1 - po.sy) * 40;
     if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
-    const detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
+    let detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
+    // cada tipo de arma se lleva a su manera (las de dos manos al hombro, barridos largos, el golpe desde arriba)
+    const poseArma = window.ARMAS && ARMAS.pose(sp, p, { face, lado: miraV.vista === "N" ? -face : face, jp, bob, gC });
+    if (poseArma) {
+      sp = poseArma.sp;
+      sp.x += po.dx;
+      sp.y += po.dy;
+      detras = poseArma.detras || (!p.atk && miraV.vista === "N");
+    }
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,

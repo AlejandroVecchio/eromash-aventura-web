@@ -5,29 +5,40 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 4,
-    titulo: { es: "Tipos de arma: hachas", en: "Weapon types: axes" },
+    pr: 5,
+    titulo: { es: "Armas a dos manos", en: "Two-handed weapons" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín y equipo: las hachas caen como cualquier pieza y van en la casilla del arma", en: "loot and gear: axes drop like any piece and go in the weapon slot" },
-      { pr: 1, es: "niveles: las hachas mejores salen desde cierto nivel de objeto", en: "levels: better axes start at a given item level" },
+      { pr: 4, es: "tipos de arma: los mandobles y las hachas danesas son dos tipos nuevos con sus golpes (el hacha danesa también hace sangrar)", en: "weapon types: greatswords and Dane axes are two new types with their own moves (the Dane axe also bleeds)" },
+      { pr: 3, es: "botín y equipo: caen como cualquier pieza; poner una saca el escudo", en: "loot and gear: they drop like any piece; equipping one removes the shield" },
+      { pr: 1, es: "niveles: las mejores salen desde cierto nivel de objeto", en: "levels: the best ones start at a given item level" },
     ],
     mirar: [
-      { es: "Con un hacha puesta los golpes son más lentos y anchos; el tercero es un hachazo que parte el piso.", en: "With an axe the hits are slower and wider; the third is a chop that cracks the ground." },
-      { es: "Uno de cada tres golpes hace sangrar: gotas rojas y números rojos que bajan la vida de a poco.", en: "One hit in three causes bleeding: red drops and red numbers that drain life." },
-      { es: "Manteniendo atacar se lanza el hacha: vuela girando, corta a la ida y a la vuelta y vuelve sola. Mientras vuela, Eromash pega con los puños.", en: "Hold attack to throw the axe: it spins, cuts on the way out and back and returns. Meanwhile Eromash punches." },
-      { es: "Cinco hachas dibujadas como las espadas de la arena, cada una con cinco escalones de rareza (mirá la Bolsa).", en: "Five axes drawn like the arena's swords, each with five rarity tiers (check the Bag)." },
+      { es: "Quieto o caminando, Eromash lleva el arma al hombro, detrás de la espalda.", en: "Idle or walking, Eromash carries the weapon on his shoulder, behind his back." },
+      { es: "El combo: dos barridos anchos con envión (camina más lento mientras pega) y un golpe desde arriba que hace una onda en el piso y tambalea a lo que está cerca.", en: "The combo: two wide sweeps with wind-up (he walks slower while swinging) and an overhead slam that sends a ground wave and staggers what is close." },
+      { es: "Manteniendo atacar: torbellino. Gira con el arma estirada, pega cada 0,3 s, se puede mover y gasta estamina hasta soltar.", en: "Hold attack: whirlwind. He spins with the weapon out, hits every 0.3 s, can move and drains stamina until released." },
+      { es: "Saltando y atacando, el golpe al caer también hace onda. Corriendo, estocada larga.", en: "Jump and attack: the landing hit also makes a wave. Running, a long thrust." },
+      { es: "Con un arma a dos manos el escudo vuelve a la bolsa y no deja ponérselo (mirá el aviso). Diez armas nuevas: cinco mandobles y cinco hachas danesas.", en: "With a two-handed weapon the shield returns to the bag and can't be equipped (see the notice). Ten new weapons: five greatswords and five Dane axes." },
     ],
     botones: [
-      { es: "Darme las cinco hachas y abrir la Bolsa", en: "Give me the five axes and open the Bag", fn: (A) => {
-        ["hachaMano", "hachaBarbuda", "hachaRunica", "hachaHueso", "hachaDoble"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 16, r: i % 4 }), { silencio: true }));
+      { es: "Darme las diez armas y abrir la Bolsa", en: "Give me the ten weapons and open the Bag", fn: (A) => {
+        ["mandoble", "espadon", "espadonRunico", "mandobleHueso", "flamigera", "hachaDanesa", "hachaGuerra", "hachaRunica2", "hachaHueso2", "labrys"].forEach((b, i) =>
+          BOTIN.dar(OBJETOS.generar({ base: b, n: 20, r: i % 4 }), { silencio: true }),
+        );
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme un hacha legendaria", en: "Equip a legendary axe", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "hachaRunica", n: Math.max(9, RPG.nivel()), r: 3 }), { silencio: true });
+      { es: "Ponerme un mandoble", en: "Equip a greatsword", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "flamigera", n: Math.max(18, RPG.nivel()), r: 2 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ir con un grupo a probarla", en: "Go to a group to try it", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160) },
+      { es: "Ponerme un hacha danesa", en: "Equip a Dane axe", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "labrys", n: Math.max(19, RPG.nivel()), r: 3 }), { silencio: true });
+        BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
+      } },
+      { es: "Ir con un grupo a probarla (estamina llena)", en: "Go to a group to try it (full stamina)", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160);
+        A.jug.sta = A.jug.staMax;
+      } },
       { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {
         const i = BOTIN.estado().bolsa.findIndex((it) => it.fijo === "ob.forastero");
         if (i >= 0) BOTIN.equipar(i);

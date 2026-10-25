@@ -36,6 +36,17 @@ window.OBJETOS = (function () {
     hachaRunica: { slot: "arma", tipo: "hacha", g: "f", dano: 10, vel: 1, desde: 9, implicito: [["runico", 8]], arte: { lib: "arma", forma: "hacha", fam: 2 } },
     hachaHueso: { slot: "arma", tipo: "hacha", g: "f", dano: 11, vel: 1, desde: 13, implicito: [["robo", 1]], arte: { lib: "arma", forma: "hacha", fam: 3 } },
     hachaDoble: { slot: "arma", tipo: "hacha", g: "f", dano: 12, vel: 0.92, desde: 16, arte: { lib: "arma", forma: "hacha", fam: 4 } },
+    // a dos manos (motor/armas.js): pegan más fuerte y más ancho, pero sin escudo; manteniendo atacar, el torbellino
+    mandoble: { slot: "arma", tipo: "mandoble", dosManos: true, g: "m", dano: 16, vel: 0.8, desde: 2, arte: { lib: "arma", forma: "mandoble", fam: 0 } },
+    espadon: { slot: "arma", tipo: "mandoble", dosManos: true, g: "m", dano: 18, vel: 0.74, desde: 6, arte: { lib: "arma", forma: "mandoble", fam: 1 } },
+    espadonRunico: { slot: "arma", tipo: "mandoble", dosManos: true, g: "m", dano: 17, vel: 0.8, desde: 11, implicito: [["runico", 10]], arte: { lib: "arma", forma: "mandoble", fam: 2 } },
+    mandobleHueso: { slot: "arma", tipo: "mandoble", dosManos: true, g: "m", dano: 18, vel: 0.78, desde: 15, implicito: [["robo", 2]], arte: { lib: "arma", forma: "mandoble", fam: 3 } },
+    flamigera: { slot: "arma", tipo: "mandoble", dosManos: true, g: "f", dano: 19, vel: 0.78, desde: 18, implicito: [["fuego", 6]], arte: { lib: "arma", forma: "mandoble", fam: 4 } },
+    hachaDanesa: { slot: "arma", tipo: "hacha2", dosManos: true, g: "f", dano: 18, vel: 0.75, desde: 3, arte: { lib: "arma", forma: "hacha2", fam: 0 } },
+    hachaGuerra: { slot: "arma", tipo: "hacha2", dosManos: true, g: "f", dano: 20, vel: 0.7, desde: 8, arte: { lib: "arma", forma: "hacha2", fam: 1 } },
+    hachaRunica2: { slot: "arma", tipo: "hacha2", dosManos: true, g: "f", dano: 19, vel: 0.74, desde: 12, implicito: [["runico", 10]], arte: { lib: "arma", forma: "hacha2", fam: 2 } },
+    hachaHueso2: { slot: "arma", tipo: "hacha2", dosManos: true, g: "f", dano: 20, vel: 0.72, desde: 15, implicito: [["robo", 2]], arte: { lib: "arma", forma: "hacha2", fam: 3 } },
+    labrys: { slot: "arma", tipo: "hacha2", dosManos: true, g: "f", dano: 22, vel: 0.66, desde: 19, arte: { lib: "arma", forma: "hacha2", fam: 4 } },
     escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
     escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },
@@ -208,6 +219,7 @@ window.OBJETOS = (function () {
     if (it.ar) l.push({ txt: t("ob.l_armadura", [it.ar]), col: "#F2ECEC", grande: true });
     // cómo pega cada tipo de arma (motor/armas.js)
     if (B.tipo) l.push({ txt: t("ar.rasgo_" + B.tipo), col: "#E0B2B2" });
+    if (B.dosManos) l.push({ txt: t("ar.sin_escudo"), col: "#FF8D71" });
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
     return l;

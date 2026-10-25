@@ -97,6 +97,17 @@ tener que leer el código para balancear.
 - Cinco hachas de una mano: de mano (1), barbuda (4), rúnica (9, +8 % de poder rúnico), de hueso (13, 1 % de robo de
   vida) y de doble filo (16). El dibujo (`DIB_ARMAS.forma(id, fn)`) usa el lenguaje de las espadas de la arena: cinco
   escalones con tientos de cuero, remaches de oro, runas que laten y el filo encendido de la legendaria.
+- **A dos manos** (`mandoble`, `hacha2`; bases con `dosManos: true`): 17 / 19 / 32, barridos de 3,2 rad con envión
+  (mientras pega camina al 35 %, `d.mueve`; `d.peso` inclina más el cuerpo) y un tercero desde arriba (`piso`) que
+  hace una **onda** (`ARMAS.ONDA`: radio 170, tambalea 0,6 s, 0,25 a líderes y pesados) además del remate. El golpe al
+  caer de un salto también hace onda. **Manteniendo atacar, torbellino** (`ARMAS.TORB`): desde 0,45 s de carga gira
+  dando la vuelta cada 0,3 s (9 de daño por vuelta con todo lo de un golpe), deja andar al 70 % y gasta 26 de
+  estamina por segundo hasta soltar o quedarse sin. `ARMAS.pose` lleva el arma al hombro detrás de la espalda, la
+  estira girando, la sube y la baja en el remate. Poner una saca el escudo a la bolsa y un escudo no entra mientras
+  se lleva (`BOTIN.equipar`, aviso `ob.dos_manos_*`). El hacha danesa (`hacha2`) además sangra y su remate agrieta.
+- Cinco mandobles (mandoble 2, espadón 6, espadón rúnico 11, de hueso 15, flamígera 18 con fuego) y cinco hachas
+  danesas (danesa 3, de guerra 8, gran hacha rúnica 12, de hueso 15, lábrys 19). Pegan ≈ 1,7 veces una de una mano
+  y son ≈ 25 % más lentas.
 
 ## Pruebas
 
