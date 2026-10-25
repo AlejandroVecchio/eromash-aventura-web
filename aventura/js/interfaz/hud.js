@@ -375,7 +375,9 @@ window.HUD = (function () {
 
   // ---------- menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando ----------
   let menu = null;
+  let menuAntes = null;
   function abrir(html, botones, op) {
+    menuAntes = { html, botones, op };
     const clase = (op && op.clase) || "";
     $("capa").classList.remove("oculto");
     $("capa").className = "capa" + (clase ? " " + clase : "");
@@ -439,5 +441,5 @@ window.HUD = (function () {
   function fundido(si) {
     $("fundido").classList.toggle("on", si);
   }
-  return { armar, jugador, piedras, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, canal, herido, guardado, hayMenu: () => !!menu };
+  return { armar, jugador, piedras, retrato, bolsillo, barra, misiones, plegarTodo, accion, aviso, dialogo, jefe, abrir, cerrar, pasoMenu, enfocar, fundido, ocultarJuego, canal, herido, guardado, hayMenu: () => !!menu, ultimo: () => menuAntes };
 })();
