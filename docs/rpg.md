@@ -117,6 +117,13 @@ tener que leer el código para balancear.
   sistemas con `info.d.flecha`) y quedan clavadas 8 s. Tensando camina al 60 % y se ve la línea de tiro.
   `ARMAS.poseDe("arco", fn)` lo lleva en la mano y `DIB_ARMAS.tension` tensa la cuerda. Cinco arcos: de tejo (1),
   largo (5), rúnico (10), de asta (14) y recurvo de las estepas (17, +4 % de crítico). Van con las dos manos.
+- **Lanza** (`motor/lanza.js`, `LANZA_ARMA`; dibujo `equipo/lanzas-dibujo.js`): estocadas 14 / 15 (arco 0,5, alcance
+  150, `estoque`) y un barrido de 24 que empuja 2; corriendo, embestida de 26 que avanza 520; al caer, 28. Con la
+  **punta** (`punta: true`, desde el 70 % del alcance) pega ×1,3 (`modDano`, «¡Punta!»). **Cargada (0,5 s, 16 de
+  estamina) se arroja** (`LANZA_ARMA.TIRO`): 720 a 1350 por segundo, 30 de daño, atraviesa hasta 3, aturde 1 s al
+  primero y se clava; se junta pasando por encima o vuelve sola a los 4 s (anillo rúnico en el piso). Mientras tanto,
+  puños: `ARMAS.sinArma(fn)` deja la mano vacía mientras fn() da true. Se lleva con escudo. Cinco: de hoja (1), alada
+  (5), rúnica (10), de hueso (13) y atgeir (17).
 
 ## Pruebas
 
