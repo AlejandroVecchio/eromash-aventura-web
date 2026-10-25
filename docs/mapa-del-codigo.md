@@ -328,7 +328,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **vida.js**: el bosque vivo (sistema VIDA)
   - partículas con estado · luces que dejan los eventos · clima del día · los lugares místicos · fauna chica · emisores con estado (brasas, humo, hojas, motas rúnicas…) · campos sin estado (dependen solo de la posición y el tiempo) · el fuego guía · fauna chica: liebres, pinzones, mariposas y bandadas · eventos que mandan los sistemas · capas de dibujo · el sistema
 - **zonas.js**: las zonas del generador: mazmorras oscuras y tierras con islas (sistema ZONAS)
-  - los generadores (también los usa el editor) · leer un pedido escrito (sin IA) · las tres mazmorras que vienen con el juego · armar cada zona en su lugar fuera del mapa · entrar, salir y pasar · dibujar · el sistema
+  - los generadores (también los usa el editor) · leer un pedido escrito (sin IA) · las tres mazmorras que vienen con el juego · armar cada zona en su lugar fuera del mapa · entrar, salir y pasar · el nivel de cada zona y el reto · dibujar · el sistema
 
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 

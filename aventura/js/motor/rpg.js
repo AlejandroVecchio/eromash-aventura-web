@@ -41,7 +41,9 @@ window.RPG = (function () {
   function nivelDe(e) {
     if (e.nivel) return e.nivel;
     let n;
-    if (NIVEL_FIJO[e.tipo] && !e.hordaGrupo) n = NIVEL_FIJO[e.tipo];
+    // las de una mazmorra o tierra de afuera: el nivel de su zona (motor/zonas.js), más 3 con reto
+    if (e.zona && window.ZONAS && ZONAS.nivelDe && ZONAS.nivelDe(e)) n = ZONAS.nivelDe(e);
+    else if (NIVEL_FIJO[e.tipo] && !e.hordaGrupo) n = NIVEL_FIJO[e.tipo];
     else if (!e.hordaGrupo && (e.tipo === "lobo" || e.tipo === "errante")) n = e.tipo === "lobo" ? 2 : 3;
     else {
       const p = W.LUGARES.puesto.p,
@@ -62,12 +64,20 @@ window.RPG = (function () {
     if (e.nivel) return;
     const n = nivelDe(e);
     e.nivel = n;
+    e.antesNivel = e.antesNivel || { vida: e.d.vida, dano: e.d.dano }; // para volver a nivelarla (renivelar)
     const kv = 1 + 0.08 * (n - 1),
       kd = 1 + 0.045 * (n - 1);
     const llena = e.vida >= e.d.vida;
     e.d.vida = Math.round(e.d.vida * kv);
     e.d.dano = Math.round(e.d.dano * kd);
     if (llena) e.vida = e.d.vida;
+  }
+  // volver a ponerle su nivel (una mazmorra con reto): de su vida y daño de antes de nivelarla
+  function renivelar(e) {
+    if (e.antesNivel) (e.d.vida = e.antesNivel.vida), (e.d.dano = e.antesNivel.dano);
+    e.nivel = 0;
+    e.vida = e.d.vida;
+    nivelar(e);
   }
   // qué tan peligrosa es para Eromash: el color del número
   function color(n) {
@@ -347,6 +357,7 @@ window.RPG = (function () {
     estado: () => st,
     nivelDe,
     nivelar,
+    renivelar,
     color,
     xpDe,
     xpPara,
