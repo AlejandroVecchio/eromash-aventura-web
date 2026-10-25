@@ -209,6 +209,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las miniaturas · el mapa grande: zoom, arrastre y la marca propia · el minimapa
 - **opciones.js**: opciones (módulo OPCIONES)
   - teclas propias
+- **probar.js**: el menú para probar las mecánicas (sistema PROBAR)
+  - lo que se da · ir a un lugar · las entradas · los menús · el sistema
 - **prologo.js**: el prólogo del mago (módulo PROLOGO)
   - el nombre pasado a runas · la cabaña (igual que la ilustración) · el escritorio · el pergamino: lo que escribe el mago, en runas (al revés para quien mira: de frente al mago) · la pluma que escribe sola · lo que hay en el escritorio · la escena desde arriba: el escritorio visto en planta, con el pergamino en el medio · el cuadro: elige la escena y la cámara · las preguntas
 
@@ -483,6 +485,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
+- **probar.js**: Textos del menú para probar las mecánicas (interfaz/probar.js): prefijo pb.
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.

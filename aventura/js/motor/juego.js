@@ -2009,6 +2009,7 @@
       titulo();
     } });
     botones.push({ texto: t("op.titulo"), fn: () => OPCIONES.abrir(titulo) });
+    if (window.PROBAR) botones.push({ texto: t("pb.boton"), sub: t("pb.boton_sub"), fn: () => PROBAR.abrir(true) });
     HUD.abrir(`<h1>Eromash</h1><div class="sub">${tav("juego_subtitulo")}</div>`, botones, { clase: "titulo" });
     // de fondo, el mago escribe en su escritorio
     if (window.PROLOGO) PROLOGO.mostrar();
@@ -2093,6 +2094,7 @@
       } },
       { texto: tav("diario_titulo"), fn: diario },
       { texto: t("op.titulo"), fn: () => OPCIONES.abrir(pausa) },
+      ...(window.PROBAR ? [{ texto: t("pb.boton"), sub: t("pb.boton_sub"), fn: () => PROBAR.abrir() }] : []),
       { texto: tav("pausa_titulo_menu"), fn: () => {
         H.guardar();
         titulo();
