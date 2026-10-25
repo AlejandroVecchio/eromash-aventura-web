@@ -584,30 +584,6 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
 - **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
 
-## Las facciones y la reputación (`motor/facciones.js`, `FACCIONES`; asset `estandarteFaccion` y `FACCIONES_DIBUJO.emblema` en `mundo/assets-facciones.js`; textos `fc.`)
-
-Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconocido, Conocido, Amigo, Honrado, Exaltado):
-
-| Facción | De dónde sale (`FUENTES`, puntos por cada una) | Bono por grado (`BONO`) |
-|---|---|---|
-| La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
-| Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
-| El Gremio de Brunvik | pez 6, plato 8 | −4 % con Kolbrun, +3 % al vender |
-| El Pueblo Oculto | piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
-
-- **Cómo suma**: cada medio segundo `mirar` cuenta lo hecho en los estados guardados de los otros sistemas y suma la diferencia (`E.extra.facciones.cont`); no hay que tocar esos sistemas. Al cargar, lo ya hecho se cobra en silencio. Los bandidos suman por `alMorir`.
-- **Regalos por grado**: 40 × grado de plata; Honrado, un fragmento; Exaltado, una pieza (rara o mejor) de la casilla de la facción (`PIEZA`: arma, botas, anillo, amuleto).
-- **Estandartes**: la Guardia afuera de la Puerta del Sur de Eikholt (con la cornamenta pálida de la capital), los Guardasendas en el Puesto, el Gremio en Brunvik y el Pueblo Oculto junto al Santuario de las Raíces. Con E abren la ventana de esa facción; la casilla Reputación de la Bolsa abre las cuatro. Mapa: clase `facciones`.
-- **Estado** (`E.extra.facciones`): rep y cont. Va al diario.
-
-## Los remates (`motor/remates.js`, `REMATES`; textos `rm.`)
-
-- **Quién**: una criatura con menos del 22 % de la vida (`UMBRAL`; las pesadas, los líderes y los semijefes, 12 %, `UMBRAL_DURO`; los únicos con nombre, 6 %), o aturdida con el doble de ese margen. No se rematan el dreki, el jötunn, el custodio ni el muñeco (`NO_SE_REMATAN`). Lleva un rombo rojo sobre la barra (`sobreLuz`) y la primera vez sale un cartel que lo explica.
-- **Cómo**: con E (en `cercanos`, adelante de todo lo demás) a menos de 110 + su radio. Eromash salta junto a ella (0,12 s), carga (0,12 s) y pega: la criatura muere (`CB.golpear` con su vida entera), hay cámara lenta, una pausa breve, temblor, chispas (menos en calidad media y baja) y el trazo del arma (`REMATES`: cruz, baja, parte, aplasta, empala, flecha, runa, puños) durante medio segundo. Mientras dura, `jug.inv` y la criatura quieta.
-- **Qué deja**: 8 % de la vida, 30 de estamina, 15 de energía rúnica (`PODERES.darEnergia`), 20 de furia (`FURIA.ponerFuria`) y un 25 % más de la experiencia de la criatura. Las de a menos de 9 m se frenan (aturdidas 1,1 s; las pesadas y los líderes, 0,6 s).
-- **Verdugo** (`VERDUGO`): a los 10, 50 y 150 remates, +5, +10 y +15 % de daño (`modDano`) contra criaturas con menos del 30 %.
-- **Estado** (`E.extra.remates`): n, porTipo, ayuda. Va al diario.
-
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
