@@ -314,7 +314,7 @@ window.ARBOL = (function () {
         A.textoFlotante(jug.x, jug.y - 140, t("ab.corazon_salva"), RAMAS.oso.col);
         if (A.columnaRunica) A.columnaRunica(jug.x, jug.y);
         if (window.SONIDO) SONIDO.tocar("rugido", { vol: 0.6, tono: 0.8 });
-        J.sacudir && J.sacudir(8);
+        J.sacudir && J.sacudir(0.5); // como los golpes fuertes: medio segundo, apenas
         return 0;
       }
       return Math.round(dano);
