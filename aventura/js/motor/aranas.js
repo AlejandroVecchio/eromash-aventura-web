@@ -193,10 +193,10 @@ window.ARANAS = (function () {
       armar();
       // quién muerde: J.herir recibe el lugar de quien pega
       const herir = J.herir;
-      J.herir = (dano, ox, oy, tipo) => {
-        const e = A.enemigos.find((q) => q.activo && !q.muerto && q.x === ox && q.y === oy);
+      J.herir = (dano, ox, oy, tipo, de) => {
+        const e = de || A.enemigos.find((q) => q.activo && !q.muerto && q.x === ox && q.y === oy);
         const hp0 = jug.hp;
-        const r = herir(dano, ox, oy, tipo);
+        const r = herir(dano, ox, oy, tipo, de);
         if (e && (e.tipo === "arana" || e.tipo === "aranaReina") && jug.hp < hp0 && !jug.muerto) {
           if (st.veneno <= 0) HUD.aviso(t("ar.envenenado_d"), "#7BC86C");
           st.veneno = VENENO;

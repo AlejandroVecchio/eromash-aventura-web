@@ -196,7 +196,7 @@ window.COMBATE = (function () {
   // el golpe de la criatura llega: daño y lo que deja el líder (fuego en el piso, escarcha)
   function pega(J, e, a) {
     const p = J.jugador;
-    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
+    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null, e);
     if (tiene(e, "igneo")) {
       const z = aviso("circulo", a.forma === "lejos" || a.forma === "circulo" ? a.x : p.x, a.forma === "circulo" ? a.y : p.y, 3, { radio: 1.6 * M, rgb: RGB.igneo, zona: true, dps: 9 });
       if (a.forma !== "circulo" && a.forma !== "lejos") {

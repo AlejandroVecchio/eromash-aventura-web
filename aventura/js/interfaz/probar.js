@@ -136,6 +136,19 @@ window.PROBAR = (function () {
         },
         ...["lobos", "jabalies", "draugr", "trol", "bandidos", "aranas"].map((fam) => ({ id: "grupo", fam, si: !!grupoDe(fam), fn: () => pelearCon(fam) })),
         {
+          // el grupo de lobos más cercano, 10 niveles arriba de Eromash: los fallos y la diferencia de nivel
+          id: "pregunta",
+          si: hay("FALLOS") && !!grupoDe("lobos"),
+          fn: () => {
+            const g = grupoDe("lobos"),
+              n = (window.RPG ? RPG.nivel() : 1) + 10;
+            g.miembros.forEach((e) => {
+              e.nivel = n + (e.lider ? 1 : 0);
+            });
+            pelearCon("lobos");
+          },
+        },
+        {
           id: "jotunn",
           si: hay("JOTUNN") && !!JOTUNN.jefe(),
           fn: () => {

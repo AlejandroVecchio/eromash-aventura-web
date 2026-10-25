@@ -216,10 +216,10 @@
 .inv-detalle .hj-tope{font-size:.85em;color:#8E8A86}
 .inv-detalle .hj-recorte{color:#FF8D71;font-weight:700}
 .inv-celda.hj-topada .cant{color:#FF8D71}
-.hj-tabla{width:100%;border-collapse:collapse;font-size:.85em;margin-top:4px}
-.hj-tabla th{text-align:left;padding:3px 8px 3px 0;white-space:nowrap}
-.hj-tabla td{padding:3px 8px 3px 0;color:#E0B2B2;border-top:1px solid #2A2220}
-.hj-tabla td.hj-v{color:#F2ECEC;font-weight:800;white-space:nowrap}
+.hj-tabla,.fl-tabla{width:100%;border-collapse:collapse;font-size:.85em;margin-top:4px}
+.hj-tabla th,.fl-tabla th{text-align:left;padding:3px 8px 3px 0;white-space:nowrap}
+.hj-tabla td,.fl-tabla td{padding:3px 8px 3px 0;color:#E0B2B2;border-top:1px solid #2A2220}
+.hj-tabla td.hj-v,.fl-tabla td.hj-v{color:#F2ECEC;font-weight:800;white-space:nowrap}
 .hj-tabla em{color:#FF8D71;font-style:normal}
 .rotulo.hj-rotulo{margin-top:14px}
 /* la saga de Eromash (motor/saga.js) */
