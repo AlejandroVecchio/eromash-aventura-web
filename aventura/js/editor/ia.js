@@ -11,10 +11,60 @@ window.EDITOR_IA = (function () {
     $ = (id) => document.getElementById(id);
   const CLAVE = "eromash-aventura-editor-ia";
   const MODELOS = { claude: "claude-opus-5-5", chatgpt: "gpt-5", gemini: "gemini-2.5-pro", otra: "" };
-  let conf = { quien: "claude", modelos: {}, claves: {} };
+  const NOMBRES = { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini", otra: "?" };
+  // ---------- qué IA hace cada tarea ----------
+  // Se guardan las claves de las tres a la vez. Cada tarea tiene su orden de preferencia (la mejor para eso primero) y,
+  // en automático, usa la primera que tenga clave; si esa falla, prueba con la siguiente. Se puede fijar una a mano.
+  //   mapa: pedidos del mapa (este chat): JSON largo pensando en el espacio → Claude, ChatGPT, Gemini
+  //   boceto: mirar una foto y leer un dibujo → Claude, Gemini, ChatGPT
+  //   imagen: crear una imagen (texturas): Claude no hace imágenes → ChatGPT (gpt-image-1), Gemini
+  //   receta: una receta corta de textura → Claude, ChatGPT, Gemini
+  //   generar: casas y zonas desde un texto (JSON chico) → Claude, Gemini, ChatGPT
+  const TAREAS = {
+    mapa: ["claude", "chatgpt", "gemini"],
+    boceto: ["claude", "gemini", "chatgpt"],
+    imagen: ["chatgpt", "gemini"],
+    receta: ["claude", "chatgpt", "gemini"],
+    generar: ["claude", "gemini", "chatgpt"],
+  };
+  let conf = { quien: "auto", modelos: {}, claves: {}, tareas: {} };
   try {
     conf = Object.assign(conf, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
+  conf.tareas = conf.tareas || {};
+  // lo de antes: la IA elegida para el chat era «quien»; ahora el chat es la tarea «mapa»
+  if (conf.quien !== "otra" && conf.quien !== "auto" && !conf.tareas.mapa) conf.tareas.mapa = conf.quien;
+  if (conf.quien !== "otra") conf.quien = "auto";
+  const tiene = (q) => !!(conf.claves[q] || "").trim();
+  const modeloDe = (q) => conf.modelos[q] || MODELOS[q];
+  // las IA que van a hacer una tarea, en orden: la fijada a mano primero (si tiene clave), después las demás con clave
+  function candidatas(tarea) {
+    const orden = TAREAS[tarea] || TAREAS.mapa,
+      fija = conf.tareas[tarea];
+    const l = (fija && fija !== "auto" && orden.includes(fija) ? [fija].concat(orden.filter((q) => q !== fija)) : orden).filter(tiene);
+    return fija && fija !== "auto" && tiene(fija) ? [fija] : l;
+  }
+  function paraTarea(tarea) {
+    const q = candidatas(tarea)[0];
+    return q ? { quien: q, modelo: modeloDe(q), clave: conf.claves[q], claves: conf.claves, nombre: NOMBRES[q] } : null;
+  }
+  // llamar a la IA de una tarea: mensajes puede ser una función (quien) → mensajes (cada una pide la imagen a su modo);
+  // si una falla, se prueba con la siguiente. Devuelve { txt, quien }
+  async function llamarTarea(tarea, mensajes, sistema, alProbar) {
+    const l = candidatas(tarea);
+    if (!l.length) throw new Error(t("ed.ia_sin_ninguna"));
+    let error = null;
+    for (const q of l) {
+      if (alProbar) alProbar(NOMBRES[q]);
+      try {
+        const txt = await llamar(q, modeloDe(q), conf.claves[q], typeof mensajes === "function" ? mensajes(q) : mensajes, sistema);
+        return { txt, quien: q, nombre: NOMBRES[q] };
+      } catch (e) {
+        error = e;
+      }
+    }
+    throw error;
+  }
   const guardarConf = () => {
     try {
       localStorage.setItem(CLAVE, JSON.stringify(conf));
@@ -26,31 +76,63 @@ window.EDITOR_IA = (function () {
     pensando = false;
 
   // ---------- el panel ----------
+  // «Tus IA»: modelo y clave de cada una; «Qué hace cada una»: por tarea, automática o fijada
   function pintarConf() {
-    $("iaQuien").value = conf.quien;
-    $("iaModelo").value = conf.modelos[conf.quien] || MODELOS[conf.quien];
-    $("iaClave").value = conf.claves[conf.quien] || "";
     const otra = conf.quien === "otra";
-    $("iaFilaClave").classList.toggle("oculto", otra);
+    $("iaModo").value = otra ? "otra" : "auto";
     $("iaClaveAyuda").textContent = t(otra ? "ed.ia_otra_ayuda" : "ed.ia_clave_ayuda");
-    $("iaModelo").classList.toggle("oculto", otra);
     $("iaOtra").classList.toggle("oculto", !otra);
     $("iaEnviar").classList.toggle("oculto", otra);
+    ["claude", "chatgpt", "gemini"].forEach((q) => {
+      $("iaModelo_" + q).value = modeloDe(q);
+      $("iaClave_" + q).value = conf.claves[q] || "";
+      $("iaEstado_" + q).textContent = tiene(q) ? "✓" : "—";
+      $("iaEstado_" + q).className = tiene(q) ? "si" : "";
+    });
+    const tabla = $("iaTareas");
+    tabla.innerHTML = "";
+    Object.keys(TAREAS).forEach((tarea) => {
+      const fila = document.createElement("label"),
+        sel = document.createElement("select"),
+        auto = paraTarea(tarea) && (conf.tareas[tarea] || "auto") === "auto" ? NOMBRES[candidatas(tarea)[0]] : null;
+      fila.className = "iaTarea";
+      fila.innerHTML = `<span>${t("ed.ia_t_" + tarea)}<small>${t("ed.ia_t_" + tarea + "_por")}</small></span>`;
+      sel.innerHTML =
+        `<option value="auto">${t("ed.ia_auto")}${auto ? " · " + auto : ""}</option>` +
+        TAREAS[tarea].map((q) => `<option value="${q}">${NOMBRES[q]}${tiene(q) ? "" : " " + t("ed.ia_sin_clave_corto")}</option>`).join("");
+      sel.value = conf.tareas[tarea] || "auto";
+      sel.addEventListener("change", () => {
+        conf.tareas[tarea] = sel.value;
+        guardarConf();
+        pintarConf();
+      });
+      fila.appendChild(sel);
+      tabla.appendChild(fila);
+    });
+    const ning = !["claude", "chatgpt", "gemini"].some(tiene);
+    $("iaTodas").disabled = otra || conClave().length < 2;
+    $("iaTodas").title = t("ed.ia_todas_tit", [conClave().map((q) => NOMBRES[q]).join(", ") || "—"]);
+    $("iaSinNinguna").classList.toggle("oculto", !ning || otra);
+    if (ning) $("iaTus").open = true;
   }
-  $("iaQuien").addEventListener("change", () => {
-    conf.quien = $("iaQuien").value;
+  $("iaModo").addEventListener("change", () => {
+    conf.quien = $("iaModo").value;
     guardarConf();
     pintarConf();
   });
-  $("iaModelo").addEventListener("change", () => {
-    conf.modelos[conf.quien] = $("iaModelo").value.trim();
-    guardarConf();
+  ["claude", "chatgpt", "gemini"].forEach((q) => {
+    $("iaModelo_" + q).addEventListener("change", () => {
+      conf.modelos[q] = $("iaModelo_" + q).value.trim();
+      guardarConf();
+    });
+    $("iaClave_" + q).addEventListener("change", () => {
+      conf.claves[q] = $("iaClave_" + q).value.trim();
+      guardarConf();
+      pintarConf();
+    });
+    ["iaModelo_" + q, "iaClave_" + q].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
   });
-  $("iaClave").addEventListener("change", () => {
-    conf.claves[conf.quien] = $("iaClave").value.trim();
-    guardarConf();
-  });
-  ["iaModelo", "iaClave", "iaPedido", "iaRespuesta"].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
+  ["iaPedido", "iaRespuesta"].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
   $("iaPedido").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) enviar();
   });
@@ -129,6 +211,8 @@ window.EDITOR_IA = (function () {
 
   // ---------- llamar a cada IA ----------
   // sistema: las instrucciones (las del mapa si no se dice otra cosa; las texturas mandan las suyas)
+  // el contenido de un mensaje para Gemini: texto, o una lista como la de Claude (texto e imágenes, como el boceto)
+  const partes = (ct) => (Array.isArray(ct) ? ct.map((p) => (p.type === "image" ? { inline_data: { mime_type: p.source.media_type, data: p.source.data } } : { text: p.text || "" })) : [{ text: ct }]);
   async function llamar(quien, modelo, clave, mensajes, sistema = SISTEMA) {
     if (quien === "claude") {
       const conRespaldo = /^claude-(opus-5-5|opus-5|fable-5-1|sonnet-5-5)$/.test(modelo),
@@ -161,7 +245,7 @@ window.EDITOR_IA = (function () {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
         method: "POST",
         headers: { "content-type": "application/json", "x-goog-api-key": clave },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })) }),
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: sistema }] }, contents: mensajes.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: partes(m.content) })) }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error((j.error && j.error.message) || r.status);
@@ -213,22 +297,17 @@ window.EDITOR_IA = (function () {
   async function enviar() {
     const pedido = $("iaPedido").value.trim();
     if (!pedido || pensando) return;
-    const quien = conf.quien,
-      modelo = ($("iaModelo").value || MODELOS[quien]).trim(),
-      clave = ($("iaClave").value || "").trim();
-    if (!clave) return decir(t("ed.ia_falta_clave"), "error");
-    conf.claves[quien] = clave;
-    conf.modelos[quien] = modelo;
-    guardarConf();
+    if (!paraTarea("mapa")) return decir(t("ed.ia_falta_clave"), "error");
     decir(pedido, "yo");
     $("iaPedido").value = "";
     conv.push({ role: "user", content: contexto(pedido) });
     conv = conv.slice(-8);
     pensando = true;
-    const espera = decir(t("ed.ia_pensando", [$("iaQuien").selectedOptions[0].textContent]));
+    const espera = decir(t("ed.ia_pensando", [paraTarea("mapa").nombre]));
     try {
-      const txt = await llamar(quien, modelo, clave, conv);
+      const { txt, nombre } = await llamarTarea("mapa", conv, SISTEMA, (n) => (espera.textContent = t("ed.ia_pensando", [n])));
       espera.remove();
+      if (nombre !== paraTarea("mapa").nombre) decir(t("ed.ia_contesto", [nombre]));
       conv.push({ role: "assistant", content: txt });
       mostrar(txt);
     } catch (e) {
@@ -239,6 +318,192 @@ window.EDITOR_IA = (function () {
     pensando = false;
   }
   $("iaEnviar").onclick = enviar;
+
+  // ---------- «Probar con todas»: el mismo pedido a cada IA con clave, los resultados lado a lado ----------
+  // Cada uno con su color en el mapa; se ve o se oculta, se marca para usar y los elegidos van cada uno a una capa
+  // nueva con el nombre de la IA («Claude · pedido»), así se comparan prendiendo y apagando capas.
+  const COLOR = { claude: "#FF8D71", chatgpt: "#7BC86C", gemini: "#73D5DB" };
+  const conClave = () => ["claude", "chatgpt", "gemini"].filter(tiene);
+  let varias = null; // { pedido, res: [{ quien, nombre, ops, texto, txt, error, ver, usar, pensando }] }
+  async function enviarTodas() {
+    const pedido = $("iaPedido").value.trim();
+    if (pensando) return;
+    if (!pedido) return decir(t("ed.ia_falta_pedido"), "error");
+    const qs = conClave();
+    if (qs.length < 2) return decir(t("ed.ia_todas_falta"), "error");
+    decir(pedido, "yo");
+    decir(t("ed.ia_todas_pensando", [qs.map((q) => NOMBRES[q]).join(", ")]));
+    $("iaPedido").value = "";
+    propuesta = null;
+    $("iaPropuesta").classList.add("oculto");
+    const mensajes = conv.concat([{ role: "user", content: contexto(pedido) }]);
+    const yo = { pedido, mensajes };
+    const { res, listo } = pedirATodas(
+      mensajes,
+      SISTEMA,
+      (txt) => {
+        const l = leer(txt);
+        return l.ops && (l.ops.poner.length || l.ops.caminos.length || l.ops.quitar.length) ? l : null;
+      },
+      () => varias === yo && (pintarVarias(), E.pedir()),
+    );
+    yo.res = res;
+    varias = yo;
+    pensando = true;
+    pintarVarias();
+    await listo;
+    pensando = false;
+  }
+  function pintarVarias() {
+    const caja = $("iaVarias");
+    caja.classList.toggle("oculto", !varias);
+    if (!varias) return;
+    pintarLista($("iaVariasLista"), varias.res, pintarUsar);
+  }
+  // la lista de resultados (la usa también el boceto): cada IA con su color, «Ver en el mapa» y «Usar esta»
+  function pintarLista(l, res, alCambiar, resumen) {
+    l.innerHTML = "";
+    res.forEach((r) => {
+      const f = document.createElement("div");
+      f.className = "iaVar" + (r.error ? " mal" : "");
+      f.style.borderLeftColor = COLOR[r.quien];
+      const cab = document.createElement("div");
+      cab.className = "iaVarCab";
+      const nom = document.createElement("b");
+      nom.textContent = r.nombre;
+      nom.style.color = COLOR[r.quien];
+      const que = document.createElement("small");
+      que.textContent = r.pensando ? t("ed.ia_todas_esperando") : r.error ? r.error : resumen ? resumen(r.ops) : t("ed.ia_resumen", [r.ops.poner.length, r.ops.caminos.length, r.ops.quitar.length]);
+      cab.append(nom, que);
+      f.appendChild(cab);
+      if (!r.pensando && !r.error) {
+        const fila = document.createElement("div");
+        fila.className = "iaVarFila";
+        const chk = (k, txt) => {
+          const lb = document.createElement("label"),
+            c = document.createElement("input");
+          c.type = "checkbox";
+          c.checked = !!r[k];
+          c.addEventListener("change", () => ((r[k] = c.checked), alCambiar(), E.pedir()));
+          lb.append(c, document.createTextNode(txt));
+          return lb;
+        };
+        fila.append(chk("ver", t("ed.ia_todas_ver")), chk("usar", t("ed.ia_todas_usar")));
+        f.appendChild(fila);
+        if (r.texto) {
+          const d = document.createElement("details"),
+            sm = document.createElement("summary"),
+            p = document.createElement("p");
+          sm.textContent = t("ed.ia_todas_dice");
+          p.textContent = r.texto;
+          d.append(sm, p);
+          f.appendChild(d);
+        }
+      }
+      l.appendChild(f);
+    });
+    alCambiar();
+  }
+  function pintarUsar() {
+    const n = varias ? varias.res.filter((r) => r.usar && r.ops).length : 0;
+    $("iaVariasAplicar").disabled = !n;
+    $("iaVariasAplicar").textContent = t("ed.ia_todas_aplicar", [n]);
+  }
+  $("iaTodas").onclick = enviarTodas;
+  $("iaVariasDescartar").onclick = () => {
+    varias = null;
+    pintarVarias();
+    E.pedir();
+  };
+  $("iaVariasAplicar").onclick = () => {
+    if (!varias) return;
+    const elegidas = varias.res.filter((r) => r.usar && r.ops);
+    if (!elegidas.length) return;
+    aplicarEnCapas(elegidas, varias.pedido);
+    // la conversación sigue con lo que dijo la primera elegida
+    conv = varias.mensajes.concat([{ role: "assistant", content: elegidas[0].txt }]).slice(-8);
+    decir(t("ed.ia_todas_aplicado", [elegidas.map((r) => r.nombre).join(", ")]));
+    varias = null;
+    pintarVarias();
+    if (window.EDITOR_CAPAS) EDITOR_CAPAS.verPestana("capas");
+  };
+  // cada resultado elegido a una capa nueva con el nombre de la IA; todo en un solo paso de Deshacer
+  function aplicarEnCapas(elegidas, pedido) {
+    const corto = pedido.length > 30 ? pedido.slice(0, 29) + "…" : pedido;
+    elegidas.forEach((r, k) => {
+      const id = E.capas.nueva(r.nombre + " · " + corto, true, k > 0);
+      E.aplicar(r.ops, { capa: id, sinPaso: true, sinElegir: true });
+    });
+  }
+  // el mismo pedido a cada IA con clave, a la vez: res = [{ quien, nombre, pensando, ver, usar }], se va llenando;
+  // armar(txt) → { ops, texto } o null; alLlegar() repinta
+  function pedirATodas(mensajes, sistema, armar, alLlegar) {
+    const res = conClave().map((q) => ({ quien: q, nombre: NOMBRES[q], pensando: true, ver: true, usar: false }));
+    const listo = Promise.allSettled(
+      res.map(async (r) => {
+        try {
+          const txt = await llamar(r.quien, modeloDe(r.quien), conf.claves[r.quien], typeof mensajes === "function" ? mensajes(r.quien) : mensajes, sistema);
+          const l = armar(txt);
+          if (!l || !l.ops) throw new Error(t("ed.ia_sin_json"));
+          Object.assign(r, { txt, texto: l.texto, ops: l.ops, pensando: false });
+        } catch (e) {
+          Object.assign(r, { pensando: false, error: String(e.message || e) });
+        }
+        alLlegar();
+      }),
+    );
+    return { res, listo };
+  }
+  // en el mapa: lo de cada IA con su color (anillos en cada objeto, caminos y agua), encima de su vista previa
+  function dibujarVarias(c, cam, V, tt) {
+    if (!varias || !abierta()) return;
+    dibujarRes(c, cam, V, tt, varias.res);
+  }
+  function dibujarRes(c, cam, V, tt, res) {
+    res.forEach((r) => {
+      if (!r.ver || !r.ops) return;
+      E.fantasmas(c, r.ops.poner, tt, 0.4);
+      c.save();
+      c.strokeStyle = COLOR[r.quien];
+      c.lineWidth = 5 / cam.z;
+      c.setLineDash([16 / cam.z, 10 / cam.z]);
+      r.ops.caminos.concat(r.ops.rios || []).forEach((cm) => {
+        c.beginPath();
+        cm.p.forEach(([x, y], i) => (i ? c.lineTo(...V(x, y)) : c.moveTo(...V(x, y))));
+        c.stroke();
+      });
+      (r.ops.lagos || []).forEach((lg) => {
+        c.beginPath();
+        for (let k = 0; k <= 24; k++) {
+          const a = (k / 24) * Math.PI * 2,
+            q = V(lg.x + Math.cos(a) * lg.rx, lg.y + Math.sin(a) * lg.ry);
+          k ? c.lineTo(...q) : c.moveTo(...q);
+        }
+        c.stroke();
+      });
+      c.setLineDash([]);
+      c.lineWidth = 2.5 / cam.z;
+      r.ops.poner.slice(0, 600).forEach((a) => {
+        const [x, y] = V(a.x, a.y);
+        c.beginPath();
+        c.ellipse(x, y, 22 / cam.z, 11 / cam.z, 0, 0, Math.PI * 2);
+        c.stroke();
+      });
+      c.globalAlpha = 0.35;
+      r.ops.quitar.slice(0, 400).forEach((q) => {
+        const [x, y] = V(q.x, q.y),
+          d = 6 / cam.z;
+        c.beginPath();
+        c.moveTo(x - d, y - d);
+        c.lineTo(x + d, y + d);
+        c.moveTo(x + d, y - d);
+        c.lineTo(x - d, y + d);
+        c.stroke();
+      });
+      c.restore();
+    });
+  }
+  const todasFoco = () => setTimeout(() => $("iaPedido").focus(), 0);
   // con Cursor u otro chat: se copia el pedido entero y después se pega lo que contestó
   $("iaCopiar").onclick = () => {
     const pedido = $("iaPedido").value.trim();
@@ -313,6 +578,7 @@ window.EDITOR_IA = (function () {
   }
   pintarConf();
   // para otros módulos (texturas): la misma IA, modelo y clave que eligió acá
-  const elegida = () => ({ quien: conf.quien, modelo: conf.modelos[conf.quien] || MODELOS[conf.quien], clave: conf.claves[conf.quien] || "", claves: conf.claves });
-  return { abrir, cerrar, alternar, abierta, dibujar, llamar, elegida };
+  // la que haría los pedidos del mapa (para lo viejo que todavía pregunta «cuál está elegida»)
+  const elegida = () => paraTarea("mapa") || { quien: conf.quien === "otra" ? "otra" : "claude", modelo: "", clave: "", claves: conf.claves };
+  return { abrir, cerrar, alternar, abierta, dibujar, dibujarVarias, todasFoco, conClave, pedirATodas, pintarLista, dibujarRes, aplicarEnCapas, llamar, llamarTarea, paraTarea, candidatas, elegida, catalogo, NOMBRES };
 })();
