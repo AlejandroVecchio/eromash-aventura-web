@@ -88,7 +88,8 @@
       PESCA.empezar();
       PESCA.picar();
       PESCA.tirar();
-      for (let i = 0; i < 400 && PESCA.actual().fase === "pelea"; i++) PESCA.pelear(0.05, false);
+      // el pez arriba, lejos de la franja que cae (si no, a veces se queda abajo con ella)
+      for (let i = 0; i < 400 && PESCA.actual().fase === "pelea"; i++) (PESCA.actual().f = 0.9), PESCA.pelear(0.05, false);
       igual(PESCA.actual().res, "escapo", "sin sostener se suelta:");
       PESCA.cerrar();
       // bien

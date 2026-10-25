@@ -206,3 +206,24 @@
 #dados .dd-botones button:disabled { opacity: 0.4; cursor: default; }
 #dados .dd-botones button:not(:disabled):hover { background: #3A1A14; border-color: #FFD98A; }
 #dados .dd-pie { margin: 8px 0 0; color: #8A8080; font-size: 12px; }
+
+/* el lector de libros (motor/libros.js) */
+#libro { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(760px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; user-select: none; }
+#libro.oculto { display: none; }
+#libro .lb-hojas { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #5E130D; padding: 10px; }
+#libro .lb-hoja { position: relative; min-height: 300px; padding: 26px 26px 34px; text-align: left; color: #3A2A1C; font-size: 16px; line-height: 1.55; cursor: pointer; }
+#libro .lb-izq { background: #E6DCC6; }
+#libro .lb-der { background: #F2ECEC; }
+#libro .lb-hoja p { margin: 0; }
+#libro .lb-folio { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 12px; color: #8A7A64; }
+#libro .lb-portada { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-left: 10px solid var(--tapa); padding-left: 12px; }
+#libro .lb-portada small { text-transform: uppercase; letter-spacing: 0.16em; color: #9C2315; font-size: 11px; }
+#libro .lb-portada h2 { margin: 10px 0; color: #3A2A1C; font-size: 22px; line-height: 1.25; }
+#libro .lb-portada p { color: #6E5E4C; font-style: italic; }
+#libro .lb-num { margin: 8px 0; color: #E0B2B2; font-size: 13px; }
+#libro .lb-botones { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+#libro .lb-botones button { font: inherit; font-weight: 700; color: #F2ECEC; background: #221B18; border: 1px solid #3A2A26; padding: 8px 14px; cursor: pointer; }
+#libro .lb-botones button:disabled { opacity: 0.4; cursor: default; }
+#libro .lb-botones button:not(:disabled):hover { background: #3A1A14; border-color: #FFD98A; }
+#libro .lb-pie { margin: 8px 0 0; color: #8A8080; font-size: 12px; }
+@media (max-width: 640px) { #libro .lb-hojas { grid-template-columns: 1fr; } #libro .lb-hoja { min-height: 0; } }

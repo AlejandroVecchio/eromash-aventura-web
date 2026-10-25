@@ -5,29 +5,32 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 41,
-    titulo: { es: "Los dados de hueso", en: "Bone dice" },
+    pr: 42,
+    titulo: { es: "Los libros de Eldervald", en: "The books of Eldervald" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
-    usa: [],
+    usa: [
+      { pr: 1, es: "niveles: cada libro nuevo da experiencia", en: "levels: each new book gives experience" },
+      { pr: 2, es: "atributos: los libros de oficio dan un punto", en: "attributes: craft books give a point" },
+      { pr: 17, es: "árbol de habilidades: la saga entera y el cuaderno del maestro dan un punto", en: "skill tree: the full saga and the master's notebook give a point" },
+    ],
     mirar: [
-      { es: "En el patio del Puesto juega Bersi el Tuerto y en Brunvik Hallgerd la Atrevida, cada una en su mesa con mantel, cubilete, vela y plata (en el mapa, clase Dados). Ulf juega en la mesa de la taberna. Con E se elige la apuesta (10, 25 o 50) o se piden las reglas.", en: "In the Outpost yard Bersi One-Eye plays and in Brunvik Hallgerd the Bold, each at their own table with cloth, cup, candle and silver (on the map, Dice class). Ulf plays at the tavern table. Press E to choose the bet (10, 25 or 50) or ask for the rules." },
-      { es: "Se tiran seis dados: los 1 valen 100, los 5 valen 50, tres iguales y las escaleras más. Se aparta lo que vale (izquierda/derecha y E, o tocando el dado) y se elige seguir tirando (Espacio) o plantarse (la lente). Una tirada sin nada pierde todo el turno; si los seis valen, se tiran los seis otra vez. Gana el primero a 2000 y se lleva el doble de la apuesta.", en: "Six dice are rolled: 1s are worth 100, 5s 50, three of a kind and straights more. Set aside what scores (left/right and E, or tap the die) and choose to roll on (Space) or stop (the lens). A roll with nothing loses the whole turn; if all six score, roll all six again. First to 2000 wins and takes double the bet." },
-      { es: "Cada jugador tiene su carácter: Bersi se planta temprano, Hallgerd arriesga hasta 650 y Ulf queda en el medio. Ganándole a los tres se abre la mesa alta (apuestas de 100 y 200). Levantarse a la mitad cuenta como perdida. El diario lleva partidas, plata ganada y tu mejor turno.", en: "Each player has a temperament: Bersi stops early, Hallgerd risks up to 650 and Ulf sits in the middle. Beating all three opens the high table (bets of 100 and 200). Getting up midway counts as a loss. The journal keeps games, silver won and your best turn." },
+      { es: "Hay nueve atriles de piedra a un costado de los caminos, cada uno con un libro abierto y la runa Ansuz encendida (el más cercano al Puesto tiene la Crónica breve de Eldervald). Al verlos van al mapa (clase Libros); con E se leen en una ventana de dos páginas: izquierda/derecha o tocar la hoja pasan, pausa cierra.", en: "There are nine stone lecterns beside the roads, each with an open book and the Ansuz rune lit (the one nearest the Outpost holds A Short Chronicle of Eldervald). Once seen they go on the map (Books class); press E to read them in a two-page window: left/right or tapping the page turns, pause closes." },
+      { es: "Cada libro deja algo la primera vez: los de oficio un punto de atributo (o de habilidad), los de caza +10 % de daño contra lobos, muertos o arañas, los de saber experiencia, y la saga de Sigrun Mano de Hierro (cuatro tomos) un punto de habilidad y dos fragmentos al terminarla. Leer los quince da un punto de atributo y un fragmento.", en: "Each book gives something the first time: craft books an attribute point (or a skill point), hunting books +10% damage against wolves, the dead or spiders, lore books experience, and the saga of Sigrun Iron-Hand (four volumes) a skill point and two fragments once finished. Reading all fifteen gives an attribute point and a fragment." },
+      { es: "Seis libros los llevan encima los líderes de los grupos (40 %, un semijefe siempre): quedan tirados brillando donde cayó y se juntan con E. Los leídos se releen desde la Bolsa (casilla Libros) y el diario los lista.", en: "Six books are carried by group leaders (40%, a mini-boss always): they lie glowing where it fell and are picked up with E. Read books can be reread from the Bag (Books slot) and the journal lists them." },
     ],
     botones: [
-      { es: "Llevarme a la mesa de Bersi", en: "Take me to Bersi's table", fn: (A) => {
-        const m = DADOS.mesas.find((q) => q.rival === "bersi");
-        ir(A, [m.x, m.y], 0, 110);
+      { es: "Llevarme al atril de la crónica", en: "Take me to the chronicle lectern", fn: (A) => {
+        const a = LIBROS.atriles[0];
+        ir(A, [a.x, a.y], 0, 90);
       } },
-      { es: "Llevarme a la mesa de Hallgerd", en: "Take me to Hallgerd's table", fn: (A) => {
-        const m = DADOS.mesas.find((q) => q.rival === "hallgerd");
-        ir(A, [m.x, m.y], 0, 110);
+      { es: "Tirar a mis pies el próximo libro de un líder", en: "Drop the next leader's book at my feet", fn: (A) => {
+        LIBROS.soltar({ x: A.jug.x + 70, y: A.jug.y - 10, tipo: "lobo", d: {}, lider: { nombre: "—" } });
       } },
-      { es: "Darme 300 de plata", en: "Give me 300 silver", fn: () => {
-        PODERES.pj().plata += 300;
+      { es: "Darme los tomos I a III de la saga", en: "Give me volumes I to III of the saga", fn: () => {
+        ["sigrun1", "sigrun2", "sigrun3"].forEach((k) => LIBROS.aprender(k));
       } },
-      { es: "Abrir la mesa alta (ganados los tres)", en: "Open the high table (all three beaten)", fn: () => {
-        Object.assign(DADOS.estado().vencidos, { bersi: 1, hallgerd: 1, ulf: 1 });
+      { es: "Mostrar todos los atriles en el mapa", en: "Show every lectern on the map", fn: () => {
+        LIBROS.atriles.forEach((a, i) => (LIBROS.estado().vistos[i] = 1));
       } },
     ],
   };

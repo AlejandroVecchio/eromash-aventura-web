@@ -639,6 +639,21 @@ El juego de taberna de Eldervald, a la manera del farkle. Seis dados; cada 1 val
 - **Controles**: izquierda/derecha eligen dado, interactuar lo aparta (o tocarlo), saltar tira, la lente se planta, pausa se levanta; los botones del panel hacen lo mismo.
 - **Estado** (`E.extra.dados`): ganadas, perdidas, vencidos, mejor turno y plata ganada; va al diario. Mapa: clase `dados`.
 
+## Los libros de Eldervald (`motor/libros.js`, `LIBROS`, modo `libro`; assets `atrilPiedra` y `libroCaido` y `LIBROS_DIBUJO.libro` en `mundo/assets-libros.js`; textos `lb.`)
+
+Quince libros con tapa, autor y páginas (`lb.<id>_t`, `_a`, `_1`…), en cuatro clases (`LISTA`):
+
+- **Saga** (4 tomos de Sigrun Mano de Hierro): cada tomo da experiencia; los cuatro, un punto de habilidad (`ARBOL.sumarPuntos`) y dos fragmentos.
+- **Oficio**: un punto de atributo (`ATRIBUTOS.sumarPuntos`: El uro y el arado, Cuarenta pasos de esgrima, Siete inviernos en la escarcha, Las voces de Ansuz) o uno de habilidad (Cuaderno de un maestro de armas).
+- **Caza**: +10 % de daño para siempre (`modDano`, `CAZA_MULT`) contra lobos, draugr y errantes o arañas.
+- **Saber**: 150 de experiencia (los demás dan 40) y la historia de Eldervald.
+
+Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez que se abre (`aprender`) y se anuncia al cerrar.
+
+- **Dónde**: nueve atriles de piedra a 150–240 de un camino (`EN_ATRIL`, semilla 8807, lejos de pueblos, grupos, guaridas, nidos y vættir; el más cercano al Puesto lleva la crónica). Van al mapa (clase `libros`) al verlos a menos de 900 y se apagan al leerlos. Los otros seis (`DE_LIDER`, en orden) los suelta un líder al morir (40 %, un semijefe siempre) y quedan en `extra.libros.caidos` hasta juntarlos con E.
+- **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
+- **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
