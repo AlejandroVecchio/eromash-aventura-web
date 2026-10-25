@@ -155,6 +155,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
 - **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
   - Bandido · Arquero
+- **caceria.js**: la Cacería Salvaje: sabuesos y el Cazador (se suman a CRIATURAS)
+  - Sabueso de la Cacería · El Cazador de Oskoreia
 - **criaturas-bosque.js**: las criaturas del bosque profundo (se suman a CRIATURAS)
   - Draugr del túmulo · Jabalí de musgo · Cuervo de Hel · Fuego fatuo · Trol de musgo · Oso de zarzal
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
@@ -221,6 +223,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
+- **caceria.js**: la Cacería Salvaje (sistema CACERIA)
+  - cuándo · sonidos armados · la llegada · los jinetes que cruzan · el final · el cuerno · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **cerraduras.js**: cofres con candado y ganzúas (sistema CERRADURAS, modo "ganzua")
   - empezar y terminar · el juego de la cerradura · ubicar · el sistema
@@ -402,6 +406,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **bandidos.js**: Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
+- **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **cerraduras.js**: Textos de los cofres con candado y las ganzúas (motor/cerraduras.js): prefijo gz. (y as.cofreCandado, mt.ganzua)
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.

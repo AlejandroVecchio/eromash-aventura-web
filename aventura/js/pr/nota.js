@@ -5,38 +5,46 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 37,
-    titulo: { es: "Hrímnir, el jötunn de la escarcha (jefe)", en: "Hrímnir, the frost jötunn (boss)" },
+    pr: 38,
+    titulo: { es: "La Cacería Salvaje (evento de noche)", en: "The Wild Hunt (night event)" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: vencerlo da 1500 de experiencia", en: "levels: defeating him gives 1500 experience" },
-      { pr: 3, es: "botín: deja una pieza épica o mejor", en: "loot: he drops an epic or better item" },
-      { pr: 15, es: "bestiario: su página y su lugar entre los únicos", en: "bestiary: his page and his place among the uniques" },
+      { pr: 1, es: "niveles: aparece desde el nivel 4 y paga experiencia", en: "levels: it appears from level 4 and pays experience" },
+      { pr: 3, es: "botín: el Cazador deja una pieza", en: "loot: the Huntsman drops an item" },
+      { pr: 15, es: "bestiario: dos páginas nuevas y el Cazador entre los únicos", en: "bestiary: two new pages and the Huntsman among the uniques" },
     ],
     mirar: [
-      { es: "En el norte hay un anillo de nueve menhires con la runa Isa (en el mapa, clase El jötunn). Hrímnir duerme sentado en su trono; al acercarte se levanta, ruge, la vista se abre y aparece la barra de jefe con el nombre de cada ataque.", en: "In the north there's a ring of nine standing stones with the Isa rune (on the map, The jötunn class). Hrímnir sleeps on his throne; as you approach he rises, roars, the view widens and the boss bar appears with each attack's name." },
-      { es: "Rotación fija por fase: barrido, pisotón y línea de hielo; desde el 66 % suma granizo de rocas y desde el 33 % el grito de escarcha. Avisos exactos en el piso, saltar evita todo, nada saca más del 35 % y nunca repite un ataque tres veces. Al pasar de fase llama hasta tres hrímthursar.", en: "Fixed rotation per phase: sweep, stomp and ice line; from 66% he adds rock hail and from 33% the frost roar. Exact ground warnings, jumping avoids everything, nothing takes more than 35% and no attack repeats three times. On each phase change he calls up to three hrímthursar." },
-      { es: "Después del pisotón y del grito queda expuesto (se agacha, runas en la cabeza): recibe un 30 % más. Si te alejás del anillo vuelve a su trono y se cura. Vencerlo paga 320 de plata, 1500 de experiencia, dos fragmentos y una pieza épica o mejor.", en: "After the stomp and the roar he's exposed (crouches, runes over his head): he takes 30% more. If you leave the ring he returns to his throne and heals. Defeating him pays 320 silver, 1500 experience, two shards and an epic or better item." },
+      { es: "Una noche de cada tres (desde la segunda y con nivel 4) suena un cuerno lejano a las 20:30: esa noche corre la Cacería Salvaje. A las 22, si andás afuera y sin pelear, llega el Cazador de Oskoreia con cuatro sabuesos de humo, la noche se pone violeta y arriba a la izquierda corre el tiempo (75 s).", en: "One night in three (from the second, at level 4) a distant horn sounds at 20:30: that night the Wild Hunt rides. At 22, if you're outside and not fighting, the Oskoreia Huntsman arrives with four smoke hounds, the night turns violet and a 75 s timer runs on the left." },
+      { es: "El Cazador carga en línea con la lanza y los sabuesos muerden en abanico; son fantasmas (cruzan árboles, la runa del sol les pega triple). Cada 11 s cruzan los jinetes: una franja violeta larga donde estás, que pega al terminar (saltala o salite). A los 35 s, si quedan menos de dos sabuesos, vuelven dos.", en: "The Huntsman charges in a line with his spear and the hounds bite in a fan; they're ghosts (they pass through trees, the sun rune hits them triple). Every 11 s the riders sweep past: a long violet strip where you stand that hits when it ends (jump it or step out). At 35 s, if fewer than two hounds remain, two come back." },
+      { es: "Cuatro finales: tumbar al Cazador (plata, experiencia, una pieza y la primera vez su cuerno), aguantar los 75 s (algo de plata y experiencia), meterte en un pueblo o una casa (pasa de largo) o caer. El Cuerno de la Cacería queda en la Bolsa: de noche y afuera la llama a propósito, una vez por noche.", en: "Four endings: bring down the Huntsman (silver, experience, an item and the first time his horn), hold out the 75 s (some silver and experience), get into a village or house (it rides past) or fall. The Horn of the Hunt stays in your Bag: at night and outside it calls the Hunt on purpose, once per night." },
     ],
     botones: [
-      { es: "Llevarme frente al anillo", en: "Take me in front of the ring", fn: (A) => {
-        const j = JOTUNN.jefe();
-        ir(A, j.centro, 0, 1150);
+      { es: "Llamarla ahora (de noche, en un claro)", en: "Call it now (at night, in a clearing)", fn: (A) => {
+        afueraDeNoche(A, 22.5);
+        setTimeout(() => CACERIA.empezar(CACERIA.nocheId()), 500);
       } },
-      { es: "Llevarme y dejarlo al 40 % (fase 2)", en: "Take me there with him at 40% (phase 2)", fn: (A) => {
-        const j = JOTUNN.jefe();
-        ir(A, j.centro, 0, 1150);
-        setTimeout(() => {
-          j.e.vida = j.e.d.vida * 0.4;
-          j.fase = 1;
-          j.llamo = 1;
-        }, 400);
+      { es: "Una noche de Cacería a las 20:25 (oír el cuerno)", en: "A Hunt night at 20:25 (hear the horn)", fn: (A) => {
+        let n = CACERIA.nocheId() + 1;
+        while (!CACERIA.toca(n)) n++;
+        afueraDeNoche(A, 20.4, n);
       } },
-      { es: "Subirme a nivel 12 para pelearlo", en: "Raise me to level 12 to fight him", fn: () => {
-        while (RPG.nivel() < 12) RPG.dar(500);
+      { es: "Darme el Cuerno de la Cacería", en: "Give me the Horn of the Hunt", fn: (A) => {
+        CACERIA.estado().cuerno = true;
+        CACERIA.estado().corrida = -1;
+        afueraDeNoche(A, 23);
+        setTimeout(() => INVENTARIO.abrir("bolsa"), 1500);
       } },
     ],
   };
+  // de noche, nivel 4 o más y en el claro del jötunn (lejos de Hrímnir y de los pueblos)
+  function afueraDeNoche(A, h, n) {
+    while (window.RPG && RPG.nivel() < CACERIA.NIVEL_MIN) RPG.dar(500);
+    const noche = n != null ? n : CACERIA.nocheId() + 1;
+    A.H.E.tiempo = ((24 * noche + h - 9 + (h < 20 ? 24 : 0)) / 24) * LUZ.DIA;
+    if (CACERIA.caza()) CACERIA.terminar("cayo");
+    const j = JOTUNN.jefe();
+    ir(A, j.centro, 0, 760);
+  }
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {
     let x = p[0] + dx,
