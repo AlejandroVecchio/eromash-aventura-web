@@ -578,22 +578,6 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
 - **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
 
-## Las facciones y la reputación (`motor/facciones.js`, `FACCIONES`; asset `estandarteFaccion` y `FACCIONES_DIBUJO.emblema` en `mundo/assets-facciones.js`; textos `fc.`)
-
-Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconocido, Conocido, Amigo, Honrado, Exaltado):
-
-| Facción | De dónde sale (`FUENTES`, puntos por cada una) | Bono por grado (`BONO`) |
-|---|---|---|
-| La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
-| Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
-| El Gremio de Brunvik | pez 6, plato 8 | −4 % con Kolbrun, +3 % al vender |
-| El Pueblo Oculto | piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
-
-- **Cómo suma**: cada medio segundo `mirar` cuenta lo hecho en los estados guardados de los otros sistemas y suma la diferencia (`E.extra.facciones.cont`); no hay que tocar esos sistemas. Al cargar, lo ya hecho se cobra en silencio. Los bandidos suman por `alMorir`.
-- **Regalos por grado**: 40 × grado de plata; Honrado, un fragmento; Exaltado, una pieza (rara o mejor) de la casilla de la facción (`PIEZA`: arma, botas, anillo, amuleto).
-- **Estandartes**: la Guardia afuera de la Puerta del Sur de Eikholt (con la cornamenta pálida de la capital), los Guardasendas en el Puesto, el Gremio en Brunvik y el Pueblo Oculto junto al Santuario de las Raíces. Con E abren la ventana de esa facción; la casilla Reputación de la Bolsa abre las cuatro. Mapa: clase `facciones`.
-- **Estado** (`E.extra.facciones`): rep y cont. Va al diario.
-
 ## Los remates (`motor/remates.js`, `REMATES`; textos `rm.`)
 
 - **Quién**: una criatura con menos del 22 % de la vida (`UMBRAL`; las pesadas, los líderes y los semijefes, 12 %, `UMBRAL_DURO`; los únicos con nombre, 6 %), o aturdida con el doble de ese margen. No se rematan el dreki, el jötunn, el custodio ni el muñeco (`NO_SE_REMATAN`). Lleva un rombo rojo sobre la barra (`sobreLuz`) y la primera vez sale un cartel que lo explica.
@@ -652,7 +636,7 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 
 ## La hoja de Eromash y los topes (`interfaz/hoja.js`, `HOJA`; los topes en `motor/rpg.js`; textos `hj.`)
 
-- **Quién suma**: `RPG.aporte(fn, quien)` lleva el nombre del sistema (`hj.de_<quien>`). Hoy: botin, atributos, arbol, cocina, conjuntos, alquimia, companero, instructores, holmr, santuarios, legendarios, contratos, casa, encuentros, facciones y furia; el nivel aparece como `nivel`. Un sistema nuevo pasa su nombre y suma su texto `hj.de_`; sin nombre cae en «Otros» y la prueba falla.
+- **Quién suma**: `RPG.aporte(fn, quien)` lleva el nombre del sistema (`hj.de_<quien>`). Hoy: botin, atributos, arbol, cocina, conjuntos, alquimia, companero, instructores, holmr, santuarios, legendarios, contratos, casa, encuentros y furia; el nivel aparece como `nivel`. Un sistema nuevo pasa su nombre y suma su texto `hj.de_`; sin nombre cae en «Otros» y la prueba falla.
 - **El desglose** (`RPG.desglose()`): por cada estadística de `RPG.CLAVES`, la base (forja de Ása, manzanas, cota), cada parte con su diferencia y su proporción, el bono de los sistemas que no son núcleo (`bonoX` multiplicado, `bonoMas` sumado), el recorte del tope y el valor final.
 - **Los topes** (`RPG.TOPES`, la pasada de balance): el núcleo (`NUCLEO`: nivel, equipo puesto y sus conjuntos, atributos) cuenta entero. Lo que suman los demás juntos tiene tope, y lo que pasa vale la mitad: daño ×1,75, vida ×1,6, poder rúnico ×1,75, daño del crítico ×1,5, velocidad de ataque y al andar ×1,4, regeneraciones ×2,5, experiencia, plata y botín ×2, estamina +80, armadura +120 (frena a/(100+a) de cada golpe), crítico +25 %. El crítico nunca pasa del 60 % (`CRIT_MAX`, antes 75 %).
 - **La pestaña Hoja** (antes de la Bolsa): una casilla por estadística con su runa (Uruz vida, Ehwaz estamina, Tiwaz daño, Sowilo crítico…) y el valor; al elegirla, abajo su base, de dónde sale, el tope y lo que se comió (la casilla topada lleva un punto naranja). Más abajo, la hoja entera en una tabla.

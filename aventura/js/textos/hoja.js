@@ -43,7 +43,6 @@ I18N.textos({
   "hj.de_contratos": { es: "Trofeo en el cinto", en: "Trophy on the belt" },
   "hj.de_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },
   "hj.de_encuentros": { es: "Inspirado", en: "Inspired" },
-  "hj.de_facciones": { es: "Facciones", en: "Factions" },
   "hj.de_furia": { es: "Rugido de Björn", en: "Björn's Roar" },
   "hj.de_otros": { es: "Otros", en: "Other" },
 });

@@ -197,16 +197,6 @@
 #libro .lb-pie { margin: 8px 0 0; color: #8A8080; font-size: 12px; }
 @media (max-width: 640px) { #libro .lb-hojas { grid-template-columns: 1fr; } #libro .lb-hoja { min-height: 0; } }
 
-/* la reputación con las facciones (motor/facciones.js) */
-.fc-lista { display: grid; gap: 10px; margin: 8px 0; text-align: left; }
-.fc-fila { display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: start; }
-.fc-fila img { width: 56px; height: 56px; }
-.fc-fila .fc-grado { font-weight: 700; margin-left: 6px; }
-.fc-fila .fc-barra { height: 6px; background: #221B18; margin: 4px 0 2px; }
-.fc-fila .fc-barra i { display: block; height: 100%; }
-.fc-fila small { color: #8A8080; }
-.fc-fila p { margin: 2px 0 0; font-size: 14px; }
-.fc-fila .fc-como { color: #8A8080; font-size: 12px; }
 /* el códice de los elementos (motor/elementos.js) */
 .el-lista { display: grid; gap: 8px; margin: 8px 0; text-align: left; }
 .el-fila { padding: 8px 10px; background: #1A1513; }
