@@ -1795,6 +1795,7 @@
         ...(window.ESCUDO && ESCUDO.puede() ? [{ id: "bloquear", icono: "bloquear", accion: "bloquear", nombre: t("inv.b_bloquear"), listo: ESCUDO.rota() <= 0 && jug.sta > 5 }] : []),
         { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },
         { id: "lente", icono: "lente", accion: "lente", nombre: t("inv.b_lente"), listo: tieneLente() && lenteEspera <= 0, espera: tieneLente() ? lenteEspera / 1.2 : 0 },
+        ...SIS.flatMap((s0) => (s0.casillas ? s0.casillas() : [])), // las habilidades activas y lo que sumen los sistemas
         { id: "mochila", icono: "mochila", accion: "inventario", nombre: t("inv.b_mochila"), listo: true },
       ]);
     }

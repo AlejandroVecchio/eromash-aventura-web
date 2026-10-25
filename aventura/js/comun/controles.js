@@ -23,6 +23,9 @@ window.CONTROLES = (function () {
     inventario: ["KeyI", "KeyB"],
     personaje: ["KeyU"],
     talentos: ["KeyH"],
+    hab1: ["Digit1"],
+    hab2: ["Digit2"],
+    hab3: ["Digit3"],
     pausa: ["Escape", "KeyP"],
     acercar: ["Equal", "NumpadAdd"],
     alejar: ["Minus", "NumpadSubtract"],
@@ -54,8 +57,11 @@ window.CONTROLES = (function () {
     derecha: [15],
     camara: [11],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
+  // combinaciones del mando: L2 (el escudo) + □ △ ○ son las habilidades activas; mientras se aprietan juntos, esos
+  // botones no hacen lo suyo
+  const COMBOS = { hab1: [6, 2], hab2: [6, 3], hab3: [6, 1] };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", hab1: "1", hab2: "2", hab3: "3", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   const abajo = new Set();
   let antes = {},
@@ -115,6 +121,12 @@ window.CONTROLES = (function () {
         if (BOTONES[a].some((b) => g.buttons[b] && (g.buttons[b].pressed || g.buttons[b].value > 0.5))) {
           ahora[a] = true;
           usandoMando = true;
+        }
+      const ap = (b) => g.buttons[b] && (g.buttons[b].pressed || g.buttons[b].value > 0.5);
+      for (const a in COMBOS)
+        if (COMBOS[a].every(ap)) {
+          ahora[a] = true;
+          for (const o in BOTONES) if (o !== "bloquear" && BOTONES[o].includes(COMBOS[a][1]) && !(TECLAS[o] || []).some((k) => abajo.has(k))) delete ahora[o];
         }
       const rx = g.axes[2] || 0,
         ry = g.axes[3] || 0;

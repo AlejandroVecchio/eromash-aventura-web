@@ -5,41 +5,29 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 17,
-    titulo: { es: "Árbol de habilidades: Oso, Lobo y Cuervo", en: "Skill tree: Bear, Wolf and Raven" },
+    pr: 18,
+    titulo: { es: "Furia y habilidades activas", en: "Fury and active skills" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: cada nivel desde el 2 da un punto de habilidad, y los nodos suman a las estadísticas de RPG", en: "levels: each level from 2 gives a skill point, and nodes add to RPG stats" },
-      { pr: 2, es: "atributos: la pestaña nueva queda al lado de Atributos y usa el mismo rombo dorado de puntos", en: "attributes: the new tab sits next to Attributes and uses the same gold points diamond" },
+      { pr: 17, es: "árbol de habilidades: cada habilidad activa es un nodo nuevo (círculo) de su rama y se aprende con puntos", en: "skill tree: each active skill is a new node (circle) in its branch, learned with points" },
+      { pr: 15, es: "bestiario: los golpes de las habilidades también suman el punto débil", en: "bestiary: skill hits also benefit from weak spots" },
     ],
     mirar: [
-      { es: "Mochila → Habilidades (o H directo): tres ramas con su bestia. El Oso aguanta y pega fuerte, el Lobo es rápido y crítico, el Cuervo va con runas, botín y experiencia.", en: "Backpack → Skills (or H directly): three branches, each with its beast. The Bear endures and hits hard, the Wolf is quick and critical, the Raven is about runes, loot and experience." },
-      { es: "Las filas de abajo piden 3, 6 y 10 puntos puestos en esa rama, y algunos nodos piden a su padre (la línea se pinta al aprenderlo). El detalle dice lo que da ahora y lo que da el rango siguiente.", en: "Lower rows need 3, 6 and 10 points spent in that branch, and some nodes need their parent (the line lights up once learned). The detail shows what it gives now and at the next rank." },
-      { es: "El último nodo de cada rama cambia la pelea. Corazón de Björn te deja en pie una vez cada 2 min. Acecho pone la sorpresa en ×2,2 y da velocidad tras cada muerte. Hugin y Munin devuelve energía rúnica y vida al vencer.", en: "The last node of each branch changes combat. Heart of Björn keeps you standing once every 2 min. Stalking makes surprise ×2.2 and grants speed after each kill. Huginn and Muninn restores rune energy and life on kills." },
-      { es: "«Olvidar todo» devuelve los puntos: la primera vez es gratis, después cuesta plata y se toca dos veces.", en: "«Forget everything» returns your points: the first time is free, then it costs silver and needs two presses." },
+      { es: "Debajo de la estamina aparece la barra de Furia (cuando sabés alguna habilidad). Arranca vacía, se llena pegando (los críticos más) y recibiendo golpes, y se enfría a los 5 s fuera de pelea.", en: "Below stamina there's a Fury bar (once you know a skill). It starts empty, fills as you hit (crits more) and take blows, and cools down 5 s out of combat." },
+      { es: "1 · Rugido de Björn (Oso): aturde lo cercano, lo deja expuesto (+15 %) y te da armadura. 2 · Salto del lobo: saltás hacia la criatura de enfrente sin que te toquen y pegás al caer. 3 · Bandada (Cuervo): cuervos que buscan, pican y marcan.", en: "1 · Björn's roar (Bear): stuns what's near, exposes it (+15 %) and grants armour. 2 · Wolf's leap: leap at the creature in front, untouchable, and hit on landing. 3 · Flock (Raven): ravens that seek, peck and mark." },
+      { es: "Con mando: L2 (escudo) + □ △ ○. Cada una tiene su casilla en la barra de abajo con su espera, y se apaga si falta Furia.", en: "With a gamepad: L2 (shield) + □ △ ○. Each one has its slot on the bottom bar with its cooldown, greyed out without Fury." },
+      { es: "En el árbol son círculos en la tercera fila (piden 6 puntos en la rama y su padre). El rango 2 abarata y mejora cada una.", en: "In the tree they're circles on the third row (they need 6 points in the branch and their parent). Rank 2 makes each cheaper and stronger." },
     ],
     botones: [
-      { es: "Nivel 16 y abrir Habilidades", en: "Level 16 and open Skills", fn: (A) => {
-        if (RPG.nivel() < 16) RPG.estado().nivel = 16;
-        RPG.recalcular();
-        INVENTARIO.abrir("talentos");
-      } },
-      { es: "Oso completo (con Corazón de Björn)", en: "Full Bear (with Heart of Björn)", fn: (A) => {
-        if (RPG.nivel() < 15) RPG.estado().nivel = 15;
-        Object.assign(ARBOL.estado().r, { piel: 3, zarpa: 3, corpulencia: 3, zarpazo: 2, aguante: 2, corazon: 1 });
-        RPG.recalcular();
-        INVENTARIO.abrir("talentos");
-      } },
-      { es: "Lobo y Cuervo con sus nodos clave", en: "Wolf and Raven with their key nodes", fn: (A) => {
+      { es: "Aprender las tres e ir a pelear", en: "Learn all three and go fight", fn: (A) => {
         if (RPG.nivel() < 25) RPG.estado().nivel = 25;
-        Object.assign(ARBOL.estado().r, { patas: 3, colmillo: 3, jauria: 2, mordida: 2, sangre: 1, acecho: 1, ojo: 2, voz: 3, memoria: 2, pozo: 2, presagio: 1, dos: 1 });
+        Object.assign(ARBOL.estado().r, { piel: 3, zarpa: 3, zarpazo: 1, rugido: 1, patas: 3, jauria: 3, salto: 1, ojo: 3, memoria: 3, bandada: 1 });
         RPG.recalcular();
-        INVENTARIO.abrir("talentos");
-      } },
-      { es: "Ir a pelear (draugr, con la vida baja)", en: "Go fight (draugr, with low life)", fn: (A) => {
+        FURIA.ponerFuria(100);
         ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 400);
-        A.jug.hp = Math.round(A.jug.hpMax * 0.3);
       } },
+      { es: "Llenar la Furia", en: "Fill Fury", fn: () => FURIA.ponerFuria(100) },
+      { es: "Ver los nodos activos en el árbol", en: "See the active nodes in the tree", fn: () => INVENTARIO.abrir("talentos") },
     ],
   };
   // ---------- ayuda para los botones ----------
