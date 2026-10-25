@@ -439,45 +439,6 @@ Santuarios como los del Diablo con la idea de las piedras guardianas del Skyrim:
 - El ojo (en `sobreLuz`): sale de la que está más cerca de verlo entre 1 y 1,7 veces su distancia de detección.
 - Estado en `E.extra.sigilo = { golpes, muertes }`.
 
-## Cofres con candado y ganzúas (`motor/cerraduras.js`, `CERRADURAS`, modo `ganzua`; asset `cofreCandado` en `mundo/assets-cerraduras.js`; textos `gz.`)
-
-- Catorce cofres (`SITIOS`, px del mapa con su nivel) que se ubican en `alEmpezar` y corren los árboles de adelante.
-  En el mapa son marcas `cofre`, apagadas una vez abiertos.
-- La ganzúa es el material `ganzua` (se suma a `MATERIALES.LISTA`). Ingrid vende de 3 a 6 por día a 15 de plata, y
-  la primera partida regala tres.
-- El juego (como el del Skyrim): la ganzúa va de −90° a 90° (◀ ▶, el stick o arrastrando sobre la cerradura) y el punto
-  justo (`dulce`) sale al azar en cada intento. Girar (mantener E, atacar o el botón Girar) lleva la cerradura hasta
-  `tope(ang)`: 1 dentro del punto y baja lineal hasta 0 a 55° del borde. Forzar contra el tope gasta el aguante de la
-  ganzúa y al agotarse se rompe.
-
-| Nivel | Candado | Punto justo | Aguante | Adentro |
-|---|---|---|---|---|
-| novato | bronce | 30° | 1,1 s | 25 de plata, una pieza (mágica o mejor) y una ganzúa |
-| aprendiz | hierro | 20° | 0,9 s | 50 de plata y dos piezas |
-| experto | plata | 12° | 0,75 s | 95 de plata, tres piezas (raras o mejores) y una esquirla |
-| maestro | runas | 7° | 0,6 s | 170 de plata, cuatro piezas (épicas o mejores) y dos esquirlas |
-
-- La primera pieza llega por `PODERES.botinCofre(..., importante)` (la suma botin.js) y el resto por `BOTIN.tirar`.
-- Práctica: a los 5, 15 y 30 candados abiertos el punto es 3° más ancho cada vez.
-- Estado en `E.extra.cerraduras = { abiertos, abiertas, rotas, regalo }`.
-
-## Némesis (`motor/nemesis.js`, `NEMESIS`; textos `nm.`)
-
-Como el sistema Némesis del Shadow of Mordor.
-- Quién mata: `J.herir(dano, ox, oy)` recibe el lugar de quien pega (combate.js pasa `e.x, e.y`). NEMESIS envuelve
-  `J.herir`; si ese golpe deja a Eromash muerto, la criatura se vuelve némesis (`nacer`). Solo cuentan las de los grupos
-  de HORDAS (`e.hordaGrupo`), y no los líderes únicos.
-- Cada némesis tiene nombre nórdico (fijo, `NOMBRES`), apodo (`nm.ep_*`), rasgo y rango 1 a 5. Si vuelve a ganar, sube
-  un rango. A lo sumo hay `TOPE` = 3; la nueva reemplaza a la de rango más bajo.
-- La fuerza es una copia propia de la ficha (`e.d`, con la original en `e.dBase`): vida × (1,6 + 0,3 × rango), daño
-  × (1,15 + 0,08 × rango) (× 1,3 si es rabiosa), velocidad × 1,25 si es veloz, plata × 4. La piel de hierro recibe
-  × 0,65 (`modDano`) y la sanguijuela se cura el doble de lo que saca.
-- Vencerla da 60 + 40 × rango de plata, 150 + 80 × rango de experiencia y una pieza rara (épica desde rango 4), y queda
-  en `vengadas`.
-- Se dibuja corona y nombre en `sobreLuz`. En el mapa es la marca `nemesis` (clase `nemesis`). A menos de 900 la
-  criatura avisa que lo reconoce.
-- Estado en `E.extra.nemesis = { vivas: [{ id, g, m, tipo, nombre, ep, rango, rasgo, x, y, muertes }], vengadas, cuenta }`;
-  `g` y `m` son el índice del grupo y del miembro, que salen iguales en cada partida.
 
 ## Pruebas
 
