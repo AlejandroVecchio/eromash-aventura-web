@@ -708,16 +708,20 @@ window.MAPA = (function () {
       document.getElementById("capa").insertAdjacentHTML("beforebegin", `<div id="hudMini" class="ui panel oculto"><canvas id="minimapa"></canvas><div class="rotulo" id="miniLugar"></div></div>`);
     },
     hud() {
-      const el = document.getElementById("hudMini");
-      el.classList.toggle("oculto", !st || J.modo === "menu" || !!J.dentro);
+      const el = document.getElementById("hudMini"),
+        // en Eikholt el minimapa es el de la ciudad (ciudad/mapa.js); en los cuartos no hay
+        ciudad = !!(window.EIKHOLT && EIKHOLT.activo() && window.MAPA25);
+      el.classList.toggle("oculto", !st || J.modo === "menu" || (!!J.dentro && !ciudad));
       paseMini -= 1;
       if (paseMini > 0) return;
       paseMini = 4; // cada cuatro cuadros alcanza
-      dibujarMini();
+      if (ciudad) EIKHOLT.mini(document.getElementById("minimapa"), MINI);
+      else dibujarMini();
       const h = A.hora(),
         txt = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.floor((h % 1) * 6) * 10).padStart(2, "0");
+      const barrio = ciudad && EIKHOLT.barrio();
       const lug = document.getElementById("miniLugar"),
-        todo = lugarAqui() + " · " + txt;
+        todo = (ciudad ? (barrio ? t("ci.lugar_" + barrio) : t("ci.mapa_ciudad")) : lugarAqui()) + " · " + txt;
       if (lug.textContent !== todo) lug.textContent = todo;
     },
     alEmpezar(extra) {

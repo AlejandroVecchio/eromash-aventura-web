@@ -376,7 +376,7 @@ window.EIKHOLT = (function () {
       else A.usarLente();
     }
     if (CONTROLES.recien("inventario") && window.INVENTARIO) INVENTARIO.abrir("equipo");
-    if (CONTROLES.recien("mapa") && window.MAPA) MAPA.abrir();
+    if (CONTROLES.recien("mapa")) abrirMapa();
   }
 
   // ---------- la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) ----------
@@ -395,7 +395,7 @@ window.EIKHOLT = (function () {
     cam.y += (e.y - cam.y) * Math.min(1, dt * 6);
   }
   addEventListener("wheel", (ev) => {
-    if (!activo || J.modo !== "juego" || (ev.target && ev.target.closest && ev.target.closest(".ui, #capaCaja, #mapaLienzo"))) return;
+    if (!activo || J.modo !== "juego" || (ev.target && ev.target.closest && ev.target.closest(".ui, #capaCaja, #mapaLienzo, #mapa25Lienzo"))) return;
     zoom = Math.max(0.22, Math.min(1.2, zoom - Math.sign(ev.deltaY) * 0.04));
   }, { passive: true });
 
@@ -558,6 +558,18 @@ window.EIKHOLT = (function () {
     MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), historia);
     c.setTransform(1, 0, 0, 1, 0, 0);
   }
+  // ---------- el mapa propio (ciudad/mapa.js): la M abre el de la ciudad y desde ahí se pasa al del bosque ----------
+  const datosMapa = () => ({
+    plano,
+    ero: ero(),
+    dir: jug.dirMundo || [0, 1],
+    gente: MUNDO25.gente(),
+    marca: st && st.marca,
+  });
+  function abrirMapa() {
+    if (!window.MAPA25) return window.MAPA && MAPA.abrir();
+    MAPA25.abrir({ A, plano, vivo: datosMapa, ponerMarca: (m) => st && (st.marca = m), alBosque: () => window.MAPA && MAPA.abrir() });
+  }
   const sistemaCiudad = { paso, dibujar, cercano };
 
   // ---------- el sistema (en el bosque: detecta cuando Eromash llega a la ciudad) ----------
@@ -613,5 +625,5 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  return { mini: (cv, px) => activo && plano && window.MAPA25 && MAPA25.mini(cv, px, datosMapa()), barrio: () => (window.RECORRER25 && RECORRER25.zona()) || null, abrirMapa, activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
 })();
