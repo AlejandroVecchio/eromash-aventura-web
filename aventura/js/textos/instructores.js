@@ -1,6 +1,7 @@
 // Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
 // porque el cartel de diálogo los busca ahí)
 I18N.textos({
+  "as.grupo.instructores": { es: "Instructores", en: "Trainers" },
   "av.nombre_hallbera": { es: "Hallbera", en: "Hallbera" },
   "av.nombre_ulfar": { es: "Ulfar", en: "Ulfar" },
   "av.nombre_vor": { es: "Vör", en: "Vör" },
