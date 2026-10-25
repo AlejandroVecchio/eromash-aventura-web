@@ -51,7 +51,7 @@ I18N.textos({
   "el.lluvia": { es: "Con la lluvia todo queda empapado: el trueno pega más y el fuego dura menos.", en: "In the rain everything is soaked: thunder hits harder and fire burns shorter." },
   // el códice
   "el.codice": { es: "El códice de los elementos", en: "The codex of elements" },
-  "el.codice_d": { es: "Las reacciones que descubriste mezclando runas, galdrar y el clima.", en: "The reactions you discovered mixing runes, galdrar and the weather." },
+  "el.codice_d": { es: "Las reacciones que descubriste mezclando runas y el clima.", en: "The reactions you discovered mixing runes and the weather." },
   "el.codice_bolsa": { es: "Las reacciones que conocés: {0} de 6.", en: "The reactions you know: {0} of 6." },
   "el.sin_descubrir": { es: "Sin descubrir", en: "Undiscovered" },
   "el.veces": { es: "×{0}", en: "×{0}" },
