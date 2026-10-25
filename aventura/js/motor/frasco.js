@@ -171,8 +171,22 @@ window.FRASCO = (function () {
       if (aqui && aqui !== adentro) llenar(t("fr.en_" + aqui));
       adentro = aqui;
     },
-    casillas() {
-      return [{ id: "frasco", icono: "frasco_" + st.cargas + "_" + st.max, accion: "frasco", nombre: t("fr.casilla"), listo: !puede() || (!!bebe && st.cargas > 0), espera: bebe ? 1 - bebe.t / DURA : 0 }];
+    cosasBarra() {
+      // el frasco es un objeto de la barra (BARRA): con teclado se usa con el número de su casilla, con mando L2 + ✕
+      return {
+        frasco: {
+          tipo: "objeto",
+          icono: () => "frasco_" + st.cargas + "_" + st.max,
+          avisa: true,
+          nombre: () => t("fr.casilla"),
+          desc: () => t("fr.diario", [st.max, Math.round(CURA * (1 + FUERZA * st.fuerza) * 100)]),
+          tiene: () => !!st,
+          listo: () => !puede() || (!!bebe && st.cargas > 0),
+          espera: () => (bebe ? 1 - bebe.t / DURA : 0),
+          cant: () => st.cargas,
+          usar: () => tomar(),
+        },
+      };
     },
     diario() {
       return `<div class="diario-resumen"><p><b>${t("fr.titulo")}</b> ${t("fr.diario", [st.max, Math.round(CURA * (1 + FUERZA * st.fuerza) * 100)])}</p></div>`;
