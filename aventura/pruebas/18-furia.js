@@ -22,7 +22,8 @@
       FURIA.sistema.modRecibido(20);
       igual(Math.round(FURIA.furia()), 20, "recibir 20 da 12 más:");
       si(FURIA.puede("rugido") === "fu.sin_furia", "40 para rugir");
-      igual(FURIA.sistema.casillas().length, 3, "tres casillas en la barra:");
+      igual(Object.keys(FURIA.sistema.cosasBarra()).length, 3, "tres cosas para la barra:");
+      si(BARRA.COSAS.hab_rugido && BARRA.COSAS.hab_rugido.tiene(), "el Rugido se puede poner en una casilla de la barra");
     } },
     { nombre: "furia: el Rugido aturde y expone, el Salto lleva y pega al caer, la Bandada marca", fn: async (A, { igual, si }) => {
       const jug = A.jug;
