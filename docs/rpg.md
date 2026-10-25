@@ -595,7 +595,7 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 
 | Facción | De dónde sale (`FUENTES`, puntos por cada una) | Bono por grado (`BONO`) |
 |---|---|---|
-| La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90, némesis vengada 120 | +4 % de daño contra bandidos |
+| La Guardia del Roble (Eikholt) | bandido 8, líder bandido 30, guarida saqueada 80, trofeo de contrato 90 | +4 % de daño contra bandidos |
 | Los Guardasendas de Eydis | misión 120, lugar 25, tablón 60, encuentro 30 | −4 % con Ingrid |
 | El Gremio de Brunvik | pez 6, plato 8, partida de dados ganada 35 | −4 % con Kolbrun, +3 % al vender |
 | El Pueblo Oculto | favor de vættr 60, piedra 30, rito 50, hörgr 40 | +5 % de energía rúnica |
