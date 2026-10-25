@@ -508,6 +508,29 @@ window.TEXTURAS = (function () {
       c.restore();
     };
   }
+  // el bloque armado con caras: la textura en las cinco caras, más oscura de costado y en sombra del lado de la
+  // izquierda (gira con el bloque y con la cámara)
+  function bloqueV(id) {
+    return (c, x, y, t, o) => {
+      const tx = tabla[id] || {},
+        pr = VOL.pr(x, y, o),
+        w = o.w || tx.w || 160,
+        d = o.d || tx.d || 70,
+        h = o.h || tx.h || 26,
+        pat = patron(c, id, x, y, (o.k || tx.k || 1) * pr.s),
+        velo = (cc, l, hh, nx, nz) => {
+          const a = nz > 0.5 ? 0.04 : 0.24 + Math.max(0, -nx) * 0.22;
+          cc.fillStyle = "rgba(17,17,17," + a + ")";
+          cc.fillRect(0, -hh, l, hh);
+          if (nz > 0.5) {
+            cc.fillStyle = "rgba(242,236,236,0.10)";
+            cc.fillRect(0, -hh, l, Math.max(2, 3));
+          }
+        };
+      VOL.sombra(c, pr, 6, 0, w * 0.56, d * 0.6 + 6, 0.25);
+      VOL.caja(c, pr, -w / 2, -d / 2, 0, w / 2, d / 2, h, () => pat, { frente: velo, atras: velo, izq: velo, der: velo, arriba: velo });
+    };
+  }
   // para la vista del editor: dibujar una textura que todavía no está guardada como parche o como bloque
   function dibujarCon(c, tx, como, x, y, t, o) {
     tabla._vista = tx;
@@ -532,7 +555,7 @@ window.TEXTURAS = (function () {
       ASSETS.EJEMPLO[ip] = { rx: 64, ry: 13 };
     }
     if (uso !== "parche") {
-      ASSETS.LISTA[ib] = { f: bloque(id), alto: (tx.h || 26) + (tx.d || 70) * 0.5, choque: { w: tx.w || 160, h: tx.d || 70 }, grupo: "texturas", textura: id };
+      ASSETS.LISTA[ib] = { f: bloque(id), fv: bloqueV(id), vol: true, alto: (tx.h || 26) + (tx.d || 70) * 0.5, choque: { w: tx.w || 160, h: tx.d || 70 }, grupo: "texturas", textura: id };
       textos["as." + ib] = { es: I18N.t("as.tex_bloque", [nom.es || id]), en: I18N.t("as.tex_bloque", [nom.en || nom.es || id]) };
     }
     I18N.textos(textos);

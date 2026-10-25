@@ -198,16 +198,185 @@
     for (let k = 0; k < 4; k++) E(c, x + 18 * s + k * 6 * s, y + (k % 2) * 3 * s, 2 * s, 1.5 * s, "#6E7074");
   }
 
+  // ======================================================================
+  //  ARMADOS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  const T = C.T,
+    PIEDRA_R = ["#46484C", "#585A5E", "#6E7074"],
+    menhir = (...a) => ASSETS.KIT.menhirV(...a);
+  // el carro de la cuadrilla volcado: la raíz enorme atrás, el fondo de tablas parado con los tajos de cornamenta y
+  // la marca de Orm, el costado golpeado en el piso, las ruedas de arriba, el asta clavada, el eje trabado, la rueda
+  // partida, el yugo roto y lo que quedó entre los restos
+  function carroCuadrillaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 10, -10, 160, 50);
+    const S = VOL.escena(pr);
+    S.poner(-60, -60, () => {
+      VOL.rollo(c, pr, -170, 40, -58, 22, 24, T.tronco, { n: 8, corte: C.corteza });
+      VOL.elipse(c, pr, -90, -58, 45, 22, 10, C.musgo2);
+    });
+    S.poner(0, -20, () => {
+      VOL.caja(c, pr, -100, -50, 76, 100, -20, 84, T.madera);
+      VOL.caja(c, pr, -100, -24, 0, 100, -16, 84, T.madera, {
+        frente: (cc, l, h) => {
+          R(cc, 0, -h, l, h, C.madera);
+          for (let k = 1; k < 5; k++) L(cc, k * 40, 0, k * 40, -h, C.maderaSombra, 3);
+          [[40, 0], [70, 0], [106, 0]].forEach(([bx], i) => {
+            const by = -14;
+            L(cc, bx, by, bx + 14, by - 36, "#2A1E14", 4);
+            L(cc, bx + 7, by - 18, bx + 20, by - 24, "#2A1E14", 3);
+            L(cc, bx + 11, by - 28, bx + 6, by - 40, "#2A1E14", 3);
+            alfa(cc, 0.22 + Math.sin(t * 1.5 + i) * 0.06, () => L(cc, bx, by, bx + 14, by - 36, RUNICO, 2));
+            if (i === 1) alfa(cc, 0.14, () => L(cc, bx + 7, by - 18, bx + 20, by - 24, VIOLETA, 1.2));
+          });
+          FUTHARK.dibujar(cc, "othala", 170, -50, 16, C.maderaSombra, 2);
+        },
+        atras: (cc, l, h) => {
+          for (let k = 1; k < 5; k++) L(cc, k * 40, 0, k * 40, -h, C.maderaSombra, 3);
+        },
+      });
+      [-70, 74].forEach((u, i) => {
+        VOL.cilindro(c, pr, u, -40, 32, 84, 90, T.oscura, { n: 12, tapa: i ? C.maderaSombra : C.madera });
+        VOL.elipse(c, pr, u, -40, 90.5, 8, 8, C.hierro);
+      });
+      VOL.palo(c, pr, 40, -20, 60, 74, -20, 104, 6, C.hueso);
+      VOL.palo(c, pr, 64, -20, 90, 80, -20, 92, 4, C.hueso);
+    });
+    S.poner(0, 0, () => {
+      VOL.caja(c, pr, -100, -16, 0, 104, 22, 8, T.madera, {
+        tapa: C.maderaLuz,
+        sinTapa: false,
+      });
+      VOL.enPiso(c, pr, (cc) => P(cc, [-20, 4, 30, 1, 26, 16, -14, 18], C.maderaSombra), 8.5);
+      VOL.palo(c, pr, -80, -20, 30, -130, -36, 20, 7, C.maderaSombra);
+    });
+    S.poner(150, 20, () => {
+      VOL.prisma(c, pr, [[120, 18], [150, 6], [170, 16], [150, 30]], 0, 6, T.oscura);
+      VOL.palo(c, pr, 100, 0, 8, 160, -16, 4, 5, C.madera);
+      VOL.palo(c, pr, 170, -12, 4, 200, 0, 4, 5, C.madera);
+    });
+    if (o.cepillo)
+      S.poner(150, 46, () => {
+        VOL.caja(c, pr, 130, 42, 0, 168, 52, 6, T.madera, { tapa: C.maderaLuz });
+        VOL.caja(c, pr, 138, 44, 6, 160, 50, 10, T.hierro);
+        VOL.halo(c, pr, 150, 46, 6, 24, C.ambar, 0.5);
+      });
+    if (o.talla)
+      S.poner(-40, 52, () => {
+        VOL.cilindro(c, pr, -40, 52, 6, 0, 8, ["#B8B0A0", C.abedul, C.abedul], { n: 6, rw: 4 });
+        VOL.palo(c, pr, -36, 52, 8, -34, 52, 16, 2, C.abedul);
+        VOL.palo(c, pr, -34, 52, 16, -30, 52, 20, 1.5, C.abedulSombra);
+        VOL.halo(c, pr, -38, 52, 8, 22, C.ambar, 0.5);
+      });
+    if (o.jornal)
+      S.poner(25, 26, () => {
+        VOL.caja(c, pr, 10, 20, 0, 40, 32, 10, T.oscura, { tapa: C.maderaSombra });
+        VOL.caja(c, pr, 10, 25, 10, 40, 27, 11, T.hierro);
+        VOL.elipse(c, pr, 25, 26, 11, 2.5, 2.5, C.ambar);
+      });
+    S.dibujar();
+  }
+  // los sacos abiertos: tres sacos bajos con la boca abierta y el grano desparramado
+  function sacosAbiertosV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.enPiso(c, pr, (cc) => {
+      for (let k = 0; k < 8; k++) E(cc, -50 + k * 13, 26 + (k % 3) * 4, 3, 2, "#E8DCC4");
+    });
+    const S = VOL.escena(pr);
+    [[-30, 0, "#A8946C"], [20, 6, "#8A7A5A"], [-4, 16, "#B8A47C"]].forEach(([u, w, col]) =>
+      S.poner(u, w, () => {
+        VOL.cono(c, pr, u, w, 24, 18, 0, 14, [VOL.mezcla(col, "#000000", 0.3), col, VOL.mezcla(col, "#FFFFFF", 0.15)], { n: 9 });
+        VOL.elipse(c, pr, u + 8, w - 2, 14.5, 8, 6, "#3A2A1C");
+      }),
+    );
+    S.dibujar();
+  }
+  // los rastros: el mismo dibujo en el piso con la otra punta llevada a la vista
+  function rastroV(c, x, y, t, o) {
+    const b = VOL.rel(x, y, o.x2 - x, o.y2 - y);
+    rastro(c, x, y, t, Object.assign({}, o, { x2: b[0], y2: b[1] }));
+  }
+  // el poste de senda: el palo con Raidho, el brazo y el farol (apagado o encendido)
+  function posteFarolV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      raidho = (cc, l) => FUTHARK.dibujar(cc, "raidho", l / 2, -30, 22, "#2A1E14", 2.5);
+    VOL.sombra(c, pr, 6, 0, 18, 12);
+    VOL.cubo(c, pr, 0, 0, 10, 10, 130, T.oscura, { frente: raidho, atras: raidho });
+    VOL.palo(c, pr, 0, 0, 120, 26, 0, 120, 3, C.hierro);
+    const luz = (cc, l, h) => (o.encendido ? alfa(cc, 0.95, () => R(cc, 2, -h + 2, l - 4, h - 4, C.ambar)) : R(cc, 2, -h + 2, l - 4, h - 4, "#3A3430"));
+    VOL.cubo(c, pr, 26, 0, 14, 14, 20, ["#1A140E", "#1A140E", "#2A2018"], { frente: luz, atras: luz, izq: luz, der: luz }, 84);
+    VOL.piramide(c, pr, [[16, -10], [36, -10], [36, 10], [16, 10]], 104, 26, 0, 114, T.pizarra);
+    if (o.encendido) VOL.halo(c, pr, 26, 0, 94, 70, C.ambar, 0.8);
+  }
+  // un mojón del Refugio: la piedra alta con su runa (encendida según o.luz) y el nicho de ofrendas
+  function mojonV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      luz = o.luz || 0,
+      nom = o.runa || "algiz";
+    if (luz > 0) VOL.halo(c, pr, 0, 0, 50, 60, RUNICO, luz);
+    VOL.sombra(c, pr, 8, 0, 24, 16);
+    menhir(c, pr, 17, 12, 94, PIEDRA_R, (cc, l, h) => {
+      FUTHARK.dibujar(cc, nom, l / 2, -26, 30, "#2E3034", 4);
+      if (luz > 0) {
+        alfa(cc, 0.2 + luz * 0.8, () => FUTHARK.dibujar(cc, nom, l / 2, -26, 30, RUNICO, 3));
+        if (luz > 0.6) alfa(cc, luz * 0.6, () => FUTHARK.dibujar(cc, nom, l / 2, -26, 30, RUNICO_CLARO, 1.2));
+      }
+      if (o.nicho) {
+        R(cc, l / 2 - 8, -16 + 4, 16, 12, "#1E1C1A");
+        if (o.ofrenda === "venda") E(cc, l / 2, -3, 6, 3, "#E6DCC8");
+        else if (o.ofrenda === "hierbas") {
+          L(cc, l / 2 - 4, 0, l / 2 - 2, -8, "#7BC86C", 2);
+          L(cc, l / 2 + 2, 0, l / 2 + 4, -7, "#5E9A4E", 2);
+        } else E(cc, l / 2 - 3, -2, 3, 2, "#8A7A5A");
+      }
+    });
+  }
+  // el poste de tablillas: cientos, de los cuatro lados, algunas comidas por el musgo; adelante las cinco nuevas
+  function posteTablillasV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      nuevas = o.nuevas != null ? o.nuevas : 5,
+      lado = (sem, frente) => (cc, l, h) => {
+        const r = azar(911 + sem);
+        for (let k = 0; k < 40; k++) {
+          const tx = -12 + (k % 4) * 9 + r() * 3,
+            ty = -h + 10 + Math.floor(k / 4) * 13;
+          R(cc, tx, ty, 7, 11, r() < 0.35 ? C.musgo2 : r() < 0.5 ? "#A8946C" : "#C8B48C");
+        }
+        if (frente) for (let k = 0; k < 5; k++) R(cc, -14 + k * 9, -40, 8, 12, k < nuevas ? "#2A2420" : "#E6DCC8");
+      };
+    VOL.sombra(c, pr, 6, 0, 30, 20);
+    VOL.cubo(c, pr, 0, 0, 18, 18, 170, T.vieja, { frente: lado(0, true), atras: lado(1), izq: lado(2), der: lado(3) });
+  }
+  // la camilla de varas: las dos varas, los travesaños y la manta encima
+  function camillaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 90, 22, 0.25);
+    [-12, 12].forEach((w) => VOL.rollo(c, pr, -90, 90, w, 3, 3, T.madera, { n: 5 }));
+    for (let k = -2; k <= 2; k++) VOL.palo(c, pr, k * 30, -12, 5, k * 30, 12, 5, 3, C.maderaSombra);
+    VOL.caja(c, pr, -60, -12, 5, 50, 12, 9, ["#5E2A1E", "#7A3A2A", "#9A4A36"]);
+  }
+  // la cuña de piedra que cedió (o la reparación nueva, con la tabla clara)
+  function cunaPiedraV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    if (o.reparada) {
+      VOL.caja(c, pr, -16, -8, 0, 16, 8, 12, ["#6E7074", "#8A8C90", "#A0A2A6"]);
+      VOL.caja(c, pr, -18, 8, 0, 18, 10, 4, T.madera);
+      return;
+    }
+    VOL.piramide(c, pr, [[-14, -6], [12, -8], [10, 6], [-12, 6]], 0, 4, -2, 14, PIEDRA_R);
+    for (let k = 0; k < 4; k++) VOL.prisma(c, pr, VOL.redonda(18 + k * 6, (k % 2) * 3, 2, 5, k), 0, 2, PIEDRA_R);
+  }
+
   const L2 = ASSETS.LISTA;
   Object.assign(L2, {
-    carroCuadrilla: { f: carroCuadrilla, alto: 120, choque: { w: 230, h: 30 }, grupo: "refugio" },
-    sacosAbiertos: { f: sacosAbiertos, alto: 24, choque: null, grupo: "refugio" },
-    rastro: { f: rastro, alto: 4, choque: null, grupo: "refugio" },
-    posteFarol: { f: posteFarol, alto: 140, choque: { r: 10 }, grupo: "refugio", luz: true },
-    mojon: { f: mojon, alto: 96, choque: { r: 18 }, grupo: "refugio", luz: true },
-    posteTablillas: { f: posteTablillas, alto: 175, choque: { r: 12 }, grupo: "refugio" },
-    camilla: { f: camilla, alto: 20, choque: null, grupo: "refugio" },
-    cunaPiedra: { f: cunaPiedra, alto: 16, choque: null, grupo: "refugio" },
+    carroCuadrilla: { f: carroCuadrilla, fv: carroCuadrillaV, vol: true, alto: 120, choque: { w: 230, h: 30 }, grupo: "refugio" },
+    sacosAbiertos: { f: sacosAbiertos, fv: sacosAbiertosV, vol: true, alto: 24, choque: null, grupo: "refugio" },
+    rastro: { f: rastro, fv: rastroV, vol: true, alto: 4, choque: null, grupo: "refugio" },
+    posteFarol: { f: posteFarol, fv: posteFarolV, vol: true, alto: 140, choque: { r: 10 }, grupo: "refugio", luz: true },
+    mojon: { f: mojon, fv: mojonV, vol: true, alto: 96, choque: { r: 18 }, grupo: "refugio", luz: true },
+    posteTablillas: { f: posteTablillas, fv: posteTablillasV, vol: true, alto: 175, choque: { r: 12 }, grupo: "refugio" },
+    camilla: { f: camilla, fv: camillaV, vol: true, alto: 20, choque: null, grupo: "refugio" },
+    cunaPiedra: { f: cunaPiedra, fv: cunaPiedraV, vol: true, alto: 16, choque: null, grupo: "refugio" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     carroCuadrilla: { cepillo: true, talla: true, jornal: true },

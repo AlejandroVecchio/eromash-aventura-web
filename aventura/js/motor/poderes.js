@@ -324,14 +324,14 @@ window.PODERES = (function () {
       for (const n of GENTE_CIUDAD) {
         if (!visible(n.x, n.y)) continue;
         if (Math.hypot(jug.x - n.x, jug.y - n.y) < 260) n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
-        lista.push({ y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo }) });
+        lista.push({ x: n.x, y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo }) });
       }
       for (const b of botin) {
         if (!visible(b.x, b.y)) continue;
-        lista.push({ y: b.y, f: () => dibujarBotin(c, b) });
+        lista.push({ x: b.x, y: b.y, f: () => dibujarBotin(c, b) });
       }
-      for (const f of efectos) lista.push({ y: (f.y || jug.y) + 1, f: () => dibujarEfecto(c, f) });
-      if (escudo > 0) lista.push({ y: jug.y + 2, f: () => dibujarEscudo(c) });
+      for (const f of efectos) lista.push({ x: f.x != null ? f.x : jug.x, pie: f.y || jug.y, y: (f.y || jug.y) + 1, f: () => dibujarEfecto(c, f) });
+      if (escudo > 0) lista.push({ x: jug.x, pie: jug.y, y: jug.y + 2, f: () => dibujarEscudo(c) });
     },
     luces(dar) {
       for (const f of efectos) {

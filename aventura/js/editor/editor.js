@@ -37,6 +37,9 @@
     if (!e.piezas || typeof e.piezas !== "object") e.piezas = {};
     if (!e.texturas || typeof e.texturas !== "object") e.texturas = {};
     if (!e.casas || typeof e.casas !== "object") e.casas = {};
+    if (!e.zonas || typeof e.zonas !== "object") e.zonas = {};
+    if (!Array.isArray(e.npcs)) e.npcs = [];
+    if (!e.imagenes || typeof e.imagenes !== "object") e.imagenes = {};
   };
   completar(est);
   // las texturas hechas acá son assets: se suman a la lista antes de armarla
@@ -50,6 +53,17 @@
     return true;
   };
   cargarTexturas();
+  // lo mismo con las imágenes importadas (estructuras, pinturas, calcos): cada una es el asset im_<id>
+  let firmaImg = "";
+  const cargarImagenes = () => {
+    if (!window.IMAGENES) return false;
+    IMAGENES.cargar(est.imagenes);
+    const f = Object.keys(est.imagenes).map((k) => k + ":" + (est.imagenes[k].clase || "") + ":" + ((est.imagenes[k].nombre || {}).es || "") + ":" + (est.imagenes[k].src || "").length).join();
+    if (f === firmaImg) return false;
+    firmaImg = f;
+    return true;
+  };
+  cargarImagenes();
   const historial = [],
     rehechos = []; // lo deshecho, para rehacerlo (Ctrl+Shift+Z o Ctrl+Y)
   const recordar = () => {
@@ -78,7 +92,7 @@
     armarIr();
     pintarPendiente();
     if (window.EDITOR_PLANO) EDITOR_PLANO();
-    if (cargarTexturas()) armarLista();
+    if (cargarTexturas() | cargarImagenes()) armarLista();
     if (window.EDITOR_TEXTURAS) EDITOR_TEXTURAS.pintarLista();
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.pintarPiezas();
   };
@@ -228,24 +242,11 @@
   medir();
   // la cámara gira (cam.g, en radianes) alrededor del centro de la vista: el piso gira con ella y los objetos quedan
 // parados. V lleva un punto del mundo a la vista girada; aMundo, del puntero al mundo.
-  const V = (x, y) => {
-    if (!cam.g) return [x, y];
-    const co = Math.cos(cam.g),
-      si = Math.sin(cam.g),
-      dx = x - cam.x,
-      dy = y - cam.y;
-    return [cam.x + dx * co - dy * si, cam.y + dx * si + dy * co];
-  };
-  const desdeVista = (vx, vy) => {
-    if (!cam.g) return [vx, vy];
-    const co = Math.cos(cam.g),
-      si = Math.sin(cam.g),
-      dx = vx - cam.x,
-      dy = vy - cam.y;
-    return [cam.x + dx * co + dy * si, cam.y - dx * si + dy * co];
-  };
+  // (el giro es el del piso en perspectiva, VOL.girar: lo mismo que haría la cámara del juego)
+  const V = (x, y) => VOL.vista(x, y, cam.x, cam.y, cam.g);
+  const desdeVista = (vx, vy) => VOL.mundo(vx, vy, cam.x, cam.y, cam.g);
   // un desplazamiento de la pantalla, pasado al mundo (para mover la vista)
-  const giroInverso = (dx, dy) => (cam.g ? [dx * Math.cos(cam.g) + dy * Math.sin(cam.g), -dx * Math.sin(cam.g) + dy * Math.cos(cam.g)] : [dx, dy]);
+  const giroInverso = (dx, dy) => VOL.desgirar(dx, dy, cam.g);
   const aMundo = (sx, sy) => desdeVista((sx * dpr - cw / 2) / cam.z + cam.x, (sy * dpr - ch / 2) / cam.z + cam.y);
   // lo que se dibuja parado, pasado a la vista: su pie (y las dos puntas de lo que va de punta a punta) giran con el
   // piso; lo que tiene todas sus caras (ASSETS.LISTA[id].caras) además se ve desde el lado que mira la cámara
@@ -253,14 +254,14 @@
     if (!cam.g) return d;
     const [x, y] = V(d.x, d.y),
       o = Object.assign({}, d.o);
-    if (o.x2 !== undefined) [o.x2, o.y2] = V(o.x2, o.y2);
     const def = ASSETS.LISTA[d.id];
-    // lo que tiene caras se arma como volumen; lo demás que tiene frente (puertas, empalizadas, carros, puestos) se
-    // gira de mentira (se angosta y se da vuelta) para que no quede mirando a la cámara; lo redondo (árboles, piedras,
-    // postes, torres: choque redondo) y la naturaleza se ven igual de cualquier lado y quedan como están
-    const md = d.choque || (def && def.choque);
-    if (def && def.caras) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
-    else if (def && o.x2 === undefined && !(md && md.r) && def.grupo !== "naturaleza" && !def.piso) o.giroCam = cam.g;
+    // lo armado con caras gira solo su otra punta (VOL.prSeg): le llega relativa al pie, sin girar
+    if (o.x2 !== undefined) [o.x2, o.y2] = def && def.vol ? [x + o.x2 - d.x, y + o.y2 - d.y] : V(o.x2, o.y2);
+    // lo que apunta a un punto del mundo (o.hacia: las cadenas de las ataduras) igual: relativo al pie
+    if (o.hacia && def && def.vol) o.hacia = [x + o.hacia[0] - d.x, y + o.hacia[1] - d.y];
+    // lo armado con caras (vol) mira solo la cámara (VOL.cam.g); lo que tiene todas sus caras a mano (caras) se gira
+    // con o.giro; lo redondo o plano de frente (figura) y lo del piso quedan como están (ASSETS.sinGiro: la norma)
+    if (def && def.caras && !def.vol) o.giro = (o.giro || 0) + (cam.g * 180) / Math.PI;
     return Object.assign({}, d, { x, y, o, mundo: d });
   }
   const croquis = new Image();
@@ -464,7 +465,16 @@
 
   let tPrev = performance.now(),
     tt = 0;
+  // la cámara del editor es la de los volúmenes mientras se dibuja el mapa (las miniaturas de la lista van de frente)
   function dibujar() {
+    VOL.cam.g = cam.g;
+    try {
+      dibujarMapa();
+    } finally {
+      VOL.cam.g = 0;
+    }
+  }
+  function dibujarMapa() {
     const ahoraT = performance.now(),
       moviendo = Object.keys(teclas).some((k) => teclas[k]);
     if (!sucio && !faltan && !moviendo && ahoraT - ultimo < (cam.z >= LIVIANO ? 120 : 1000)) return requestAnimationFrame(dibujar);
@@ -480,7 +490,7 @@
       vh = ch / cam.z,
       xv0 = cam.x - vw / 2,
       yv0 = cam.y - vh / 2,
-      rr = Math.hypot(vw, vh) / 2,
+      rr = Math.hypot(vw, vh / VOL.K) / 2,
       // con la cámara girada, lo que se ve del mundo es el círculo que toca las cuatro esquinas
       x0 = cam.g ? cam.x - rr : xv0,
       y0 = cam.g ? cam.y - rr : yv0,
@@ -491,9 +501,7 @@
     const pisoT = () => {
       vistaT();
       if (!cam.g) return;
-      c.translate(cam.x, cam.y);
-      c.rotate(cam.g);
-      c.translate(-cam.x, -cam.y);
+      VOL.piso(c, cam.x, cam.y, cam.g);
     };
     pisoT();
     const lejos = cam.z < 0.07,
@@ -758,6 +766,8 @@
     if (window.EDITOR_MUNDO) EDITOR_MUNDO.dibujar(c, cam, V, cursor, tt);
     if (window.EDITOR_PINCEL) EDITOR_PINCEL.dibujar(c, cam, V, cursor, tt);
     if (window.EDITOR_HISTORIA) EDITOR_HISTORIA.dibujar(c, cam, V);
+    if (window.EDITOR_ZONAS) EDITOR_ZONAS.dibujar(c, cam, V, tt);
+    if (window.EDITOR_NPC) EDITOR_NPC.dibujar(c, cam, V, tt);
     // la vista previa de lo que se va a poner
     if (herr === "poner" && elegido && cursor && !lejos) {
       const o = opcionesDe({ id: elegido, o: nuevasOpciones(cursor.x, cursor.y) });
@@ -1961,7 +1971,7 @@
   function tocado(x, y) {
     const vw = cw / cam.z,
       vh = ch / cam.z,
-      rr = cam.g ? Math.hypot(vw, vh) / 2 : 0;
+      rr = cam.g ? Math.hypot(vw, vh / VOL.K) / 2 : 0;
     const l = cam.g ? visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr) : visibles(cam.x - vw / 2, cam.y - vh / 2, cam.x + vw / 2, cam.y + vh / 2);
     let mejor = null,
       dm = Infinity;
@@ -2070,6 +2080,8 @@
       medida = arrastre = { medir: true, x, y, x2: x, y2: y };
       return;
     }
+    if (window.EDITOR_NPC && EDITOR_NPC.clic(x, y, e)) return;
+    if (window.EDITOR_ZONAS && EDITOR_ZONAS.clic(x, y, e)) return;
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.clic(x, y, e)) return;
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.clic(x, y, e)) return;
     // una nota se toca (para editarla) o se arrastra con cualquier herramienta menos sacar
@@ -2371,7 +2383,7 @@
     const id = elegida.a ? elegida.a.id : elegida.cosa.id,
       vw = cw / cam.z,
       vh = ch / cam.z,
-      rr = Math.hypot(vw, vh) / 2;
+      rr = Math.hypot(vw, vh / VOL.K) / 2;
     const l = visibles(cam.x - rr, cam.y - rr, cam.x + rr, cam.y + rr).filter((d) => d.id === id && !($("bloquear").checked && d.agregado == null));
     grupo = [];
     l.forEach((d) => {
@@ -2778,6 +2790,12 @@
       if (ctrl && e.key.toLowerCase() === "y") return e.preventDefault(), rehacer();
       return EDITOR_CUARTOS.tecla(e);
     }
+    // con las zonas abiertas, lo mismo
+    if (window.EDITOR_ZONAS && EDITOR_ZONAS.abierta()) {
+      if (ctrl && e.key.toLowerCase() === "z") return e.preventDefault(), e.shiftKey ? rehacer() : deshacer();
+      if (ctrl && e.key.toLowerCase() === "y") return e.preventDefault(), rehacer();
+      return EDITOR_ZONAS.tecla(e);
+    }
     // las teclas que no llaman a una acción con nombre también enseñan qué se usa después de qué
     const k = e.key.toLowerCase(),
       regionAbierta = window.EDITOR_MUNDO && EDITOR_MUNDO.trazando(),
@@ -2786,6 +2804,8 @@
     if (window.EDITOR_MUNDO && EDITOR_MUNDO.tecla(e)) return e.preventDefault();
     if (window.EDITOR_PINCEL && EDITOR_PINCEL.tecla(e)) return e.preventDefault();
     if (window.EDITOR_TEXTURAS && EDITOR_TEXTURAS.tecla(e)) return e.preventDefault();
+    if ((e.key === "m" || e.key === "M") && !ctrl) return window.EDITOR_ZONAS && EDITOR_ZONAS.abrir();
+    if ((e.key === "n" || e.key === "N") && !ctrl) return window.EDITOR_NPC && EDITOR_NPC.alternar();
     if (e.key === "9" && !ctrl) return window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(elegida && window.INTERIORES ? INTERIORES.plantillaDe(elegida.a ? elegida.a.id : elegida.cosa.id, opcionesElegida(), (elegida.a || elegida.cosa).x, (elegida.a || elegida.cosa).y) : null);
     // marcadores: Shift+número vuelve, Ctrl+Shift+número guarda
     if (e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
@@ -2996,7 +3016,7 @@
     return (
       "// Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor\n" +
       "// con «Descargar agregados.js»: se guarda acá, en aventura/js/mundo/, y el mundo lo aplica al armarse.\n" +
-      "window.AGREGADOS = {\n  nombre: " + JSON.stringify(est.nombre || "") + ",\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>\n  casas: " + JSON.stringify(est.casas || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
+      "window.AGREGADOS = {\n  nombre: " + JSON.stringify(est.nombre || "") + ",\n  poner: [" + lineas(est.poner) + "],\n  quitar: [" + lineas(est.quitar) + "],\n  mover: [" + lineas(est.mover) + "],\n  quitarDeco: [" + lineas(est.quitarDeco) + "],\n  caminos: [" + lineas(est.caminos) + "],\n  quitarCaminos: [" + est.quitarCaminos.join(", ") + "],\n  estiloCaminos: [" + lineas(est.estiloCaminos) + "],\n  rios: [" + lineas(est.rios) + "],\n  lagos: [" + lineas(est.lagos) + "],\n  quitarRios: [" + est.quitarRios.join(", ") + "],\n  quitarLagos: [" + est.quitarLagos.join(", ") + "],\n  estiloRios: [" + lineas(est.estiloRios) + "],\n  estiloLagos: [" + lineas(est.estiloLagos) + "],\n  // los interiores cambiados (pestaña Interiores): plantilla → pared, ventana, cambios por mueble y muebles puestos\n  cuartos: " + JSON.stringify(est.cuartos || {}) + ",\n  // casas de varios cuartos (generador de casas): cuartos, uniones y pasadizos; cada cuarto es la plantilla plano:<id>:<n>\n  casas: " + JSON.stringify(est.casas || {}) + ",\n  // zonas fuera del mapa (sección Zonas): mazmorras oscuras y tierras con islas, cada una con su entrada en el bosque\n  zonas: " + JSON.stringify(est.zonas || {}) + ",\n  // gente propia (Importar NPC): nombre, diálogo, lugar y sus dibujos por vista (imágenes achicadas)\n  npcs: [" + lineas(est.npcs || []) + "],\n  // imágenes importadas (estructuras, pinturas de pared y calcos en el piso): cada una es el asset im_<id>\n  imagenes: " + JSON.stringify(est.imagenes || {}) + ",\n  // regiones con nombre (el juego lo muestra al entrar) y piezas guardadas para reusar en el editor\n  regiones: [" + lineas(est.regiones || []) + "],\n  piezas: " + JSON.stringify(est.piezas || {}) + ",\n  // texturas hechas en el editor (generador de texturas): cada una es un asset tx_<id> (parche) o txb_<id> (bloque)\n  texturas: " + JSON.stringify(est.texturas || {}) + ",\n  // notas para Claude: qué hacer en ese lugar (el juego no las usa)\n  notas: [" + lineas(est.notas) + "],\n};\n" +
       "// ?borrador=1: el juego usa lo que está armado en el editor de este navegador, sin descargar nada\n" +
       "try {\n  if (/[?&]borrador=1/.test(location.search)) {\n    const b = JSON.parse(localStorage.getItem(\"" + CLAVE + "\") || \"null\");\n    if (b && b.poner) window.AGREGADOS = b;\n  }\n} catch (e) {}\n"
     );
@@ -3081,7 +3101,7 @@
     if (!confirm(t("ed.limpiar_seguro"))) return;
     recordar();
     // las piezas son la biblioteca de este navegador: limpiar el mapa no las borra
-    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {}, texturas: est.texturas || {}, casas: est.casas || {} };
+    est = { poner: [], quitar: [], mover: [], quitarDeco: [], caminos: [], quitarCaminos: [], estiloCaminos: [], rios: [], lagos: [], quitarRios: [], quitarLagos: [], estiloRios: [], estiloLagos: [], notas: [], piezas: est.piezas || {}, texturas: est.texturas || {}, casas: est.casas || {}, zonas: est.zonas || {}, npcs: est.npcs || [], imagenes: est.imagenes || {} };
     guardar();
   };
 
@@ -3117,6 +3137,8 @@
     W,
     t,
     avisar,
+    // del puntero (offsetX, offsetY del mapa) al mundo
+    aMundo: (sx, sy) => aMundo(sx, sy),
     ponerHerr,
     girarCamara,
     elegido: () => elegido,

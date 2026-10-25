@@ -600,9 +600,9 @@ window.GOINN = (function () {
       for (const [dx, dy, tipo] of COSAS_CAMARA) {
         const x = C[0] + dx,
           y = C[1] + dy;
-        if (visible(x, y)) lista.push({ y, f: () => cosaCamara(tipo, x, y) });
+        if (visible(x, y)) lista.push({ x, y, f: () => cosaCamara(tipo, x, y) });
       }
-      if (visible(svan.x, svan.y)) lista.push({ y: svan.y, f: () => GENTE.dibujar(c, "svanhild", svan.x, svan.y, J.t, svan.mira) });
+      if (visible(svan.x, svan.y)) lista.push({ x: svan.x, y: svan.y, f: () => GENTE.dibujar(c, "svanhild", svan.x, svan.y, J.t, svan.mira) });
       // los pilares de raíz y la raíz madre
       const raiz = (x, y, w, alto, sem) => {
         // una raíz de Yggdrasil como en el boceto: corteza con musgo, roída hasta la madera clara, y el agua rúnica que
@@ -663,11 +663,11 @@ window.GOINN = (function () {
           px = R[0] + Math.cos(ang) * 2080 * ra2,
           py = R[1] + Math.sin(ang) * 1470 * ra2,
           hh = 140 + ((k * 53) % 7) * 34;
-        if (visible(px, py)) lista.push({ y: py, f: () => aguja(px, py, hh, 300 + k) });
+        if (visible(px, py)) lista.push({ x: px, y: py, f: () => aguja(px, py, hh, 300 + k) });
       }
-      for (const p of pilares) if (visible(p.x, p.y)) lista.push({ y: p.y, f: () => raiz(p.x, p.y, p.r, 1400, p.sem + 11) });
+      for (const p of pilares) if (visible(p.x, p.y)) lista.push({ x: p.x, y: p.y, f: () => raiz(p.x, p.y, p.r, 1400, p.sem + 11) });
       const m = madre();
-      if (visible(m[0], m[1])) lista.push({ y: m[1], f: () => raiz(m[0], m[1], 300, 1800, 77) });
+      if (visible(m[0], m[1])) lista.push({ x: m[0], y: m[1], f: () => raiz(m[0], m[1], 300, 1800, 77) });
       // Góinn: la cadena de segmentos sigue a la cabeza; cada uno se ordena por su línea del piso
       if (pelea) {
         const segs = cuerpo(),
@@ -709,6 +709,7 @@ window.GOINN = (function () {
           if (!visible(a.x, a.y)) continue;
           const r = ancho(i);
           lista.push({
+            x: a.x,
             y: a.y,
             f: () =>
               DIB.alfa(c, 1 - muere * 0.6, () => {
@@ -728,6 +729,8 @@ window.GOINN = (function () {
         }
         const cb = p.cab;
         lista.push({
+          x: cb.x,
+          pie: cb.y,
           y: cb.y + 1,
           f: () =>
             DIB.alfa(c, 1 - muere * 0.6, () => {

@@ -160,12 +160,12 @@ window.CAPITAL = (function () {
       for (const n of gente) {
         if (n.fuera || !visible(n.x, n.y)) continue;
         if (Math.hypot(jug.x - n.x, jug.y - n.y) < 260) n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
-        lista.push({ y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo }) });
+        lista.push({ x: n.x, y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo }) });
       }
       // las runas de la cúpula, en el cielo: encima de todo lo de la ciudad
       for (const r of W.NOMBRADAS.runasCupula || []) {
         if (!visible(r.x, r.y - r.alto)) continue;
-        lista.push({ y: 1e9, f: () => ASSETS.dibujar(c, "runaCupula", r.x, r.y - r.alto, J.t, r) });
+        lista.push({ x: r.x, pie: r.y - r.alto, y: 1e9, f: () => ASSETS.dibujar(c, "runaCupula", r.x, r.y - r.alto, J.t, r) });
       }
     },
   };

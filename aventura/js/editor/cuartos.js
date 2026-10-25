@@ -24,6 +24,8 @@ window.EDITOR_CUARTOS = (function () {
     poniendo = null, // id del mueble que se pone con el próximo clic
     arrastre = null,
     luz = true,
+    giro = 0, // la vista del cuarto gira con Z y X (todo girable); se acerca a giroMeta de a poco
+    giroMeta = 0,
     k = 1,
     ox = 0,
     oy = 0;
@@ -139,24 +141,29 @@ window.EDITOR_CUARTOS = (function () {
   }
   const alto = (q) => (ASSETS.LISTA[q.id] ? ASSETS.LISTA[q.id].alto : 200) * (q.o.s || 1);
   const ancho = (q) => Math.max(50, q.r || alto(q) * 0.4);
+  // (x, y) en la vista (girada o no): lo que está ahí, lo de más adelante primero
   function tocado(x, y) {
     let mejor = null;
     cuarto.gente.forEach((n) => {
-      if (Math.abs(x - n.x) < 60 && y > n.y - 190 && y < n.y + 15 && (!mejor || n.y > mejor.y)) mejor = { gente: n.id, y: n.y };
+      const [vx, vy, kk] = I.aVista(n.x, n.y);
+      if (Math.abs(x - vx) < 60 * kk && y > vy - 190 * kk && y < vy + 15 * kk && (!mejor || vy > mejor.y)) mejor = { gente: n.id, y: vy };
     });
     cuarto.muebles.forEach((q) => {
-      if (Math.abs(x - q.x) > ancho(q) || y > q.y + 30 || y < q.y - alto(q)) return;
-      const yy = q.piso ? q.y - 2000 : q.y;
+      const [vx, vy, kk] = I.aVista(q.x, q.y);
+      if (Math.abs(x - vx) > ancho(q) * kk || y > vy + 30 * kk || y < vy - alto(q) * kk) return;
+      const yy = q.piso ? vy - 2000 : vy;
       if (!mejor || yy > mejor.y) mejor = { clave: q.clave, y: yy };
     });
     return mejor;
   }
-  const enCuarto = (e) => {
+  // el puntero en la vista, y en el piso del cuarto
+  const enVista = (e) => {
     const r = cv.getBoundingClientRect(),
       px = (e.clientX - r.left) * (cv.width / r.width),
       py = (e.clientY - r.top) * (cv.height / r.height);
     return [(px - ox) / k, (py - oy) / k];
   };
+  const enCuarto = (e) => I.deVista(...enVista(e));
   const piso = (y) => Math.max(FONDO + 4, Math.min(RH - 10, y));
   cv.addEventListener("pointerdown", (e) => {
     if (!cuarto) return;
@@ -173,7 +180,7 @@ window.EDITOR_CUARTOS = (function () {
       }
       return pintarPanel();
     }
-    const h = tocado(x, y);
+    const h = tocado(...enVista(e));
     elegido = h ? (h.gente ? { gente: h.gente } : { clave: h.clave }) : null;
     pintarPanel();
     const q = actual();
@@ -189,7 +196,7 @@ window.EDITOR_CUARTOS = (function () {
       // mientras se arrastra se mueve en la vista; al soltar se guarda (un paso de Deshacer)
       arrastre.o.x = Math.round(Math.max(40, Math.min(RW - 40, x - arrastre.dx)));
       arrastre.o.y = Math.round(piso(y - arrastre.dy));
-    } else cv.style.cursor = poniendo ? "copy" : tocado(x, y) ? "grab" : "default";
+    } else cv.style.cursor = poniendo ? "copy" : tocado(...enVista(e)) ? "grab" : "default";
   });
   cv.addEventListener("pointerup", () => {
     if (!arrastre) return;
@@ -262,6 +269,12 @@ window.EDITOR_CUARTOS = (function () {
     if (kk === "f" || kk === "F") return darVuelta();
     if (kk === "l" || kk === "L") return ($("cuLuz").checked = luz = !luz);
     if (kk === "9") return cerrar();
+    // Z y X giran la vista del cuarto de a 30°, como en el mapa; dos vueltas completas vuelven a cero
+    if (!e.ctrlKey && !e.metaKey && (kk === "z" || kk === "Z" || kk === "x" || kk === "X")) {
+      giroMeta += ((kk.toLowerCase() === "z" ? -1 : 1) * Math.PI) / 6;
+      if (Math.abs(Math.sin(giroMeta)) < 1e-6 && Math.cos(giroMeta) > 0) (giroMeta = 0), (giro = Math.atan2(Math.sin(giro), Math.cos(giro)));
+      return;
+    }
     const paso = e.shiftKey ? 40 : 8,
       fl = { ArrowLeft: [-paso, 0], ArrowRight: [paso, 0], ArrowUp: [0, -paso], ArrowDown: [0, paso] }[kk];
     if (fl && actual()) return e.preventDefault(), mover(...fl);
@@ -273,19 +286,22 @@ window.EDITOR_CUARTOS = (function () {
 
   // ---------- dibujar ----------
   function marco(q, col) {
-    const a = alto(q),
-      w = ancho(q);
+    const [vx, vy, kk] = I.aVista(q.x, q.y),
+      a = alto(q) * kk,
+      w = ancho(q) * kk;
     c.save();
     c.strokeStyle = col;
     c.lineWidth = 3;
     c.setLineDash([12, 8]);
-    c.strokeRect(q.x - w, q.y - a, w * 2, a + 24);
+    c.strokeRect(vx - w, vy - a, w * 2, a + 24 * kk);
     c.restore();
   }
   function cuadro(ts) {
     if (!abierta()) return;
     requestAnimationFrame(cuadro);
     armar();
+    if (giro !== giroMeta) giro = Math.abs(giroMeta - giro) < 0.003 ? giroMeta : giro + (giroMeta - giro) * 0.25;
+    I.ponerGiro(giro);
     const r = cv.getBoundingClientRect();
     if (cv.width !== Math.round(r.width) || cv.height !== Math.round(r.height)) (cv.width = Math.round(r.width)), (cv.height = Math.round(r.height));
     k = Math.min(cv.width / RW, cv.height / RH);
@@ -300,7 +316,7 @@ window.EDITOR_CUARTOS = (function () {
     c.rect(0, 0, RW, RH);
     c.clip();
     try {
-      I.dibujarVista(c, cuarto, ts / 1000, luz);
+      I.dibujarVista(c, cuarto, ts / 1000, luz, giro);
     } catch (e) {
       console.error(e);
     }
@@ -308,13 +324,14 @@ window.EDITOR_CUARTOS = (function () {
     cuarto.muebles.forEach((q) => q.puesto && marco(q, "rgba(255,217,138,0.45)"));
     const q = actual();
     if (q) q.gente ? marco({ id: "", x: q.n.x, y: q.n.y, o: {}, r: 60 }, "#73D5DB") : marco(q.m, "#73D5DB");
-    if (!cuarto.sotano && !cuarto.sinSalida) {
+    if (!cuarto.sotano && !cuarto.sinSalida && !giro) {
       c.strokeStyle = "rgba(242,236,236,0.25)";
       c.setLineDash([6, 6]);
       c.lineWidth = 2;
       c.strokeRect(130, RH - 30, 190, 30);
     }
     c.restore();
+    I.ponerGiro(0);
   }
   // ---------- los planos: nombre a la vista, duplicar, copiar y pegar, casas de varios cuartos ----------
   // Cada plantilla y cada casa de varios cuartos tiene un nombre que se ve arriba y se cambia escribiendo. Duplicar arma

@@ -43,7 +43,7 @@
     const s = o.s || 1,
       leida = !!o.leida,
       f = formaPiedra(x, y, 38 * s, 104 * s, o.sem);
-    sombra(c, x + 10 * s, y + 3, f.w + 8 * s, 9 * s);
+    if (!o.sinSombra) sombra(c, x + 10 * s, y + 3, f.w + 8 * s, 9 * s);
     pintarPiedra(c, f, ["#6A6660", "#827C74", "#4C4844"]);
     // la cinta de la serpiente: sigue el borde de la piedra por dentro y se anuda abajo
     const tinta = leida ? "#C8402D" : "#6E4A3A",
@@ -99,11 +99,11 @@
       carga = o.carga || 0,
       [gris, clara, oscura] = d.piedra;
     const late = viva ? 0.85 + Math.sin(t * 2 + (o.sem || 0)) * 0.15 : 0.2 + carga * 0.6 + Math.max(0, Math.sin(t * 1.3 + (o.sem || 0))) * 0.2;
-    if (viva || carga > 0) halo(c, x, y - 70 * s, (70 + 90 * Math.max(carga, viva ? 1 : 0)) * s, d.col, late * 0.9);
-    sombra(c, x + 10 * s, y + 3, 32 * s, 8 * s);
+    if (!o.sinSombra && (viva || carga > 0)) halo(c, x, y - 70 * s, (70 + 90 * Math.max(carga, viva ? 1 : 0)) * s, d.col, late * 0.9);
+    if (!o.sinSombra) sombra(c, x + 10 * s, y + 3, 32 * s, 8 * s);
     // base chata y la piedra con su forma
     const f = formaPiedra(x, y - 4 * s, 36 * s, 128 * s, o.sem);
-    P(c, poli(x, y - 2 * s, f.w + 10 * s, 11 * s, 7, 0.4), oscura);
+    if (!o.sinSombra) P(c, poli(x, y - 2 * s, f.w + 10 * s, 11 * s, 7, 0.4), oscura);
     pintarPiedra(c, f, [gris, clara, oscura]);
     // el sello de cada rito, chico, arriba de la runa grande
     const sx = x + 1 * s,
@@ -145,9 +145,62 @@
       }
   }
 
+  // ======================================================================
+  //  ARMADAS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  // la piedra con su silueta (formaPiedra) como una losa de espesor hondo: adelante su dibujo de siempre, atrás la
+  // piedra lisa con musgo y los cantos de la silueta; z0 levanta la losa (la del rito va sobre su base)
+  function losa(c, pr, f, ancho, alto, hondo, z0, cols, frente) {
+    const fm = formaPiedra(0, 0, ancho, alto, f.sem),
+      W = fm.w,
+      H = fm.h,
+      n = fm.norm,
+      perfil = [];
+    for (let k = 0; k < n.length; k += 2) perfil.push([n[k] * W, z0 - n[k + 1] * H]);
+    const d = hondo / 2,
+      tonos = [cols[2], cols[0], cols[1]];
+    // los cantos, de atrás para adelante
+    const cantos = [];
+    for (let i = 0; i < perfil.length - 1; i++) {
+      const [ua, za] = perfil[i],
+        [ub, zb] = perfil[i + 1];
+      cantos.push(VOL.afuera([[ua, -d, za], [ub, -d, zb], [ub, d, zb], [ua, d, za]], [-(zb - za), 0, ub - ua]));
+    }
+    cantos.push([[perfil[0][0], d, z0], [perfil[perfil.length - 1][0], d, z0], [perfil[perfil.length - 1][0], -d, z0], [perfil[0][0], -d, z0]]);
+    const cara = (w, dib) => {
+      const pts = VOL.afuera(perfil.map(([u, z]) => [u, w, z]), [0, w, 0]);
+      if (!VOL.cara(c, pr, pts, tonos)) return;
+      if (dib) VOL.enCara(c, [pr(-W, w, z0), pr(W, w, z0), pr(-W, w, z0 + H)], VOL.medida(2 * W, H, (cc) => dib(cc, W, H, w < 0)));
+    };
+    cara(-d, (cc, w, h, atras) => {
+      cc.translate(2 * w, 0);
+      cc.scale(-1, 1);
+      E(cc, w * 0.4, -3, 12, 5, C.musgo2);
+      void atras;
+    });
+    cantos.forEach((q) => VOL.cara(c, pr, q, tonos));
+    cara(d, frente);
+  }
+  function piedraCaminoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 8, 0, 46, 22);
+    losa(c, pr, o, 38, 104, 22, 0, ["#4C4844", "#6A6660", "#827C74"], (cc, W) => piedraCamino(cc, W, 0, t, Object.assign({}, o, { s: 1, sinSombra: true })));
+  }
+  function piedraRitoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      d = RITO[o.tipo] || RITO.eco,
+      viva = !!o.viva,
+      carga = o.carga || 0,
+      late = viva ? 0.85 + Math.sin(t * 2 + (o.sem || 0)) * 0.15 : 0.2 + carga * 0.6 + Math.max(0, Math.sin(t * 1.3 + (o.sem || 0))) * 0.2;
+    if (viva || carga > 0) VOL.halo(c, pr, 0, 0, 70, 70 + 90 * Math.max(carga, viva ? 1 : 0), d.col, late * 0.9);
+    VOL.sombra(c, pr, 8, 0, 42, 24);
+    VOL.cilindro(c, pr, 0, 0, 44, 0, 5, [d.piedra[2], d.piedra[0], d.piedra[1]], { n: 7, rw: 22, fase: 0.4 });
+    losa(c, pr, o, 36, 128, 24, 4, [d.piedra[2], d.piedra[0], d.piedra[1]], (cc, W) => piedraRito(cc, W, 4, t, Object.assign({}, o, { s: 1, sinSombra: true })));
+  }
+
   Object.assign(ASSETS.LISTA, {
-    piedraCamino: { f: piedraCamino, alto: 110, choque: { r: 26 }, grupo: "piedras" },
-    piedraRito: { f: piedraRito, alto: 140, choque: { r: 26 }, grupo: "piedras", luz: true },
+    piedraCamino: { f: piedraCamino, fv: piedraCaminoV, vol: true, alto: 110, choque: { r: 26 }, grupo: "piedras" },
+    piedraRito: { f: piedraRito, fv: piedraRitoV, vol: true, alto: 140, choque: { r: 26 }, grupo: "piedras", luz: true },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     piedraCamino: { leida: true },

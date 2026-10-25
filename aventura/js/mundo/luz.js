@@ -38,40 +38,6 @@ window.LUZ = (function () {
     return { h, n, o, osc };
   }
 
-  let gradCache = null;
-  // el agujero de cada luz: un degradé redondo recortado en un óvalo (r × 0.82 r), hecho una vez a 256 px
-  const AGUJERO = (() => {
-    const cv = document.createElement("canvas");
-    cv.width = 256;
-    cv.height = 210;
-    const x = cv.getContext("2d");
-    x.setTransform(128, 0, 0, 128, 128, 105);
-    const g = x.createRadialGradient(0, 0, 0, 0, 0, 1);
-    g.addColorStop(0, "rgba(0,0,0,1)");
-    g.addColorStop(0.45, "rgba(0,0,0,0.75)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    x.fillStyle = g;
-    x.beginPath();
-    x.ellipse(0, 0, 1, 0.82, 0, 0, Math.PI * 2);
-    x.fill();
-    return cv;
-  })();
-  // el brillo de color de cada luz, uno por color (se guarda)
-  const brillos = new Map();
-  function brillo(col) {
-    let cv = brillos.get(col);
-    if (cv) return cv;
-    cv = document.createElement("canvas");
-    cv.width = cv.height = 256;
-    const x = cv.getContext("2d");
-    const g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
-    g.addColorStop(0, hexA(col, 0.16));
-    g.addColorStop(1, hexA(col, 0));
-    x.fillStyle = g;
-    x.fillRect(0, 0, 256, 256);
-    brillos.set(col, cv);
-    return cv;
-  }
   // luces: [{ x, y, r (unidades del mundo), col, f (fuerza 0..1) }]
   function dibujar(c, cw, ch, x0, y0, esc, luces, amb, t) {
     const nv = nivel();
@@ -90,7 +56,8 @@ window.LUZ = (function () {
     if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o) * (1 - ll * 0.85), colorHora(amb.h));
     else if (nv === "alta" && amb.n >= 0.6 && ll < 0.5) rayos(c, cw, ch, x0, t, ((amb.n - 0.6) / 0.4) * 0.55, "200,242,244");
     if (nv === "baja") {
-      c.fillStyle = `rgba(${tono[0]},${tono[1]},${tono[2]},${Math.min(0.42, amb.osc * 0.55)})`;
+      const tb = amb.tono || tono;
+      c.fillStyle = `rgba(${tb[0]},${tb[1]},${tb[2]},${Math.min(0.42, amb.osc * 0.55)})`;
       c.fillRect(0, 0, cw, ch);
       c.restore();
       return;
@@ -104,7 +71,8 @@ window.LUZ = (function () {
     }
     cc.globalCompositeOperation = "source-over";
     cc.clearRect(0, 0, w, h);
-    cc.fillStyle = `rgba(${tono[0]},${tono[1]},${tono[2]},${amb.osc})`;
+    const tn = amb.tono || tono; // una zona puede pedir su propio color de oscuridad (las mazmorras, tibio)
+    cc.fillStyle = `rgba(${tn[0]},${tn[1]},${tn[2]},${amb.osc})`;
     cc.fillRect(0, 0, w, h);
     // agujeros de luz
     cc.globalCompositeOperation = "destination-out";
@@ -114,8 +82,6 @@ window.LUZ = (function () {
         sy = (l.y - y0) * s,
         r = l.r * s;
       if (sx < -r || sy < -r || sx > w + r || sy > h + r) continue;
-      // el agujero sale de un dibujo hecho una sola vez (sin armar un degradé por luz en cada cuadro); la fuerza va en
-      // la transparencia, que multiplica igual que antes cada parada del degradé
       cc.globalAlpha = Math.min(1, l.f == null ? 1 : l.f);
       cc.drawImage(AGUJERO, sx - r, sy - r * 0.82, r * 2, r * 1.64);
     }
@@ -132,17 +98,52 @@ window.LUZ = (function () {
           sy = (l.y - y0) * esc,
           r = l.r * esc * 0.7;
         if (sx < -r || sy < -r || sx > cw + r || sy > ch + r) continue;
-        c.globalAlpha = fuerza * (l.f == null ? 1 : Math.min(1, l.f));
+        c.globalAlpha = 0.16 * fuerza * (l.f == null ? 1 : Math.min(1, l.f));
         c.drawImage(brillo(l.col), sx - r, sy - r, r * 2, r * 2);
       }
       c.globalAlpha = 1;
     }
     c.restore();
   }
-  const hexA = (hex, a) => {
-    const n = parseInt(hex.slice(1), 16);
-    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a.toFixed(3)})`;
-  };
+  // Las luces se pintan con dos dibujos hechos una sola vez (crear un degradado por luz en cada cuadro era lo más caro
+  // de la luz): el agujero en la oscuridad (círculo que se apaga hacia afuera, cortado en una elipse de 1 × 0,82) y
+  // el brillo de cada color. La fuerza de cada luz va como globalAlpha: da lo mismo que el degradado de antes.
+  const LADO = 256;
+  const AGUJERO = (() => {
+    const cv = document.createElement("canvas");
+    cv.width = LADO;
+    cv.height = Math.round(LADO * 0.82);
+    const g2 = cv.getContext("2d"),
+      m = LADO / 2,
+      my = cv.height / 2;
+    const g = g2.createRadialGradient(m, my, 0, m, my, m);
+    g.addColorStop(0, "rgba(0,0,0,1)");
+    g.addColorStop(0.45, "rgba(0,0,0,0.75)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    g2.fillStyle = g;
+    g2.beginPath();
+    g2.ellipse(m, my, m, my, 0, 0, Math.PI * 2);
+    g2.fill();
+    return cv;
+  })();
+  const BRILLOS = new Map();
+  function brillo(col) {
+    let cv = BRILLOS.get(col);
+    if (cv) return cv;
+    cv = document.createElement("canvas");
+    cv.width = cv.height = LADO;
+    const g2 = cv.getContext("2d"),
+      m = LADO / 2,
+      n = parseInt(col.slice(1), 16),
+      rgb = `${n >> 16},${(n >> 8) & 255},${n & 255}`;
+    const g = g2.createRadialGradient(m, m, 0, m, m, m);
+    g.addColorStop(0, `rgba(${rgb},1)`);
+    g.addColorStop(1, `rgba(${rgb},0)`);
+    g2.fillStyle = g;
+    g2.fillRect(0, 0, LADO, LADO);
+    BRILLOS.set(col, cv);
+    return cv;
+  }
   // franjas diagonales de luz que se mueven despacio con la cámara (parallax suave)
   function colorHora(h) {
     if (h < 9) return "255,190,170"; // alba

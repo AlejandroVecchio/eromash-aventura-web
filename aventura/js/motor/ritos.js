@@ -384,7 +384,7 @@ window.RITOS = (function () {
         const e = enCurso,
           a = Math.atan2(e.meta.y - jug.y, e.meta.x - jug.x),
           resta = Math.max(0, Math.ceil(e.lim - e.t));
-        lista.push({ y: jug.y - 1, f: () => {
+        lista.push({ x: jug.x, pie: jug.y, y: jug.y - 1, f: () => {
           const x = jug.x + Math.cos(a) * 70,
             y = jug.y + Math.sin(a) * 50;
           c.save();
@@ -394,7 +394,7 @@ window.RITOS = (function () {
           DIB.alfa(c, 0.85, () => DIB.P(c, [18, 0, -10, -12, -4, 0, -10, 12], "#FFD98A"));
           c.restore();
         } });
-        lista.push({ y: jug.y + 5, f: () => {
+        lista.push({ x: jug.x, pie: jug.y, y: jug.y + 5, f: () => {
           c.font = '800 22px "Eromash Text", system-ui, sans-serif';
           c.textAlign = "center";
           c.lineWidth = 4;
@@ -407,7 +407,7 @@ window.RITOS = (function () {
       // el silencio: un anillo violeta que se cierra alrededor de Eromash
       if (enCurso.tipo === "silencio") {
         const u = enCurso.t / enCurso.lim;
-        lista.push({ y: jug.y - 2, f: () => {
+        lista.push({ x: jug.x, pie: jug.y, y: jug.y - 2, f: () => {
           c.save();
           c.strokeStyle = "#9A6BD8";
           c.lineWidth = 4;

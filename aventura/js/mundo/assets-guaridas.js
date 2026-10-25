@@ -101,7 +101,7 @@
     c.restore();
   }
   Object.assign(ASSETS.LISTA, {
-    puertaPiedra: { f: puertaPiedra, alto: 380, grupo: "interiores" },
+    puertaPiedra: { f: puertaPiedra, fv: ASSETS.cartaV(puertaPiedra, 300, 372), vol: true, alto: 380, grupo: "interiores" },
     bocaCueva: { f: bocaCueva, alto: 300, choque: { w: 520, h: 50 }, grupo: "guaridas" },
     nidoZarzal: { f: nidoZarzal, alto: 20, grupo: "guaridas", piso: true },
   });

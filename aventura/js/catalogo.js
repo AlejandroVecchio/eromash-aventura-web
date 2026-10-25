@@ -5,6 +5,11 @@
   const fichas = [];
   const params = new URLSearchParams(location.search);
   if (params.get("lang")) I18N.setLang(params.get("lang"));
+  // la norma de giro: si algún asset no se puede ver con la cámara girada, se avisa acá (ver ASSETS.sinGiro)
+  if (ASSETS.sinGiro) {
+    const faltan = ASSETS.sinGiro();
+    if (faltan.length) console.warn("Assets sin giro (sumarles fv + vol, figura o caras):", faltan.join(", "));
+  }
   function ficha(grupoEl, nombre, w, h, dibujar) {
     const f = document.createElement("div");
     f.className = "ficha";
@@ -28,15 +33,42 @@
     cat.append(h, g);
     return g;
   }
+  // la cámara del catálogo: todo se puede mirar desde cualquier lado (VOL.cam.g); el piso gira alrededor del pie
+  // de lo que se muestra en cada ficha
+  const giro = { g: 0, sola: false };
+  const $ = (id) => document.getElementById(id);
+  function ponerGiro(gr) {
+    while (gr > 180) gr -= 360;
+    while (gr < -180) gr += 360;
+    giro.g = gr;
+    $("giroCam").value = Math.round(gr);
+    $("giroCamV").textContent = Math.round(gr) + "°";
+  }
+  $("giroCam").addEventListener("input", () => ponerGiro(+$("giroCam").value));
+  $("giroSola").addEventListener("change", () => (giro.sola = $("giroSola").checked));
+  $("giroNorte").addEventListener("click", () => (($("giroSola").checked = giro.sola = false), ponerGiro(0)));
+  if (params.get("giro")) ponerGiro(+params.get("giro"));
   const piso = (c, w, h) => {
     c.fillStyle = "#3B3222";
     c.fillRect(0, 0, w, h);
+    c.save();
+    VOL.piso(c, w / 2, h - 40);
     c.fillStyle = "#463B28";
     for (let i = 0; i < 6; i++) {
       c.beginPath();
       c.ellipse((i * 97) % w, 30 + ((i * 61) % (h - 40)), 60, 12, 0, 0, Math.PI * 2);
       c.fill();
     }
+    // una cruz en el piso: hacia dónde queda el norte del mundo
+    c.strokeStyle = "rgba(242,236,236,0.12)";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(w / 2 - 80, h - 40);
+    c.lineTo(w / 2 + 80, h - 40);
+    c.moveTo(w / 2, h - 40 - 64);
+    c.lineTo(w / 2, h - 40 + 64);
+    c.stroke();
+    c.restore();
   };
   // assets
   const porGrupo = {};
@@ -70,7 +102,11 @@
         if (a.id === "soporteAtadura") o.hacia = [x + o.hacia[0], y + o.hacia[1]];
         if (a.id === "empalizada") x = 50;
         if (a.id === "aserradero") x = w / 2 - 30;
+        // lo del piso va pintado en el piso: gira con él
+        c.save();
+        if (ASSETS.LISTA[a.id].piso) VOL.piso(c, x, y);
         ASSETS.dibujar(c, a.id, x, y, t, o);
+        c.restore();
       });
     });
   });
@@ -151,8 +187,12 @@
       }),
     );
   }
+  let antes = 0;
   function cuadro(ms) {
     const t = ms / 1000;
+    if (giro.sola) ponerGiro(giro.g + (t - antes) * 30);
+    antes = t;
+    VOL.cam.g = (giro.g * Math.PI) / 180;
     fichas.forEach((f) => {
       const c = f.cv.getContext("2d");
       c.setTransform(f.k, 0, 0, f.k, 0, 0);

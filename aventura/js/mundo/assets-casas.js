@@ -127,10 +127,10 @@
   }
 
   Object.assign(ASSETS.LISTA, {
-    puertaInterior: { f: puertaInterior, alto: 350, choque: null, grupo: "interiores" },
-    pasoSecreto: { f: pasoSecreto, alto: 300, choque: null, grupo: "interiores" },
-    tapizPared: { f: tapizPared, alto: 360, choque: null, grupo: "interiores" },
-    tablasFlojas: { f: tablasFlojas, alto: 270, choque: null, grupo: "interiores" },
+    puertaInterior: { f: puertaInterior, fv: ASSETS.cartaV(puertaInterior, 252, 354), vol: true, alto: 350, choque: null, grupo: "interiores" },
+    pasoSecreto: { f: pasoSecreto, fv: ASSETS.cartaV(pasoSecreto, 200, 296), vol: true, alto: 300, choque: null, grupo: "interiores" },
+    tapizPared: { f: tapizPared, fv: ASSETS.cartaV(tapizPared, 280, 352), vol: true, alto: 360, choque: null, grupo: "interiores" },
+    tablasFlojas: { f: tablasFlojas, fv: ASSETS.cartaV(tablasFlojas, 200, 270), vol: true, alto: 270, choque: null, grupo: "interiores" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { puertaInterior: { runa: "raidho" } });
 })();

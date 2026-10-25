@@ -12,5 +12,6 @@ Recorre el Bosque de Eldervald con el guion de las misiones EL-01 a EL-07.
 - `aventura/catalogo.html`: cada objeto, persona y criatura de Eldervald, uno por uno, para revisarlos.
 - `juego/js/comun/` y `juego/fuentes/`: lo compartido con la arena (idiomas, colores de los vikingos, calidad gráfica, tipografías).
 - `docs/historia/`: la campaña, las misiones y la dirección de arte.
+- `docs/mapa-del-codigo.md`: dónde está cada cosa del código, para cambiarla rápido.
 
 Para verlo: servir la carpeta raíz (por ejemplo `python3 -m http.server 8899`) y abrir `http://127.0.0.1:8899/aventura/catalogo.html`. Con `?lang=es` se ve en español.

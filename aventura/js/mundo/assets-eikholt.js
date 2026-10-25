@@ -431,21 +431,459 @@
     P(c, [ex - 14 * s, ey - 70 * s, ex, ey - 84 * s, ex + 14 * s, ey - 70 * s], "#B8A060");
   }
 
+  // ======================================================================
+  //  LOS MISMOS, ARMADOS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  // De frente y sin girar se ve el dibujo de siempre; girado (él o la cámara), estos.
+  const T = C.T;
+  // un farol de poste: palo, caja de hierro y la luz
+  function farolV(c, pr, u, w, h, t, k) {
+    VOL.cubo(c, pr, u, w, 4, 4, h, T.oscura);
+    VOL.cubo(c, pr, u, w, 14, 14, 16, T.hierro, null, h);
+    VOL.cubo(c, pr, u, w, 10, 10, 12, [C.ambar, C.ambar, "#FFE8B0"], null, h + 2);
+    VOL.halo(c, pr, u, w, h + 8, 44, C.ambar, 0.6 + Math.sin(t * 4 + k) * 0.08);
+  }
+  // un tronco parado con punta (empalizadas): prisma de seis caras y la punta
+  function troncoPunta(c, pr, u, w, r, h, col, punta = 14) {
+    VOL.cilindro(c, pr, u, w, r, 0, h, col, { n: 6, fase: 0.5 });
+    VOL.piramide(c, pr, VOL.redonda(u, w, r, 6, 0.5), h, u, w, h + punta, col);
+  }
+  // la muralla: los troncos de punta a punta, con las fajas del lado que se ve
+  function murallaV(c, x, y, t, o) {
+    const pr = VOL.prSeg(x, y, o.x2, o.y2, o),
+      l = pr.largo,
+      n = Math.max(2, Math.round(l / 17)),
+      r = azar((o.sem || 1) * 977),
+      frente = pr.mira(0, 1)[1] >= 0 ? 1 : -1,
+      paso = l / n;
+    const S = VOL.escena(pr);
+    for (let k = 0; k < n; k++) {
+      const u = (k + 0.5) * paso,
+        h = 116 + r() * 18,
+        marca = r() < 0.06,
+        col = k % 2 ? T.madera : T.vieja;
+      S.poner(u, 0, () => {
+        troncoPunta(c, pr, u, 0, 9, h, col);
+        if (marca) VOL.cara(c, pr, frente > 0 ? [[u - 4, 9, 68], [u + 4, 9, 68], [u + 4, 9, 76], [u - 4, 9, 76]] : [[u + 4, -9, 68], [u - 4, -9, 68], [u - 4, -9, 76], [u + 4, -9, 76]], C.rojoEromash);
+        // las fajas, del lado que mira a la cámara
+        [44, 92].forEach((hh, i) => VOL.palo(c, pr, u - paso / 2, 10 * frente, hh, u + paso / 2, 10 * frente, hh, 5, i ? C.hierro : "#8A7A5A"));
+      });
+    }
+    S.dibujar();
+  }
+  // la torre de vigía: cuatro patas, la caseta con su ventana encendida y el techo a cuatro aguas
+  function torreVigiaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 50, 50, 0.36);
+    const S = VOL.escena(pr);
+    [[-28, -28], [28, -28], [-28, 28], [28, 28]].forEach(([u, w]) => S.poner(u, w, () => VOL.cubo(c, pr, u, w, 7, 7, 150, T.madera)));
+    S.poner(0, 0, () => {
+      // las cruces entre las patas, adelante
+      VOL.palo(c, pr, -28, 28, 10, 28, 28, 120, 4, C.maderaSombra);
+      VOL.palo(c, pr, 28, 28, 10, -28, 28, 120, 4, C.maderaVieja);
+    });
+    S.dibujar();
+    const tablas = (cc, l, h) => {
+      for (let k = 0; k < 5; k++) R(cc, (k * l) / 4 - 1.5, -h, 3, h, C.maderaSombra);
+    };
+    const ventana = (cc, l, h) => {
+      tablas(cc, l, h);
+      R(cc, l / 2 - 11, -36, 22, 18, "#1A140E");
+      alfa(cc, 0.7, () => R(cc, l / 2 - 9, -34, 18, 14, C.ambar));
+    };
+    VOL.cubo(c, pr, 0, 0, 88, 88, 6, T.oscura, null, 146);
+    VOL.caja(c, pr, -40, -40, 152, 40, 40, 198, T.madera, { frente: ventana, atras: tablas, izq: tablas, der: ventana, tapa: T.oscura[0] });
+    VOL.piramide(c, pr, [[-48, -48], [48, -48], [48, 48], [-48, 48]], 196, 0, 0, 240, T.pizarra);
+    VOL.halo(c, pr, 0, 40, 177, 50, C.ambar, 0.5 + Math.sin(t * 3 + (o.sem || 0)) * 0.08);
+  }
+  // un menhir de cuatro caras algo torcidas; la runa tallada solo en la de adelante
+  function menhirV(c, pr, a, f, h, col, frente) {
+    const p0 = [[-a, -f], [a * 0.9, -f * 1.1], [a, f], [-a * 1.05, f * 0.9]],
+      p1 = [[-a * 0.5, -f * 0.6], [a * 0.55, -f * 0.5], [a * 0.5, f * 0.55], [-a * 0.55, f * 0.5]];
+    // los lados, de abajo a arriba
+    const lados = [];
+    for (let i = 0; i < 4; i++) {
+      const j = (i + 1) % 4;
+      lados.push([[p0[i][0], p0[i][1], 0], [p0[j][0], p0[j][1], 0], [p1[j][0], p1[j][1], h * 0.82], [p1[i][0], p1[i][1], h * 0.82]]);
+    }
+    lados.forEach((q, i) => {
+      VOL.afuera(q, [(q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2, 0]);
+      const esFrente = i === 2;
+      // la del frente, con sus puntas en orden (abajo izquierda, abajo derecha, arriba...) para que lo tallado quede derecho
+      if (esFrente) q = [[p0[3][0], p0[3][1], 0], [p0[2][0], p0[2][1], 0], [p1[2][0], p1[2][1], h * 0.82], [p1[3][0], p1[3][1], h * 0.82]];
+      VOL.cara(c, pr, q, col, esFrente && frente ? VOL.medida(a * 2, h * 0.82, frente) : null);
+    });
+    VOL.piramide(c, pr, p1, h * 0.82, 0.1 * a, 0, h, col);
+  }
+  function piedraMurallaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      luz = 0.75 + Math.sin(t * 1.8 + (o.sem || 0)) * 0.2;
+    VOL.halo(c, pr, 0, 0, 70, 70, RUNICO, luz);
+    VOL.sombra(c, pr, 0, 0, 30, 18);
+    menhirV(c, pr, 24, 16, 136, ["#3A3E42", "#4A4E52", "#5E6266"], (cc, l) => {
+      runa(cc, "algiz", l / 2 - 11, -112, 22, 56, RUNICO, 4);
+      alfa(cc, 0.6, () => runa(cc, "algiz", l / 2 - 11, -112, 22, 56, RUNICO_CLARO, 1.6));
+    });
+    VOL.elipse(c, pr, 0, 16, 2, 22, 6, C.musgo2);
+  }
+  // la Puerta del Sur: dos torres de piedra y troncos, las hojas abiertas hacia adentro y el dintel con Raido
+  function puertaSurV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 230, 70, 0.38);
+    const piedra = (cc, l) => {
+      for (let k = 1; k < 4; k++) R(cc, 0, -k * 15, l, 2, "#46423C");
+    };
+    const tablas = (cc, l, h) => {
+      for (let k = 0; k < 5; k++) R(cc, (k * l) / 4 - 1.5, -h, 3, h, C.maderaSombra);
+    };
+    const S = VOL.escena(pr);
+    // las hojas, abiertas hacia adentro (atrás)
+    [-1, 1].forEach((l) =>
+      S.poner(l * 90, -20, () => {
+        const a = [l * 110, 0],
+          b = [l * 76, -44];
+        VOL.lamina(c, pr, l < 0 ? [[a[0], a[1], 4], [b[0], b[1], 4], [b[0], b[1], 166], [a[0], a[1], 150]] : [[b[0], b[1], 4], [a[0], a[1], 4], [a[0], a[1], 150], [b[0], b[1], 166]], T.madera, T.oscura);
+      }),
+    );
+    [-1, 1].forEach((lado) => {
+      const u = lado * 150;
+      S.poner(u, 0, () => {
+        VOL.cubo(c, pr, u, 0, 88, 88, 60, T.piedra, { frente: piedra, atras: piedra, der: piedra, izq: piedra });
+        const ven = (cc, l, h) => {
+          tablas(cc, l, h);
+          R(cc, l / 2 - 11, -120, 22, 26, "#1A140E");
+          alfa(cc, 0.75, () => R(cc, l / 2 - 9, -118, 18, 22, C.ambar));
+        };
+        VOL.cubo(c, pr, u, 0, 80, 80, 150, T.madera, { frente: ven, atras: ven, der: tablas, izq: tablas }, 60);
+        VOL.piramide(c, pr, [[u - 54, -54], [u + 54, -54], [u + 54, 54], [u - 54, 54]], 206, u, 0, 262, T.pizarra);
+        VOL.halo(c, pr, u, 40, 166, 60, C.ambar, 0.5);
+      });
+      // los faroles junto a la entrada, adelante y atrás
+      [52, -52].forEach((w) => S.poner(u - lado * 52, w, () => farolV(c, pr, u - lado * 52, w, 70, t, lado)));
+    });
+    // el dintel con la runa y el pasillo de arriba
+    S.poner(0, 0, () => {
+      const raido = (cc, l) => {
+        R(cc, l / 2 - 30, -28, 60, 28, "#3A2A1C");
+        runa(cc, "raido", l / 2 - 9, -24, 18, 20, C.ambar, 3);
+      };
+      VOL.caja(c, pr, -112, -16, 196, 112, 16, 226, T.oscura, { frente: raido, atras: raido });
+      VOL.caja(c, pr, -104, -20, 226, 104, 20, 236, T.madera);
+    }, 196);
+    S.dibujar();
+  }
+  // el Tablero de las Sendas: dos postes, el tablero con las tablillas de cada lado y el alero
+  function granTableroV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 84, 26);
+    const tablillas = (cc, l, h) => {
+      const r = azar(41);
+      for (let f = 0; f < 4; f++)
+        for (let k = 0; k < 7; k++) {
+          const tx = 8 + k * 17,
+            ty = -h + 8 + f * 19,
+            vuelta = r() < 0.35;
+          R(cc, tx, ty, 13, 14, vuelta ? "#7BC86C" : r() < 0.3 ? C.rojoEromash : C.maderaLuz);
+          R(cc, tx + 2, ty + 4, 9, 1.5, "#2A2016");
+        }
+    };
+    VOL.cubo(c, pr, -66, 0, 7, 7, 130, T.madera);
+    VOL.cubo(c, pr, 66, 0, 7, 7, 130, T.madera);
+    VOL.caja(c, pr, -66, -4, 34, 66, 4, 120, T.vieja, { frente: tablillas, atras: tablillas });
+    VOL.techo(c, pr, -84, -22, 84, 22, 120, 26, T.madera);
+    // las flechas de las rutas, arriba
+    [-1, 1].forEach((d) => VOL.caja(c, pr, d * 38 - 24, -3, 151, d * 38 + 24, 3, 165, d > 0 ? T.madera : T.vieja));
+  }
+  // el Círculo del Ting: los doce asientos en ronda (en el piso, giran con él) y el menhir negro
+  function tingCirculoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.enPiso(c, pr, (cc) => E(cc, 0, 0, 190, 100, "rgba(60,52,36,0.55)"));
+    const S = VOL.escena(pr);
+    for (let k = 0; k < 12; k++) {
+      const a = (k / 12) * TAU,
+        u = Math.cos(a) * 150,
+        w = Math.sin(a) * 78;
+      S.poner(u, w, () => {
+        VOL.sombra(c, pr, u, w, 20, 12, 0.3);
+        // el asiento mira al menhir
+        const p = VOL.proyector(pr(u, w)[0], pr(u, w)[1], pr.fi + a + Math.PI / 2, { s: pr.s });
+        VOL.cubo(c, p, 0, 0, 30, 18, 24, ["#5E5C58", "#5E5C58", "#74726C", "#86847C"]);
+      });
+    }
+    S.poner(0, 0, () => {
+      VOL.sombra(c, pr, 0, 0, 30, 18, 0.4);
+      menhirV(c, pr, 22, 16, 128, ["#141416", "#1C1C1E", "#2C2C30"], (cc, l) => alfa(cc, 0.5, () => runa(cc, "tiwaz", l / 2 - 8, -100, 16, 40, "#3A3A40", 3)));
+    });
+    S.dibujar();
+  }
+  // un toldo del mercado: cuatro postes, el mostrador con la mercadería encima y la tela a franjas
+  function toldoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      v = o.v || 0,
+      telas = [["#F2ECEC", C.rojoEromash], ["#E0B2B2", "#5E130D"], ["#D8C8A8", "#6B5A3A"], ["#F2ECEC", "#4E5C32"], ["#E0B2B2", "#9C2315"], ["#D8C8A8", "#3E4E66"]][v % 6];
+    VOL.sombra(c, pr, 0, 0, 66, 40);
+    const S = VOL.escena(pr);
+    [[-52, -30], [52, -30], [-52, 30], [52, 30]].forEach(([u, w]) => S.poner(u, w, () => VOL.cubo(c, pr, u, w, 4, 4, 84, T.madera)));
+    S.poner(0, 14, () => {
+      VOL.caja(c, pr, -54, 4, 0, 54, 26, 28, T.madera, { tapa: C.maderaSombra });
+      // la mercadería: lo mismo de siempre, sobre la tapa
+      const M = [
+        (cc) => { for (let i = 0; i < 7; i++) VOL.cilindro(cc, pr, -42 + i * 14, 15, 5, 28, 34, ["#B88A3A", i % 2 ? "#E8B04A" : C.ambar, "#FFE8B0"], { n: 6 }); },
+        (cc) => { for (let i = 0; i < 5; i++) VOL.cubo(cc, pr, -40 + i * 20, 15, 18, 7, 5, ["#6A7C88", "#8A9CA8", "#A8B8C4"], null, 28); },
+        (cc) => { VOL.cubo(cc, pr, -24, 15, 40, 18, 12, ["#6E5038", "#8A6A4A", "#A07850"], null, 28); VOL.cubo(cc, pr, 25, 15, 40, 18, 10, ["#A89A82", "#C8B49A", "#DCCAB2"], null, 28); },
+        (cc) => { for (let i = 0; i < 4; i++) VOL.elipse(cc, pr, -30 + i * 20, 15, 30, 8, 5, C.pasto); for (let i = 0; i < 6; i++) VOL.palo(cc, pr, -40 + i * 16, 4, 70, -40 + i * 16, 4, 52, 3, i % 2 ? C.musgoClaro : C.musgo2); },
+        (cc) => { [["#A0583A", -38, 14], ["#B86A44", -16, 18], ["#8A4A30", 8, 12], ["#C07850", 30, 16]].forEach(([col, u, h]) => VOL.cilindro(cc, pr, u, 15, 8, 28, 28 + h, col, { n: 7 })); },
+        (cc) => { [["#3E4E66", -31], ["#9C2315", -9], ["#E0B2B2", 13], ["#4E5C32", 35]].forEach(([col, u]) => VOL.cubo(cc, pr, u, 15, 18, 16, 11, col, null, 28)); },
+      ];
+      M[v % 6](c);
+    });
+    S.dibujar();
+    // la tela: un techo a dos aguas bajo, a franjas (arriba de todo)
+    const franjas = (cc, l, h) => {
+      for (let i = 0; i < 6; i++) R(cc, (i * l) / 6, -h, l / 6 + 0.5, h, telas[i % 2]);
+    };
+    VOL.techo(c, pr, -60, -38, 60, 38, 84, 16, [telas[1], telas[0], telas[0]], { faldon: franjas, hastial: telas[1] });
+  }
+  // la herrería de Ása: postes, la pared del fondo, la fragua de piedra encendida con su chimenea, el yunque, las
+  // herramientas y el cajón del mineral, bajo un techo de un agua
+  function herreriaAsaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      brasa = 0.75 + Math.sin(t * 5) * 0.15 + Math.sin(t * 13) * 0.05;
+    VOL.sombra(c, pr, 0, -10, 130, 60, 0.36);
+    const S = VOL.escena(pr);
+    S.poner(0, -40, () => VOL.caja(c, pr, -100, -46, 0, 100, -38, 106, T.oscura, { col_frente: "#3A2A1C" }));
+    [[-100, 30], [96, 30], [-100, -42], [96, -42], [-20, 30]].forEach(([u, w]) => S.poner(u, w, () => VOL.cubo(c, pr, u, w, 7, 7, 112, T.madera)));
+    S.poner(-60, -10, () => {
+      VOL.caja(c, pr, -90, -30, 0, -30, 10, 50, T.piedra);
+      VOL.elipse(c, pr, -60, -10, 50, 24, 14, "#2A1A12");
+      alfa(c, brasa, () => {
+        VOL.elipse(c, pr, -60, -10, 51, 18, 10, "#FF8D71");
+        VOL.elipse(c, pr, -58, -10, 52, 9, 5, C.ambar);
+      });
+      VOL.halo(c, pr, -60, -10, 56, 80, "#FF8D71", brasa);
+      VOL.caja(c, pr, -72, -30, 50, -46, -12, 150, T.piedra);
+      if (!window.CALIDAD || CALIDAD.nivel !== "baja")
+        for (let k = 0; k < 4; k++) {
+          const p = (t * 0.25 + k / 4) % 1,
+            q = pr(-59, -21, 158 + p * 110);
+          alfa(c, 0.3 * (1 - p), () => E(c, q[0] + Math.sin(p * 5 + k) * 10, q[1], (6 + p * 16) * pr.s, (5 + p * 12) * pr.s, "#6A6A66"));
+        }
+    });
+    S.poner(14, 10, () => {
+      VOL.cilindro(c, pr, 14, 10, 12, 0, 22, T.tronco, { n: 7 });
+      VOL.caja(c, pr, -6, 4, 22, 34, 16, 32, T.hierro);
+    });
+    S.poner(73, 20, () => {
+      VOL.caja(c, pr, 54, 8, 0, 92, 32, 26, T.madera, { tapa: C.maderaSombra });
+      VOL.cubo(c, pr, 64, 20, 8, 6, 4, "#3A3436", null, 26);
+    });
+    // herramientas colgadas de la viga de atrás
+    S.poner(40, -36, () => [10, 30, 50, 70].forEach((u, i) => {
+      VOL.palo(c, pr, u, -36, 98, u, -36, 70, 2.5, C.hierroLuz);
+      if (i === 1) VOL.cubo(c, pr, u, -36, 12, 4, 6, T.hierro, null, 68);
+    }));
+    S.dibujar();
+    VOL.aguaUna(c, pr, -112, -52, 132, 114, 36, 108, T.pizarra);
+  }
+  // la cordelería de Folke: postes con travesaño, las sogas tendidas, el torno y los rollos
+  function cordeleriaFolkeV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, 0, 124, 26, 0.3);
+    const S = VOL.escena(pr);
+    [-107, -37, 33, 103].forEach((u, i) =>
+      S.poner(u, 0, () => {
+        VOL.cubo(c, pr, u, 0, 6, 6, 70, i % 2 ? T.madera : T.oscura);
+        VOL.cubo(c, pr, u, 0, 6, 26, 5, T.oscura, null, 66);
+      }),
+    );
+    S.poner(0, 0, () => [[-10, "#A8946C"], [0, "#C8B48C"], [10, "#A8946C"]].forEach(([w, col]) => {
+      // cuelgan un poco en el medio
+      const a = pr(-107, w, 62),
+        m = pr(-5, w, 52),
+        b = pr(103, w, 62);
+      c.strokeStyle = col;
+      c.lineWidth = 2.5 * pr.s;
+      c.beginPath();
+      c.moveTo(a[0], a[1]);
+      c.quadraticCurveTo(m[0] * 2 - (a[0] + b[0]) / 2, m[1] * 2 - (a[1] + b[1]) / 2, b[0], b[1]);
+      c.stroke();
+    }), 50);
+    S.poner(-127, 0, () => {
+      VOL.cubo(c, pr, -127, 0, 22, 14, 50, T.madera);
+      VOL.rollo(c, pr, -127 - 2, -127 + 2, 9, 50, 14, T.oscura, { corte: C.maderaLuz, n: 8 });
+    });
+    [[70, 10], [92, 6]].forEach(([u, w]) =>
+      S.poner(u, w, () => {
+        VOL.cilindro(c, pr, u, w, 14, 0, 6, ["#8A7650", "#A8946C", "#C8B48C"], { n: 10 });
+        VOL.elipse(c, pr, u, w, 6, 4, 4, "#6B5A3A");
+      }),
+    );
+    S.poner(37, 8, () => VOL.cubo(c, pr, 37, 8, 32, 16, 20, ["#9A8448", "#B8A060", "#CCB670"]));
+    S.dibujar();
+  }
+  // la Casa de Sanación: casa larga de troncos sobre un zócalo, puerta verde, techo de tablas, hierbas colgadas, la
+  // cama con toldo a un costado y el jardín medicinal adelante
+  function casaSanacionV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, -30, 150, 70, 0.34);
+    const S = VOL.escena(pr);
+    // el jardín: hileras en el piso con sus plantas paradas
+    S.poner(-20, 26, () => {
+      for (let f = 0; f < 3; f++) {
+        const w = 6 + f * 18;
+        VOL.enPiso(c, pr, (cc) => R(cc, -110, w - 5, 180, 10, "#3A3022"));
+        for (let k = 0; k < 11; k++) VOL.palo(c, pr, -98 + k * 18, w, 0, -98 + k * 18, w, 12, 5, [C.musgoClaro, "#8A6A9A", "#B8A040"][(f + k) % 3]);
+      }
+    });
+    S.poner(0, -40, () => {
+      const pared = (cc, l, h) => {
+        for (let k = 0; k <= 6; k++) R(cc, (k * l) / 6 - 2.5, -h, 5, h, C.maderaSombra);
+        R(cc, 0, -4, l, 5, C.maderaSombra);
+      };
+      const frente = (cc, l, h) => {
+        pared(cc, l, h);
+        P(cc, [l / 2 - 14, 0, l / 2 - 14, -44, l / 2, -50, l / 2 + 14, -44, l / 2 + 14, 0], "#3E5A32");
+        [[l / 2 - 70, -48], [l / 2 + 52, -48]].forEach(([u, z]) => {
+          R(cc, u, z, 20, 18, "#1A140E");
+          alfa(cc, 0.6, () => R(cc, u + 2, z + 2, 16, 14, C.ambar));
+        });
+      };
+      VOL.caja(c, pr, -120, -70, 0, 120, -10, 62, ["#3A281A", "#5A4030", "#6E5038"], { frente, atras: pared, izq: pared, der: pared });
+      VOL.techo(c, pr, -136, -84, 136, 4, 62, 50, T.vieja, { hastial: "#5A4030" });
+      // hierbas colgadas del alero de adelante
+      for (let k = 0; k < 9; k++) {
+        const u = -100 + k * 26;
+        VOL.palo(c, pr, u, 2, 62, u, 2, 50, 1, "#8A7A5A");
+        VOL.palo(c, pr, u, 2, 50, u, 2, 38, 6, k % 3 ? C.musgo2 : "#8A6A9A");
+      }
+    });
+    S.poner(115, -6, () => {
+      VOL.cubo(c, pr, 85, -6, 4, 4, 24, T.oscura);
+      VOL.caja(c, pr, 80, -18, 0, 150, 6, 10, T.madera, { tapa: "#E8DCC4" });
+    });
+    S.dibujar();
+  }
+  // el Hongo Dorado: planta baja de piedra, piso alto de madera más ancho, ventanas encendidas, techo alto de pizarra
+  // con dos buhardillas, chimenea, el cartel del hongo, el banco y los barriles
+  function hongoDoradoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 0, -20, 140, 70, 0.36);
+    const vent = (cc, u, z) => {
+      R(cc, u, z, 18, 18, "#1A140E");
+      alfa(cc, 0.75, () => R(cc, u + 2, z + 2, 14, 14, C.ambar));
+    };
+    const bajo = (cc, l) => {
+      for (let k = 1; k < 4; k++) R(cc, 0, -k * 14, l, 2, "#46423C");
+      vent(cc, l * 0.17, -40);
+      vent(cc, l * 0.78, -40);
+    };
+    const bajoPuerta = (cc, l) => {
+      bajo(cc, l);
+      P(cc, [l / 2 - 18, 0, l / 2 - 18, -44, l / 2, -52, l / 2 + 18, -44, l / 2 + 18, 0], "#5E3A22");
+      L(cc, l / 2, 0, l / 2, -50, "#3E2414", 2);
+    };
+    const alto = (cc, l, h) => {
+      for (let k = 0; k <= 5; k++) R(cc, (k * l) / 5 - 2.5, -h, 5, h, C.maderaSombra);
+      R(cc, 0, -4, l, 6, C.maderaSombra);
+      [0.12, 0.38, 0.6, 0.82].forEach((u) => vent(cc, l * u - 9, -44));
+    };
+    const S = VOL.escena(pr);
+    S.poner(0, -40, () => {
+      VOL.caja(c, pr, -100, -80, 0, 100, 0, 56, T.piedra, { frente: bajoPuerta, atras: bajo, izq: bajo, der: bajo });
+      VOL.caja(c, pr, -108, -86, 56, 108, 6, 118, ["#42301E", "#6A4A30", "#80603F"], { frente: alto, atras: alto, izq: alto, der: alto });
+      VOL.techo(c, pr, -122, -96, 122, 16, 116, 80, T.pizarra, { hastial: "#6A4A30" });
+      // las buhardillas, en el faldón de adelante
+      [-40, 40].forEach((u) => {
+        const buh = (cc, l, h) => {
+          R(cc, l / 2 - 7, -h + 4, 14, 14, "#1A140E");
+          alfa(cc, 0.7, () => R(cc, l / 2 - 5, -h + 6, 10, 10, C.ambar));
+        };
+        VOL.caja(c, pr, u - 16, -20, 130, u + 16, 4, 152, ["#B8A888", "#D8C8A8", "#E8DCC4"], { frente: buh, sinTapa: true });
+        VOL.techo(c, pr, u - 18, -24, u + 18, 6, 150, 14, T.pizarra, { eje: "w" });
+      });
+      // la chimenea del gran fogón
+      VOL.cubo(c, pr, 50, -50, 18, 18, 100, T.piedra, null, 140);
+      if (!window.CALIDAD || CALIDAD.nivel !== "baja")
+        for (let k = 0; k < 4; k++) {
+          const p = (t * 0.2 + k / 4) % 1,
+            q = pr(50, -50, 246 + p * 90);
+          alfa(c, 0.25 * (1 - p), () => E(c, q[0] + Math.sin(p * 5 + k) * 9, q[1], (5 + p * 14) * pr.s, (4 + p * 10) * pr.s, "#8A8E88"));
+        }
+      VOL.halo(c, pr, 0, 0, 50, 150, C.ambar, 0.4 + Math.sin(t * 2.6) * 0.05);
+    });
+    // el cartel colgado del brazo de hierro, en la esquina de adelante
+    S.poner(140, 0, () => {
+      VOL.palo(c, pr, 108, 0, 92, 146, 0, 92, 3, C.hierro);
+      const bal = Math.sin(t * 1.5) * 4;
+      const cartel = (cc, l, h) => {
+        R(cc, l / 2 - 2, -h * 0.5, 4, h * 0.4, "#E8DCC4");
+        P(cc, [l / 2 - 12, -h * 0.47, l / 2, -h * 0.87, l / 2 + 12, -h * 0.47], C.ambar);
+      };
+      VOL.plano(c, pr, 122 + bal, 154 + bal, 0, 54, 84, T.oscura, cartel);
+    });
+    S.poner(-50, 14, () => VOL.caja(c, pr, -90, 8, 0, -30, 20, 8, T.madera));
+    [[80, 12], [98, 22]].forEach(([u, w]) =>
+      S.poner(u, w, () => {
+        VOL.cilindro(c, pr, u, w, 11, 0, 24, T.madera, { n: 8 });
+        [6, 17].forEach((z) => VOL.cilindro(c, pr, u, w, 11.5, z, z + 2.5, T.hierro, { n: 8, sinTapa: true }));
+      }),
+    );
+    S.dibujar();
+  }
+  // las huertas: el cantero en el piso con sus surcos, el cerco de mimbre alrededor y el espantapájaros
+  function huertaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      r = azar((o.sem || 1) * 71),
+      w = 150;
+    VOL.enPiso(c, pr, (cc) => {
+      R(cc, -w, -62, w * 2, 124, "#3E3222");
+      for (let f = 0; f < 6; f++) R(cc, -w + 8, -52 + f * 20, w * 2 - 16, 10, "#5A4630");
+    });
+    const S = VOL.escena(pr);
+    for (let f = 0; f < 6; f++)
+      for (let k = 0; k < 16; k++) {
+        const u = -w + 16 + k * 18,
+          ww = -47 + f * 20,
+          alto = 10 + r() * 4,
+          col = r() < 0.5 ? "#6E8A44" : "#84A050";
+        S.poner(u, ww, () => (f % 2 ? VOL.palo(c, pr, u, ww, 0, u, ww, alto, 3, C.musgoClaro) : VOL.elipse(c, pr, u, ww, 3, 6, 5, col)));
+      }
+    // el cerco, en los cuatro lados
+    for (let k = 0; k <= 15; k++) {
+      const u = -w + k * 20;
+      [-62, 62].forEach((ww) => S.poner(u, ww, () => VOL.cubo(c, pr, u, ww, 3, 3, 18, T.oscura)));
+    }
+    S.poner(0, 62, () => VOL.palo(c, pr, -w, 62, 12, w, 62, 12, 3, "#8A7A5A"));
+    S.poner(0, -62, () => VOL.palo(c, pr, -w, -62, 12, w, -62, 12, 3, "#8A7A5A"));
+    const ex = w * 0.5;
+    S.poner(ex, -4, () => {
+      VOL.cubo(c, pr, ex, -4, 4, 4, 70, T.oscura);
+      VOL.caja(c, pr, ex - 26, -6, 54, ex + 26, -2, 58, T.oscura);
+      VOL.caja(c, pr, ex - 13, -8, 26, ex + 13, 0, 56, [C.rojoEromash, C.rojoEromash, "#B8301E"]);
+      const q = pr(ex, -4, 66);
+      E(c, q[0], q[1], 9 * pr.s, 9 * pr.s, "#D8C8A8");
+      VOL.piramide(c, pr, VOL.redonda(ex, -4, 14, 6), 70, ex, -4, 84, "#B8A060");
+    });
+    S.dibujar();
+  }
+
   const L2 = ASSETS.LISTA;
   Object.assign(L2, {
-    muralla: { f: muralla, alto: 140, choque: null, grupo: "capital" },
-    torreVigia: { f: torreVigia, alto: 240, choque: { r: 34 }, grupo: "capital", luz: true },
-    piedraMuralla: { f: piedraMuralla, alto: 136, choque: { r: 22 }, grupo: "capital", luz: true },
-    puertaSur: { f: puertaSur, alto: 262, choque: null, grupo: "capital", luz: true },
-    granTablero: { f: granTablero, alto: 150, choque: { w: 150, h: 14 }, grupo: "capital" },
-    tingCirculo: { f: tingCirculo, alto: 128, choque: { r: 24 }, grupo: "capital" },
-    toldo: { f: toldo, alto: 100, choque: { w: 110, h: 20 }, grupo: "capital" },
-    herreriaAsa: { f: herreriaAsa, alto: 160, choque: { w: 210, h: 30 }, grupo: "capital", luz: true },
-    cordeleriaFolke: { f: cordeleriaFolke, alto: 80, choque: { w: 40, h: 14 }, grupo: "capital" },
-    casaSanacion: { f: casaSanacion, alto: 180, choque: { w: 250, h: 40 }, grupo: "capital" },
-    hongoDorado: { f: hongoDorado, alto: 220, choque: { w: 210, h: 40 }, grupo: "capital", luz: true },
-    huerta: { f: huerta, alto: 90, choque: null, grupo: "capital" },
+    muralla: { f: muralla, fv: murallaV, vol: true, alto: 140, choque: null, grupo: "capital" },
+    torreVigia: { f: torreVigia, fv: torreVigiaV, vol: true, alto: 240, choque: { r: 34 }, grupo: "capital", luz: true },
+    piedraMuralla: { f: piedraMuralla, fv: piedraMurallaV, vol: true, alto: 136, choque: { r: 22 }, grupo: "capital", luz: true },
+    puertaSur: { f: puertaSur, fv: puertaSurV, vol: true, alto: 262, choque: null, grupo: "capital", luz: true },
+    granTablero: { f: granTablero, fv: granTableroV, vol: true, alto: 150, choque: { w: 150, h: 14 }, grupo: "capital" },
+    tingCirculo: { f: tingCirculo, fv: tingCirculoV, vol: true, alto: 128, choque: { r: 24 }, grupo: "capital" },
+    toldo: { f: toldo, fv: toldoV, vol: true, alto: 100, choque: { w: 110, h: 20 }, grupo: "capital" },
+    herreriaAsa: { f: herreriaAsa, fv: herreriaAsaV, vol: true, alto: 160, choque: { w: 210, h: 30 }, grupo: "capital", luz: true },
+    cordeleriaFolke: { f: cordeleriaFolke, fv: cordeleriaFolkeV, vol: true, alto: 80, choque: { w: 40, h: 14 }, grupo: "capital" },
+    casaSanacion: { f: casaSanacion, fv: casaSanacionV, vol: true, alto: 180, choque: { w: 250, h: 40 }, grupo: "capital" },
+    hongoDorado: { f: hongoDorado, fv: hongoDoradoV, vol: true, alto: 220, choque: { w: 210, h: 40 }, grupo: "capital", luz: true },
+    huerta: { f: huerta, fv: huertaV, vol: true, alto: 90, choque: null, grupo: "capital" },
   });
   // ejemplos para el catálogo
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { muralla: { x2: 160, y2: -10 }, toldo: { v: 0 } });
+  // piezas armadas con caras que usan otros archivos
+  ASSETS.KIT = Object.assign(ASSETS.KIT || {}, { menhirV, farolV, troncoPunta, runa });
 })();

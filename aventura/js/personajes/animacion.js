@@ -82,7 +82,7 @@ window.ANIMA = (function () {
         fuerza = base.paso === 3 ? 0.1 : 0.05;
       o.sy *= 1 - fuerza * 0.6 + fuerza * u;
       o.sx /= Math.sqrt(o.sy);
-      if (p.mira.vista === "E") o.rot += base.paso === 3 ? 0.16 : 0.05; // corriendo se tira para adelante
+      if (VOL.relativa(p.mira.vista, p.mira.espejo).vista === "E") o.rot += base.paso === 3 ? 0.16 : 0.05; // corriendo se tira para adelante
       else o.rot += Math.sin(t * w * 0.5) * (base.paso === 3 ? 0.07 : 0.035);
     }
     // saltar: se encoge al despegar, se estira subiendo y bajando; al caer se aplasta y rebota

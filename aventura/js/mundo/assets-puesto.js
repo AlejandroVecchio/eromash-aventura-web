@@ -294,19 +294,280 @@
     }
   }
 
+  // ======================================================================
+  //  ARMADOS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  const T = C.T,
+    troncoPunta = (...a) => ASSETS.KIT.troncoPunta(...a);
+  // el tramo de palisada: troncos con punta de (ax, ay) a (bx, by) en el mundo y los dos travesaños de atrás
+  function palisadaV(c, x, y, t, o) {
+    const a = VOL.rel(x, y, o.ax || 0, o.ay || 0),
+      b = VOL.rel(x, y, o.bx || 0, o.by || 0),
+      pr = VOL.prVista(a[0], a[1], b[0], b[1]),
+      l = pr.largo,
+      n = Math.max(2, Math.round(l / 17)),
+      r = azar((o.sem || 1) * 313);
+    VOL.sombra(c, pr, l / 2, 0, l / 2 + 8, 12, 0.3);
+    const S = VOL.escena(pr);
+    [34, 86].forEach((z) => S.poner(l / 2, -11, () => VOL.caja(c, pr, 0, -13, z - 3, l, -9, z + 3, T.oscura), z));
+    for (let k = 0; k < n; k++) {
+      const u = ((k + 0.5) / n) * l,
+        h = 112 + r() * 18,
+        nuevo = r() < 0.16;
+      S.poner(u, 0, () => troncoPunta(c, pr, u, 0, 8, h, nuevo ? ["#8A6A40", "#B08A58", "#C8A470"] : k % 2 ? T.madera : T.vieja, 12));
+    }
+    S.dibujar();
+  }
+  // el portón: los dos postes tallados con su punta, el travesaño, el farol (o dos), la campana y el estandarte
+  function portonPuestoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 10, 0, 124, 24);
+    const S = VOL.escena(pr);
+    [-1, 1].forEach((l) => {
+      const u = l * 104;
+      S.poner(u, 0, () => {
+        const tallas = (cc, ll) => {
+          for (let k = 0; k < 3; k++) P(cc, [ll / 2, -60 - k * 30, ll / 2 + 6, -50 - k * 30, ll / 2, -40 - k * 30, ll / 2 - 6, -50 - k * 30], C.maderaLuz);
+        };
+        VOL.cubo(c, pr, u, 0, 24, 24, 170, T.madera, { frente: tallas, atras: tallas, sinTapa: true });
+        VOL.piramide(c, pr, [[u - 14, -14], [u + 14, -14], [u + 14, 14], [u - 14, 14]], 170, u, 0, 186, T.oscura);
+        if (l < 0 || o.faroles === 2) {
+          const fu = u - l * 30;
+          VOL.palo(c, pr, u, 0, 150, fu, 0, 150, 3, C.hierro);
+          VOL.cubo(c, pr, fu, 0, 16, 16, 22, ["#1A140E", "#1A140E", "#2A2018"], { frente: (cc, ll, h) => alfa(cc, 0.95, () => R(cc, 2, -h + 2, ll - 4, h - 4, C.ambar)), atras: (cc, ll, h) => alfa(cc, 0.95, () => R(cc, 2, -h + 2, ll - 4, h - 4, C.ambar)), izq: (cc, ll, h) => alfa(cc, 0.8, () => R(cc, 2, -h + 2, ll - 4, h - 4, C.ambar)), der: (cc, ll, h) => alfa(cc, 0.95, () => R(cc, 2, -h + 2, ll - 4, h - 4, C.ambar)) }, 118);
+          VOL.piramide(c, pr, [[fu - 12, -12], [fu + 12, -12], [fu + 12, 12], [fu - 12, 12]], 140, fu, 0, 152, T.pizarra);
+          VOL.halo(c, pr, fu, 0, 128, 80, C.ambar, 0.8 + Math.sin(t * 4 + l) * 0.06);
+        }
+      });
+    });
+    S.poner(0, 0, () => {
+      VOL.caja(c, pr, -124, -7, 152, 124, 7, 170, T.oscura, { tapa: C.maderaLuz });
+      if (o.faroles !== 2) {
+        VOL.palo(c, pr, 60, 0, 152, 60, 0, 140, 2, C.hierro);
+        VOL.cono(c, pr, 60, 0, 10, 6, 120, 140, ["#5A4418", "#8A6A2A", "#A8843A"], { n: 8 });
+        const v = Math.sin(t * 1.5) * 3;
+        VOL.plano(c, pr, -30, 10, 9, 90, 152, null, (cc, l, h) => {
+          P(cc, [0, -h, l, -h, l + v, -h + 62, l * 0.5 + v, -h + 52, v, -h + 62], "#2C4226");
+          [-1, 1].forEach((k) => L(cc, l * 0.5 + v * 0.5, -h + 36, l * 0.5 + k * 12 + v * 0.5, -h + 16, C.hueso, 2.5));
+        });
+      }
+    }, 150);
+    S.dibujar();
+  }
+  // la mesa de rutas: la tabla con el mapa tallado y las clavijas, las patas y el croquis enrollado
+  function mesaRutasV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 6, 0, 62, 24);
+    [[-48, -16], [48, -16], [-48, 16], [48, 16]].forEach(([u, w]) => VOL.cubo(c, pr, u, w, 6, 6, 36, T.oscura));
+    VOL.caja(c, pr, -58, -22, 34, 58, 22, 40, T.madera, { tapa: "#B08A58" });
+    VOL.enPiso(c, pr, (cc) => {
+      L(cc, -44, 14, -10, 2, "#5E4A36", 2);
+      L(cc, -10, 2, 30, -12, "#5E4A36", 2);
+      L(cc, 20, 14, 44, -16, "#3E6A7A", 2.5);
+    }, 40.5);
+    [[-30, 8, C.rojoEromash], [-8, 0, C.rojoEromash], [12, -6, "#F2ECEC"], [30, -10, C.rojoEromash], [-40, 12, "#3E5A34"]].forEach(([u, w, col]) => VOL.cubo(c, pr, u, w, 3, 3, 7, [col, col, col], null, 40));
+    VOL.rollo(c, pr, 32, 50, 12, 44, 4, ["#B8AC98", "#E6DCC8", "#F2ECEC"]);
+  }
+  // el tablero de las tablillas: la tabla y las dieciocho tablillas (las oscuras del lado oscuro)
+  function tableroTablillasV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      osc = o.oscuras != null ? o.oscuras : 5;
+    VOL.caja(c, pr, -52, -4, 46, 52, 0, 116, T.oscura, {
+      frente: (cc, l, h) => {
+        R(cc, 0, -h, l, h, C.maderaSombra);
+        for (let k = 0; k < 18; k++) {
+          const tx = 8 + (k % 6) * 15,
+            ty = -h + 8 + Math.floor(k / 6) * 20;
+          R(cc, tx, ty, 11, 16, k >= 18 - osc ? "#2A2420" : "#D8C8A4");
+          E(cc, tx + 5.5, ty + 2, 1.5, 1.5, C.hierro);
+        }
+      },
+    });
+  }
+  // el tablón de cacería: los dos postes, el tablero con los pedidos (frente) y tablas atrás, el alerito, la lanza
+  // cruzada y la tira roja
+  function tablonCazaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      hojas = [[-36, -100, -0.06], [-6, -98, 0.05], [22, -102, -0.03], [-30, -66, 0.04], [6, -64, -0.05]];
+    VOL.sombra(c, pr, 6, 0, 64, 18);
+    VOL.cubo(c, pr, -46, 0, 9, 9, 120, T.oscura);
+    VOL.cubo(c, pr, 46, 0, 9, 9, 120, T.oscura);
+    VOL.caja(c, pr, -46, -2, 34, 46, 2, 108, ["#5A3E24", "#6A4A2C", "#8A6440"], {
+      frente: (cc, l, h) => {
+        for (let k = 1; k < 4; k++) L(cc, 0, -k * 18.5, l, -k * 18.5, C.maderaSombra, 1.2);
+        hojas.forEach(([dx, dy, a], i) => {
+          const hx = 46 + dx,
+            hy = dy + 34;
+          if (i === 1 && o.pedido && !o.cobrar) return E(cc, hx + 8, hy + 2, 1.6, 1.6, C.hierro);
+          cc.save();
+          cc.translate(hx + 8, hy + 12);
+          cc.rotate(a);
+          R(cc, -9, -12, 18, 24, i % 2 ? "#E6DCC8" : "#D8C8A4");
+          E(cc, 0, 3, 3.4, 2.8, "#5E4A36");
+          [-4, -1.4, 1.4, 4].forEach((d, k) => E(cc, d, -3 - (k === 1 || k === 2 ? 1.5 : 0), 1.3, 1.6, "#5E4A36"));
+          if (i === 1 && o.cobrar) E(cc, 5, 8, 3.4, 3.4, C.rojoEromash);
+          cc.restore();
+          E(cc, hx + 8, hy + 1, 1.4, 1.4, C.hierro);
+        });
+      },
+      atras: (cc, l) => {
+        for (let k = 1; k < 4; k++) L(cc, 0, -k * 18.5, l, -k * 18.5, C.maderaSombra, 1.2);
+      },
+    });
+    VOL.techo(c, pr, -62, -14, 62, 14, 108, 24, ["#3A2C20", "#4A3A2A", "#6E5236"], { hastial: C.maderaSombra });
+    VOL.palo(c, pr, -58, 6, 20, 30, 6, 128, 3, C.maderaVieja);
+    VOL.piramide(c, pr, [[27, 4], [33, 4], [33, 8], [27, 8]], 128, 34, 6, 142, T.hierro);
+    const ond = Math.sin(t * 2.2 + x) * 2;
+    VOL.plano(c, pr, 46, 56, 3, 64, 104, null, (cc, l, h) => P(cc, [0, -h, l, -h, l + ond, -6, l * 0.5 + ond, 0, ond, -8], C.rojoEromash));
+  }
+  // el fuego de Halvard: el anillo de piedras, el fuego (o las cenizas), el trípode con la olla y el banco
+  function fogonOllaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.elipse(c, pr, 0, 0, 0, 26, 26, "#1A140E");
+    const S = VOL.escena(pr);
+    for (let k = 0; k < 9; k++) {
+      const a = (k / 9) * TAU,
+        u = Math.cos(a) * 34,
+        w = Math.sin(a) * 34;
+      S.poner(u, w, () => VOL.prisma(c, pr, VOL.redonda(u, w, 9, 6, k), 0, 8, k % 2 ? ["#4E4A44", "#6E6A62", "#86827A"] : ["#45413C", "#5A5650", "#706C66"]));
+    }
+    S.poner(0, 0, () => {
+      if (o.apagado) {
+        VOL.elipse(c, pr, 0, 0, 1, 18, 18, "#5A5650");
+        VOL.palo(c, pr, -16, 0, 3, 12, -6, 6, 3, C.maderaVieja);
+        VOL.palo(c, pr, -8, -8, 6, 16, 4, 3, 3, C.maderaSombra);
+        return;
+      }
+      const q = pr(0, 0, 0),
+        s = pr.s,
+        f = Math.sin(t * 9) * 3 * s;
+      P(c, [q[0] - 18 * s, q[1], q[0] - 6 * s, q[1] - 34 * s - f, q[0], q[1] - 18 * s, q[0] + 6 * s, q[1] - 40 * s + f, q[0] + 18 * s, q[1]], C.ambarFuerte);
+      P(c, [q[0] - 9 * s, q[1], q[0], q[1] - 24 * s + f, q[0] + 9 * s, q[1]], C.ambar);
+      VOL.halo(c, pr, 0, 0, 18, 90, C.ambarFuerte, 0.8);
+      [0, 2.1, 4.2].forEach((a, i) => VOL.palo(c, pr, Math.cos(a) * 34, Math.sin(a) * 34, 0, 0, 0, 70, 4, i ? C.madera : C.maderaSombra));
+      VOL.palo(c, pr, 0, 0, 70, 0, 0, 48, 2, C.hierro);
+      VOL.cilindro(c, pr, 0, 0, 16, 26, 48, ["#1E1E22", "#2A2A2E", "#46464C"], { n: 10 });
+      if (nivel() !== "baja") {
+        const p0 = pr(0, 0, 56);
+        for (let k = 0; k < 3; k++) {
+          const p = (t * 0.3 + k / 3) % 1;
+          alfa(c, 0.2 * (1 - p), () => E(c, p0[0] + Math.sin(p * 4 + k) * 6 * s, p0[1] - p * 70 * s, (4 + p * 10) * s, (3 + p * 7) * s, "#C8C4BC"));
+        }
+      }
+    }, 10);
+    S.poner(95, 26, () => {
+      VOL.caja(c, pr, 50, 22, 12, 140, 30, 18, T.madera);
+      [56, 128].forEach((u) => VOL.cubo(c, pr, u + 3, 26, 6, 6, 12, T.oscura));
+    });
+    S.dibujar();
+  }
+  // el mostrador de Ingrid: dos cajas, la manta roja encima, frascos, vendas y un escudo chico
+  function mostradorMantaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 6, 0, 62, 24);
+    [-30, 22].forEach((u, i) => VOL.cubo(c, pr, u, 0, 48, 30, 34, i ? T.madera : T.vieja));
+    VOL.caja(c, pr, -60, -18, 34, 54, 18, 38, ["#5E1E14", "#7A2A1E", "#9C3A2A"]);
+    VOL.caja(c, pr, -62, 17, 16, 56, 19, 38, ["#5E1E14", "#7A2A1E", "#9C3A2A"], { sinTapa: true });
+    [[-44, "#C8402D"], [-34, "#4A78D0"], [-24, "#C8402D"], [-14, "#7BC86C"]].forEach(([u, col]) => {
+      VOL.cilindro(c, pr, u, 0, 3, 38, 50, [VOL.mezcla(col, "#000000", 0.3), col, col], { n: 6 });
+      VOL.cilindro(c, pr, u, 0, 1.5, 50, 54, ["#8A7A5A", "#C8B48C", "#C8B48C"], { n: 6 });
+    });
+    VOL.rollo(c, pr, 0, 14, 4, 43, 5, ["#B8AC98", "#E6DCC8", "#F2ECEC"]);
+    const p2 = VOL.sub(pr, 34, 2, 38);
+    VOL.plano(c, p2, -13, 13, 0, 0, 26, null, (cc, l, h) => {
+      E(cc, l / 2, -h / 2, 13, 13, C.maderaSombra);
+      E(cc, l / 2, -h / 2, 4, 4, C.hierroLuz);
+    });
+  }
+  // la leñera y el ahumadero: el galpón de tres paredes con pescado colgando y humo, la leña apilada y el tonel de lanzas
+  function ahumaderoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      tab = (cc, l, h) => {
+        R(cc, 0, -h, l, h, "#3A2A1C");
+        for (let k = 1; k < 8; k++) R(cc, 0, -k * 12, l, 2, "rgba(0,0,0,0.3)");
+      };
+    VOL.sombra(c, pr, 12, 0, 130, 34);
+    const S = VOL.escena(pr);
+    S.poner(-20, 0, () => {
+      VOL.caja(c, pr, -70, -24, 0, 30, -20, 96, ["#2A1E14", "#3A2A1C", "#4E3A2A"], { frente: tab, atras: tab });
+      VOL.caja(c, pr, -70, -20, 0, -66, 24, 96, ["#2A1E14", "#3A2A1C", "#4E3A2A"]);
+      VOL.caja(c, pr, 26, -20, 0, 30, 24, 96, ["#2A1E14", "#3A2A1C", "#4E3A2A"]);
+      for (let k = 0; k < 5; k++) {
+        const u = -54 + k * 18;
+        VOL.palo(c, pr, u, 0, 92, u, 0, 78, 1.5, "#C8B48C");
+        VOL.piramide(c, pr, [[u - 4, -2], [u + 4, -2], [u + 4, 2], [u - 4, 2]], 76, u, 0, 50, k % 2 ? ["#7A5A2A", "#A8783A", "#C0904A"] : ["#6A4E2A", "#8A6A3A", "#A07E4A"]);
+      }
+      VOL.aguaUna(c, pr, -84, -30, 102, 44, 34, 92, T.vieja);
+      if (nivel() !== "baja") {
+        const p0 = pr(-20, 0, 104),
+          s = pr.s;
+        for (let k = 0; k < 3; k++) {
+          const p = (t * 0.18 + k / 3) % 1;
+          alfa(c, 0.18 * (1 - p), () => E(c, p0[0] + Math.sin(p * 4 + k) * 10 * s, p0[1] - p * 80 * s, (6 + p * 14) * s, (5 + p * 9) * s, "#A8A49C"));
+        }
+      }
+    });
+    S.poner(78, 0, () => {
+      for (let f = 0; f < 4; f++)
+        for (let k = 0; k < 5 - (f % 2); k++) VOL.rollo(c, VOL.sub(pr, 52 + k * 13 + (f % 2) * 6, 0, 0, Math.PI / 2), -12, 12, 0, f * 11 + 6, 6, T.madera, { n: 6, corte: C.maderaLuz });
+    });
+    S.poner(130, 0, () => {
+      VOL.cono(c, pr, 130, 0, 16, 18, 0, 40, T.madera, { n: 10 });
+      VOL.elipse(c, pr, 130, 0, 30, 18.5, 18.5, C.hierro);
+      VOL.elipse(c, pr, 130, 0, 40.5, 17, 17, "#2A1E14");
+      [-8, 0, 8].forEach((d, i) => {
+        VOL.palo(c, pr, 130 + d, 0, 40, 130 + d * 1.6, 0, 120, 3, C.maderaSombra);
+        VOL.piramide(c, pr, [[127 + d * 1.6, -2], [133 + d * 1.6, -2], [133 + d * 1.6, 2], [127 + d * 1.6, 2]], 120, 130 + d * 1.6, 0, 132 + i * 2, T.hierro);
+      });
+    });
+    S.dibujar();
+  }
+  // la ropa tendida: dos postes, la soga y las prendas como telas de dos caras
+  function tendederoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      v = Math.sin(t * 1.4) * 2;
+    VOL.cubo(c, pr, -58, 0, 5, 5, 90, T.oscura);
+    VOL.cubo(c, pr, 58, 0, 5, 5, 90, T.oscura);
+    VOL.palo(c, pr, -58, 0, 86, 58, 0, 86, 1.5, "#C8B48C");
+    [[-44, 22, "#C8C0B0"], [-16, 18, "#7A3A2A"], [10, 26, "#3E4E66"], [36, 16, "#E6DCC8"]].forEach(([u, w, col]) =>
+      VOL.plano(c, pr, u, u + w, 0, 50, 86, null, (cc, l, h) => P(cc, [0, -h, l, -h, l + v, 0, v, -4], col)),
+    );
+  }
+  // la piedra violeta: facetada, con Hagalaz adelante y la luz de las ataduras
+  function piedraVioletaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      late = 0.7 + Math.sin(t * 1.1) * 0.25;
+    VOL.halo(c, pr, 0, 0, 70, 120, VIOLETA, late);
+    VOL.sombra(c, pr, 10, 0, 40, 26);
+    const base = [[-30, 10], [-34, -10], [-10, -22], [24, -16], [32, 6], [8, 20]],
+      col = ["#9894AA", "#B8B4C8", "#D8D4E4"];
+    VOL.prisma(c, pr, base, 0, 104, col, { sinTapa: true });
+    VOL.piramide(c, pr, base, 104, -2, -4, 140, col);
+    VOL.plano(c, pr, -24, 24, 18.5, 10, 70, null, (cc, l, h) => alfa(cc, 0.5 + late * 0.5, () => FUTHARK.dibujar(cc, "hagalaz", l / 2, -h / 2, 56, VIOLETA, 5)), () => {});
+    if (o.vista) {
+      const q = VOL.redonda(0, 0, 38, 20).map(([u, w]) => pr(u, w, 60 + u * 0.15));
+      c.strokeStyle = VIOLETA;
+      c.lineWidth = 2.5 * pr.s;
+      c.beginPath();
+      q.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
+      c.closePath();
+      c.stroke();
+    }
+  }
+
   const L2 = ASSETS.LISTA;
   Object.assign(L2, {
-    palisada: { f: palisada, alto: 130, choque: null, grupo: "puesto" },
-    portonPuesto: { f: portonPuesto, alto: 190, choque: null, grupo: "puesto", luz: true },
-    mesaRutas: { f: mesaRutas, alto: 64, choque: { w: 116, h: 16 }, grupo: "puesto" },
-    tableroTablillas: { f: tableroTablillas, alto: 120, choque: null, grupo: "puesto" },
-    tablonCaza: { f: tablonCaza, alto: 140, choque: { w: 100, h: 14 }, grupo: "puesto" },
-    fogonOlla: { f: fogonOlla, alto: 80, choque: { r: 40 }, grupo: "puesto", luz: true },
-    mostradorManta: { f: mostradorManta, alto: 56, choque: { w: 110, h: 14 }, grupo: "puesto" },
-    ahumadero: { f: ahumadero, alto: 150, choque: { w: 280, h: 30 }, grupo: "puesto" },
-    tendedero: { f: tendedero, alto: 90, choque: null, grupo: "puesto" },
-    perraGrima: { f: perraGrima, alto: 60, choque: null, grupo: "puesto" },
-    piedraVioleta: { f: piedraVioleta, alto: 150, choque: { r: 30 }, grupo: "puesto", luz: true },
+    palisada: { f: palisada, fv: palisadaV, vol: true, alto: 130, choque: null, grupo: "puesto" },
+    portonPuesto: { f: portonPuesto, fv: portonPuestoV, vol: true, alto: 190, choque: null, grupo: "puesto", luz: true },
+    mesaRutas: { f: mesaRutas, fv: mesaRutasV, vol: true, alto: 64, choque: { w: 116, h: 16 }, grupo: "puesto" },
+    tableroTablillas: { f: tableroTablillas, fv: tableroTablillasV, vol: true, alto: 120, choque: null, grupo: "puesto" },
+    tablonCaza: { f: tablonCaza, fv: tablonCazaV, vol: true, alto: 140, choque: { w: 100, h: 14 }, grupo: "puesto" },
+    fogonOlla: { f: fogonOlla, fv: fogonOllaV, vol: true, alto: 80, choque: { r: 40 }, grupo: "puesto", luz: true },
+    mostradorManta: { f: mostradorManta, fv: mostradorMantaV, vol: true, alto: 56, choque: { w: 110, h: 14 }, grupo: "puesto" },
+    ahumadero: { f: ahumadero, fv: ahumaderoV, vol: true, alto: 150, choque: { w: 280, h: 30 }, grupo: "puesto" },
+    tendedero: { f: tendedero, fv: tendederoV, vol: true, alto: 90, choque: null, grupo: "puesto" },
+    perraGrima: { f: perraGrima, fv: ASSETS.ladoV(perraGrima), vol: true, alto: 60, choque: null, grupo: "puesto" },
+    piedraVioleta: { f: piedraVioleta, fv: piedraVioletaV, vol: true, alto: 150, choque: { r: 30 }, grupo: "puesto", luz: true },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { palisada: { ax: -80, bx: 80 }, perraGrima: { despierta: true }, tableroTablillas: { oscuras: 5 } });
 })();

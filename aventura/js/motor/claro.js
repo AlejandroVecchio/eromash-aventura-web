@@ -106,6 +106,8 @@ window.CLARO = (function () {
       const libre = rotos >= 3 || H.tiene("ciervo_vencido");
       // el haz de luz fría, desde la abertura de la copa
       lista.push({
+        x: cx,
+        pie: cy,
         y: 1e9 - 2,
         f: () => {
           const w0 = libre ? 520 : 300,
@@ -124,6 +126,8 @@ window.CLARO = (function () {
       // la niebla baja, que se levanta al final
       if (!libre && !baja)
         lista.push({
+          x: cx,
+          pie: cy,
           y: cy - L0.r,
           f: () => {
             for (let k = 0; k < 10; k++) {

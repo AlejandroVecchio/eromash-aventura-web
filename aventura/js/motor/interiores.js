@@ -1001,7 +1001,8 @@ window.INTERIORES = (function () {
     c.rect(0, 0, RW, RH);
     c.clip();
     tAhora = tt;
-    escena(c, d, tt, () => A.dibujarJugadorEn(c, d.ix, d.iy, escala(d.iy)));
+    giro = J.giro || 0;
+    escena(c, d, tt, (x, y, k) => A.dibujarJugadorEn(c, x, y, k));
     // la luz del cuarto: oscuro con agujeros cálidos en las velas, el hogar y la forja
     dibujarLuz(c, d, tt);
     c.restore();
@@ -1015,6 +1016,7 @@ window.INTERIORES = (function () {
   }
   // la pared, los muebles y la gente ordenados por el piso; jugador() dibuja a Eromash en su lugar (en el editor, nada)
   function escena(c, d, tt, jugador) {
+    if (giro && window.VOL) return dibujarGirado(c, d, tt, jugador);
     dibujarPared(c, d, tt);
     const lista = [];
     d.muebles.forEach((q) => !q.oculto && lista.push({ y: q.piso ? -1 : q.y, f: () => ASSETS.dibujar(c, q.id, q.x, q.y, tt, q.o) }));
@@ -1030,9 +1032,137 @@ window.INTERIORES = (function () {
         c.restore();
       } }),
     );
-    if (d.ix !== undefined && jugador) lista.push({ y: d.iy, f: jugador });
+    if (d.ix !== undefined && jugador) lista.push({ y: d.iy, f: () => jugador(d.ix, d.iy, escala(d.iy)) });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((q) => q.f());
+  }
+  // ---------- el cuarto girado (todo girable) ----------
+  // Con giro 0 (el juego) el cuarto se ve como un escenario de frente. Girado (el editor de cuartos con Z y X, o el
+  // juego con ?giro=) se arma como una caja: el piso, las paredes que quedan atrás (la que tapa se corta, como en una
+  // casa de muñecas) y todo lo de adentro en su lugar, cada mueble girado con la cámara. El piso del escenario
+  // (FONDO..RH) se estira hacia el fondo para que el cuarto tenga hondura de verdad.
+  let giro = 0;
+  const HONDO = 2.5,
+    MEDIO = (FONDO + RH) / 2,
+    MU = RW / 2, // medio ancho del cuarto
+    MW = ((RH - FONDO) / 2) * HONDO, // medio fondo
+    ZG = 0.5, // girado se ve más chico, para que entre entero
+    GENTE_K = 2.75; // el tamaño de la gente (en el escenario va de 2,3 al fondo a 3,2 adelante)
+  const prCuarto = () => VOL.proyector(RW / 2, 600, giro, { s: ZG });
+  // un punto del cuarto (x, y del escenario, z de alto) → dónde cae en la vista, y cuánto se achica
+  function aVista(x, y, z = 0) {
+    if (!giro) return [x, y - z, 1];
+    const p = prCuarto()(x - MU, (y - MEDIO) * HONDO, z);
+    return [p[0], p[1], ZG];
+  }
+  // al revés, para el piso: un punto de la vista → x, y del escenario
+  function deVista(sx, sy) {
+    if (!giro) return [sx, sy];
+    const pr = prCuarto(),
+      a = (sx - pr.x) / ZG,
+      b = (sy - pr.y) / ZG / VOL.K;
+    return [a * pr.co + b * pr.si + MU, (-a * pr.si + b * pr.co) / HONDO + MEDIO];
+  }
+  // las paredes como lienzos: la de atrás con todo (ventana, estandarte, repisa) cada cuadro; los costados solo tablas
+  function lienzo(d, k, q) {
+    let cv = d[k];
+    if (!cv || cv.q !== q) (cv = d[k] = document.createElement("canvas")), (cv.width = RW * q), (cv.height = FONDO * q), (cv.q = q), (cv.listo = false);
+    return cv;
+  }
+  function lienzoPared(d, tt, q, lado) {
+    const cv = lienzo(d, lado ? "cvLado" : "cvAtras", q);
+    if (lado && cv.listo) return cv;
+    const n = cv.getContext("2d");
+    n.setTransform(q, 0, 0, q, 0, 0);
+    dibujarPared(n, lado ? Object.assign({}, d, { ventana: 0, estandarte: 0, repisa: 0, sinSalida: true, luzVentana: null }) : d, tt);
+    cv.listo = true;
+    return cv;
+  }
+  function pisoGirado(cc, d) {
+    const r = DIB.azar(9);
+    if (d.pared === "sotano") {
+      const viejo = d.sotano === "viejo";
+      DIB.R(cc, -MU, -MW, RW, MW * 2, viejo ? "#34322E" : "#3A2A1C");
+      for (let i = 0; i < (viejo ? 70 : 40); i++) DIB.E(cc, -MU + r() * RW, -MW + r() * MW * 2, 30 + r() * 50, 14 + r() * 20, viejo ? ["#4E4C46", "#45433E", "#5A5852"][i % 3] : ["#4A3826", "#443222", "#3E2E1E"][i % 3]);
+      return;
+    }
+    const n = 12,
+      w = RW / n;
+    for (let i = 0; i < n; i++) {
+      DIB.R(cc, -MU + i * w, -MW, w, MW * 2, ["#3A1A10", "#341710", "#40200F"][i % 3]);
+      DIB.R(cc, -MU + (i + 1) * w - 2, -MW, 3, MW * 2, "#1A0A06");
+      // las juntas de cada tablón, salteadas
+      DIB.R(cc, -MU + i * w, -MW + (0.2 + r() * 0.6) * MW * 2, w, 3, "#1A0A06");
+    }
+    // la puerta de salida: el rectángulo de luz de afuera en el borde de adelante
+    if (!d.sinSalida) DIB.alfa(cc, 0.5, () => DIB.R(cc, 150 - MU, MW - 70, 170, 70, "#E8DCA8"));
+  }
+  function dibujarGirado(c, d, tt, jugador) {
+    const pr = prCuarto(),
+      g0 = VOL.cam.g,
+      q = window.CALIDAD && CALIDAD.nivel !== "alta" ? 0.5 : 1;
+    VOL.cam.g = giro;
+    try {
+      c.fillStyle = "#0A0606";
+      c.fillRect(0, 0, RW, RH);
+      VOL.enPiso(c, pr, (cc) => pisoGirado(cc, d));
+      const atras = lienzoPared(d, tt, q),
+        lado = lienzoPared(d, tt, q, true),
+        tela = (cv, largo) => (cc, l, h) => cc.drawImage(cv, 0, 0, largo * q, FONDO * q, 0, -h, l, h),
+        pared = (p, cv, largo) => VOL.cara(c, pr, p, "#111111", VOL.medida(largo, FONDO, tela(cv, largo))),
+        H = FONDO;
+      // solo se pintan las caras de adentro que miran a la cámara: las paredes de atrás
+      pared([[-MU, -MW, 0], [MU, -MW, 0], [MU, -MW, H], [-MU, -MW, H]], atras, RW);
+      pared([[MU, MW, 0], [-MU, MW, 0], [-MU, MW, H], [MU, MW, H]], lado, RW);
+      pared([[-MU, MW, 0], [-MU, -MW, 0], [-MU, -MW, H], [-MU, MW, H]], lado, MW * 2);
+      pared([[MU, -MW, 0], [MU, MW, 0], [MU, MW, H], [MU, -MW, H]], lado, MW * 2);
+      // la sombra donde las paredes tocan el piso
+      VOL.enPiso(c, pr, (cc) => {
+        cc.strokeStyle = "rgba(0,0,0,0.35)";
+        cc.lineWidth = 24;
+        cc.strokeRect(-MU, -MW, RW, MW * 2);
+      });
+      const lista = [],
+        pon = (x, y, f, abajo) => {
+          const u = x - MU,
+            w = (y - MEDIO) * HONDO;
+          lista.push({ k: abajo ? -1e9 : pr.hondo(u, w), f: () => f(...pr(u, w, 0)) });
+        };
+      d.muebles.forEach((m) => {
+        if (m.oculto) return;
+        const a = ASSETS.LISTA[m.id] || {};
+        pon(m.x, m.y, (sx, sy) => {
+          if (a.piso) {
+            // lo del piso (alfombra, trampilla) gira con el piso
+            c.save();
+            VOL.piso(c, sx, sy, giro);
+            c.translate(sx, sy);
+            c.scale(ZG, ZG);
+            c.translate(-sx, -sy);
+            ASSETS.dibujar(c, m.id, sx, sy, tt, m.o);
+            c.restore();
+          } else ASSETS.dibujar(c, m.id, sx, sy, tt, Object.assign({}, m.o, { esc: (m.o.esc || 1) * ZG }));
+        }, m.piso || a.piso);
+      });
+      d.gente.forEach((n) =>
+        pon(n.x, n.y, (sx, sy) => {
+          const s = GENTE_K * ZG,
+            mv = VOL.relativa(n.mira.vista, n.mira.espejo);
+          c.save();
+          c.translate(sx, sy);
+          c.scale(s, s);
+          c.translate(-sx, -sy);
+          if (window.GENTE) GENTE.dibujar(c, n.id, sx, sy, tt, { vista: mv.vista, espejo: mv.espejo });
+          else DIB.E(c, sx, sy - 40, 26, 40, "#E0B2B2");
+          c.restore();
+        }),
+      );
+      if (d.ix !== undefined && jugador) pon(d.ix, d.iy, (sx, sy) => jugador(sx, sy, GENTE_K * ZG));
+      lista.sort((a, b) => a.k - b.k);
+      lista.forEach((l) => l.f());
+    } finally {
+      VOL.cam.g = g0;
+    }
   }
   // para el editor: arma la plantilla con todo a la vista (arcón y trampilla siempre, la alfombra corrida)
   let fuente = null; // en el editor: lo que se está armando, en vez de AGREGADOS
@@ -1059,8 +1189,9 @@ window.INTERIORES = (function () {
     if (plantilla.startsWith("casa_")) return (ed.o.v = +plantilla.slice(5)), armarCuarto("casa", ed, "editor", true);
     return armarCuarto(plantilla, ed, "editor", true);
   }
-  function dibujarVista(c, d, tt, conLuz) {
+  function dibujarVista(c, d, tt, conLuz, g) {
     tAhora = tt;
+    giro = g || 0;
     escena(c, d, tt, null);
     if (conLuz) dibujarLuz(c, d, tt);
   }
@@ -1087,7 +1218,12 @@ window.INTERIORES = (function () {
     return L0;
   }
   function dibujarLuz(c, d, tt) {
-    const luces = lucesDe(d);
+    // girado: cada luz va a su lugar en la caja (lo que queda arriba del piso, contra la pared de atrás)
+    const luces = lucesDe(d).map((l) => {
+      if (!giro) return l;
+      const [x, y] = l.y < FONDO ? aVista(l.x, FONDO, FONDO - l.y) : aVista(l.x, l.y);
+      return Object.assign({}, l, { x, y, r: l.r * ZG * 1.4 });
+    });
     const baja = window.CALIDAD && CALIDAD.nivel === "baja";
     if (baja) {
       c.fillStyle = "rgba(10,5,5,0.32)";
@@ -1210,5 +1346,5 @@ window.INTERIORES = (function () {
     J.cam.x = x;
     J.cam.y = y - 30;
   }
-  return { puertas, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe };
+  return { puertas, entrar, salirA, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();

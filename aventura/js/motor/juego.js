@@ -40,6 +40,9 @@
     t: 0,
     modo: "titulo", // titulo · juego · dialogo · menu · fin
     cam: { x: 0, y: 0, sac: 0 },
+    // el giro de la cámara en radianes (todo girable): el juego no gira, pero todo está hecho para que pueda;
+    // ?giro=45 lo prueba
+    giro: ((Number(consulta.get("giro")) || 0) * Math.PI) / 180,
     avisos: [],
     fx: [],
     marcas: [], // lo que muestra la Lente: huellas, anillos, runas en el piso
@@ -666,8 +669,8 @@
   let mouse = { x: 0, y: 0, usado: false };
   lienzo.addEventListener("pointermove", (e) => {
     const k = cw / innerWidth;
-    mouse.x = (e.clientX * k) / esc + J.cam.x - cw / 2 / esc;
-    mouse.y = (e.clientY * k) / esc + J.cam.y - ch / 2 / esc;
+    // en la vista, y de ahí al mundo (la cámara puede estar girada)
+    [mouse.x, mouse.y] = VOL.mundo((e.clientX * k) / esc + J.cam.x - cw / 2 / esc, (e.clientY * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
     mouse.usado = true;
   });
   function puedeMover() {
@@ -694,7 +697,8 @@
     }
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     const libre = puedeMover();
-    const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
+    // el palanca o las flechas son de la pantalla: con la cámara girada se pasan al piso del mundo
+    const e = libre ? VOL.ejeMundo(CONTROLES.eje()) : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15;
     // estamina: correr y esquivar gastan; se recupera sola después de un respiro
     const mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -1115,24 +1119,27 @@
     const h = 150,
       w = 125,
       yy = p.y - h + 8 - bob - jp * 70 + po.dy,
-      face = p.mira.vista === "E" ? (p.mira.espejo ? -1 : 1) : p.dir[0] < 0 ? -1 : 1;
+      // hacia dónde mira, visto con la cámara (puede estar girada: los ángulos del piso suman VOL.cam.g)
+      miraV = VOL.relativa(p.mira.vista, p.mira.espejo),
+      gC = VOL.cam.g,
+      face = miraV.vista === "E" ? (miraV.espejo ? -1 : 1) : Math.cos(Math.atan2(p.dir[1], p.dir[0]) + gC) < 0 ? -1 : 1;
     // espada: en guardia al costado, o en el arco del golpe
     let sp;
     if (p.atk) {
       const a = p.atk,
         d = a.d;
       let pr = a.t < d.wind ? -0.15 * (a.t / d.wind) : a.t < d.wind + d.swing ? (a.t - d.wind) / d.swing : 1;
-      const ang = a.dir + a.side * (-d.arc / 2 + d.arc * pr);
+      const ang = a.dir + gC + a.side * (-d.arc / 2 + d.arc * pr);
       sp = { x: p.x + Math.cos(ang) * 62, y: p.y - 55 - jp * 70 + Math.sin(ang) * 62 * 0.8, ang, s: 0.31 };
     } else {
-      const lado = p.mira.vista === "N" ? -face : face;
+      const lado = miraV.vista === "N" ? -face : face;
       sp = { x: p.x + lado * 78, y: p.y - 70 - bob - jp * 70 + Math.sin(J.t * 2.4) * 6, ang: -Math.PI / 2 + lado * 0.25, s: 0.3 };
     }
     // de espaldas la espada en guardia queda detrás del cuerpo
     sp.x += po.dx;
     sp.y += po.dy + (1 - po.sy) * 40;
     if (p.muerto) sp.y = 1e9; // al caer suelta la espada (no se dibuja)
-    const detras = sp.y < p.y - 95 || (!p.atk && p.mira.vista === "N");
+    const detras = sp.y < p.y - 95 || (!p.atk && miraV.vista === "N");
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= CARGA_GIRO);
     if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
@@ -1143,8 +1150,8 @@
       c.strokeStyle = a.combo ? "#FFD98A" : "#F2ECEC";
       c.lineWidth = 14;
       c.lineCap = "round";
-      const a0 = a.dir - (a.side * d.arc) / 2,
-        a1 = a.dir + a.side * (-d.arc / 2 + d.arc * pr),
+      const a0 = a.dir + gC - (a.side * d.arc) / 2,
+        a1 = a.dir + gC + a.side * (-d.arc / 2 + d.arc * pr),
         alc = d.reach / CUERPO;
       c.beginPath();
       c.ellipse(p.x, p.y - 55 - jp * 70, alc * 0.92, alc * 0.74, 0, Math.min(a0, a1), Math.max(a0, a1));
@@ -1152,8 +1159,8 @@
       c.restore();
     }
     const ojos = po.ojos || (p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm");
-    const vista = po.vista || p.mira.vista,
-      espejo = po.vista ? po.espejo : p.mira.espejo;
+    // hacia dónde mira en el mundo, visto con la cámara (VOL.relativa: la cámara puede estar girada)
+    const { vista, espejo } = VOL.relativa(po.vista || p.mira.vista, po.vista ? po.espejo : p.mira.espejo);
     const img = VK[vista + ojos] || VK[vista + "calm"];
     // la estela de la esquiva: copias claras que quedan atrás
     if (!enSilueta && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
@@ -1316,6 +1323,7 @@
     for (const c0 of W.CAMINOS) if (W.distLinea(jug.x, jug.y, c0.p) < c0.w) s0 *= 0.4;
     if (Math.hypot(jug.x - W.CIUDAD.c[0], (jug.y - W.CIUDAD.c[1]) * 1.3) < W.CIUDAD.rx) s0 = 0;
     for (const k of ["tumulo", "claro"]) if (dist(jug, W.LUGARES[k].p) < W.LUGARES[k].r * 1.6) s0 = Math.max(s0, k === "tumulo" ? 1.4 : 0.6);
+    if (J.ambZona && J.ambZona.sombra != null) return Math.max(J.ambZona.sombra, J.oscuro || 0);
     return Math.max(s0, J.oscuro || 0);
   }
   // cada asset que alumbra: radio y color (se suma su posición en el mundo)
@@ -1358,7 +1366,7 @@
       const tiembla = l[1] === "#FF8D71" ? 0.84 + Math.sin(J.t * 11 + o.x) * 0.08 + Math.sin(J.t * 23 + o.y) * 0.06 : 0.9 + Math.sin(J.t * 7 + o.x) * 0.06;
       if (f > 0) L0.push({ x: o.x + l[2] * (o.o.s || 1), y: o.y + l[3] * (o.o.s || 1), r: l[0] * (o.o.s || 1), col: l[1], f: f * tiembla });
     });
-    if (n > 0.2) W.DECO.forEach((d) => d.id === "hongosRocio" && d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
+    if (n > 0.2) W.decoDe("hongosRocio").forEach((d) => d.x > x0 - 80 && d.x < x1 + 80 && d.y > y0 - 80 && d.y < y1 + 80 && L0.push({ x: d.x, y: d.y, r: 80, col: "#73D5DB", f: 0.6 }));
     for (const e of enemigos) if (e.activo && !e.muerto && e.d.luz && e.x > x0 - 300 && e.x < x1 + 300 && e.y > y0 - 300 && e.y < y1 + 300) L0.push({ x: e.x, y: e.y - 60, r: 240, col: ["#8CF0B4", "#73D5DB", "#9A6BD8"][e.pal || 0], f: 0.9 });
     if (nucleoSuelo) L0.push({ x: nucleoSuelo.x, y: nucleoSuelo.y, r: 200, col: "#73D5DB", f: 1 });
     if (ciervo.activo || ciervo.mostrarAtaduras) L0.push({ x: ciervo.x, y: ciervo.y - 80, r: 340, col: "#73D5DB", f: 0.8 });
@@ -1368,7 +1376,7 @@
   }
 
   function dibujar() {
-    if (J.dentro) return J.dentro.dibujar(c, cw, ch);
+    if (J.dentro) return (VOL.cam.g = 0), J.dentro.dibujar(c, cw, ch);
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.fillStyle = "#33301F";
     c.fillRect(0, 0, cw, ch);
@@ -1380,9 +1388,28 @@
       y0 = J.cam.y - vh / 2 + sy,
       x1 = x0 + vw,
       y1 = y0 + vh;
-    c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
-    W.dibujarPiso(c, x0, y0, x1, y1, escBase);
-    cadaSis("fondo", c, x0, y0, x1, y1);
+    // la cámara puede girar (todo girable, VOL): J.giro en radianes alrededor del centro de la vista. Lo del piso se
+    // dibuja con el piso girado (pisoT); lo que está parado, en su pie pasado a la vista (vista) y derecho.
+    const g = (VOL.cam.g = J.giro || 0),
+      cx = J.cam.x + sx,
+      cy = J.cam.y + sy,
+      vista = (x, y) => VOL.vista(x, y, cx, cy, g);
+    J.vista = vista;
+    // lo que se ve del mundo: con la cámara girada, la caja que encierra la vista
+    let wx0 = x0,
+      wy0 = y0,
+      wx1 = x1,
+      wy1 = y1;
+    if (g) {
+      const rr = Math.hypot(vw / 2, vh / 2 / VOL.K);
+      [wx0, wy0, wx1, wy1] = [cx - rr, cy - rr * VOL.K, cx + rr, cy + rr * VOL.K];
+    }
+    W.girarVista(g);
+    const baseT = () => c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc),
+      pisoT = () => (baseT(), VOL.piso(c, cx, cy, g));
+    pisoT();
+    W.dibujarPiso(c, wx0, wy0, wx1, wy1, escBase);
+    cadaSis("fondo", c, wx0, wy0, wx1, wy1);
     // lo que va en el piso
     J.marcas.forEach(dibujarMarca);
     J.zonas.forEach((a) => CB.dibujarAviso(c, a));
@@ -1398,36 +1425,63 @@
         c.stroke();
       });
     }
-    cadaSis("piso", c, x0, y0, x1, y1);
+    cadaSis("piso", c, wx0, wy0, wx1, wy1);
     J.ondas.forEach(dibujarOnda);
     if (nucleoSuelo) ASSETS.dibujar(c, "nucleo", nucleoSuelo.x, nucleoSuelo.y, J.t, {});
-    // todo lo que tiene altura, ordenado por la línea del piso
+    baseT();
+    // todo lo que tiene altura, ordenado por la línea del piso. Cada cosa lleva su x y su y (el pie): con la cámara
+    // girada se dibuja corrida a donde cae su pie en la vista
     const lista = [];
-    W.cercanas(x0 - 300, y0 - 100, x1 + 300, y1 + 420, (o) => {
-      if (o.oculto || o.x < x0 - 320 || o.x > x1 + 320 || o.y < y0 - 40 || o.y - o.alto * 1.2 > y1) return;
-      lista.push({ y: o.y + (o.o.orden || 0), f: () => dibujarCosa(o), cosa: o }); // o.orden: adelante / atrás del editor
+    W.cercanas(wx0 - 300, wy0 - 100, wx1 + 300, wy1 + 420, (o) => {
+      if (o.oculto || o.x < wx0 - 320 || o.x > wx1 + 320 || o.y < wy0 - 40 || o.y - o.alto * 1.2 > wy1 + (g ? 400 : 0)) return;
+      lista.push({ x: o.x, y: o.y + (o.o.orden || 0), pie: o.y, f: null, cosa: o }); // o.orden: adelante / atrás del editor
     });
-    W.DECO.forEach((d) => {
-      if (d.id === "hongosRocio" && d.x > x0 - 40 && d.x < x1 + 40 && d.y > y0 && d.y < y1 + 40) lista.push({ y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
+    W.decoDe("hongosRocio").forEach((d) => {
+      if (d.x > wx0 - 40 && d.x < wx1 + 40 && d.y > wy0 && d.y < wy1 + 40) lista.push({ x: d.x, y: d.y, f: () => ASSETS.dibujar(c, d.id, d.x, d.y, J.t, { sem: d.sem }) });
     });
-    const visible = (x, y) => x > x0 - 200 && x < x1 + 200 && y > y0 - 50 && y < y1 + 300;
-    Object.values(npcs).forEach((n) => visible(n.x, n.y) && lista.push({ y: n.y, f: () => dibujarNpc(n) }));
-    trabajadores.forEach((n) => visible(n.x, n.y) && lista.push({ y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, camina: n.camina, hablando: n.hablando }) }));
-    enemigos.forEach((e) => e.activo && e.muerto < 0.8 && visible(e.x, e.y) && lista.push({ y: e.y, f: () => CB.dibujar(c, e, J.t) }));
-    if (visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
+    const visible = (x, y) => {
+      if (g) [x, y] = vista(x, y);
+      return x > x0 - 200 && x < x1 + 200 && y > y0 - 50 && y < y1 + 300;
+    };
+    Object.values(npcs).forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => dibujarNpc(n) }));
+    trabajadores.forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, camina: n.camina, hablando: n.hablando }) }));
+    enemigos.forEach((e) => e.activo && e.muerto < 0.8 && visible(e.x, e.y) && lista.push({ x: e.x, y: e.y, f: () => CB.dibujar(c, e, J.t) }));
+    if (visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ x: ciervo.x, y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
     cadaSis("objetos", lista, visible, c);
-    lista.push({ y: window.ALTURAS ? ALTURAS.orden() : jug.y, f: dibujarJugador, jugador: true });
+    lista.push({ x: jug.x, y: window.ALTURAS ? ALTURAS.orden() : jug.y, pie: jug.y, f: dibujarJugador, jugador: true });
+    if (g) {
+      // ordenadas por dónde cae su pie en la vista (lo que no dijo su x queda donde está: no debería haber)
+      lista.forEach((d) => {
+        if (d.x == null) return;
+        const p = d.pie != null ? d.pie : d.y,
+          v = vista(d.x, p);
+        d.dx = v[0] - d.x;
+        d.dy = v[1] - p;
+        d.y += d.dy;
+      });
+    }
     lista.sort((a, b) => a.y - b.y);
-    lista.forEach((d) => d.f());
+    lista.forEach((d) => {
+      // las cosas del mundo no llevan función propia (menos basura por cuadro)
+      if (!d.dx && !d.dy) return d.f ? d.f() : dibujarCosa(d.cosa);
+      c.save();
+      c.translate(d.dx, d.dy);
+      d.f ? d.f() : dibujarCosa(d.cosa);
+      c.restore();
+    });
     siluetaJugador(lista);
     if (window.ALTURAS) ALTURAS.velo(c, lienzo, x0, y0, esc, cw, ch);
-    cadaSis("aire", c, x0, y0, x1, y1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
+    pisoT();
+    cadaSis("aire", c, wx0, wy0, wx1, wy1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
-    LUZ.niebla(c, x0, y0, vw, vh, J.t, 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
-    LUZ.dibujar(c, cw, ch, x0, y0, esc, juntarLuces(x0, y0, x1, y1), amb, J.t);
-    c.setTransform(esc, 0, 0, esc, -x0 * esc, -y0 * esc);
-    cadaSis("sobreLuz", c, x0, y0, x1, y1); // lo que brilla en la oscuridad: luciérnagas, brasas, motas rúnicas
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, amb.niebla != null ? amb.niebla : 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
+    let luces = juntarLuces(wx0, wy0, wx1, wy1);
+    if (g) luces = luces.map((l) => Object.assign({}, l, { x: vista(l.x, l.y)[0], y: vista(l.x, l.y)[1] }));
+    LUZ.dibujar(c, cw, ch, x0, y0, esc, luces, amb, J.t);
+    pisoT();
+    cadaSis("sobreLuz", c, wx0, wy0, wx1, wy1); // lo que brilla en la oscuridad: luciérnagas, brasas, motas rúnicas
     J.fx.forEach((f) => DIB.alfa(c, Math.max(0, f.t / 0.35), () => DIB.R(c, f.x - f.s / 2, f.y - f.s / 2, f.s, f.s, f.c)));
+    baseT();
     c.font = '800 18px "Eromash Text", system-ui, sans-serif';
     c.textAlign = "center";
     J.textos.forEach((n) => {
@@ -1435,15 +1489,16 @@
       c.font = n.grande ? '800 26px "Eromash Text", system-ui, sans-serif' : n.palabra ? '800 15px "Eromash Text", system-ui, sans-serif' : '800 18px "Eromash Text", system-ui, sans-serif';
       c.lineWidth = 4;
       c.strokeStyle = "#0A0707";
-      c.strokeText(n.n, n.x, n.y - n.t * 40);
+      const [tx, ty] = vista(n.x, n.y);
+      c.strokeText(n.n, tx, ty - n.t * 40);
       c.fillStyle = n.col || "#F2ECEC";
-      c.fillText(n.n, n.x, n.y - n.t * 40);
+      c.fillText(n.n, tx, ty - n.t * 40);
     });
     c.globalAlpha = 1;
     // el rombo rúnico sobre lo que se usa con E ahora (la persona, la cosa)
     if (J.cerca && J.cerca.x != null) {
-      const bx = J.cerca.x,
-        by = J.cerca.y + Math.sin(J.t * 4) * 5;
+      const [bx, by0] = vista(J.cerca.x, J.cerca.y),
+        by = by0 + Math.sin(J.t * 4) * 5;
       DIB.halo(c, bx, by, 26, "#73D5DB", 1);
       c.beginPath();
       c.moveTo(bx, by - 11);
@@ -1457,8 +1512,9 @@
       c.lineWidth = 2;
       c.stroke();
     }
-    dibujarHaz(dondeObjetivo(), x0, y0, x1, y1);
-    if (window.MAPA) dibujarHaz(MAPA.marca(), x0, y0, x1, y1, "255,217,138", "#FFD98A");
+    const enVista = (p) => (p && g ? vista(p[0], p[1]) : p);
+    dibujarHaz(enVista(dondeObjetivo()), x0, y0, x1, y1);
+    if (window.MAPA) dibujarHaz(enVista(MAPA.marca()), x0, y0, x1, y1, "255,217,138", "#FFD98A");
     // el aire del bosque: viñeta suave (se apaga en calidad baja)
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
@@ -1504,7 +1560,7 @@
       c.fillStyle = gr;
       c.beginPath();
       c.moveTo(cx, cy);
-      c.arc(cx, cy, r * 1.5, g.a - 0.4, g.a + 0.4);
+      c.arc(cx, cy, r * 1.5, VOL.angulo(g.a) - 0.4, VOL.angulo(g.a) + 0.4); // con la cámara girada, el lado de la vista
       c.closePath();
       c.fill();
       c.restore();
@@ -1516,11 +1572,14 @@
     const m = 46;
     for (const e of enemigos) {
       if (!e.activo || e.muerto || (e.estado !== "persigue" && e.estado !== "aviso" && e.estado !== "golpe")) continue;
-      if (e.x > x0 && e.x < x1 && e.y - 60 > y0 && e.y < y1) continue;
       if (Math.hypot(e.x - jug.x, e.y - jug.y) > 1600) continue;
-      const sx = (jug.x - x0) * esc,
-        sy = (jug.y - 40 - y0) * esc,
-        a = Math.atan2(e.y - jug.y, e.x - jug.x),
+      // en la vista (la cámara puede estar girada)
+      const [ex, ey] = J.vista(e.x, e.y),
+        [jx, jy] = J.vista(jug.x, jug.y);
+      if (ex > x0 && ex < x1 && ey - 60 > y0 && ey < y1) continue;
+      const sx = (jx - x0) * esc,
+        sy = (jy - 40 - y0) * esc,
+        a = Math.atan2(ey - jy, ex - jx),
         ux = Math.cos(a),
         uy = Math.sin(a);
       // hasta dónde llega el rayo desde Eromash antes de salir del margen
@@ -1582,15 +1641,62 @@
     silC = silCv.getContext("2d"),
     tapaCv = document.createElement("canvas"),
     tapaC = tapaCv.getContext("2d");
+  // Hasta dónde llega el dibujo de una cosa: a cada lado de su pie (ancho) y hacia arriba (alto). Lo de forma fija
+  // (árboles, rocas, tocones) se mide una vez por asset dibujándolo aparte (con tres semillas y sus variantes); lo que
+  // cambia según sus opciones o según hacia dónde mira la cámara (casas, cercas, gigantes, lo que tiene caras) usa su
+  // choque y su alto con margen. Se guarda en la cosa.
+  const medidaAsset = {};
+  function medirAsset(id) {
+    const L = 900,
+      pie = L * 0.8,
+      cv = document.createElement("canvas");
+    cv.width = cv.height = L;
+    const g = cv.getContext("2d");
+    for (const sem of [1, 2.7, 6.3]) for (const roble of [false, true]) ASSETS.dibujar(g, id, L / 2, pie, 0, { sem, roble });
+    const px = g.getImageData(0, 0, L, L).data;
+    let an = 0,
+      al = 0;
+    for (let y = 0; y < L; y += 2)
+      for (let x = 0; x < L; x += 2)
+        if (px[(y * L + x) * 4 + 3] > 8) {
+          an = Math.max(an, Math.abs(x - L / 2));
+          al = Math.max(al, pie - y);
+        }
+    return { ancho: an * 1.1 + 12, alto: al * 1.1 + 12 };
+  }
+  function bordes(o) {
+    if (!o.bordes) {
+      const k = (o.o.s || 1) * (o.o.esc || 1) * Math.max(o.o.ex || 1, o.o.ey || 1);
+      const a = ASSETS.LISTA[o.id],
+        fijo = a && !a.caras && !(o.choque && o.choque.w) && o.o.x2 == null && !o.o.ancho && !o.o.copa && (o.arbol || o.resto || (o.choque && o.choque.r));
+      if (fijo) {
+        const m = medidaAsset[o.id] || (medidaAsset[o.id] = medirAsset(o.id));
+        o.bordes = { ancho: m.ancho * k, alto: m.alto * k };
+      } else o.bordes = { ancho: Math.max(90 * k, o.choque && o.choque.w ? o.choque.w * 0.75 + 60 : 0, o.alto * 0.6, o.o.ancho || 0, o.o.copa ? o.o.copa[2] : 0, o.o.x2 != null ? Math.abs(o.o.x2 - o.x) + 60 : 0), alto: o.alto * 1.3 };
+    }
+    return o.bordes;
+  }
   function siluetaJugador(lista) {
     if (jug.muerto) return;
     const zj = jug.z || 0,
       clave = window.ALTURAS ? ALTURAS.orden() : jug.y;
-    const bx = jug.x - 100,
-      by = jug.y - zj - 150,
+    // todo en la vista (la cámara puede estar girada: d.dx, d.dy es lo que se corrió cada cosa)
+    const [jx, jy] = J.vista(jug.x, jug.y),
+      jdx = jx - jug.x,
+      jdy = jy - jug.y,
+      claveV = clave + jdy;
+    const bx = jx - 100,
+      by = jy - zj - 150,
       bw = 200,
       bh = 170;
-    const tapan = lista.filter((d) => d.cosa && d.y > clave && !d.cosa.o.piso && d.cosa.y - d.cosa.alto * 1.3 < jug.y - zj && Math.abs(d.cosa.x - jug.x) < 420);
+    // solo lo que de verdad se cruza con el encuadre de Eromash (redibujar todo lo de adelante era lo más caro del
+    // cuadro); los assets se dibujan siempre de frente a la cámara, así que sus bordes valen igual con la vista girada
+    const tapan = lista.filter((d) => {
+      if (!d.cosa || d.y <= claveV || d.cosa.o.piso) return false;
+      const vy = d.cosa.y + (d.dy || 0),
+        b = bordes(d.cosa);
+      return vy - d.cosa.alto * 1.3 < jy - zj && vy - b.alto < by + bh && Math.abs(d.cosa.x + (d.dx || 0) - jx) < bw / 2 + b.ancho;
+    });
     if (!tapan.length) return;
     const w = Math.ceil(bw * esc),
       h = Math.ceil(bh * esc);
@@ -1602,12 +1708,13 @@
     tapaC.setTransform(1, 0, 0, 1, 0, 0);
     tapaC.clearRect(0, 0, w, h);
     tapaC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
-    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x, d.cosa.y, J.t, d.cosa.o));
+    tapan.forEach((d) => ASSETS.dibujar(tapaC, d.cosa.id, d.cosa.x + (d.dx || 0), d.cosa.y + (d.dy || 0), J.t, d.cosa.o));
     // Eromash solo, sin su sombra
     silC.setTransform(1, 0, 0, 1, 0, 0);
     silC.globalCompositeOperation = "source-over";
     silC.clearRect(0, 0, w, h);
     silC.setTransform(esc, 0, 0, esc, -bx * esc, -by * esc);
+    silC.translate(jdx, jdy);
     c = silC;
     enSilueta = true;
     try {
@@ -1888,12 +1995,14 @@
       J.zonas = J.zonas.filter((z) => z.t < z.dur);
       alejarMeta = zoomJug;
       J.oscuro = 0; // un sistema puede oscurecer el lugar mientras lo pida cada cuadro (las raíces de Góinn)
+      J.ambZona = null; // y cambiar el aire del lugar: { tono: [r, g, b] de la oscuridad, osc, niebla, sombra } (las mazmorras)
       cadaSis("actualizar", dt);
       alejar += (alejarMeta - alejar) * Math.min(1, dt * 1.2);
       esc = escBase / alejar;
       amb = LUZ.ambiente(H.E.tiempo, sombraAqui() + (window.VIDA ? VIDA.nubes() : 0), dt);
       if (window.VIDA) VIDA.clima(amb);
       if (J.oscuro) amb = Object.assign({}, amb, { n: Math.max(amb.n, 0.8), o: 0 });
+      if (J.ambZona) amb = Object.assign({}, amb, J.ambZona);
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));

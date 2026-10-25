@@ -71,15 +71,9 @@
     [120, 480],
   ];
   const HB = 150; // de dónde nace el sombrero (el borde de arriba de la E ya girada)
-  const eBack = (p) => {
-    const c1 = 1.9,
-      c3 = c1 + 1;
-    return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
-  };
   const clamp = (v) => Math.max(0, Math.min(1, v));
   const seg = (t, a, b) => clamp((t - a) / (b - a));
   const ease = (p) => 1 - Math.pow(1 - p, 3);
-  const eIn = (p) => p * p * p;
   function rnd(seed) {
     let a = seed;
     return () => {

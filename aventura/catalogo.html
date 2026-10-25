@@ -13,12 +13,21 @@
   .grilla { display: flex; flex-wrap: wrap; gap: 12px; }
   .ficha { background: #1C1714; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
   .ficha canvas { display: block; }
+  #giroCat { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 14px; margin: 0 -24px 8px; background: #1C1714; }
+  #giroCat input { accent-color: #C8402D; }
+  #giroCat input[type=range] { width: min(320px, 50vw); }
+  #giroCat button { background: #5E130D; color: #F2ECEC; border: 0; padding: 6px 12px; font: inherit; cursor: pointer; }
   .ficha p { margin: 0; padding: 8px 12px 10px; font-size: 14px; }
 </style>
 </head>
 <body>
 <h1 data-i18n="cat.titulo"></h1>
 <p class="sub" data-i18n="cat.sub"></p>
+<div id="giroCat">
+  <label><span data-i18n="cat.camara"></span> <input id="giroCam" type="range" min="-180" max="180" step="5" value="0" /> <b id="giroCamV">0°</b></label>
+  <label><input id="giroSola" type="checkbox" /> <span data-i18n="cat.girar_sola"></span></label>
+  <button id="giroNorte" data-i18n="cat.norte"></button>
+</div>
 <div id="cat"></div>
 <script src="../juego/js/comun/i18n.js"></script>
 <script src="js/textos/aventura.js"></script>
@@ -26,6 +35,7 @@
 <script src="js/textos/secretos.js"></script>
 <script src="js/textos/piedras.js"></script>
 <script src="js/textos/interiores.js"></script>
+<script src="js/textos/zonas.js"></script>
 <script src="js/textos/capital.js"></script>
 <script src="js/textos/ciudad.js"></script>
 <script src="js/textos/norte.js"></script>
@@ -36,6 +46,7 @@
 <script src="js/textos/vida.js"></script>
 <script src="../juego/js/comun/vikingos.js"></script>
 <script src="js/comun/dibujo.js"></script>
+<script src="js/comun/volumen.js"></script>
 <script src="js/comun/futhark.js"></script>
 <script src="js/mundo/assets.js"></script>
 <script src="js/mundo/assets-eikholt.js"></script>
@@ -53,14 +64,17 @@
 <script src="js/mundo/assets-sotanos.js"></script>
 <script src="js/mundo/assets-casas.js"></script>
 <script src="js/mundo/assets-vida.js"></script>
+<script src="js/mundo/assets-zonas.js"></script>
 <script src="js/interfaz/iconos.js"></script>
 <script src="js/personajes/vikingo.js"></script>
 <script src="js/personajes/gente.js"></script>
 <script src="js/enemigos/criaturas.js"></script>
 <script src="js/enemigos/criaturas-bosque.js"></script>
+<script src="js/enemigos/dreki.js"></script>
 <script src="js/motor/poderes.js"></script>
 <script src="js/mundo/agregados.js"></script>
 <script src="js/mundo/texturas.js"></script>
+<script src="js/mundo/imagenes.js"></script>
 <script src="js/catalogo.js"></script>
 </body>
 </html>

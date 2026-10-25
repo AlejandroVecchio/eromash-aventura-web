@@ -1384,6 +1384,18 @@ window.ELDERVALD = (function () {
     if (!o.piso) BALDES[Math.min(BH - 1, Math.max(0, Math.floor(c.y / BALDE))) * BW + Math.min(BW - 1, Math.max(0, Math.floor(c.x / BALDE)))].push(c);
     return c;
   }
+  // lo pintado en el piso de un tipo (hongosRocio, helechos…), separado una vez: recorrer las miles de DECO en cada
+  // cuadro era caro. Se vuelve a separar si DECO cambia de largo (el editor saca o agrega).
+  let decoPorId = {},
+    decoLargo = -1;
+  function decoDe(id) {
+    if (DECO.length !== decoLargo) {
+      decoLargo = DECO.length;
+      decoPorId = {};
+      for (const d of DECO) (decoPorId[d.id] || (decoPorId[d.id] = [])).push(d);
+    }
+    return decoPorId[id] || [];
+  }
   // tipo de suelo en (x, y): 0 libre · 1 agua · 2 quebrada · 3 borde o muro
   const sueloEn = (x, y) => (x < 0 || y < 0 || x >= ANCHO || y >= ALTO ? 3 : suelo[Math.floor(y / CELDA) * GW + Math.floor(x / CELDA)]);
   function cercanas(x0, y0, x1, y1, fn) {
@@ -1643,6 +1655,6 @@ window.ELDERVALD = (function () {
 
   return {
     U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
-    m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, dibujarPiso, girarVista, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
+    m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, decoDe, dibujarPiso, girarVista, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();

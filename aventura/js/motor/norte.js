@@ -169,6 +169,8 @@ window.NORTE = (function () {
       if (!H.tiene("runa_paso") && visible(PU.b[0], PU.b[1])) {
         const baja = window.CALIDAD && CALIDAD.nivel === "baja";
         lista.push({
+          x: PU.b[0],
+          pie: PU.b[1],
           y: PU.b[1] + 40,
           f: () => {
             const n = baja ? 3 : 9;
@@ -207,6 +209,7 @@ window.NORTE = (function () {
         const a = Math.min(1, (rasponesHasta - J.t) / 2) * 0.8,
           [rx, ry] = P.raspones;
         lista.push({
+          x: rx,
           y: ry,
           f: () =>
             DIB.alfa(c, a, () => {
@@ -220,7 +223,7 @@ window.NORTE = (function () {
         for (const g of guardias) {
           const p = P[g.p];
           if (!p || !visible(p[0], p[1])) continue;
-          lista.push({ y: p[1], f: () => GENTE.dibujar(c, "guardia_paso", p[0], p[1], J.t, g.mira) });
+          lista.push({ x: p[0], y: p[1], f: () => GENTE.dibujar(c, "guardia_paso", p[0], p[1], J.t, g.mira) });
         }
     },
   };
