@@ -29,7 +29,6 @@ window.SAGA = (function () {
     ["alquimia", "oficios", "berkano", "#7BC86C", "ALQUIMIA", () => [Object.keys(ALQUIMIA.HIERBAS).filter((h) => ALQUIMIA.estado().cosechadas[h] || ALQUIMIA.estado().hierbas[h]).length, largo(ALQUIMIA.HIERBAS)]],
     ["cocina", "oficios", "jera", "#F5A524", "COCINA", () => [Math.min(10, COCINA.estado().platos), 10]],
     ["pesca", "oficios", "laguz", "#5A8CA8", "PESCA", () => [Object.keys(PESCA.PECES).filter((p) => PESCA.estado().libro[p] && PESCA.estado().libro[p].n > 0).length, largo(PESCA.PECES)]],
-    ["dados", "oficios", "perthro", "#E8E0D0", "DADOS", () => [cuenta(DADOS.estado().vencidos), largo(DADOS.RIVALES)]],
     ["tintes", "oficios", "wunjo", "#C8402D", "TINTES", () => [cuenta(TINTES.estado().tiene), largo(TINTES.LISTA)]],
     ["legendarios", "oficios", "sowilo", "#F5A524", "LEGENDARIOS", () => [cuenta(LEGENDARIOS.estado().aprendidos), largo(LEGENDARIOS.POD)]],
     ["conjuntos", "oficios", "gebo", "#9BE08C", "CONJUNTOS", () => [cuenta(CONJUNTOS.estado().completos), largo(CONJUNTOS.JUEGOS)]],

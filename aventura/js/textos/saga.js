@@ -49,8 +49,6 @@ I18N.textos({
   "sg.e_cocina_d": { es: "Carne y hierbas en un fogón encendido.", en: "Meat and herbs on a lit fire." },
   "sg.e_pesca": { es: "Peces", en: "Fish" },
   "sg.e_pesca_d": { es: "Sverri presta la caña: cada agua tiene sus peces.", en: "Sverri lends the rod: each water has its fish." },
-  "sg.e_dados": { es: "Dados de hueso", en: "Bone dice" },
-  "sg.e_dados_d": { es: "Bersi, Hallgerd y Ulf juegan por plata.", en: "Bersi, Hallgerd and Ulf play for silver." },
   "sg.e_tintes": { es: "Tintes del casco", en: "Helmet dyes" },
   "sg.e_tintes_d": { es: "La tina del Puesto tiñe con lo que traigas.", en: "The Outpost's vat dyes with what you bring." },
   "sg.e_legendarios": { es: "Poderes legendarios", en: "Legendary powers" },
