@@ -9,7 +9,12 @@
 // Al pasar al 66 % y al 33 % llama hasta tres hrímthursar (draugr de escarcha). Tras el pisotón y el grito queda
 // expuesto un momento (se agacha, runas en la cabeza) y recibe × 1,3. Si Eromash se aleja del anillo, vuelve a su
 // asiento y se cura. Vencerlo una vez paga plata, mucha experiencia, dos fragmentos y una pieza épica o mejor, y queda
-// entre los únicos del bestiario. Estado en E.extra.jotunn = { vencido, intentos }. Textos `jt.`.
+// entre los únicos del bestiario.
+// Por qué pelea: Hrímnir no se levanta por un mortal. Hasta que Eromash venza a sus tres hrímthursar guardianes (andan
+// por el norte, a unos 80 m del anillo, y el mapa los marca después de la primera visita), acercarse a su asiento le
+// cuesta una patada que lo saca volando del anillo (aviso en el piso, saltar la evita, no saca vida). Con los tres
+// caídos, el gigante sintió morir a los suyos y lo espera para vengarlos.
+// Estado en E.extra.jotunn = { vencido, intentos, guardianes: [0|1 ×3], visto }. Textos `jt.`.
 window.JOTUNN = (function () {
   "use strict";
   let A, J, jug, W, CB;
@@ -19,7 +24,9 @@ window.JOTUNN = (function () {
     ANILLO = 900, // radio del anillo de menhires
     SUELTA = 1900, // más lejos que esto del centro, vuelve a su asiento
     EXPUESTO = 1.4,
-    BONO_EXPUESTO = 1.3;
+    BONO_EXPUESTO = 1.3,
+    PATADA = 360, // más cerca que esto del gigante sin el desafío: la patada
+    DIST_GUARDIAN = 2400; // a cuánto del anillo andan sus tres guardianes
   COMBATE.TIPOS.jotunn = { vida: 2600, dano: 30, vel: 3 * M, alcance: 4 * M, aviso: 1.2, forma: "circulo", radio: 64, espera: 1.2, barra: 340, plata: 0, pesado: true, dibujo: "jotunnFigura" };
   // los ataques: forma, tiempo de aviso, daño y medidas
   const ATAQUES = {
@@ -35,7 +42,8 @@ window.JOTUNN = (function () {
     ["grito", "granizo", "barrido", "linea", "granizo", "pisoton"],
   ];
   const RGB = { barrido: [200, 64, 45], pisoton: [200, 64, 45], linea: [140, 210, 240], granizo: [184, 176, 168], grito: [200, 242, 244] };
-  const base = () => ({ vencido: false, intentos: 0 });
+  const base = () => ({ vencido: false, intentos: 0, guardianes: [0, 0, 0], visto: false });
+  const desafiado = () => st.guardianes.every(Boolean);
   let st = base();
   let jefe = null; // { e, centro, asiento, fase, rot, estado, t, avisos[], esb[], ultimos[] }
 
@@ -105,7 +113,32 @@ window.JOTUNN = (function () {
       A.enemigos.push(m);
       esb.push(m);
     }
-    jefe = { e, centro: [x, y], asiento, fase: 0, rot: 0, estado: "duerme", t: 0, avisos: [], esb, ultimos: [], llamo: 0 };
+    // los tres guardianes: hrímthursar más grandes que andan solos alrededor del anillo
+    const guard = [0, 1, 2].map((k) => {
+      let gx = x,
+        gy = y + DIST_GUARDIAN;
+      for (let i = 0; i < 24; i++) {
+        const a = (k / 3) * Math.PI * 2 + Math.PI / 2 + (i % 2 ? 1 : -1) * Math.floor(i / 2) * 0.12,
+          d = DIST_GUARDIAN + (i % 3) * 200,
+          px = x + Math.cos(a) * d,
+          py = y + Math.sin(a) * d * 0.8;
+        if (px > W.BORDE && px < W.ANCHO - W.BORDE && py > W.BORDE && W.sueloEn(px, py) === 0 && W.libre(px, py, 40)) {
+          gx = px;
+          gy = py;
+          break;
+        }
+      }
+      const g = CB.crear("draugr", gx, gy, { pal: 2 });
+      g.s = 1.3;
+      g.vida = g.d.vida * 2.2;
+      g.d = Object.assign({}, g.d, { vida: g.vida, dano: Math.round(g.d.dano * 1.3) });
+      g.guardianJotunn = k;
+      g.lugar = [gx, gy];
+      g.activo = true;
+      A.enemigos.push(g);
+      return g;
+    });
+    jefe = { e, centro: [x, y], asiento, fase: 0, rot: 0, estado: "duerme", t: 0, avisos: [], esb, ultimos: [], llamo: 0, guard, patada: null, vuelo: null };
   }
 
   // ---------- la pelea ----------
@@ -119,6 +152,71 @@ window.JOTUNN = (function () {
     HUD.aviso(t("jt.despierta_d"), "lugar", t("hd.unico_hrimnir"));
     if (window.SONIDO) SONIDO.tocar("rugido", { vol: 0.8, tono: 0.55, x: jefe.e.x, y: jefe.e.y });
     if (window.ANIMA) ANIMA.gesto("susto");
+  }
+  // ---------- el desafío: sin sus guardianes caídos, la patada ----------
+  function desdenar(dt) {
+    const e = jefe.e;
+    if (!st.visto) {
+      st.visto = true;
+      A.dialogoLibre([["hrimnir", "jt.desden_1"], ["hrimnir", "jt.desden_2"]], () => HUD.aviso(t("jt.pista_d"), "lugar", t("jt.pista")));
+      return;
+    }
+    const p = jefe.patada;
+    if (!p) {
+      if (Math.hypot(jug.x - e.x, jug.y - e.y) > PATADA || jefe.vuelo) return;
+      // el aviso exacto: una franja desde el gigante hacia Eromash
+      const dir = Math.atan2((jug.y - e.y) * 1.25, jug.x - e.x),
+        a = { forma: "franja", x: e.x, y: e.y, largo: 16 * M, ancho: 3.4 * M, dir, dur: 0.8, t: 0, rgb: [200, 242, 244], ataque: "patada", de: e };
+      jefe.patada = { t: 0, a };
+      J.avisos.push(a);
+      e.o.pose = "pisa";
+      if (window.SONIDO) SONIDO.tocar("grunido", { vol: 0.6, tono: 0.45, x: e.x, y: e.y });
+      return;
+    }
+    p.t += dt;
+    if (p.t < p.a.dur) return;
+    J.quitarAviso(p.a);
+    jefe.patada = null;
+    e.o.pose = "sentado";
+    if (!CB.contiene(p.a, jug.x, jug.y) || jug.salto > 0 || jug.inv > 0 || jug.muerto) return;
+    // vuela hasta afuera del anillo, del lado por donde vino
+    const ang = Math.atan2(jug.y - jefe.centro[1], jug.x - jefe.centro[0]);
+    let x1 = jug.x,
+      y1 = jug.y;
+    for (let d = ANILLO + 320; d < ANILLO + 1400; d += 120) {
+      x1 = jefe.centro[0] + Math.cos(ang) * d;
+      y1 = jefe.centro[1] + Math.sin(ang) * d * 0.8;
+      if (W.libre(x1, y1, 30) && W.sueloEn(x1, y1) === 0) break;
+    }
+    jefe.vuelo = { t: 0, dur: 0.7, x0: jug.x, y0: jug.y, x1, y1 };
+    jug.inv = 1;
+    J.sacudir(0.5);
+    HUD.aviso(t("jt.patada_d"), "#C8F2F4", t("jt.patada"));
+    if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.7, tono: 0.6, x: e.x, y: e.y });
+    if (window.ANIMA) ANIMA.gesto("susto");
+  }
+  function volar(dt) {
+    const v = jefe.vuelo;
+    v.t += dt;
+    const k = Math.min(1, v.t / v.dur),
+      q = 1 - (1 - k) * (1 - k);
+    jug.x = v.x0 + (v.x1 - v.x0) * q;
+    jug.y = v.y0 + (v.y1 - v.y0) * q;
+    jug.salto = Math.max(jug.salto, 0.05);
+    if (k >= 1) jefe.vuelo = null;
+  }
+  // los guardianes: cada uno que cae queda anotado; con los tres, el gigante espera
+  function mirarGuardianes() {
+    jefe.guard.forEach((g, k) => {
+      if (st.guardianes[k] || !(g.muerto > 0)) return;
+      st.guardianes[k] = 1;
+      const n = st.guardianes.filter(Boolean).length;
+      if (n < 3) HUD.aviso(t("jt.guardian_d", [n]), "#C8F2F4", t("jt.guardian"));
+      else {
+        HUD.aviso(t("jt.desafio_d"), "lugar", t("jt.desafio"));
+        if (window.SONIDO) SONIDO.tocar("rugido", { vol: 0.5, tono: 0.5 });
+      }
+    });
   }
   function dormir() {
     const e = jefe.e;
@@ -266,7 +364,14 @@ window.JOTUNN = (function () {
     alEmpezar(extra) {
       extra.jotunn = Object.assign(base(), extra.jotunn || {});
       st = extra.jotunn;
+      st.guardianes = (st.guardianes || [0, 0, 0]).slice(0, 3);
       dormir();
+      jefe.patada = null;
+      jefe.vuelo = null;
+      jefe.guard.forEach((g, k) => {
+        const fuera = !!st.guardianes[k] || st.vencido;
+        Object.assign(g, { muerto: fuera ? 1 : 0, activo: !fuera, vida: g.d.vida, x: g.lugar[0], y: g.lugar[1], estado: "quieto" });
+      });
       jefe.e.muerto = st.vencido ? 1 : 0;
       jefe.e.o.oculto = st.vencido;
       jefe.e.activo = !st.vencido;
@@ -281,9 +386,13 @@ window.JOTUNN = (function () {
       if (jefe.estado === "vencido") return;
       if (e.muerto > 0) return vencido();
       if (J.modo !== "juego") return;
+      mirarGuardianes();
+      if (jefe.vuelo) volar(dt);
       const dc = Math.hypot(jug.x - jefe.centro[0], jug.y - jefe.centro[1]);
       if (jefe.estado === "duerme") {
-        if (dc < DESPIERTA && !jug.muerto) despertar();
+        if (desafiado()) {
+          if (dc < DESPIERTA && !jug.muerto) despertar();
+        } else if ((dc < DESPIERTA || jefe.patada) && !jug.muerto) desdenar(dt);
         return;
       }
       // se fue o cayó Eromash: vuelve a su asiento
@@ -348,6 +457,7 @@ window.JOTUNN = (function () {
       J.jefeHud = { nombre: e.lider.nombre, frac: Math.max(0, e.vida / e.d.vida), ataduras: 0, ataque: jefe.estado === "aviso" ? t("jt.a_" + jefe.ataque) : "", accion: jefe.estado === "expuesto" ? t("jt.expuesto") : "" };
     },
     modDano(dano, e) {
+      if (jefe && e === jefe.e && jefe.estado === "duerme") return 0; // dormido no se lo lastima: hay que ganarse la pelea
       return jefe && e === jefe.e && jefe.estado === "expuesto" ? dano * BONO_EXPUESTO : dano;
     },
     luces(dar) {
@@ -355,12 +465,17 @@ window.JOTUNN = (function () {
       dar({ x: jefe.e.x, y: jefe.e.y - 230, r: 360, col: "#C8F2F4", f: jefe.estado === "duerme" ? 0.25 : 0.55 });
     },
     marcasMapa() {
-      return jefe ? [{ tipo: "jotunn", x: jefe.centro[0], y: jefe.centro[1], op: { nombre: t("hd.unico_hrimnir"), apagado: st.vencido } }] : [];
+      if (!jefe) return [];
+      const m = [{ tipo: "jotunn", x: jefe.centro[0], y: jefe.centro[1], op: { nombre: t("hd.unico_hrimnir"), apagado: st.vencido } }];
+      // sus guardianes, después de la primera visita
+      if (st.visto && !st.vencido) jefe.guard.forEach((g, k) => !st.guardianes[k] && m.push({ tipo: "jotunn", x: g.lugar[0], y: g.lugar[1], op: { nombre: t("jt.guardian_nombre"), cat: "jotunn" } }));
+      return m;
     },
     diario() {
-      return st.intentos ? `<div class="diario-resumen"><p><b>${t("hd.unico_hrimnir")}</b> ${st.vencido ? t("jt.diario_vencido") : t("jt.diario", [st.intentos])}</p></div>` : "";
+      if (st.intentos) return `<div class="diario-resumen"><p><b>${t("hd.unico_hrimnir")}</b> ${st.vencido ? t("jt.diario_vencido") : t("jt.diario", [st.intentos])}</p></div>`;
+      return st.visto ? `<div class="diario-resumen"><p><b>${t("hd.unico_hrimnir")}</b> ${t("jt.diario_guardianes", [st.guardianes.filter(Boolean).length])}</p></div>` : "";
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, jefe: () => jefe, ATAQUES, ROTACION, proximo, atacar, despertar, dormir, ANILLO };
+  return { sistema, estado: () => st, jefe: () => jefe, ATAQUES, ROTACION, proximo, atacar, despertar, dormir, desafiado, ANILLO, PATADA };
 })();
