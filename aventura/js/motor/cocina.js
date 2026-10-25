@@ -68,7 +68,7 @@ window.COCINA = (function () {
         ok = alcanza(P.pide);
       return { texto: t("co.p_" + id) + (ok ? "" : " ✗"), sub: t("co.p_" + id + "_d") + " · " + pideTexto(P.pide), fn: () => (ok ? (A.cerrarMenu(), empezar(id)) : (HUD.aviso(t("co.faltan")), menuFogata())) };
     });
-    // lo que suman otros sistemas al menú del fuego: botonesFogata(f) → [{ texto, sub, fn }] (el descanso)
+    // lo que suman otros sistemas al menú del fuego: botonesFogata(f) → [{ texto, sub, fn }]
     const f = fogataCerca();
     if (f) window.SISTEMAS.forEach((s0) => s0.botonesFogata && bot.push(...s0.botonesFogata(f)));
     bot.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
