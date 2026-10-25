@@ -196,11 +196,6 @@ window.ICONOS = (function () {
       linea(c, [x - 4 * u, y - 4 * u, x + 4 * u, y + 4 * u], CLARO, 1.2 * u);
       linea(c, [x + 4 * u, y - 4 * u, x - 4 * u, y + 4 * u], CLARO, 1.2 * u);
     },
-    // una némesis (nemesis.js): la corona roja de tres puntas
-    nemesis(c, x, y, u, col) {
-      pol(c, [x - 5.5 * u, y + 4 * u, x - 5.5 * u, y - 3 * u, x - 2.6 * u, y, x, y - 5.5 * u, x + 2.6 * u, y, x + 5.5 * u, y - 3 * u, x + 5.5 * u, y + 4 * u], col);
-      pol(c, [x, y - 5.5 * u, x + 2.6 * u, y, x + 5.5 * u, y - 3 * u, x + 5.5 * u, y + 4 * u, x, y + 4 * u], "#FF8D71");
-    },
     // una guarida de los Sin Linde (bandidos.js): la linde partida, un rombo cortado por una raya
     bandidos(c, x, y, u, col) {
       pol(c, [x, y - 6 * u, x + 4.8 * u, y, x, y + 6 * u, x - 4.8 * u, y], col);
