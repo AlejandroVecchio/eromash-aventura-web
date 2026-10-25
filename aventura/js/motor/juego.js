@@ -408,7 +408,7 @@
     for (const r of REVELA)
       if (r.cond() && dist(jug, r.p) <= r.radio) {
         algo = true;
-        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0 }, m)));
+        r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0, dura: 33 }, m)));
         setTimeout(r.al, 450);
       }
     SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
@@ -613,7 +613,7 @@
   function columnaRunica(x, y) {
     if (window.SONIDO) SONIDO.runa(x, y);
     J.ondas.push({ tipo: "pulso", x, y, t: 0 });
-    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0 });
+    J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0, dura: 2.4 }); // breve: no es una marca de la Lente
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < 26; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 50, y: y - Math.random() * 30, vx: (Math.random() - 0.5) * 30, vy: -260 - Math.random() * 320, t: 0.5 + Math.random() * 0.4, c: Math.random() < 0.5 ? "#73D5DB" : "#C8F2F4", s: 4 + Math.random() * 5, g: -0.1 });
   }
@@ -1203,7 +1203,10 @@
     if (J.modo === "juego" && !n.hablando) dibujarSenal(n);
   }
   function dibujarMarca(m) {
-    const a = Math.min(1, m.t * 2) * (m.t > 30 ? Math.max(0, 1 - (m.t - 30) / 3) : 1);
+    // las de la Lente (REVELA) duran 33 s; los anillos de un efecto (columna rúnica, viaje, cofre, piedra) se apagan solos en un par de segundos
+    const dura = m.dura || 2.4,
+      fin = Math.min(3, dura / 3);
+    const a = Math.min(1, m.t * 2) * (m.t > dura - fin ? Math.max(0, (dura - m.t) / fin) : 1);
     if (a <= 0) return;
     DIB.alfa(c, a, () => {
       const pulso = 0.75 + Math.sin(J.t * 3 + m.x) * 0.25;
@@ -2002,7 +2005,7 @@
       CB.actualizarCiervo(J, ciervo, dt);
       J.avisos.forEach((a) => (a.t += dt));
       J.marcas.forEach((m) => (m.t += dt));
-      J.marcas = J.marcas.filter((m) => m.t < 33);
+      J.marcas = J.marcas.filter((m) => m.t < (m.dura || 2.4));
       J.ondas.forEach((o) => (o.t += dt));
       J.ondas = J.ondas.filter((o) => o.t < (o.tipo === "pulso" ? 0.8 : 8));
       J.fx.forEach((f) => {
