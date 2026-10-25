@@ -291,16 +291,16 @@
   }
 
   Object.assign(ASSETS.LISTA, {
-    fresnoEcos: { f: fresnoEcos, alto: 520, choque: { r: 70 }, grupo: "vida", luz: true },
-    anilloAlfar: { f: anilloAlfar, alto: 30, choque: null, grupo: "vida", luz: true },
-    pozaEstrellas: { f: pozaEstrellas, alto: 60, choque: { w: 210, h: 76 }, grupo: "vida", luz: true },
-    floresDespertar: { f: floresDespertar, alto: 20, choque: null, grupo: "vida", piso: true },
-    liebre: { f: liebre, alto: 30, choque: null, grupo: "vida" },
-    pinzon: { f: pinzon, alto: 12, choque: null, grupo: "vida" },
-    mariposa: { f: mariposa, alto: 10, choque: null, grupo: "vida" },
-    libelula: { f: libelula, alto: 10, choque: null, grupo: "vida" },
-    polilla: { f: polilla, alto: 8, choque: null, grupo: "vida" },
-    pez: { f: pez, alto: 10, choque: null, grupo: "vida" },
+    fresnoEcos: { f: fresnoEcos, figura: true, alto: 520, choque: { r: 70 }, grupo: "vida", luz: true },
+    anilloAlfar: { f: anilloAlfar, figura: true, alto: 30, choque: null, grupo: "vida", luz: true },
+    pozaEstrellas: { f: pozaEstrellas, figura: true, alto: 60, choque: { w: 210, h: 76 }, grupo: "vida", luz: true },
+    floresDespertar: { f: floresDespertar, figura: true, alto: 20, choque: null, grupo: "vida", piso: true },
+    liebre: { f: liebre, fv: ASSETS.ladoV(liebre), vol: true, alto: 30, choque: null, grupo: "vida" },
+    pinzon: { f: pinzon, fv: ASSETS.ladoV(pinzon), vol: true, alto: 12, choque: null, grupo: "vida" },
+    mariposa: { f: mariposa, figura: true, alto: 10, choque: null, grupo: "vida" },
+    libelula: { f: libelula, figura: true, alto: 10, choque: null, grupo: "vida" },
+    polilla: { f: polilla, figura: true, alto: 8, choque: null, grupo: "vida" },
+    pez: { f: pez, fv: ASSETS.ladoV(pez), vol: true, alto: 10, choque: null, grupo: "vida" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     fresnoEcos: { brillo: 0.8 },

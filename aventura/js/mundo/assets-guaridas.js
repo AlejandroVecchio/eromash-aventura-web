@@ -103,7 +103,7 @@
   Object.assign(ASSETS.LISTA, {
     puertaPiedra: { f: puertaPiedra, alto: 380, grupo: "interiores" },
     bocaCueva: { f: bocaCueva, alto: 300, choque: { w: 520, h: 50 }, grupo: "guaridas" },
-    nidoZarzal: { f: nidoZarzal, alto: 20, grupo: "guaridas", piso: true },
+    nidoZarzal: { f: nidoZarzal, fv: ASSETS.calcoV(nidoZarzal), vol: true, alto: 20, grupo: "guaridas", piso: true },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { puertaPiedra: { luces: 5, s: 0.6 }, bocaCueva: { s: 0.6 }, nidoZarzal: { s: 0.6 } });
 })();

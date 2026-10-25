@@ -1558,7 +1558,7 @@
     murallaDoble: { f: murallaDoble, fv: murallaDobleV, vol: true, alto: 270, choque: null, grupo: "capital" },
     escaleraMuralla: { f: escaleraMuralla, fv: escaleraMurallaV, vol: true, alto: 260, choque: null, grupo: "capital" },
     piedraAncla: { f: piedraAncla, fv: piedraAnclaV, vol: true, alto: 230, choque: { r: 34 }, grupo: "capital", luz: true },
-    runaCupula: { f: runaCupula, alto: 160, choque: null, grupo: "capital", luz: true },
+    runaCupula: { f: runaCupula, figura: true, alto: 160, choque: null, grupo: "capital", luz: true },
     puertaNorte: { f: puertaNorte, fv: puertaNorteV, vol: true, alto: 290, choque: null, grupo: "capital", luz: true },
     estandarteCiervo: { f: estandarteCiervo, fv: estandarteCiervoV, vol: true, alto: 240, choque: { r: 8 }, grupo: "capital" },
     campana: { f: campana, fv: campanaV, vol: true, alto: 200, choque: { r: 30 }, grupo: "capital" },

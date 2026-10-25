@@ -164,14 +164,155 @@
     if (o.luz) halo(c, x, y - 60 * s, 110 * s, "#FF8D71", 0.35 + 0.1 * Math.sin(t * 3));
   }
 
+  // ======================================================================
+  //  ARMADAS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  const TP = [PIEDRA[2], PIEDRA[1], PIEDRA_L],
+    MAD = ["#2A1E14", "#3A2A1C", "#55402A"];
+  // la boca de la cripta: el montículo, el hueco negro con los escalones que bajan, las jambas, el dintel con runas y
+  // las antorchas apagadas
+  function bocaMazmorraV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr);
+    VOL.sombra(c, pr, 10, -40, 230, 150, 0.5);
+    S.poner(0, -70, () => {
+      VOL.cono(c, pr, 0, -80, 230, 110, 0, 150, ["#2E3C24", "#3A4A2E", "#4E6238"], { n: 12, sinTapa: true });
+      VOL.cono(c, pr, 0, -80, 110, 40, 150, 196, ["#2E3C24", "#3A4A2E", "#4E6238"], { n: 12, tapa: "#3A4A2E" });
+    });
+    S.poner(0, 60, () => {
+      VOL.plano(c, pr, -70, 70, 50, 0, 150, "#0A0807", (cc, l) => {
+        for (let k = 0; k < 4; k++) {
+          const yy = -14 - k * 20,
+            w = 64 - k * 8;
+          P(cc, [l / 2 - w, yy + 10, l / 2 + w, yy + 10, l / 2 + w - 4, yy, l / 2 - w + 4, yy], k % 2 ? "#2A2622" : "#332E2A");
+        }
+      });
+      if (o.luz) VOL.halo(c, pr, 0, 50, 70, 90, "#9A6BD8", 0.3 + 0.1 * Math.sin(t * 2));
+      [-88, 88].forEach((u) => VOL.cubo(c, pr, u, 50, 42, 36, 170, TP));
+      VOL.caja(c, pr, -124, 32, 166, 124, 68, 206, TP, {
+        frente: (cc, l, h) => {
+          if (window.FUTHARK) ["hagalaz", o.runa || "perthro", "naudiz"].forEach((rn, k) => FUTHARK.dibujar(cc, rn, l / 2 + (k - 1) * 60, -6, 24, o.luz ? "#9A6BD8" : "#2A2622", 3));
+        },
+      });
+    });
+    [-150, 150].forEach((u) =>
+      S.poner(u, 50, () => {
+        VOL.cubo(c, pr, u, 50, 8, 8, 110, MAD);
+        VOL.cono(c, pr, u, 50, 7, 10, 110, 128, ["#1A1614", "#2A2420", "#3A3430"], { n: 6 });
+      }),
+    );
+    S.dibujar();
+  }
+  // la barca de las islas: el casco de tablas trincadas (más angosto abajo), la proa alta con la cabeza tallada, la
+  // popa, el remo cruzado, el poste y el farol, meciéndose en el agua
+  function barcaVikingaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      mece = Math.sin(t * 1.4 + x) * 3;
+    VOL.enPiso(c, pr, (cc) => alfa(cc, 0.4, () => E(cc, 0, 0, 180, 60, "#1E3A48")));
+    const arriba = [[-150, 0], [-110, -34], [0, -42], [110, -34], [140, 0], [110, 34], [0, 42], [-110, 34]],
+      abajo = arriba.map(([u, w]) => [u * 0.8, w * 0.45]),
+      z0 = mece,
+      z1 = 40 + mece,
+      CA = ["#40220F", "#55301C", "#6E4228"],
+      caras = [];
+    for (let i = 0; i < arriba.length; i++) {
+      const j = (i + 1) % arriba.length,
+        q = VOL.afuera([[abajo[i][0], abajo[i][1], z0], [abajo[j][0], abajo[j][1], z0], [arriba[j][0], arriba[j][1], z1], [arriba[i][0], arriba[i][1], z1]], [(arriba[i][0] + arriba[j][0]) / 2, (arriba[i][1] + arriba[j][1]) / 2, 0]);
+      caras.push(q);
+    }
+    // adentro primero (lo que se ve por encima de la borda), después las tablas de afuera
+    VOL.enPiso(c, pr, (cc) => P(cc, arriba.flat().map((v, k) => (k % 2 ? v * 0.9 : v * 0.95)), "#2A140A"), z1 - 2);
+    caras.sort((a, b) => pr.hondo(a[0][0] + a[2][0], a[0][1] + a[2][1]) - pr.hondo(b[0][0] + b[2][0], b[0][1] + b[2][1]));
+    caras.forEach((q) => VOL.cara(c, pr, q, CA, (cc, nx) => {
+      cc.strokeStyle = "#2A140A";
+      cc.lineWidth = 0.04;
+      [0.33, 0.66].forEach((f) => {
+        cc.beginPath();
+        cc.moveTo(0, -f);
+        cc.lineTo(1, -f);
+        cc.stroke();
+      });
+      void nx;
+    }));
+    VOL.palo(c, pr, 130, 0, z1 - 4, 162, 0, z1 + 52, 9, "#661610");
+    VOL.palo(c, pr, 162, 0, z1 + 52, 182, 0, z1 + 58, 7, "#661610");
+    const ojo = pr(176, 0, z1 + 56);
+    E(c, ojo[0], ojo[1], 3 * pr.s, 3 * pr.s, "#FFD98A");
+    VOL.palo(c, pr, -140, 0, z1 - 4, -164, 0, z1 + 36, 8, "#4A0E08");
+    VOL.palo(c, pr, -40, -10, z1 + 6, 90, 50, z0, 6, "#8A6A4A");
+    VOL.cubo(c, pr, -190, -50, 14, 14, 130, MAD);
+    VOL.cubo(c, pr, -190, -50, 14, 14, 26, ["#1A1614", "#2A2420", "#2A2420"], { frente: (cc, l, h) => R(cc, 2, -h + 4, l - 4, h - 8, "#FFD98A"), der: (cc, l, h) => R(cc, 2, -h + 4, l - 4, h - 8, "#FFD98A"), izq: (cc, l, h) => R(cc, 2, -h + 4, l - 4, h - 8, "#FFD98A"), atras: (cc, l, h) => R(cc, 2, -h + 4, l - 4, h - 8, "#FFD98A") }, 120);
+    VOL.halo(c, pr, -190, -50, 132, 50, "#FFD98A", 0.6 + Math.sin(t * 7) * 0.05);
+  }
+  // la antorcha de pared: el soporte contra el muro, el mango con brea que sale hacia adelante y la llama
+  function antorchaParedV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.caja(c, pr, -14, -4, -6, 14, 4, 2, ["#1A1614", "#2A2420", "#3A3430"]);
+    VOL.palo(c, pr, 0, 0, 0, 0, 8, 46, 7, "#4A3020");
+    VOL.cono(c, pr, 0, 8, 8, 10, 46, 64, ["#141210", "#1E1A18", "#2A2420"], { n: 6 });
+    if (!o.encendida) return;
+    const q = pr(0, 8, 62),
+      s = pr.s,
+      v = Math.sin(t * 11 + x) * 3 * s;
+    VOL.halo(c, pr, 0, 8, 76, 70, "#FF8D71", 0.75);
+    P(c, [q[0] + v, q[1] - 42 * s, q[0] - 11 * s, q[1] - 8 * s, q[0], q[1] + 2 * s, q[0] + 11 * s, q[1] - 8 * s], "#FF8D71");
+    P(c, [q[0] + v * 0.6, q[1] - 30 * s, q[0] - 6 * s, q[1] - 6 * s, q[0] + 6 * s, q[1] - 6 * s], "#FFD98A");
+  }
+  // la escalera de la cripta: seis peldaños que suben hacia atrás y la luz del día que cae sobre ellos
+  function escaleraMazmorraV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    for (let k = 5; k >= 0; k--) {
+      const w = 100 - k * 8;
+      VOL.caja(c, pr, -w, -k * 28 - 28, 0, w, -k * 28, (k + 1) * 32, [PIEDRA[2], k % 2 ? PIEDRA[0] : PIEDRA[1], PIEDRA_L]);
+    }
+    const a = pr(-60, -168, 192),
+      b = pr(60, -168, 192),
+      c2 = pr(110, 10, 0),
+      d = pr(-110, 10, 0);
+    alfa(c, 0.18, () => P(c, [a[0], a[1], b[0], b[1], c2[0], c2[1], d[0], d[1]], "#FFD98A"));
+  }
+  // el pilar de la cripta: el zócalo ancho, la columna con hiladas y la runa adelante, y el capitel
+  function pilarCriptaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      h = 300,
+      hiladas = (runa) => (cc, l, hh) => {
+        for (let k = 1; k < 5; k++) L(cc, 0, -k * 54, l, -k * 54, PIEDRA_S, 2);
+        if (runa && window.FUTHARK) FUTHARK.dibujar(cc, o.runa || "eihwaz", l / 2, -120 + 15, 30, "#9A6BD8", 3);
+      };
+    VOL.sombra(c, pr, 6, 0, 72, 50, 0.5);
+    VOL.caja(c, pr, -64, -50, 0, 64, 50, 30, TP);
+    VOL.caja(c, pr, -42, -32, 30, 42, 32, h, [PIEDRA[2], PIEDRA[0], PIEDRA[3]], { frente: hiladas(true), atras: hiladas(), izq: hiladas(), der: hiladas(), sinTapa: true });
+    VOL.caja(c, pr, -56, -42, h, 56, 42, h + 24, TP);
+  }
+  // la boca de la cueva: las rocas grandes apiladas, el hueco negro al pie y el aire frío que sale
+  function bocaCuevaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr);
+    VOL.sombra(c, pr, 10, -40, 210, 120, 0.5);
+    [[-150, -10, 90, 0, 2], [140, -10, 96, 0, 3], [-70, -60, 110, 70, 0], [70, -60, 120, 70, 1], [0, -90, 90, 180, 2], [0, -110, 120, 0, 0]].forEach(([u, w, r, z, k], i) =>
+      S.poner(u, w, () => {
+        const pl = VOL.redonda(u, w, r, 7, i * 0.7, r * 0.7);
+        VOL.prisma(c, pr, pl, z, z + r * 0.9, [PIEDRA[2], PIEDRA[k], PIEDRA_L], { tapa: PIEDRA_L });
+      }, z),
+    );
+    S.poner(0, 40, () => {
+      VOL.plano(c, pr, -95, 95, 0, 0, 150, null, (cc, l, h) => {
+        P(cc, [l / 2 - 90, 4, l / 2 - 100, -90, l / 2 - 50, -150, l / 2 + 50, -150, l / 2 + 96, -90, l / 2 + 90, 4], "#0A0807");
+        alfa(cc, 0.3 + 0.1 * Math.sin(t * 1.5), () => E(cc, l / 2, -60, 50, 60, "#2A3A5A"));
+      }, () => {});
+      if (o.luz) VOL.halo(c, pr, 0, 0, 60, 110, "#FF8D71", 0.35 + 0.1 * Math.sin(t * 3));
+    }, 300);
+    S.dibujar();
+  }
+
   Object.assign(ASSETS.LISTA, {
-    bocaMazmorra: { f: bocaMazmorra, alto: 220, choque: { w: 300, h: 40 }, grupo: "zonas" },
-    barcaVikinga: { f: barcaVikinga, alto: 150, choque: null, grupo: "zonas" },
-    antorchaPared: { f: antorchaPared, alto: 110, choque: null, grupo: "zonas" },
-    escaleraMazmorra: { f: escaleraMazmorra, alto: 220, choque: null, grupo: "zonas" },
-    pilarCripta: { f: pilarCripta, alto: 330, choque: { r: 60 }, grupo: "zonas" },
-    volcan: { f: volcan, alto: 1200, choque: { r: 520 }, grupo: "zonas" },
-    bocaCueva: { f: bocaCueva, alto: 330, choque: { w: 260, h: 40 }, grupo: "zonas" },
+    bocaMazmorra: { f: bocaMazmorra, fv: bocaMazmorraV, vol: true, alto: 220, choque: { w: 300, h: 40 }, grupo: "zonas" },
+    barcaVikinga: { f: barcaVikinga, fv: barcaVikingaV, vol: true, alto: 150, choque: null, grupo: "zonas" },
+    antorchaPared: { f: antorchaPared, fv: antorchaParedV, vol: true, alto: 110, choque: null, grupo: "zonas" },
+    escaleraMazmorra: { f: escaleraMazmorra, fv: escaleraMazmorraV, vol: true, alto: 220, choque: null, grupo: "zonas" },
+    pilarCripta: { f: pilarCripta, fv: pilarCriptaV, vol: true, alto: 330, choque: { r: 60 }, grupo: "zonas" },
+    volcan: { f: volcan, figura: true, alto: 1200, choque: { r: 520 }, grupo: "zonas" },
+    bocaCueva: { f: bocaCueva, fv: bocaCuevaV, vol: true, alto: 330, choque: { w: 260, h: 40 }, grupo: "zonas" },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { antorchaPared: { encendida: true }, bocaMazmorra: { luz: true } });
 })();
