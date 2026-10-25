@@ -18,6 +18,18 @@ window.ATRIBUTOS = (function () {
     esp: { runa: "ansuz", col: "#73D5DB" },
   };
   const CLAVES = Object.keys(DEF);
+  // ---------- los umbrales ----------
+  // Al llegar a 20, 30, 40 y 50 en un atributo se suma algo de más, para que juntar puntos en uno se sienta: la Fuerza
+  // pega más fuerte, la Destreza más seguido, el Vigor aguanta más y el Espíritu pesa más en las runas. Se cuentan sobre
+  // el valor con todo (base, repartido y lo que suma el equipo). Textos at.u_<atributo>_<umbral>.
+  const UMBRALES = [20, 30, 40, 50];
+  const UMBRAL = {
+    fue: [(s) => (s.dano *= 1.05), (s) => (s.critMult += 0.1), (s) => ((s.armadura += 10), (s.dano *= 1.05)), (s) => (s.dano *= 1.1)],
+    des: [(s) => (s.crit += 0.02), (s) => (s.velAtq *= 1.05), (s) => (s.crit += 0.03), (s) => ((s.velAtq *= 1.05), (s.velMov *= 1.05))],
+    vig: [(s) => (s.vida += 20), (s) => (s.estamina += 15), (s) => ((s.vida += 30), (s.regen *= 1.1)), (s) => (s.vida *= 1.1)],
+    esp: [(s) => (s.runico *= 1.05), (s) => (s.regenRunica *= 1.1), (s) => (s.runico *= 1.08), (s) => (s.runico *= 1.15)],
+  };
+  const alcanzados = (v) => UMBRALES.filter((u) => v >= u).length;
   const base = () => ({ fue: 0, des: 0, vig: 0, esp: 0, extra: 0, reacomodos: 0 });
   let st = base(),
     borrador = { fue: 0, des: 0, vig: 0, esp: 0 };
@@ -32,6 +44,7 @@ window.ATRIBUTOS = (function () {
     s.regen *= 1 + 0.01 * p.vig;
     s.runico *= 1 + 0.02 * p.esp;
     s.regenRunica *= 1 + 0.015 * p.esp;
+    CLAVES.forEach((k) => UMBRAL[k].slice(0, alcanzados(BASE + p[k])).forEach((f) => f(s)));
   }
   const puestos = (b) => CLAVES.reduce((n, k) => n + st[k] + (b ? borrador[k] : 0), 0);
   const total = () => POR_NIVEL * ((window.RPG ? RPG.nivel() : 1) - 1) + (st.extra || 0);
@@ -104,6 +117,13 @@ window.ATRIBUTOS = (function () {
       txt.innerHTML = `<b></b><small></small>`;
       txt.querySelector("b").textContent = t("at." + k);
       txt.querySelector("small").textContent = t("at." + k + "_d");
+      // los umbrales: rombos llenos los alcanzados y el próximo en palabras
+      const v = valor(k, true),
+        n = alcanzados(v),
+        um = document.createElement("small");
+      um.className = "at-umbral";
+      um.textContent = UMBRALES.map((u, i) => (i < n ? "◆" : "◇")).join("") + " " + (n < UMBRALES.length ? t("at.umbral_prox", [UMBRALES[n], t("at.u_" + k + "_" + UMBRALES[n])]) : t("at.umbral_todos"));
+      txt.appendChild(um);
       fila.appendChild(txt);
       const menos = document.createElement("button");
       menos.type = "button";
@@ -150,6 +170,14 @@ window.ATRIBUTOS = (function () {
   }
   function confirmar() {
     if (!CLAVES.some((k) => borrador[k])) return;
+    // los umbrales que se cruzan con lo confirmado se anuncian
+    const nuevos = [];
+    CLAVES.forEach((k) => {
+      const a = alcanzados(valor(k, false)),
+        b = alcanzados(valor(k, true));
+      for (let i = a; i < b; i++) nuevos.push(t("at.umbral_logrado", [t("at." + k), UMBRALES[i], t("at.u_" + k + "_" + UMBRALES[i])]));
+    });
+    J.retrasar(0.5, () => nuevos.forEach((n) => HUD.aviso(n, "#F5A524")));
     CLAVES.forEach((k) => {
       st[k] += borrador[k];
       borrador[k] = 0;
@@ -208,5 +236,5 @@ window.ATRIBUTOS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { estado: () => st, libres: () => libres(false), valor: (k) => valor(k, false), sumarPuntos: (n) => ((st.extra = (st.extra || 0) + n), INVENTARIO.repintar()), bono: (f) => bonos.push(f), BASE, POR_NIVEL };
+  return { UMBRALES, alcanzados, estado: () => st, libres: () => libres(false), valor: (k) => valor(k, false), sumarPuntos: (n) => ((st.extra = (st.extra || 0) + n), INVENTARIO.repintar()), bono: (f) => bonos.push(f), BASE, POR_NIVEL };
 })();

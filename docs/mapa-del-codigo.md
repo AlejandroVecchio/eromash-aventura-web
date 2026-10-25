@@ -222,7 +222,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
-  - la pestaña
+  - los umbrales · la pestaña
 - **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)
   - dónde: cerca de los caminos, lejos de los pueblos, de los grupos y entre ellas · la flecha de los arqueros: vuela en arco al final del aviso · el sistema
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
