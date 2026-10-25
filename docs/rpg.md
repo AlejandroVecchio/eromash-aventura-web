@@ -504,6 +504,21 @@ Como el sistema Némesis del Shadow of Mordor.
 - Estado en `E.extra.nemesis = { vivas: [{ id, g, m, tipo, nombre, ep, rango, rasgo, x, y, muertes }], vengadas, cuenta }`;
   `g` y `m` son el índice del grupo y del miembro, que salen iguales en cada partida.
 
+## Encuentros en el camino (`motor/encuentros.js`, `ENCUENTROS`; textos `ec.` y `av.nombre_brandr|ragna|hallvard|sigrun|toki`)
+
+Como los encuentros al azar del Skyrim y del Witcher.
+- Cuándo: andando por un camino (`jug.enCamino`), sin pelea (`jug.pelea`), fuera de los pueblos (lugar + 900) y sin
+  otro encuentro. Lo andado suma (despacio 100, al paso 175, corriendo 295 por segundo); cada `CADA` = 2600 se tira con
+  `CHANCE` = 45 %. Aparece unos 720 más adelante de hacia donde mira, al costado del camino (nunca encima); a más de
+  `LEJOS` = 2600 se va. Los árboles que lo tapan se apartan mientras está.
+- Salen en rueda (`st.n`), así no se repiten seguidos: buhonero, herida, peregrino, escalda, carrero.
+- Brandr vende una pieza envuelta (r ≥ 1, hallazgo × 1,6) por `ENVUELTA` = 45. Ragna toma una carga del frasco y paga
+  30 de plata, 80 de experiencia y destapa en el mapa el cofre con candado sin abrir más cercano. Hallvard destapa el
+  hörgr no encontrado más cercano (40 de experiencia). Sigrun da Inspirado `INSPIRA` = 240 s: daño y experiencia × 1,1
+  (`RPG.aporte`, en `efectosHud`). Toki: al acercarse, tres lobos (marcados `e.encuentro`); si caen todos paga 40 de
+  plata y una pieza r ≥ 1.
+- Estado en `E.extra.encuentros = { n, hechos: { tipo: n }, inspirado }`. `aparecer(tipo)` lo fuerza (pruebas y nota).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

@@ -5,28 +5,47 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 33,
-    titulo: { es: "Némesis: la que te vence no te olvida", en: "Nemesis: the one that beats you won't forget" },
+    pr: 34,
+    titulo: { es: "Encuentros en el camino", en: "Encounters on the road" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: vencerla da mucha experiencia", en: "levels: defeating it gives lots of experience" },
-      { pr: 3, es: "botín: deja una pieza rara o mejor", en: "loot: it drops a rare or better item" },
+      { pr: 1, es: "niveles: la experiencia que dan y la inspiración de la escalda", en: "levels: the experience they give and the skald's inspiration" },
+      { pr: 3, es: "botín: la pieza envuelta del buhonero y la paga de Toki", en: "loot: the pedlar's wrapped piece and Toki's reward" },
+      { pr: 20, es: "frasco: Ragna pide una carga", en: "flask: Ragna asks for a charge" },
+      { pr: 30, es: "santuarios: el peregrino señala un hörgr", en: "shrines: the pilgrim points to a hörgr" },
+      { pr: 32, es: "cerraduras: Ragna marca un cofre con candado", en: "locks: Ragna marks a locked chest" },
     ],
     mirar: [
-      { es: "Dejate matar por una criatura de un grupo del bosque: se gana un nombre y un apodo («Ulfr Rompeyelmos»), un rasgo (piel de hierro, rabiosa, veloz o sanguijuela), más vida y daño, y una corona roja con su nombre y sus estrellas de rango.", en: "Let a creature from a forest pack kill you: it earns a name and epithet («Ulfr Helmbreaker»), a trait (iron hide, rabid, swift or leech), more life and damage, and a red crown with its name and rank stars." },
-      { es: "Si te vuelve a vencer sube de rango (hasta 5). Al acercarte te reconoce con un rugido. Está en el mapa (clase Némesis) y en el diario con cuántas veces te venció.", en: "If it beats you again it ranks up (up to 5). When you get close it recognises you with a roar. It's on the map (Nemeses class) and in the journal with how many times it beat you." },
-      { es: "Vencerla paga plata, mucha experiencia y una pieza rara o mejor, y queda en el diario entre las vengadas. Hay tres a la vez como mucho.", en: "Defeating it pays silver, lots of experience and a rare or better item, and it goes into the journal as avenged. Three at a time at most." },
+      { es: "Andá por los caminos lejos de los pueblos y sin pelear: cada tanto aparece alguien más adelante, al costado del camino, con un «!» dorado. Hay cinco, cada uno con su dibujo propio.", en: "Walk the roads away from towns and out of fights: every so often someone appears ahead, by the roadside, with a golden «!». There are five, each with their own drawing." },
+      { es: "Brandr vende una pieza envuelta (poco común o mejor) por 45 de plata. Ragna, herida, pide un trago del frasco y a cambio paga y te marca un cofre con candado. Hallvard te señala el hörgr más cercano que no encontraste.", en: "Brandr sells a wrapped piece (uncommon or better) for 45 silver. Ragna, wounded, asks for a sip from the flask and in return pays and marks a locked chest. Hallvard points to the nearest hörgr you haven't found." },
+      { es: "Sigrun canta tu saga: Inspirado 4 minutos (+10 % de daño y experiencia, en el HUD). Toki grita cuando te acercás: tres lobos rodean su carro; vencelos y te paga con plata y una pieza.", en: "Sigrun sings your saga: Inspired for 4 minutes (+10% damage and experience, on the HUD). Toki shouts as you approach: three wolves surround his cart; beat them and he pays silver and an item." },
     ],
-    botones: [
-      { es: "Crear una némesis de rango 3 y llevarme cerca", en: "Make a rank 3 nemesis and take me near it", fn: (A) => {
-        const g = HORDAS.grupos.filter((q) => !q.unico).sort((a, b) => Math.hypot(a.centro[0] - A.jug.x, a.centro[1] - A.jug.y) - Math.hypot(b.centro[0] - A.jug.x, b.centro[1] - A.jug.y))[0];
-        const e = g.miembros.find((q) => !q.lider && !q.muerto) || g.miembros[0];
-        NEMESIS.nacer(e);
-        NEMESIS.nacer(e);
-        NEMESIS.nacer(e);
-        ir(A, g.centro, 0, 700);
-      } },
-    ],
+    botones: ((camino) => [
+      { es: "Brandr el buhonero (y 100 de plata)", en: "Brandr the pedlar (and 100 silver)", fn: (A) => (PODERES.darPlata(100), camino(A, "buhonero")) },
+      { es: "Ragna, herida", en: "Ragna, wounded", fn: (A) => camino(A, "herida") },
+      { es: "Hallvard el peregrino", en: "Hallvard the pilgrim", fn: (A) => camino(A, "peregrino") },
+      { es: "Sigrun la escalda", en: "Sigrun the skald", fn: (A) => camino(A, "escalda") },
+      { es: "Toki y los lobos", en: "Toki and the wolves", fn: (A) => camino(A, "carrero") },
+    ])((A, tipo) => {
+      // el punto de camino más cercano que quede lejos de todo pueblo, mirando hacia adelante; el encuentro aparece al llegar
+      const L = A.W.LUGARES,
+        lejos = (x, y) => Object.keys(L).every((k) => Math.hypot(x - L[k].p[0], y - L[k].p[1]) > L[k].r + 1500);
+      let p = null,
+        q = null,
+        mejor = 1e9;
+      A.W.CAMINOS.forEach((c) => !c.sinPiso && c.p.forEach((a, i) => {
+        const b = c.p[i + 1],
+          d = Math.hypot(a[0] - A.jug.x, a[1] - A.jug.y);
+        if (b && d < mejor && lejos(a[0], a[1])) (mejor = d), (p = a), (q = b);
+      }));
+      ENCUENTROS.irse();
+      ir(A, p);
+      setTimeout(() => {
+        const d = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+        A.jug.dir = [(q[0] - p[0]) / d, (q[1] - p[1]) / d];
+        ENCUENTROS.aparecer(tipo);
+      }, 2600);
+    }),
   };
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {

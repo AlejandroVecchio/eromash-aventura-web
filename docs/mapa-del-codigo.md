@@ -229,6 +229,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
 - **descanso.js**: el descanso (sistema DESCANSO)
   - los petates · el menú · descansar · el cartel con el reloj · el sistema
+- **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
+  - aparecer · cada encuentro · el sistema
 - **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
   - al generar una pieza (objetos.js): ¿sale con muescas? · lo que suma una pieza · encastrar, vaciar, unir · Ása abre muescas · la pestaña de la mochila · íconos · el sistema
 - **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
@@ -394,6 +396,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
   - el banco de casas (aventura/casas.html) · la ciudad en 3D
+- **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
