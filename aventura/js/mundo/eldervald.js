@@ -292,6 +292,9 @@ window.ELDERVALD = (function () {
     poner("farol", q(560, -540));
     // la piedra de afuera, al oeste, a pocos metros de la palisada
     poner("piedraVioleta", q(-1120, 160), { vista: false }, "piedra_violeta");
+    // el manantial rúnico del patio y una piedra de Berkano junto a la palisada (berkano.js)
+    poner("manantialRunico", q(-230, -200), {}, "manantial_puesto");
+    poner("piedraBerkano", q(-230, 390), {}, "berkano_puesto");
     // dónde está cada uno (los usa capital.js)
     punto("halvard", q(-120, 70));
     punto("tove", q(-360, -440));
@@ -348,6 +351,7 @@ window.ELDERVALD = (function () {
     poner("piedraCaida", mas(c, 4.2, 3), {}, "piedra_caida");
     poner("posteTablillas", [c[0] + Math.cos(0.9) * 12.5 * M, c[1] + Math.sin(0.9) * 12.5 * M * 0.9 - 80], { nuevas: 5 }, "poste_tablillas");
     poner("farol", mas(c, 9, 9));
+    poner("manantialRunico", mas(c, -4, 2), {}, "manantial_refugio");
     punto("runa_refugio", mas(c, 2, 1.6));
     punto("piedra_caida", mas(c, 4.2, 3.4));
     punto("errantes", mas(c, 18, 10));
