@@ -171,8 +171,9 @@ tener que leer el código para balancear.
   < 0,78 mágica, < 0,93 rara, si no legendaria (tope del modo). `calidad` = (nota − 0,4) / 0,6 va a
   `OBJETOS.generar`: los números se tiran en la parte alta (el daño o la armadura hasta +8 % / +18 % del techo de
   siempre) y la pieza guarda `it.forja` («Forjada por Ása · martillada al … %»).
-- Controles por acciones: los cuatro carriles son las direcciones (WASD, flechas, cruceta) o tocar el carril (pointer
-  events, sirve para el celular). La música sale de `SONIDO.tono`. Pausa deja y devuelve la plata.
+- Controles por acciones: los cuatro carriles son las acciones `carril1`..`carril4` (A S D W de izquierda a derecha,
+  o ← ↓ → ↑, la cruceta) o tocar el carril (pointer events, sirve para el celular). Las teclas se cambian en Opciones →
+  Teclas o con «Teclas de la forja» en el menú de Ása (`CONTROLES.asignar`, grupo `forja`). La música sale de `SONIDO.tono`. Pausa deja y devuelve la plata.
 
 ## Pruebas
 

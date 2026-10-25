@@ -15,7 +15,8 @@
     ],
     mirar: [
       { es: "Hablá con Ása (en la herrería) o tocá su yunque: «Forjar una pieza nueva». Elegís qué y cómo: con calma (más lento, a lo sumo rara) o a fuego vivo (más rápido, con acordes; la única que da legendarias).", en: "Talk to Ása (in the smithy) or use her anvil: «Forge a new piece». Pick what and how: steady (slower, rare at most) or roaring fire (faster, chords; the only way to legendaries)." },
-      { es: "Un juego de ritmo: runas que bajan por cuatro carriles hasta el yunque; se aprieta la dirección (WASD, flechas, cruceta o tocando el carril) justo cuando llegan. Música armada en el momento: tambor, bordón y una nota por carril.", en: "A rhythm game: runes fall down four lanes onto the anvil; press the direction (WASD, arrows, d-pad or tap the lane) right as they land. Music built live: drum, drone and a note per lane." },
+      { es: "Un juego de ritmo: runas que bajan por cuatro carriles hasta el yunque; se aprieta su tecla justo cuando llegan: A S D W de izquierda a derecha (o ← ↓ → ↑, la cruceta, o tocando el carril). Música armada en el momento: tambor, bordón y una nota por carril.", en: "A rhythm game: runes fall down four lanes onto the anvil; press its key right as they land: A S D W from left to right (or ← ↓ → ↑, the d-pad, or tap the lane). Music built live: drum, drone and a note per lane." },
+      { es: "Las teclas se cambian a gusto: «Teclas de la forja» en el menú de Ása (al elegir con calma o a fuego vivo) o Opciones → Teclas, que también cambia las del resto del juego. Tocás la acción, apretás la tecla nueva; «Volver a las de siempre» las deja como venían.", en: "Keys can be changed: «Forge keys» in Ása's menu (when picking steady or roaring fire) or Options → Keys, which also changes the rest of the game's keys. Pick the action, press the new key; «Restore defaults» puts them back." },
       { es: "Tres tramos: el fuelle (notas largas que se mantienen y calientan el hierro), el martillo (golpes cada vez más seguidos) y el temple (un golpe final con atacar cuando baja la barra dorada).", en: "Three parts: the bellows (long held notes that heat the iron), the hammer (faster and faster strikes) and the quench (one final strike with attack when the golden bar arrives)." },
       { es: "La nota decide la rareza y qué tan altos salen los números; la pieza dice «Forjada por Ása · martillada al … %». Esc deja y Ása devuelve la plata.", en: "Your score decides rarity and how high the numbers roll; the piece says «Forged by Ása · hammered at …%». Esc leaves and Ása returns the silver." },
     ],
@@ -25,6 +26,10 @@
         FORJA.abrir();
       } },
       { es: "Probar una espada a fuego vivo ya", en: "Try a sword at roaring fire now", fn: (A) => FORJA.empezar(FORJA.baseDe({ tipo: "espada" }), "fuego", 0) },
+      { es: "Abrir las teclas de la forja", en: "Open the forge keys", fn: (A) => {
+        A.J.modo = "menu";
+        OPCIONES.teclas(() => A.cerrarMenu(), "forja");
+      } },
       { es: "Subir a nivel 12 (bases mejores)", en: "Go to level 12 (better bases)", fn: (A) => {
         while (RPG.nivel() < 12) RPG.dar(RPG.xpPara(RPG.nivel()) - RPG.estado().xp + 1);
       } },

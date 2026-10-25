@@ -37,6 +37,11 @@ window.CONTROLES = (function () {
     camaraIzq: ["KeyZ"],
     camaraDer: ["KeyX"],
     camara: ["KeyV"],
+    // los cuatro carriles de la forja de Ása, de izquierda a derecha: A S D W
+    carril1: ["KeyA", "ArrowLeft"],
+    carril2: ["KeyS", "ArrowDown"],
+    carril3: ["KeyD", "ArrowRight"],
+    carril4: ["KeyW", "ArrowUp"],
   };
   // botones estándar del mando (Gamepad API): 0 ✕/A · 1 ○/B · 2 □/X · 3 △/Y · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Select · 9 Start · 10 L3
 // · 11 R3 · 16 PS · 17 panel táctil
@@ -59,9 +64,81 @@ window.CONTROLES = (function () {
     izquierda: [14],
     derecha: [15],
     camara: [11],
+    carril1: [14],
+    carril2: [13],
+    carril3: [15],
+    carril4: [12],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
   const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", ranura1: "1", ranura2: "2", ranura3: "3", ranura4: "4", ranura5: "5", ranura6: "6", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
+
+  // ---------- teclas propias ----------
+  // El jugador puede cambiar la tecla principal de cada acción (Opciones → Teclas, y la forja desde su menú). Se
+  // guarda en este navegador como { accion: code }; las teclas de repuesto (flechas, Ctrl, Alt…) siguen andando. Una
+  // tecla nueva se saca de las otras acciones de su grupo: los carriles de la forja son un grupo aparte, así A S D W
+  // pueden mover a Eromash y tocar los carriles a la vez.
+  const GRUPOS = {
+    juego: ["arriba", "abajo", "izquierda", "derecha", "correr", "saltar", "atacar", "esquivar", "bloquear", "interactuar", "lente", "runa", "cambiarRuna", "mapa", "misiones", "diario", "inventario", "personaje"],
+    forja: ["carril1", "carril2", "carril3", "carril4"],
+  };
+  const CLAVE_TECLAS = "eromash.aventura.teclas";
+  const BASE = {};
+  for (const a in TECLAS) BASE[a] = TECLAS[a].slice();
+  let propias = {};
+  try {
+    propias = JSON.parse(localStorage.getItem(CLAVE_TECLAS) || "{}") || {};
+  } catch (e) {}
+  const grupoDe = (a) => (GRUPOS.forja.includes(a) ? "forja" : "juego");
+  function armarTeclas() {
+    for (const a in BASE) {
+      const mia = propias[a];
+      let l = mia ? [mia].concat(BASE[a].slice(1)) : BASE[a].slice();
+      // lo que el jugador le dio a otra acción del mismo grupo deja de valer acá (menos en seguir, que es de los menús)
+      if (a !== "seguir") for (const b in propias) if (b !== a && grupoDe(b) === grupoDe(a)) l = l.filter((k) => k !== propias[b]);
+      TECLAS[a] = l;
+    }
+  }
+  armarTeclas();
+  function asignar(a, code) {
+    if (!BASE[a] || !code) return;
+    if (code === BASE[a][0]) delete propias[a];
+    else propias[a] = code;
+    armarTeclas();
+    try {
+      localStorage.setItem(CLAVE_TECLAS, JSON.stringify(propias));
+    } catch (e) {}
+  }
+  function restaurar(grupo) {
+    for (const a in propias) if (!grupo || grupoDe(a) === grupo) delete propias[a];
+    armarTeclas();
+    try {
+      localStorage.setItem(CLAVE_TECLAS, JSON.stringify(propias));
+    } catch (e) {}
+  }
+  const FLECHAS = { ArrowLeft: "←", ArrowDown: "↓", ArrowRight: "→", ArrowUp: "↑" };
+  const NOMBRES = { ShiftLeft: "Shift", ShiftRight: "Shift", ControlLeft: "Ctrl", ControlRight: "Ctrl", AltLeft: "Alt", AltRight: "Alt", Escape: "Esc", Enter: "Enter", Tab: "Tab", Backspace: "⌫", Minus: "−", Equal: "+", Comma: ",", Period: ".", Semicolon: "Ñ", Slash: "/", Quote: "'", BracketLeft: "[", BracketRight: "]", Backslash: "\\", Backquote: "º" };
+  function nombreTecla(code) {
+    if (!code) return "—";
+    if (code === "Space") return I18N.t("ui.tecla.espacio");
+    if (FLECHAS[code]) return FLECHAS[code];
+    if (NOMBRES[code]) return NOMBRES[code];
+    if (/^Numpad\d$/.test(code)) return "Num " + code.slice(6);
+    return code.replace(/^(Key|Digit)/, "");
+  }
+  // la próxima tecla que se apriete es la nueva (Esc cancela): no llega al juego ni a los menús
+  let capturando = null;
+  addEventListener(
+    "keydown",
+    (e) => {
+      if (!capturando) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const fn = capturando;
+      capturando = null;
+      fn(e.code === "Escape" ? null : e.code);
+    },
+    true,
+  );
 
   const abajo = new Set();
   let antes = {},
@@ -152,9 +229,19 @@ window.CONTROLES = (function () {
       for (const a in ahora) antes[a] = true;
     },
     glifo: (a) => {
+      if (!usandoMando && (propias[a] || (!GLIFOS_TECLADO[a] && BASE[a]))) return nombreTecla(TECLAS[a][0]);
       const g = (usandoMando ? GLIFOS_MANDO[a] : GLIFOS_TECLADO[a]) || (usandoMando ? "" : a);
       return g[0] === "@" ? I18N.t(g.slice(1)) : g;
     },
     mando: () => usandoMando,
+    // teclas propias (Opciones → Teclas)
+    GRUPOS,
+    teclaDe: (a) => nombreTecla(TECLAS[a] && TECLAS[a][0]),
+    propia: (a) => !!propias[a],
+    asignar,
+    restaurar,
+    capturar: (fn) => (capturando = fn),
+    capturando: () => !!capturando,
+    nombreTecla,
   };
 })();
