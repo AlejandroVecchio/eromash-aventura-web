@@ -136,3 +136,11 @@
 .inv-detalle p .ab-ahora, .inv-detalle p .ab-luego { display: block; margin-top: 3px; }
 .inv-detalle p .ab-luego { color: #7BC86C; }
 @media (max-width: 760px) { .ab-ramas { grid-template-columns: 1fr; } }
+
+/* ---------- Furia (motor/furia.js) ---------- */
+#hudJugador .barra.fur { height: 8px; }
+#hudJugador .barra.fur span { line-height: 8px; font-size: 7px; color: #2A0C08; text-shadow: none; }
+.barra.fur i { background: linear-gradient(90deg, #5E130D, #C8402D); }
+.barra.fur.llena i { background: linear-gradient(90deg, #C8402D, #FF8D71); }
+.barra.oculto { display: none; }
+.inv .ab-nodo.activa em { right: -14px; }

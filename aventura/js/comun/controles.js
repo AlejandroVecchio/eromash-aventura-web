@@ -30,6 +30,10 @@ window.CONTROLES = (function () {
     inventario: ["KeyI", "KeyB"],
     personaje: ["KeyU"],
     talentos: ["KeyH"],
+    // las habilidades de la Furia: con teclado van en una casilla de la barra (1 a 6); con mando, L2 + □ △ ○ (COMBOS)
+    hab1: [],
+    hab2: [],
+    hab3: [],
     pausa: ["Escape", "KeyP"],
     acercar: ["Equal", "NumpadAdd"],
     alejar: ["Minus", "NumpadSubtract"],
@@ -70,7 +74,10 @@ window.CONTROLES = (function () {
     carril3: [15],
     carril4: [12],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
+  // combinaciones del mando: L2 (el escudo) + □ △ ○ son las habilidades activas; mientras se aprietan juntos, esos
+  // botones no hacen lo suyo
+  const COMBOS = { hab1: [6, 2], hab2: [6, 3], hab3: [6, 1] };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
   const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", ranura1: "1", ranura2: "2", ranura3: "3", ranura4: "4", ranura5: "5", ranura6: "6", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   // ---------- teclas propias ----------
@@ -199,6 +206,12 @@ window.CONTROLES = (function () {
         if (BOTONES[a].some((b) => g.buttons[b] && (g.buttons[b].pressed || g.buttons[b].value > 0.5))) {
           ahora[a] = true;
           usandoMando = true;
+        }
+      const ap = (b) => g.buttons[b] && (g.buttons[b].pressed || g.buttons[b].value > 0.5);
+      for (const a in COMBOS)
+        if (COMBOS[a].every(ap)) {
+          ahora[a] = true;
+          for (const o in BOTONES) if (o !== "bloquear" && BOTONES[o].includes(COMBOS[a][1]) && !(TECLAS[o] || []).some((k) => abajo.has(k))) delete ahora[o];
         }
       const rx = g.axes[2] || 0,
         ry = g.axes[3] || 0;

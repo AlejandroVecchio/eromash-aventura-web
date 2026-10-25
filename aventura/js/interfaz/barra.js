@@ -88,6 +88,14 @@ window.BARRA = (function () {
       usar: () => VIDA.guiar() && (esperas.saber = 60),
     },
   };
+  // otros sistemas suman lo suyo con el hook `cosasBarra()` → { id: cosa } (las habilidades de la Furia, el frasco…)
+  function sumarDeSistemas() {
+    for (const s of window.SISTEMAS || [])
+      if (s.cosasBarra) {
+        const o = s.cosasBarra();
+        for (const id in o) if (!COSAS[id]) (COSAS[id] = o[id]), ORDEN.push(id);
+      }
+  }
   const TIPOS = ["habilidad", "objeto", "herramienta", "conocimiento"];
   // en qué orden se llenan las casillas libres la primera vez
   const ORDEN = ["runa_kenaz", "runa_isa", "runa_algiz", "runa_sowilo", "lente", "hierbas", "brebaje", "saber", "viajar"];
@@ -131,6 +139,7 @@ window.BARRA = (function () {
     const q = COSAS[id];
     if (!q.tiene()) return;
     if (!q.listo()) {
+      if (q.avisa) return q.usar(); // dice solo por qué no (la Furia)
       if (q.tipo === "habilidad") A.avisar("pj.sin_energia");
       return q.tipo === "objeto" ? q.usar() : null; // el objeto avisa solo por qué no
     }
@@ -184,6 +193,7 @@ window.BARRA = (function () {
     alEmpezar(extra) {
       extra.barra = Object.assign({ r: Array(LARGO).fill(null), sel: 0, vistos: {} }, extra.barra || {});
       st = extra.barra;
+      sumarDeSistemas();
       while (st.r.length < LARGO) st.r.push(null);
       for (const k in esperas) delete esperas[k];
       // una partida guardada antes de la barra: lo que ya tiene va a lo libre

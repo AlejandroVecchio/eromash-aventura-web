@@ -263,6 +263,20 @@ tener que leer el código para balancear.
 - «Olvidar todo»: gratis la primera vez, después `25 × nivel` de plata, se toca dos veces. Otros sistemas suman nodos
   con `ARBOL.sumar(rama, nodo)`. Estado en `E.extra.arbol = { r: { id: rango }, extra, olvidos }`.
 
+## Furia y habilidades activas (`motor/furia.js`, `FURIA`; con teclado en casillas de la barra (1 a 6), con mando L2 + □ △ ○ (acciones `hab1`, `hab2`, `hab3`); textos `fu.` en `textos/furia.js`)
+
+- La Furia (0 a 100) arranca en 0, suma 5 por golpe (8 si es crítico, nada por los golpes de las habilidades) y 0,6 por
+  punto de vida perdido; a los 5 s sin pelear se enfría 8 por segundo. No se guarda. Su barra (`#bFuria`) va debajo
+  de la estamina y solo se ve si hay alguna habilidad aprendida.
+- Tres habilidades, cada una un nodo `activa` (círculo) de la tercera fila de su rama, con 2 rangos (`ARBOL.sumar`):
+  Rugido de Björn (40/35 de Furia, 8/7 s: aturde a 280 (×1,2 en rango 2), 1,4 s o 0,8 a líderes, expone 5 s +15 %, +20
+  de armadura 5 s), Salto del lobo (30/25, 5/4 s: usa `jug.salto` para el arco y la invulnerabilidad, va hasta 330
+  hacia la criatura de enfrente sin cruzar muros, pega 160/200 % de 28 × `J.mulDano` a 150 al caer) y Bandada (45/40,
+  10/9 s: 5/7 cuervos buscan criaturas a 440, pican 55 % y marcan 6 s, +12 %). Los golpes pasan por los `modDano` y
+  `alPegar` de todos, con `info.d.habilidad`.
+- Hooks nuevos: `cosasBarra()` de un sistema suma cosas que el jugador puede poner en la barra de abajo (`BARRA`: `{ id: { tipo, icono, nombre, desc, tiene, listo, espera, usar, avisa } }`); en `CONTROLES`,
+  `COMBOS` son botones del mando que se aprietan juntos (mientras tanto, esos botones no hacen lo suyo).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

@@ -98,6 +98,7 @@ window.ARBOL = (function () {
   }
   // lo que dice cada nodo con n rangos (el texto lleva el número del rango)
   function efectoTexto(d, n) {
+    if (d.num) return t("ab." + d.id + "_d", d.num(Math.max(1, n)));
     const v = d.v * Math.max(1, n);
     const num = Math.abs(v) < 1 ? Math.round(v * 100) : Math.round(v);
     return t("ab." + d.id + "_d", [num]);
@@ -158,7 +159,10 @@ window.ARBOL = (function () {
     c.globalAlpha = abierto || nivelNodo ? 1 : 0.4;
     c.fillStyle = nivelNodo ? "#2A1E1A" : "#161210";
     c.beginPath();
-    if (d.clave) {
+    if (d.activa) {
+      // las habilidades activas (FURIA): un círculo, se usan con su tecla
+      c.arc(36, 36, 32, 0, Math.PI * 2);
+    } else if (d.clave) {
       // los nodos que cambian cómo se pelea: un hexágono más grande
       for (let i = 0; i < 6; i++) {
         const a = Math.PI / 6 + (i * Math.PI) / 3;
@@ -182,7 +186,7 @@ window.ARBOL = (function () {
   // ---------- la pestaña ----------
   function pintar(cuerpo, api) {
     cuerpo.classList.add("ab-cuerpo");
-    const li = libres();
+    const li = Math.max(0, libres());
     const cab = document.createElement("div");
     cab.className = "ab-cabeza";
     cab.innerHTML = `<div class="at-libres${li > 0 ? " hay" : ""}"><b>${li}</b><span>${t("ab.libres")}</span></div>`;
@@ -244,7 +248,7 @@ window.ARBOL = (function () {
           abierto = !porque || (n > 0 && n < d.max) || (porque === t("ab.sin_puntos"));
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "ab-nodo" + (d.clave ? " clave" : "") + (n ? " tiene" : "") + (n >= d.max ? " lleno" : "") + (porque ? "" : " puede");
+        b.className = "ab-nodo" + (d.clave ? " clave" : "") + (d.activa ? " activa" : "") + (n ? " tiene" : "") + (n >= d.max ? " lleno" : "") + (porque ? "" : " puede");
         b.style.left = (d.c * 100 + 50) / 3 + "%";
         b.style.top = d.f * 25 + 12.5 + "%";
         b.appendChild(iconoNodo(d, n, abierto));
@@ -253,7 +257,7 @@ window.ARBOL = (function () {
         const ahora = n ? `<span class="ab-ahora">${t("ab.ahora")} ${efectoTexto(d, n)}</span>` : "";
         const luego = n < d.max ? `<span class="ab-luego">${n ? t("ab.siguiente") : t("ab.primero")} ${efectoTexto(d, n + 1)}</span>` : "";
         const traba = porque && n < d.max ? `<span class="ob-pista">${porque}</span>` : "";
-        enfocar.push([b, { nombre: t("ab." + d.id) + (d.clave ? " ◆" : ""), col: R.col, html: `<span class="ob-rotulo">${t("ab.rango", [n, d.max])} · ${t("ab.rama_" + rama)}</span>${ahora}${luego}${traba}`, fn: () => subir(d.id) }]);
+        enfocar.push([b, { nombre: t("ab." + d.id) + (d.clave ? " ◆" : "") + (d.activa ? " · " + (CONTROLES.mando() || !window.BARRA ? CONTROLES.glifo(d.activa) : BARRA.glifoDe("hab_" + d.id)) : ""), col: R.col, html: `<span class="ob-rotulo">${t("ab.rango", [n, d.max])} · ${t("ab.rama_" + rama)}</span>${ahora}${luego}${traba}`, fn: () => subir(d.id) }]);
       });
       col.appendChild(grilla);
       ramas.appendChild(col);
