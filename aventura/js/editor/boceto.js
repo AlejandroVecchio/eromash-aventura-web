@@ -681,9 +681,8 @@ window.EDITOR_BOCETO = (function () {
     $("boIA").classList.toggle("activo", ia);
     $("boIA").textContent = t(ia ? "ed.bo_ia_on" : "ed.bo_ia_off");
     $("boFilaIA").classList.toggle("oculto", !ia);
-    const el = window.EDITOR_IA ? EDITOR_IA.elegida() : null,
-      nombre = el ? { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini", otra: "?" }[el.quien] : "?";
-    $("boIAQuien").textContent = msg || (!el || el.quien === "otra" ? t("ed.bo_ia_sin") : !el.clave ? t("ed.bo_ia_clave", [nombre]) : t("ed.bo_ia_con", [nombre, el.modelo]));
+    const el = window.EDITOR_IA ? EDITOR_IA.paraTarea("boceto") : null;
+    $("boIAQuien").textContent = msg || (!el ? t("ed.bo_ia_sin") : t("ed.bo_ia_con", [el.nombre, el.modelo]));
   }
   $("boIA").onclick = () => {
     ia = !ia;
@@ -754,8 +753,8 @@ window.EDITOR_BOCETO = (function () {
   }
   async function generarIA() {
     if (!hoja || !lectura || pensando) return;
-    const el = window.EDITOR_IA && EDITOR_IA.elegida();
-    if (!el || el.quien === "otra" || !el.clave) return pintarIA(), E.avisar(t("ed.bo_ia_falta"));
+    const el = window.EDITOR_IA && EDITOR_IA.paraTarea("boceto");
+    if (!el) return pintarIA(), E.avisar(t("ed.bo_ia_falta"));
     pensando = true;
     $("boGenerar").disabled = true;
     pintarIA(t("ed.bo_ia_pensando"));
@@ -765,7 +764,7 @@ window.EDITOR_BOCETO = (function () {
       (($("boPedido").value || "").trim() ? "Extra request from the user: " + $("boPedido").value.trim() + "\n\n" : "") +
       "World rectangle of the sheet and the engine's reading:\n" + JSON.stringify(lecturaParaIA(base)) + "\n\nAsset catalog:\n" + cat;
     try {
-      const txt = await EDITOR_IA.llamar(el.quien, el.modelo, el.clave, [{ role: "user", content: contenido(el.quien, texto) }], SISTEMA);
+      const { txt } = await EDITOR_IA.llamarTarea("boceto", (q) => [{ role: "user", content: contenido(q, texto) }], SISTEMA, (n) => pintarIA(t("ed.bo_ia_pensando_con", [n])));
       const r = leerIA(txt);
       if (!r) throw new Error(t("ed.ia_sin_json"));
       r.L.base = base;

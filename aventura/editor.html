@@ -119,6 +119,15 @@
   #iaChat p { margin: 0; font-size: 13px; line-height: 1.4; padding: 6px 8px; background: #241A17; border-left: 3px solid #73D5DB; white-space: pre-wrap; }
   #iaChat p.yo { border-left-color: #FFD98A; }
   #iaChat p.error { border-left-color: #C8402D; }
+  #iaPanel details { border: 1px solid #4A3630; padding: 6px 8px; }
+  #iaPanel summary { cursor: pointer; color: #73D5DB; font-size: 13px; }
+  .iaFilaIA { display: grid; grid-template-columns: 62px minmax(0, 1fr) minmax(0, 1.3fr) 16px; gap: 6px; align-items: center; margin-top: 6px; font-size: 13px; }
+  .iaFilaIA input { min-width: 0; font: inherit; font-size: 12.5px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 5px 6px; }
+  .iaFilaIA i { font-style: normal; color: #B5A5A0; text-align: center; }
+  .iaFilaIA i.si { color: #7BC86C; }
+  .iaTarea { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 8px; align-items: center; margin-top: 6px; font-size: 13px; }
+  .iaTarea small { display: block; }
+  .iaTarea select { min-width: 0; font: inherit; font-size: 12.5px; background: #111111; color: #F2ECEC; border: 1px solid #4A3630; padding: 4px; }
   #iaPanel .botones { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
   #iaPanel .listo { background: #9C2315; border-color: #C8402D; }
   /* subir un boceto de mapa (U): arriba a la derecha del mapa */
@@ -520,9 +529,19 @@
 <div id="comandos" class="oculto"><input id="comBuscar" type="search" autocomplete="off" /><ul id="comLista"></ul></div>
 <div id="iaPanel" class="oculto">
   <div class="cab"><b data-i18n="ed.ia_titulo"></b><button id="iaCerrar" data-i18n="ed.cerrar"></button></div>
-  <div class="fila2"><select id="iaQuien"><option value="claude">Claude</option><option value="chatgpt">ChatGPT</option><option value="gemini">Gemini</option><option value="otra" data-i18n="ed.ia_otra"></option></select><input id="iaModelo" type="text" spellcheck="false" /></div>
-  <div class="fila2" id="iaFilaClave"><input id="iaClave" type="password" autocomplete="off" spellcheck="false" data-i18n-ph="ed.ia_clave" /></div>
-  <small id="iaClaveAyuda" data-i18n="ed.ia_clave_ayuda"></small>
+  <div class="fila2"><select id="iaModo"><option value="auto" data-i18n="ed.ia_modo_auto"></option><option value="otra" data-i18n="ed.ia_otra"></option></select></div>
+  <details id="iaTus">
+    <summary data-i18n="ed.ia_tus"></summary>
+    <div class="iaFilaIA"><b>Claude</b><input id="iaModelo_claude" type="text" spellcheck="false" /><input id="iaClave_claude" type="password" autocomplete="off" spellcheck="false" data-i18n-ph="ed.ia_clave" /><i id="iaEstado_claude"></i></div>
+    <div class="iaFilaIA"><b>ChatGPT</b><input id="iaModelo_chatgpt" type="text" spellcheck="false" /><input id="iaClave_chatgpt" type="password" autocomplete="off" spellcheck="false" data-i18n-ph="ed.ia_clave" /><i id="iaEstado_chatgpt"></i></div>
+    <div class="iaFilaIA"><b>Gemini</b><input id="iaModelo_gemini" type="text" spellcheck="false" /><input id="iaClave_gemini" type="password" autocomplete="off" spellcheck="false" data-i18n-ph="ed.ia_clave" /><i id="iaEstado_gemini"></i></div>
+    <small id="iaClaveAyuda" data-i18n="ed.ia_clave_ayuda"></small>
+  </details>
+  <details id="iaCada">
+    <summary data-i18n="ed.ia_cada"></summary>
+    <div id="iaTareas"></div>
+  </details>
+  <small id="iaSinNinguna" class="oculto" data-i18n="ed.ia_sin_ninguna"></small>
   <small id="iaZona"></small>
   <div id="iaChat"></div>
   <textarea id="iaPedido" rows="3" data-i18n-ph="ed.ia_ph"></textarea>
@@ -604,7 +623,7 @@
   </div>
   <b class="txSub" data-i18n="ed.tx_con_ia"></b>
   <textarea id="txPedido" rows="2" data-i18n-ph="ed.tx_ph"></textarea>
-  <div class="fila2"><select id="txFuente"><option value="receta" data-i18n="ed.tx_f_receta"></option><option value="chatgpt" data-i18n="ed.tx_f_chatgpt"></option><option value="gemini" data-i18n="ed.tx_f_gemini"></option></select><button id="txAfinar" data-i18n="ed.tx_afinar"></button><button id="txGenerar" class="listo" data-i18n="ed.tx_generar"></button></div>
+  <div class="fila2"><select id="txFuente"><option value="receta" data-i18n="ed.tx_f_receta"></option><option value="imagen" data-i18n="ed.tx_f_imagen"></option><option value="chatgpt" data-i18n="ed.tx_f_chatgpt"></option><option value="gemini" data-i18n="ed.tx_f_gemini"></option></select><button id="txAfinar" data-i18n="ed.tx_afinar"></button><button id="txGenerar" class="listo" data-i18n="ed.tx_generar"></button></div>
   <div class="fila2 txOpc"><label><input id="txPaleta" type="checkbox" checked /><span data-i18n="ed.tx_paleta"></span></label><label><input id="txEspejo" type="checkbox" checked /><span data-i18n="ed.tx_espejo"></span></label><button id="txSubir" data-i18n="ed.tx_subir"></button></div>
   <input id="txArchivo" type="file" accept="image/*" hidden />
   <small id="txEstado"></small>

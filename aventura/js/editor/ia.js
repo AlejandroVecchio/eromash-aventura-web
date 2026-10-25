@@ -11,10 +11,60 @@ window.EDITOR_IA = (function () {
     $ = (id) => document.getElementById(id);
   const CLAVE = "eromash-aventura-editor-ia";
   const MODELOS = { claude: "claude-opus-5-5", chatgpt: "gpt-5", gemini: "gemini-2.5-pro", otra: "" };
-  let conf = { quien: "claude", modelos: {}, claves: {} };
+  const NOMBRES = { claude: "Claude", chatgpt: "ChatGPT", gemini: "Gemini", otra: "?" };
+  // ---------- qué IA hace cada tarea ----------
+  // Se guardan las claves de las tres a la vez. Cada tarea tiene su orden de preferencia (la mejor para eso primero) y,
+  // en automático, usa la primera que tenga clave; si esa falla, prueba con la siguiente. Se puede fijar una a mano.
+  //   mapa: pedidos del mapa (este chat): JSON largo pensando en el espacio → Claude, ChatGPT, Gemini
+  //   boceto: mirar una foto y leer un dibujo → Claude, Gemini, ChatGPT
+  //   imagen: crear una imagen (texturas): Claude no hace imágenes → ChatGPT (gpt-image-1), Gemini
+  //   receta: una receta corta de textura → Claude, ChatGPT, Gemini
+  //   generar: casas y zonas desde un texto (JSON chico) → Claude, Gemini, ChatGPT
+  const TAREAS = {
+    mapa: ["claude", "chatgpt", "gemini"],
+    boceto: ["claude", "gemini", "chatgpt"],
+    imagen: ["chatgpt", "gemini"],
+    receta: ["claude", "chatgpt", "gemini"],
+    generar: ["claude", "gemini", "chatgpt"],
+  };
+  let conf = { quien: "auto", modelos: {}, claves: {}, tareas: {} };
   try {
     conf = Object.assign(conf, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
+  conf.tareas = conf.tareas || {};
+  // lo de antes: la IA elegida para el chat era «quien»; ahora el chat es la tarea «mapa»
+  if (conf.quien !== "otra" && conf.quien !== "auto" && !conf.tareas.mapa) conf.tareas.mapa = conf.quien;
+  if (conf.quien !== "otra") conf.quien = "auto";
+  const tiene = (q) => !!(conf.claves[q] || "").trim();
+  const modeloDe = (q) => conf.modelos[q] || MODELOS[q];
+  // las IA que van a hacer una tarea, en orden: la fijada a mano primero (si tiene clave), después las demás con clave
+  function candidatas(tarea) {
+    const orden = TAREAS[tarea] || TAREAS.mapa,
+      fija = conf.tareas[tarea];
+    const l = (fija && fija !== "auto" && orden.includes(fija) ? [fija].concat(orden.filter((q) => q !== fija)) : orden).filter(tiene);
+    return fija && fija !== "auto" && tiene(fija) ? [fija] : l;
+  }
+  function paraTarea(tarea) {
+    const q = candidatas(tarea)[0];
+    return q ? { quien: q, modelo: modeloDe(q), clave: conf.claves[q], claves: conf.claves, nombre: NOMBRES[q] } : null;
+  }
+  // llamar a la IA de una tarea: mensajes puede ser una función (quien) → mensajes (cada una pide la imagen a su modo);
+  // si una falla, se prueba con la siguiente. Devuelve { txt, quien }
+  async function llamarTarea(tarea, mensajes, sistema, alProbar) {
+    const l = candidatas(tarea);
+    if (!l.length) throw new Error(t("ed.ia_sin_ninguna"));
+    let error = null;
+    for (const q of l) {
+      if (alProbar) alProbar(NOMBRES[q]);
+      try {
+        const txt = await llamar(q, modeloDe(q), conf.claves[q], typeof mensajes === "function" ? mensajes(q) : mensajes, sistema);
+        return { txt, quien: q, nombre: NOMBRES[q] };
+      } catch (e) {
+        error = e;
+      }
+    }
+    throw error;
+  }
   const guardarConf = () => {
     try {
       localStorage.setItem(CLAVE, JSON.stringify(conf));
@@ -26,31 +76,61 @@ window.EDITOR_IA = (function () {
     pensando = false;
 
   // ---------- el panel ----------
+  // «Tus IA»: modelo y clave de cada una; «Qué hace cada una»: por tarea, automática o fijada
   function pintarConf() {
-    $("iaQuien").value = conf.quien;
-    $("iaModelo").value = conf.modelos[conf.quien] || MODELOS[conf.quien];
-    $("iaClave").value = conf.claves[conf.quien] || "";
     const otra = conf.quien === "otra";
-    $("iaFilaClave").classList.toggle("oculto", otra);
+    $("iaModo").value = otra ? "otra" : "auto";
     $("iaClaveAyuda").textContent = t(otra ? "ed.ia_otra_ayuda" : "ed.ia_clave_ayuda");
-    $("iaModelo").classList.toggle("oculto", otra);
     $("iaOtra").classList.toggle("oculto", !otra);
     $("iaEnviar").classList.toggle("oculto", otra);
+    ["claude", "chatgpt", "gemini"].forEach((q) => {
+      $("iaModelo_" + q).value = modeloDe(q);
+      $("iaClave_" + q).value = conf.claves[q] || "";
+      $("iaEstado_" + q).textContent = tiene(q) ? "✓" : "—";
+      $("iaEstado_" + q).className = tiene(q) ? "si" : "";
+    });
+    const tabla = $("iaTareas");
+    tabla.innerHTML = "";
+    Object.keys(TAREAS).forEach((tarea) => {
+      const fila = document.createElement("label"),
+        sel = document.createElement("select"),
+        auto = paraTarea(tarea) && (conf.tareas[tarea] || "auto") === "auto" ? NOMBRES[candidatas(tarea)[0]] : null;
+      fila.className = "iaTarea";
+      fila.innerHTML = `<span>${t("ed.ia_t_" + tarea)}<small>${t("ed.ia_t_" + tarea + "_por")}</small></span>`;
+      sel.innerHTML =
+        `<option value="auto">${t("ed.ia_auto")}${auto ? " · " + auto : ""}</option>` +
+        TAREAS[tarea].map((q) => `<option value="${q}">${NOMBRES[q]}${tiene(q) ? "" : " " + t("ed.ia_sin_clave_corto")}</option>`).join("");
+      sel.value = conf.tareas[tarea] || "auto";
+      sel.addEventListener("change", () => {
+        conf.tareas[tarea] = sel.value;
+        guardarConf();
+        pintarConf();
+      });
+      fila.appendChild(sel);
+      tabla.appendChild(fila);
+    });
+    const ning = !["claude", "chatgpt", "gemini"].some(tiene);
+    $("iaSinNinguna").classList.toggle("oculto", !ning || otra);
+    if (ning) $("iaTus").open = true;
   }
-  $("iaQuien").addEventListener("change", () => {
-    conf.quien = $("iaQuien").value;
+  $("iaModo").addEventListener("change", () => {
+    conf.quien = $("iaModo").value;
     guardarConf();
     pintarConf();
   });
-  $("iaModelo").addEventListener("change", () => {
-    conf.modelos[conf.quien] = $("iaModelo").value.trim();
-    guardarConf();
+  ["claude", "chatgpt", "gemini"].forEach((q) => {
+    $("iaModelo_" + q).addEventListener("change", () => {
+      conf.modelos[q] = $("iaModelo_" + q).value.trim();
+      guardarConf();
+    });
+    $("iaClave_" + q).addEventListener("change", () => {
+      conf.claves[q] = $("iaClave_" + q).value.trim();
+      guardarConf();
+      pintarConf();
+    });
+    ["iaModelo_" + q, "iaClave_" + q].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
   });
-  $("iaClave").addEventListener("change", () => {
-    conf.claves[conf.quien] = $("iaClave").value.trim();
-    guardarConf();
-  });
-  ["iaModelo", "iaClave", "iaPedido", "iaRespuesta"].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
+  ["iaPedido", "iaRespuesta"].forEach((id) => $(id).addEventListener("keydown", (e) => e.stopPropagation()));
   $("iaPedido").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) enviar();
   });
@@ -215,22 +295,17 @@ window.EDITOR_IA = (function () {
   async function enviar() {
     const pedido = $("iaPedido").value.trim();
     if (!pedido || pensando) return;
-    const quien = conf.quien,
-      modelo = ($("iaModelo").value || MODELOS[quien]).trim(),
-      clave = ($("iaClave").value || "").trim();
-    if (!clave) return decir(t("ed.ia_falta_clave"), "error");
-    conf.claves[quien] = clave;
-    conf.modelos[quien] = modelo;
-    guardarConf();
+    if (!paraTarea("mapa")) return decir(t("ed.ia_falta_clave"), "error");
     decir(pedido, "yo");
     $("iaPedido").value = "";
     conv.push({ role: "user", content: contexto(pedido) });
     conv = conv.slice(-8);
     pensando = true;
-    const espera = decir(t("ed.ia_pensando", [$("iaQuien").selectedOptions[0].textContent]));
+    const espera = decir(t("ed.ia_pensando", [paraTarea("mapa").nombre]));
     try {
-      const txt = await llamar(quien, modelo, clave, conv);
+      const { txt, nombre } = await llamarTarea("mapa", conv, SISTEMA, (n) => (espera.textContent = t("ed.ia_pensando", [n])));
       espera.remove();
+      if (nombre !== paraTarea("mapa").nombre) decir(t("ed.ia_contesto", [nombre]));
       conv.push({ role: "assistant", content: txt });
       mostrar(txt);
     } catch (e) {
@@ -315,6 +390,7 @@ window.EDITOR_IA = (function () {
   }
   pintarConf();
   // para otros módulos (texturas): la misma IA, modelo y clave que eligió acá
-  const elegida = () => ({ quien: conf.quien, modelo: conf.modelos[conf.quien] || MODELOS[conf.quien], clave: conf.claves[conf.quien] || "", claves: conf.claves });
-  return { abrir, cerrar, alternar, abierta, dibujar, llamar, elegida, catalogo };
+  // la que haría los pedidos del mapa (para lo viejo que todavía pregunta «cuál está elegida»)
+  const elegida = () => paraTarea("mapa") || { quien: conf.quien === "otra" ? "otra" : "claude", modelo: "", clave: "", claves: conf.claves };
+  return { abrir, cerrar, alternar, abierta, dibujar, llamar, llamarTarea, paraTarea, candidatas, elegida, catalogo, NOMBRES };
 })();
