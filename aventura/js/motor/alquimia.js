@@ -294,7 +294,7 @@ window.ALQUIMIA = (function () {
       armar();
       iconos();
       INVENTARIO.pestana({ id: "alquimia", antes: "equipo", nombre: () => t("aq.mesa"), visible: () => abierta, pintar });
-      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s)));
+      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s)), "alquimia");
     },
     alEmpezar(extra) {
       extra.alq = Object.assign(base(), extra.alq || {});

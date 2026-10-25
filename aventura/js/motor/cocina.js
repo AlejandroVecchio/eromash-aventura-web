@@ -231,7 +231,7 @@ window.COCINA = (function () {
       J.modos = J.modos || {};
       J.modos.cocina = paso;
       iconos();
-      if (window.RPG) RPG.aporte((s) => st.comida && PLATOS[st.comida.id] && PLATOS[st.comida.id].s(s, st.comida.k));
+      if (window.RPG) RPG.aporte((s) => st.comida && PLATOS[st.comida.id] && PLATOS[st.comida.id].s(s, st.comida.k), "cocina");
     },
     alEmpezar(extra) {
       extra.cocina = Object.assign(base(), extra.cocina || {});

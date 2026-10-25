@@ -263,7 +263,7 @@ window.CASA = (function () {
         RPG.aporte((s) => {
           if (hecha("armero")) s.dano *= 1.04;
           if (hecha("estante")) s.xp *= 1.05;
-        });
+        }, "casa");
     },
     alEmpezar(extra) {
       extra.casa = Object.assign(base(), extra.casa || {});

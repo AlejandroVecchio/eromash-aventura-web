@@ -224,7 +224,7 @@ window.INSTRUCTORES = (function () {
       Object.assign(GENTE.FICHAS, FICHAS);
       A.CB.TIPOS.muneco = { vida: 1e9, dano: 0, vel: 0, alcance: 0, aviso: 1, forma: "circulo", radioGolpe: 0, angulo: 0, radio: 22, espera: 99, barra: 156, plata: 0, blanco: alGolpe, dibujo: "munecoPractica" };
       ubicar();
-      if (window.RPG) RPG.aporte((s) => IDS.forEach((id) => LECCIONES[id].slice(0, aprendidas(id)).forEach((L) => L.s(s))));
+      if (window.RPG) RPG.aporte((s) => IDS.forEach((id) => LECCIONES[id].slice(0, aprendidas(id)).forEach((L) => L.s(s))), "instructores");
     },
     alEmpezar(extra) {
       extra.instruc = Object.assign(base(), extra.instruc || {});

@@ -278,7 +278,7 @@ window.ARBOL = (function () {
       J = A.J;
       jug = A.jug;
       if (window.RPG) {
-        RPG.aporte(aporte);
+        RPG.aporte(aporte, "arbol");
         RPG.alSubir(() => [t("ab.sube", [CONTROLES.glifo("talentos")])]);
       }
       INVENTARIO.pestana({ id: "talentos", antes: "bolsa", nombre: () => t("ab.tab") + (libres() > 0 ? " ·" + libres() : ""), pintar });

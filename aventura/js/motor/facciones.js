@@ -232,7 +232,7 @@ window.FACCIONES = (function () {
         RPG.aporte((s) => {
           const k = grado("ocultos");
           if (k) s.regenRunica *= 1 + BONO.ocultos(k) / 100;
-        });
+        }, "facciones");
       if (window.COMERCIO)
         COMERCIO.modPrecio((p, info) => {
           if (info.tipo === "compra" && info.mercader === "ingrid") return p * (1 - BONO.sendas(grado("sendas")) / 100);

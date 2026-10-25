@@ -414,7 +414,7 @@ window.COMPANERO = (function () {
       // el ícono de la Bolsa: la cabeza de Skuggi de frente
       if (window.INVENTARIO && INVENTARIO.iconoDe)
         INVENTARIO.iconoDe("cp_perro", (c) => CRIATURAS.dibujar(c, "perro", 0, 34, 0, { vista: "S", sentado: true, s: 0.95 }));
-      if (window.RPG) RPG.aporte((s) => sabe(5) && sigue() && (s.dano *= 1.05));
+      if (window.RPG) RPG.aporte((s) => sabe(5) && sigue() && (s.dano *= 1.05), "companero");
     },
     alEmpezar(extra) {
       extra.companero = Object.assign(base(), extra.companero || {});

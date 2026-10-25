@@ -255,7 +255,7 @@ window.CONTRATOS = (function () {
       W = A.W;
       armar();
       iconos();
-      if (window.RPG) RPG.aporte((s) => st.colgado && TROFEOS[st.colgado] && TROFEOS[st.colgado].aporte(s));
+      if (window.RPG) RPG.aporte((s) => st.colgado && TROFEOS[st.colgado] && TROFEOS[st.colgado].aporte(s), "contratos");
     },
     alEmpezar(extra) {
       extra.contratos = Object.assign(base(), extra.contratos || {});

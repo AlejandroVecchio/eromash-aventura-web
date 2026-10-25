@@ -194,7 +194,7 @@ window.CONJUNTOS = (function () {
       jug = A.jug;
       iconos();
       envolverCofres();
-      if (window.RPG) RPG.aporte(aporte);
+      if (window.RPG) RPG.aporte(aporte, "conjuntos");
       INVENTARIO.pestana({ id: "conjuntos", antes: "bestiario", nombre: () => t("cj.tab"), visible: () => Object.keys(st.vistos).length > 0, pintar });
     },
     alEmpezar(extra) {

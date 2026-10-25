@@ -5,37 +5,36 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 48,
-    titulo: { es: "La hólmganga: duelos en la piel", en: "The holmgang: duels on the hide" },
+    pr: 49,
+    titulo: { es: "La hoja de Eromash y los topes", en: "Eromash's sheet and the caps" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: cada kempa paga experiencia y crece con tu nivel", en: "levels: each champion pays experience and scales with your level" },
-      { pr: 47, es: "Skuggi: en la piel no muerde, mira desde el borde", en: "Skuggi: he doesn't bite on the hide, he watches from the edge" },
+      { pr: 1, es: "niveles: la tubería de estadísticas (RPG.aporte) que ahora dice quién suma", en: "levels: the stat pipeline (RPG.aporte) that now says who adds what" },
+      { pr: 48, es: "y todas las que suman a Eromash (equipo, atributos, árbol, comidas, bendiciones, Skuggi, el hólmr…): cada una aparece con su nombre", en: "and every PR that adds to Eromash (gear, attributes, tree, meals, blessings, Skuggi, the holmr…): each shows up by name" },
     ],
     mirar: [
-      { es: "Junto al camino del Puesto a Eikholt (escudo rojo en el mapa) hay una piel de buey estaqueada entre varas de avellano, con dos testigos en un banco y Hallbera al costado. Con E le pedís batirte con el siguiente de cinco kempur: Ketil el Joven, Thorgerd Lanza Larga, Björn el Muro, Ásgerd la Ligera y Úlfhild Hija del Oso, cada uno con su rotación fija de ataques.", en: "By the road from the Outpost to Eikholt (red shield on the map) there's an ox hide staked between hazel poles, with two witnesses on a bench and Hallbera beside it. Press E to ask to fight the next of five champions: Ketil the Young, Thorgerd Long-Spear, Björn the Wall, Ásgerd the Light and Úlfhild Bear's Daughter, each with a fixed attack rotation." },
-      { es: "Reglas: cuenta de tres, los dos curados. Cada kempa trae escudos (arriba, en la barra): mientras se cubre tu golpe pega un cuarto y tres golpes parten un escudo (tambalea); mientras avisa o se recupera queda «¡abierto!» y pega entero. Sin escudos el remate lo empuja fuerte.", en: "Rules: count of three, both healed. Each champion brings shields (top, on the bar): while guarding your blow deals a quarter and three blows split a shield (he staggers); while he telegraphs or recovers he's «open!» and takes full damage. Without shields your finisher knocks him far." },
-      { es: "Se gana sacándolo de la piel o cuando baja de su 12 % (se rinde). Se pierde al pisar fuera sin saltar (el borde se pone rojo si te acercás o te empujan) o al bajar de tu 12 %: nadie muere en la piel. El quinto da el título «Campeón del hólmr» (+5 % de daño), una pieza y un fragmento; después hay un retador por día.", en: "You win by knocking him off the hide or when he drops below 12% (he yields). You lose by stepping off without jumping (the edge turns red when you get close or get pushed) or dropping below 12%: nobody dies on the hide. The fifth grants the title «Champion of the holmr» (+5% damage), a piece and a fragment; afterwards there's a challenger each day." },
+      { es: "En la mochila hay una pestaña nueva, Hoja: cada estadística de Eromash con su runa (vida, estamina, daño, crítico, velocidades, armadura, poder rúnico, regeneración, experiencia, plata, botín y lámpara). Al elegir una, abajo dice su base, qué suma cada cosa por nombre y su tope. Más abajo está la hoja entera en una tabla.", en: "The backpack has a new tab, Sheet: every stat of Eromash with its rune (health, stamina, damage, crit, speeds, armour, rune power, regeneration, experience, silver, loot and lamp). Pick one and below it shows its base, what each thing adds by name and its cap. Further down is the whole sheet in a table." },
+      { es: "La pasada de balance: el nivel, el equipo (con sus conjuntos) y los atributos cuentan enteros, pero lo que suman los demás sistemas juntos tiene tope (daño ×1,75, vida ×1,6, experiencia, plata y botín ×2, armadura +120, crítico +25 %…). Lo que pasa el tope vale la mitad, así apilar bonos sigue sirviendo pero no se dispara. El crítico nunca pasa del 60 % (antes 75 %). Una casilla topada lleva un punto naranja.", en: "The balance pass: level, gear (with its sets) and attributes count in full, but what the other systems add together is capped (damage ×1.75, health ×1.6, experience, silver and loot ×2, armour +120, crit +25%…). Anything over the cap counts half, so stacking bonuses still helps but doesn't explode. Crit never goes over 60% (was 75%). A capped slot carries an orange dot." },
     ],
     botones: [
-      { es: "Llevarme al hólmr", en: "Take me to the holmr", fn: (A) => {
-        const h = HOLMR.hallbera();
-        ir(A, [h.x, h.y], -90, 30);
+      { es: "Abrir la Hoja", en: "Open the Sheet", fn: () => INVENTARIO.abrir("hoja") },
+      { es: "Subir 10 niveles", en: "Gain 10 levels", fn: (A) => {
+        let x = 0;
+        for (let n = RPG.nivel(); n < Math.min(RPG.TOPE, RPG.nivel() + 10); n++) x += RPG.xpPara(n);
+        RPG.dar(x, A.jug.x, A.jug.y);
       } },
-      { es: "Batirme ya con el siguiente", en: "Fight the next one now", fn: (A) => {
-        if (HOLMR.duelo()) return;
-        const h = HOLMR.hallbera();
-        A.teletransportar(h.x - 90, h.y + 30);
-        A.J.retrasar(2.2, () => HOLMR.empezar());
-      } },
-      { es: "Saltar a Úlfhild (la última)", en: "Skip to Úlfhild (the last one)", fn: () => {
-        HOLMR.estado().vencidos = 4;
-      } },
-      { es: "Partirle los escudos (en duelo)", en: "Split his shields (in a duel)", fn: () => {
-        if (HOLMR.duelo()) HOLMR.duelo().escudos = 0;
-      } },
-      { es: "Que vuelva el retador de hoy", en: "Bring back today's challenger", fn: () => {
-        HOLMR.estado().retadorDia = -1;
+      { es: "Apilar bonos (título, Skuggi, inspirado, casa) para ver el tope", en: "Stack bonuses (title, Skuggi, inspired, house) to see the cap", fn: () => {
+        if (window.HOLMR) HOLMR.estado().campeon = true;
+        if (window.COMPANERO) {
+          COMPANERO.estado().rescatado = true;
+          COMPANERO.estado().quieto = null;
+          COMPANERO.sumar(600);
+        }
+        if (window.ENCUENTROS && ENCUENTROS.estado) ENCUENTROS.estado().inspirado = 600;
+        RPG.aporte((s) => window.__notaBono && (s.dano *= 1.6), "cocina");
+        window.__notaBono = true;
+        RPG.recalcular();
+        INVENTARIO.abrir("hoja");
       } },
     ],
   };

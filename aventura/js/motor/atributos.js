@@ -187,7 +187,7 @@ window.ATRIBUTOS = (function () {
       J = A.J;
       jug = A.jug;
       if (window.RPG) {
-        RPG.aporte((s) => efecto(s, conBonos(st)));
+        RPG.aporte((s) => efecto(s, conBonos(st)), "atributos");
         RPG.alSubir(() => [t("at.sube", [POR_NIVEL, CONTROLES.glifo("personaje")])]);
       }
       if (window.INVENTARIO && INVENTARIO.pestana) INVENTARIO.pestana({ id: "atributos", antes: "bolsa", nombre: () => t("at.tab") + (libres(true) > 0 ? " ·" + libres(true) : ""), pintar });

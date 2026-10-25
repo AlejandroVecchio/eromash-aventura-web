@@ -22,7 +22,18 @@ window.RPG = (function () {
   let st = { nivel: 1, xp: 0, total: 0 };
   const base = () => ({ nivel: 1, xp: 0, total: 0 });
   const S = {}; // las estadísticas finales, después de cada recalcular
-  const aportes = []; // fn(s, nivel): cada sistema suma lo suyo
+  const aportes = []; // { f: fn(s, nivel), quien }: cada sistema suma lo suyo y dice quién es (para la hoja de Eromash)
+  // ---------- los topes (la pasada de balance) ----------
+  // Lo de base (forja de Ása, manzanas), el nivel, el equipo puesto y los atributos son el núcleo y no se topan. Lo que
+  // suman los demás sistemas (comidas, bendiciones, trucos, títulos, lecciones, pociones, trofeos…) se junta por
+  // estadística y, pasado el tope, lo que sobra vale la mitad: se puede seguir sumando, pero no se dispara.
+  // Multiplicadores (×) y sumas (+); la hoja de Eromash (interfaz/hoja.js) muestra cada aporte y cuánto se comió el tope.
+  const NUCLEO = { nivel: 1, botin: 1, conjuntos: 1, atributos: 1 }; // los conjuntos son del equipo puesto
+  const CLAVES = ["vida", "estamina", "dano", "crit", "critMult", "velAtq", "velMov", "armadura", "runico", "regen", "regenRunica", "xp", "plata", "botin", "lampara"];
+  const SUMAN = { vida: 1, estamina: 1, crit: 1, armadura: 1, lampara: 1 }; // el resto se muestra como porcentaje
+  const TOPES = { dano: { x: 1.75 }, vida: { x: 1.6 }, runico: { x: 1.75 }, critMult: { x: 1.5 }, velAtq: { x: 1.4 }, velMov: { x: 1.4 }, regen: { x: 2.5 }, regenRunica: { x: 2.5 }, xp: { x: 2 }, plata: { x: 2 }, botin: { x: 2 }, estamina: { mas: 80 }, crit: { mas: 0.25 }, armadura: { mas: 120 } };
+  const CRIT_MAX = 0.6;
+  let D = {}; // el desglose: clave → { base, partes: [{ quien, dif, k }], bono, recorte, final }
   const alSubirFns = []; // fn(nivel) → [líneas de texto] para el cartel de nivel
 
   // ---------- el nivel de cada criatura ----------
@@ -143,13 +154,55 @@ window.RPG = (function () {
     const b = (window.PODERES && PODERES.valores && PODERES.valores()) || { vida: 100, dano: 1, lampara: 1, runico: 1 };
     const n = st ? st.nivel : 1;
     const s = { vida: b.vida + (n - 1) * 6, estamina: 100, dano: b.dano * (1 + (n - 1) * 0.03), crit: 0.1, critMult: 1.6, velAtq: 1, velMov: 1, runico: b.runico, armadura: 0, regen: 1, regenRunica: 1, xp: 1, plata: 1, botin: 1, lampara: b.lampara };
-    aportes.forEach((f) => f(s, n));
+    // cada aporte, anotado: cuánto cambió cada estadística (diferencia y proporción) y quién lo puso
+    D = {};
+    CLAVES.forEach((k) => (D[k] = { base: s[k], partes: [], bonoX: 1, bonoMas: 0, recorte: 0, final: s[k] }));
+    // lo que da el nivel, aparte de la base (forja de Ása, manzanas, cota)
+    if (n > 1) {
+      D.vida.base = b.vida;
+      D.vida.partes.push({ quien: "nivel", dif: (n - 1) * 6, k: s.vida / b.vida });
+      D.dano.base = b.dano;
+      D.dano.partes.push({ quien: "nivel", dif: s.dano - b.dano, k: 1 + (n - 1) * 0.03 });
+    }
+    for (const a of aportes) {
+      const antes = CLAVES.map((k) => s[k]);
+      a.f(s, n);
+      CLAVES.forEach((k, i) => {
+        const v0 = antes[i],
+          v1 = s[k];
+        if (v1 === v0 || !isFinite(v1)) return;
+        const dk = D[k],
+          dif = v1 - v0,
+          kx = v0 ? v1 / v0 : 1,
+          p = dk.partes.find((q) => q.quien === a.quien);
+        if (p) (p.dif += dif), (p.k *= kx);
+        else dk.partes.push({ quien: a.quien, dif, k: kx });
+        if (!NUCLEO[a.quien]) (dk.bonoX *= kx), (dk.bonoMas += dif);
+      });
+    }
+    // los topes: lo que pasa del tope vale la mitad
+    Object.keys(TOPES).forEach((k) => {
+      const T = TOPES[k],
+        dk = D[k];
+      if (T.x && dk.bonoX > T.x) {
+        const ef = T.x + (dk.bonoX - T.x) * 0.5,
+          v = s[k] * (ef / dk.bonoX);
+        dk.recorte = v - s[k];
+        s[k] = v;
+      } else if (T.mas != null && dk.bonoMas > T.mas) {
+        const sobra = (dk.bonoMas - T.mas) * 0.5;
+        dk.recorte = -sobra;
+        s[k] -= sobra;
+      }
+    });
+    if (s.crit > CRIT_MAX) (D.crit.recorte += CRIT_MAX - s.crit), (s.crit = CRIT_MAX);
+    CLAVES.forEach((k) => (D[k].final = s[k]));
     jug.hpMax = Math.max(1, Math.round(s.vida));
     jug.hp = Math.min(jug.hp, jug.hpMax);
     jug.staMax = Math.max(20, Math.round(s.estamina));
     jug.sta = Math.min(jug.sta, jug.staMax);
     J.mulDano = s.dano;
-    J.critProb = Math.max(0, Math.min(0.75, s.crit));
+    J.critProb = Math.max(0, Math.min(CRIT_MAX, s.crit));
     J.critMult = s.critMult;
     J.velAtq = Math.max(0.5, Math.min(2, s.velAtq));
     J.velMov = Math.max(0.6, Math.min(1.6, s.velMov));
@@ -300,7 +353,14 @@ window.RPG = (function () {
     rotulo,
     filas,
     stats: () => S,
-    aporte: (fn) => (aportes.push(fn), recalcular()),
+    aporte: (fn, quien) => (aportes.push({ f: fn, quien: quien || "otros" }), recalcular()),
+    desglose: () => D,
+    aportes: () => aportes.map((a) => a.quien),
+    CLAVES,
+    SUMAN,
+    TOPES,
+    NUCLEO,
+    CRIT_MAX,
     alSubir: (fn) => alSubirFns.push(fn),
     TOPE,
   };

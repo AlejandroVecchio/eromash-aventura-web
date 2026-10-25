@@ -185,6 +185,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/interfaz/ · HUD, mochila, mapa, opciones y el prólogo del mago
 
+- **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
 - **iconos.js**: miniaturas del mapa (ICONOS)
@@ -307,7 +308,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
-  - el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
+  - los topes (la pasada de balance) · el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
 - **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
   - pedir · ubicar · el sistema
 - **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
@@ -472,6 +473,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
+- **hoja.js**: Textos de la hoja de Eromash y los topes del balance (interfaz/hoja.js, motor/rpg.js): prefijo hj.
 - **holmr.js**: Textos de la hólmganga (motor/holmr.js, enemigos/kempur.js, mundo/assets-holmr.js): prefijo hm. (y as., cr.kempa,
 - **instructores.js**: Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.

@@ -275,7 +275,7 @@ window.DESCANSO = (function () {
       jug = A.jug;
       W = A.W;
       ubicar();
-      if (window.RPG) RPG.aporte((s) => st.descansado > 0 && (s.xp *= 1 + st.k));
+      if (window.RPG) RPG.aporte((s) => st.descansado > 0 && (s.xp *= 1 + st.k), "descanso");
     },
     alEmpezar(extra) {
       extra.descanso = Object.assign(base(), extra.descanso || {});

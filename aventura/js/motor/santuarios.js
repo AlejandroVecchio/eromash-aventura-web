@@ -120,7 +120,7 @@ window.SANTUARIOS = (function () {
         RPG.aporte((s) => {
           if (st.bend && LISTA[st.bend.dios]) LISTA[st.bend.dios].s(s, st.bend.fuerte ? FUERTE : 1);
           if (aesir()) (s.dano *= 1.03), (s.vida *= 1.03);
-        });
+        }, "santuarios");
     },
     alEmpezar(extra) {
       extra.santuarios = Object.assign(base(), extra.santuarios || {});
