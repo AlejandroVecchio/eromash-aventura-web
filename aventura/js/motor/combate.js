@@ -221,6 +221,11 @@ window.COMBATE = (function () {
       e.muerto += dt;
       return;
     }
+    // un jefe que mueve su propio sistema (el jötunn): acá solo se le pasa el destello
+    if (e.propio) {
+      e.herido = Math.max(0, e.herido - dt * 4);
+      return;
+    }
     const p = J.jugador,
       d = e.d,
       dx = p.x - e.x,

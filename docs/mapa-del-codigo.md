@@ -170,6 +170,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
   - Lobo del zarzal · Errante de Helheim · Custodio de corteza · Ciervo Hueco (jefe)
 - **dreki.js**: el dreki (se suma a CRIATURAS)
+- **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
@@ -271,6 +272,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - dónde está cada uno · las lecciones · el muñeco · el sistema
 - **interiores.js**: los interiores (sistema INTERIORES)
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
+- **jotunn.js**: Hrímnir, el jötunn de la escarcha (sistema JOTUNN)
+  - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el desafío: sin sus guardianes caídos, la patada · el sistema
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · el claro de Eromash: lo que lo rodea se vuelve transparente · HUD de cada cuadro · menús · bucle · arranque
 - **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
@@ -351,6 +354,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-interiores.js**: los muebles de adentro (interiores)
   - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco
   - assets: escritorioRunico, hogarPiedra, camaPieles, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
+- **assets-jotunn.js**: el asiento de Hrímnir (assets de JOTUNN)
+  - assets: asientoJotunn, menhirEscarcha, jotunnFigura
 - **assets-materiales.js**: las vetas del bosque: de donde sale el material de la forja (assets de MATERIALES)
   - la veta de hierro de pantano · el nódulo de ámbar · la vena rúnica
   - assets: vetaHierro, vetaAmbar, vetaRunica
@@ -431,6 +436,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
+- **jotunn.js**: Textos de Hrímnir, el jötunn de la escarcha (motor/jotunn.js): prefijo jt. (y hd.unico_hrimnir, cr., bs., as., mp.ley_jotunn).
 - **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.

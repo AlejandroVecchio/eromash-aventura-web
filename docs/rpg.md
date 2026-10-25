@@ -500,6 +500,31 @@ Como las cuevas de arañas del Skyrim y los nidos del Gothic.
 - Vendas: `botonesFogata` teje una con `VENDA_SEDA` = 2; desde la Bolsa (`celdasBolsa`) curan el veneno y 30 de vida.
 - Estado en `E.extra.aranas = { cortados, vendas, veneno }`.
 
+## Hrímnir, el jötunn de la escarcha (`motor/jotunn.js`, `JOTUNN`; dibujo en `enemigos/jotunn.js`; assets `asientoJotunn`, `menhirEscarcha`, `jotunnFigura` en `mundo/assets-jotunn.js`; textos `jt.`)
+
+Un jefe del mundo como los gigantes del Skyrim y los jefes del WoW, con las reglas fijas de la arena.
+- Lugar: el primer punto libre en espiral desde `W.m(900, 180)`, lejos de caminos, lugares, grupos, ríos y lagunas.
+  Abre un anillo de `ANILLO` = 900 con nueve menhires y el trono.
+- Por qué pelea: dormido no se lo lastima y no se levanta por un mortal. La primera visita habla (`jt.desden_*`) y el
+  mapa marca a sus tres guardianes: hrímthursar (draugr × 1,3 de tamaño, × 2,2 de vida, × 1,3 de daño) a
+  `DIST_GUARDIAN` = 2400 del anillo. Hasta vencerlos, acercarse a menos de `PATADA` = 360 del gigante tira la patada:
+  aviso en franja de 0,8 s hacia Eromash; si lo agarra (saltar la evita) no saca vida y lo lleva volando 0,7 s hasta
+  afuera del anillo. Con los tres caídos (`st.guardianes`) avisa «Hrímnir te espera» y al acercarse pelea como siempre.
+- Es una criatura de COMBATE (`jotunn`, 2600 de vida) con `e.propio`: combate.js solo le pasa el destello y este
+  sistema lo mueve. Se dibuja por `d.dibujo` = `jotunnFigura`, con la pose en `e.o` (sentado, pisa, grita, expuesto).
+- Despierta a `DESPIERTA` = 620 del centro. Si Eromash se va a más de `SUELTA` = 1900 o cae, vuelve al trono curado.
+- `ATAQUES` (forma, aviso, daño): barrido (abanico 6,2 m, 1,1 s, 28), pisotón (círculo 4,6 m, 1,3 s, 30), línea de
+  hielo (franja 17 m, 1,2 s, 26), granizo (3 o 5 círculos de 1,7 m, 1,45 s, 22), grito (círculo 9,5 m, 1,7 s, 24).
+  `ROTACION` por fase (66 % y 33 %); `proximo()` saltea un tercero igual. Camina hasta el alcance del próximo ataque.
+- El golpe se resuelve en `pegar()` con `COMBATE.contiene` y `J.herir(min(daño, 35 % de la vida))`, así que saltar o
+  esquivar lo evita. Tras pisotón y grito queda expuesto `EXPUESTO` = 1,4 s y recibe × 1,3 (`modDano`). Un remate al
+  tercero lo aturde (`e.aturdido`) y corta el aviso.
+- Al pasar de fase llama hasta tres draugr de escarcha (los tres esbirros que tiene armados).
+- Mientras pelea pide `J.alejarA(1,75)` y `J.camFoco` (hook nuevo de juego.js: la cámara encuadra a los dos) y pone
+  `J.jefeHud` en `hud`.
+- Vencerlo una vez: 320 de plata, 1500 de experiencia, dos fragmentos, una pieza r ≥ 3 y `extra.hd.unicos.hrimnir`
+  (el bestiario lo muestra caído). Estado en `E.extra.jotunn = { vencido, intentos }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
