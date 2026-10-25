@@ -276,8 +276,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
-- **holmr.js**: la hólmganga: duelos en la piel (sistema HOLMR)
-  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo · el sistema
+- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
