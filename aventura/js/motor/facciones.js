@@ -1,7 +1,7 @@
 // ---------- las facciones y la reputación (sistema FACCIONES) ----------
 // Como la reputación del WoW y los gremios del Oblivion y el Morrowind: cuatro facciones de Eldervald recuerdan lo que
 // Eromash hace por ellas, en cinco grados (Desconocido, Conocido, Amigo, Honrado, Exaltado; NIVELES de reputación):
-//   · La Guardia del Roble (Eikholt): bandidos vencidos, guaridas saqueadas, contratos cobrados, némesis vengadas.
+//   · La Guardia del Roble (Eikholt): bandidos vencidos, guaridas saqueadas, contratos cobrados.
 //     Da daño contra bandidos.
 //   · Los Guardasendas de Eydis (el Puesto): misiones, lugares descubiertos, el tablón de cacería, los encuentros del
 //     camino. Ingrid cobra menos.
@@ -28,7 +28,6 @@ window.FACCIONES = (function () {
   const FUENTES = {
     saqueos: ["guardia", 80, () => cuenta(ex.bandidos && ex.bandidos.saqueados)],
     trofeos: ["guardia", 90, () => (ex.contratos && ex.contratos.trofeos ? ex.contratos.trofeos.length : 0)],
-    vengadas: ["guardia", 120, () => (ex.nemesis && ex.nemesis.vengadas ? ex.nemesis.vengadas.length : 0)],
     misiones: ["sendas", 120, () => (A.H.E.mision || 0)],
     lugares: ["sendas", 25, () => (A.H.E.vistos ? A.H.E.vistos.length : 0)],
     tablon: ["sendas", 60, () => (ex.tablon && ex.tablon.hechos) || 0],
