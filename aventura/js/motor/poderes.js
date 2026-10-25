@@ -18,6 +18,7 @@ window.PODERES = (function () {
     COSTO_COTA = [25, 60, 110, 190, 300],
     COSTO_LAMPARA = [40, 120];
   let pj = null; // lo que se guarda: plata, runas, nivel rúnico, mejoras
+  let cura = 0; // lo que les queda por curar a las hierbas comidas
   let energia = 100,
     escudo = 0,
     escudoT = 0,
@@ -25,7 +26,7 @@ window.PODERES = (function () {
   const efectos = []; // lo que se ve al lanzar una runa
   const botin = []; // plata y brasas de vida en el piso
 
-  const base = () => ({ plata: 0, runas: [], sel: 0, frag: 0, nivel: 0, espada: 0, cota: 0, lampara: 0, manzanas: 0 });
+  const base = () => ({ plata: 0, runas: [], sel: 0, frag: 0, nivel: 0, espada: 0, cota: 0, lampara: 0, manzanas: 0, hierbas: 0 });
   const poder = () => 1 + (pj ? pj.nivel : 0) * 0.15;
   // lo que dan la forja, las manzanas y el poder rúnico: la base que después junta RPG con lo demás
   function valores() {
@@ -80,7 +81,8 @@ window.PODERES = (function () {
       A.dialogoLibre([["asa", "pj.asa_hola"]], forja);
     } else if (n.id === "thora") {
       jug.hp = jug.hpMax;
-      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]]);
+      // después de curarte, su mesa: enciende las piedras de Berkano, prepara brebajes y vende piedras (berkano.js)
+      A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "pj.thora_" + (rumor++ % 3)]], window.BERKANO ? BERKANO.thora : null);
     } else {
       const k = rumor++ % 4;
       A.dialogoLibre([[n.id, "pj." + n.id + "_" + k]]);
@@ -114,6 +116,8 @@ window.PODERES = (function () {
       linea("pj.forja_lampara", pj.lampara, COSTO_LAMPARA, () => pj.lampara++),
       // la pechera de escamas, con las escamas de Góinn
       ...(window.GOINN && GOINN.vencido() ? [linea("pj.forja_pechera", pj.pechera ? 1 : 0, [200], () => ((pj.pechera = 1), (jug.hp += 40)))] : []),
+      // tallar Berkano más hondo: cada piedra cura más (berkano.js)
+      ...(window.BERKANO ? [BERKANO.lineaForja(rebaja, forja)] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }
@@ -142,9 +146,13 @@ window.PODERES = (function () {
     if (b.vida) soltar(x, y, "vida", 30, true);
     if (b.frag) J.retrasar(0.5, () => darFragmento());
     if (b.manzana) J.retrasar(1, () => darManzana());
+    // uno de cada tres cofres trae hierbas de Thora (se llevan hasta cinco, se comen desde la barra de abajo)
+    const hierbas = pj.hierbas < MAX_HIERBAS && Math.random() < 0.35;
+    if (hierbas) darHierbas(1);
     const partes = [nombre];
     if (b.plata) partes.push(t("sx.botin_plata", [b.plata]));
     if (b.vida) partes.push(t("sx.botin_vida"));
+    if (hierbas) partes.push(t("bar.botin_hierbas"));
     HUD.aviso(partes.join(" · "), "#FFD98A");
     if (window.ANIMA) ANIMA.gesto("feliz");
   }
@@ -172,6 +180,21 @@ window.PODERES = (function () {
       HUD.aviso(t("pj.nivel_runico", [pj.nivel]), "#73D5DB");
     } else HUD.aviso(t("pj.fragmento", [pj.frag % 3]), "#73D5DB");
   }
+  // ---------- las hierbas de Thora: el primer objeto que se usa desde la barra ----------
+  const MAX_HIERBAS = 5;
+  function darHierbas(n) {
+    pj.hierbas = Math.min(MAX_HIERBAS, (pj.hierbas || 0) + n);
+    if (window.BARRA) BARRA.recibido("hierbas");
+  }
+  function comerHierbas() {
+    if (!pj.hierbas) return A.avisar("bar.sin_hierbas", "#C8402D");
+    if (jug.hp >= jug.hpMax && cura <= 0) return A.avisar("bar.hierbas_lleno", "#7BC86C");
+    pj.hierbas--;
+    cura += 45;
+    if (window.VIDA) VIDA.evento("sanar", jug.x, jug.y);
+    if (window.SONIDO) SONIDO.tono("sine", 660, 880, 0.35, 0.04, { filtro: 2400 });
+    A.numero(jug.x, jug.y - 90, 45, "#7BC86C");
+  }
   function darManzana() {
     pj.manzanas++;
     aplicar();
@@ -183,7 +206,10 @@ window.PODERES = (function () {
     pj.runas.push(r);
     pj.sel = pj.runas.length - 1;
     energia = 100;
-    A.dialogoLibre([["eromash", "pj.runa_" + r + "_toma"]], () => HUD.aviso(t("pj.runa_aprendida", [t("pj.runa_" + r), CONTROLES.glifo("runa")]), RUNAS[r].col));
+    // va sola a la primera casilla libre de la barra de abajo; el aviso dice con qué tecla se lanza
+    if (window.BARRA) BARRA.recibido("runa_" + r);
+    const glifo = window.BARRA ? BARRA.glifoDe("runa_" + r) : CONTROLES.glifo("runa");
+    A.dialogoLibre([["eromash", "pj.runa_" + r + "_toma"]], () => HUD.aviso(t("pj.runa_aprendida", [t("pj.runa_" + r), glifo]), RUNAS[r].col));
   }
 
   // ---------- lanzar runas ----------
@@ -193,10 +219,11 @@ window.PODERES = (function () {
     return Math.atan2(jug.dir[1] * 1.25, jug.dir[0]);
   }
   const vivos = () => A.enemigos.filter((e) => e.activo && !e.muerto && Math.abs(e.x - jug.x) < 900 && Math.abs(e.y - jug.y) < 700);
-  function lanzar() {
+  // lanza una runa (la de su casilla en la barra de abajo, o la elegida)
+  function lanzar(r) {
     if (!pj.runas.length) return A.avisar("pj.sin_runas");
-    const r = pj.runas[pj.sel],
-      def = RUNAS[r];
+    if (!r || !pj.runas.includes(r)) r = pj.runas[pj.sel];
+    const def = RUNAS[r];
     if (energia < def.coste) return A.avisar("pj.sin_energia");
     energia -= def.coste;
     const pr = J.poderRunico || poder();
@@ -272,6 +299,7 @@ window.PODERES = (function () {
       energia = 100;
       escudo = 0;
       sol = 0;
+      cura = 0;
       botin.length = 0;
       aplicar();
       jug.hp = Math.min(jug.hpMax, Math.max(jug.hp, 1));
@@ -285,9 +313,11 @@ window.PODERES = (function () {
         sol -= dt;
         if (sol <= 0) aplicar();
       }
-      if (J.modo === "juego" && !jug.muerto && jug.interactuando <= 0) {
-        if (CONTROLES.recien("runa")) lanzar();
-        if (CONTROLES.recien("cambiarRuna") && pj.runas.length > 1) pj.sel = (pj.sel + 1) % pj.runas.length;
+      // las hierbas curan de a poco (las teclas de las runas y de las hierbas las mira la barra: interfaz/barra.js)
+      if (cura > 0 && !jug.muerto) {
+        const d = Math.min(cura, 22 * dt);
+        cura -= d;
+        jug.hp = Math.min(jug.hpMax, jug.hp + d);
       }
       efectos.forEach((f) => (f.t += dt));
       for (let i = efectos.length - 1; i >= 0; i--) if (efectos[i].t > efectos[i].dur) efectos.splice(i, 1);
@@ -311,7 +341,12 @@ window.PODERES = (function () {
         }
         if (listo && d < 26) {
           if (b.tipo === "plata") darPlata(Math.max(1, Math.round(b.cant * ((window.RPG && RPG.stats().plata) || 1))));
-          else jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+          else {
+            // lo que sobra de vida va a las piedras de Berkano (berkano.js)
+            const sobra = jug.hp + b.cant - jug.hpMax;
+            jug.hp = Math.min(jug.hpMax, jug.hp + b.cant);
+            if (sobra > 0 && window.BERKANO) BERKANO.cargar(sobra);
+          }
           if (window.SONIDO) SONIDO.tocar(b.tipo === "plata" ? "plata" : "tela", { vol: b.tipo === "plata" ? 0.45 : 0.4, var: 0.12 });
           botin.splice(i, 1);
         } else if (b.t > 90) botin.splice(i, 1);
@@ -428,12 +463,12 @@ window.PODERES = (function () {
   function estado() {
     if (!pj) return null;
     const r = pj.runas[pj.sel];
-    return { runa: r || null, col: r ? RUNAS[r].col : "#3A3634", coste: r ? RUNAS[r].coste : 0, energia, escudo: escudo > 0, runas: pj.runas.slice(), sel: pj.sel, plata: pj.plata, frag: pj.frag, nivel: pj.nivel, espada: pj.espada, cota: pj.cota, lampara: pj.lampara, manzanas: pj.manzanas, pechera: !!pj.pechera, poder: poder() };
+    return { runa: r || null, col: r ? RUNAS[r].col : "#3A3634", coste: r ? RUNAS[r].coste : 0, energia, escudo: escudo > 0, runas: pj.runas.slice(), sel: pj.sel, plata: pj.plata, frag: pj.frag, nivel: pj.nivel, espada: pj.espada, cota: pj.cota, lampara: pj.lampara, manzanas: pj.manzanas, hierbas: pj.hierbas || 0, pechera: !!pj.pechera, poder: poder() };
   }
   function elegirRuna(r) {
     const i = pj ? pj.runas.indexOf(r) : -1;
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, lanzar, darHierbas, comerHierbas, MAX_HIERBAS, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();

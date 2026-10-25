@@ -50,6 +50,7 @@ window.EDITOR_COMANDOS = (function () {
       ["atajos", "ed.atajos_titulo", "?"],
     ].map(([a, k, tecla]) => ({ nom: t(k), tipo: t("ed.com_accion"), tecla, hacer: E.acciones[a] }));
     acc.push({ nom: t("ed.ia_titulo"), tipo: t("ed.com_accion"), tecla: "8", hacer: () => window.EDITOR_IA && EDITOR_IA.abrir() });
+    acc.push({ nom: t("ed.bo_titulo"), tipo: t("ed.com_accion"), tecla: "U", hacer: () => window.EDITOR_BOCETO && EDITOR_BOCETO.abrir() });
     if (window.INTERIORES && INTERIORES.PLANTILLAS)
       INTERIORES.PLANTILLAS.forEach((p) => acc.push({ nom: t("ed.cu_titulo") + " · " + t("ed.cu_" + p), tipo: t("ed.com_accion"), tecla: "9", hacer: () => window.EDITOR_CUARTOS && EDITOR_CUARTOS.abrir(p) }));
     const obj = ASSETS.catalogo().map((a) => ({ nom: t("as." + a.id) === "as." + a.id ? a.id : t("as." + a.id), extra: a.id, tipo: t("ed.com_objeto"), tecla: "", hacer: () => E.elegir(a.id) }));
