@@ -89,3 +89,19 @@
 #regateo .rg-paciencia i { position: absolute; left: 0; top: 0; bottom: 0; background: #C8402D; transition: width 0.3s; }
 #regateo .rg-cerrar { font: inherit; font-weight: 700; color: #F2ECEC; background: #221B18; border: 1px solid #3A2A26; padding: 6px 14px; cursor: pointer; }
 #regateo .rg-cerrar:hover { border-color: var(--oro); }
+
+/* ---------- bestiario: la pestaña de las criaturas (motor/bestiario.js) ---------- */
+.bs-cabeza { margin: 0 0 10px; color: #E0B2B2; }
+.inv-celda.bs-n2 { box-shadow: inset 0 -3px 0 var(--oro); }
+.inv-celda.bs-n3 { box-shadow: inset 0 -3px 0 #F5A524, inset 0 0 18px rgba(245, 165, 36, 0.22); }
+.inv-detalle p .bs-texto { display: block; margin-bottom: 4px; }
+.inv-detalle p .bs-debil, .inv-detalle p .bs-saga { display: block; margin-top: 4px; }
+.inv-detalle p .bs-debil b { color: var(--oro); }
+.inv-detalle p .bs-saga b { color: #F5A524; }
+.inv-detalle p i { font-style: normal; color: #7BC86C; }
+.bs-unicos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.bs-unico { padding: 8px 10px; background: #1E1814; border-left: 3px solid var(--oro); display: flex; flex-direction: column; gap: 2px; }
+.bs-unico b { color: var(--oro); }
+.bs-unico small { color: #8A8080; }
+.bs-unico.caido b { text-decoration: line-through; color: #8A8080; }
+.bs-unico.caido { border-left-color: #3A3634; }

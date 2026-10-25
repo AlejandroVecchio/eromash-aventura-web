@@ -5,39 +5,27 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 14,
-    titulo: { es: "Regatear con la balanza", en: "Haggling on the scale" },
+    pr: 15,
+    titulo: { es: "El bestiario", en: "The bestiary" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 13, es: "comercio: se regatea lo que venden Ingrid y Kolbrun y lo que les vendés", en: "trading: you haggle over what Ingrid and Kolbrun sell and what you sell them" },
-      { pr: 2, es: "atributos: el Espíritu ensancha la zona del trato", en: "attributes: Spirit widens the deal zone" },
+      { pr: 3, es: "mochila: el bestiario es una pestaña más", en: "backpack: the bestiary is one more tab" },
+      { pr: 12, es: "materiales: cada página dice qué deja la criatura", en: "materials: each page says what the creature drops" },
     ],
     mirar: [
-      { es: "En la pestaña del mercader, elegí una pieza (suya o de tu bolsa) y apretá R (△) o el botón «Regatear» del pie.", en: "In the merchant tab, pick a piece (theirs or from your bag) and press R (△) or the «Haggle» button at the bottom." },
-      { es: "Elegís cuánto pedir: comprando −10/−20/−30 %, vendiendo +15/+30/+45 %. Después una aguja corre por la balanza: pará adentro de la zona roja (E, ✕ o tocando). En el dorado es trato redondo (un poco más).", en: "Choose how much to ask: buying −10/−20/−30 %, selling +15/+30/+45 %. Then a needle runs along the scale: stop it inside the red zone (E, ✕ or tap). On the gold it's a perfect deal (a bit more)." },
-      { es: "Más pedís, zona más chica y aguja más rápida. Errar gasta paciencia (la barra roja); sin paciencia, por hoy no regatea más. Cada uno tiene su carácter: Ingrid paciente y firme, Kolbrun impaciente y generosa si acertás.", en: "The more you ask, the smaller the zone and faster the needle. Missing costs patience (the red bar); out of patience, no more haggling today. Each has a temper: Ingrid patient and firm, Kolbrun impatient but generous if you nail it." },
-      { es: "El trato vale para esa pieza todo el día y se ve en el precio de la casilla.", en: "The deal holds for that piece all day and shows in the slot's price." },
+      { es: "Mochila (I) → pestaña Bestiario: las diez criaturas de Eldervald. Las que no viste son siluetas oscuras con «???».", en: "Backpack (I) → Bestiary tab: Eldervald's ten creatures. Ones you haven't seen are dark silhouettes with «???»." },
+      { es: "Verla de cerca la anota. Vencer una abre su página: qué es, vida, golpe, cómo avisa y qué deja.", en: "Seeing one up close records it. Defeating one opens its page: what it is, life, hit, how it telegraphs and what it drops." },
+      { es: "A las 10 vencidas aprendés su punto débil (un consejo y +8 % de daño contra ella); a las 30, la maestría (otro +8 % y −10 % de lo que te pega) y su saga.", en: "At 10 defeats you learn its weak spot (a tip and +8% damage against it); at 30, mastery (another +8% and −10% from its hits) and its saga." },
+      { es: "Abajo, los cuatro únicos con nombre: un rumor, vivos con su manada o tachados al caer.", en: "Below, the four named uniques: a rumour, alive with their pack, or crossed out once fallen." },
     ],
     botones: [
-      { es: "Comerciar con Ingrid (3000 de plata)", en: "Trade with Ingrid (3000 silver)", fn: (A) => {
-        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
-        COMERCIO.abrir("ingrid");
+      { es: "Abrir el bestiario", en: "Open the bestiary", fn: (A) => INVENTARIO.abrir("bestiario") },
+      { es: "Darme una página de cada tipo (1, 10 y 30)", en: "Give me one page of each kind (1, 10 and 30)", fn: (A) => {
+        BESTIARIO.LISTA.forEach((tp, i) => BESTIARIO.anotar(tp, [1, 10, 30, 0][i % 4] || 0));
+        BESTIARIO.estado().vistas.dreki = 1;
+        INVENTARIO.abrir("bestiario");
       } },
-      { es: "Regatear la primera pieza de Kolbrun ya", en: "Haggle over Kolbrun's first piece now", fn: (A) => {
-        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
-        COMERCIO.abrir("kolbrun");
-        const it = COMERCIO.stock("kolbrun").piezas[0];
-        if (it) REGATEO.abrir("compra", it, "kolbrun");
-      } },
-      { es: "+10 de Espíritu (zona más ancha)", en: "+10 Spirit (wider zone)", fn: (A) => {
-        ATRIBUTOS.estado().esp += 10;
-        RPG.recalcular();
-        HUD.aviso("+10 Espíritu / Spirit", "#73D5DB");
-      } },
-      { es: "Devolverles la paciencia", en: "Restore their patience", fn: (A) => {
-        REGATEO.estado().paciencia = {};
-        HUD.aviso("Paciencia / Patience 100", "#FFD98A");
-      } },
+      { es: "Ir a un grupo de draugr", en: "Go to a draugr group", fn: (A) => ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 400) },
     ],
   };
   // ---------- ayuda para los botones ----------

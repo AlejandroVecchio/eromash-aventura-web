@@ -224,6 +224,17 @@ tener que leer el código para balancear.
   sin paciencia, por hoy no regatea. Todo vuelve al día siguiente (`E.extra.regateo = { dia, paciencia, tratos }`).
 - Carácter (`CARACTER`): Ingrid zona ×1,1 y aguja ×0,85; Kolbrun zona ×0,85 y aguja ×1,15.
 
+## Bestiario (`motor/bestiario.js`, `BESTIARIO`, pestaña `bestiario` de la mochila; textos `bs.` en `textos/bestiario.js`)
+
+- Diez criaturas (`LISTA`). Verla a menos de 520 la anota (silueta y nombre); vencerla (`alMorir`) suma muertes:
+  1 abre la página (descripción, vida y golpe de `CB.TIPOS`, cómo avisa, qué deja según `MATERIALES.CRIATURAS`),
+  10 el **punto débil** (consejo y +8 % de daño en `modDano`), 30 la **maestría** (otro +8 % y −10 % de lo que pega
+  en `modRecibido`, buscando quién pegó por cercanía al origen del golpe) y la saga.
+- Los retratos se dibujan con `CRIATURAS.dibujar` en grande, se recortan a lo que ocupan y se guardan (íconos
+  `bs_<tipo>` y `bs_<tipo>_x`, la silueta, con `INVENTARIO.iconoDe`).
+- Los cuatro únicos con nombre salen de `E.extra.hd.unicos` (hordas.js). Estado en
+  `E.extra.bestiario = { vistas, muertes }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
