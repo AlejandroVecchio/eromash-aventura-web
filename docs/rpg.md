@@ -108,6 +108,15 @@ tener que leer el código para balancear.
 - Cinco mandobles (mandoble 2, espadón 6, espadón rúnico 11, de hueso 15, flamígera 18 con fuego) y cinco hachas
   danesas (danesa 3, de guerra 8, gran hacha rúnica 12, de hueso 15, lábrys 19). Pegan ≈ 1,7 veces una de una mano
   y son ≈ 25 % más lentas.
+- **Arco** (`motor/arco.js`, `ARCO`; dibujo `equipo/arcos-dibujo.js`): los golpes traen `disparo: { dano, n, abre,
+  tenso }` y `arc`/`reach` mínimos (el motor no corta nada); el sistema suelta las flechas al terminar el envión.
+  Combo 12 / 12 / abanico de 3 × 10; corriendo 12 sin frenar (`mueve: 1`); al caer, lluvia de 5 × 9; cargado (0,7 s,
+  14 de estamina) el **tiro tenso**: 42, atraviesa, vuela 1150 a 1900 por segundo. Las comunes vuelan 820 a 1250 y se
+  quedan en la primera criatura. Se corren solas hacia la criatura más cercana delante (cono de 0,18 rad con mouse,
+  0,5 con mando). Pegan como un golpe (crítico, sorpresa ×1,5 a la que está quieta, `modDano`/`alPegar` de los demás
+  sistemas con `info.d.flecha`) y quedan clavadas 8 s. Tensando camina al 60 % y se ve la línea de tiro.
+  `ARMAS.poseDe("arco", fn)` lo lleva en la mano y `DIB_ARMAS.tension` tensa la cuerda. Cinco arcos: de tejo (1),
+  largo (5), rúnico (10), de asta (14) y recurvo de las estepas (17, +4 % de crítico). Van con las dos manos.
 
 ## Pruebas
 

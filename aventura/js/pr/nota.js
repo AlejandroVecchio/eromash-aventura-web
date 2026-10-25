@@ -5,38 +5,32 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 5,
-    titulo: { es: "Armas a dos manos", en: "Two-handed weapons" },
+    pr: 6,
+    titulo: { es: "Arco", en: "Bow" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: los mandobles y las hachas danesas son dos tipos nuevos con sus golpes (el hacha danesa también hace sangrar)", en: "weapon types: greatswords and Dane axes are two new types with their own moves (the Dane axe also bleeds)" },
-      { pr: 3, es: "botín y equipo: caen como cualquier pieza; poner una saca el escudo", en: "loot and gear: they drop like any piece; equipping one removes the shield" },
-      { pr: 1, es: "niveles: las mejores salen desde cierto nivel de objeto", en: "levels: the best ones start at a given item level" },
+      { pr: 4, es: "tipos de arma: el arco es un tipo más, con sus golpes que disparan en vez de cortar", en: "weapon types: the bow is one more type, whose moves shoot instead of cutting" },
+      { pr: 5, es: "armas a dos manos: el arco también saca el escudo", en: "two-handed weapons: the bow also removes the shield" },
+      { pr: 3, es: "botín y equipo: los arcos caen como cualquier pieza", en: "loot and gear: bows drop like any piece" },
     ],
     mirar: [
-      { es: "Quieto o caminando, Eromash lleva el arma al hombro, detrás de la espalda.", en: "Idle or walking, Eromash carries the weapon on his shoulder, behind his back." },
-      { es: "El combo: dos barridos anchos con envión (camina más lento mientras pega) y un golpe desde arriba que hace una onda en el piso y tambalea a lo que está cerca.", en: "The combo: two wide sweeps with wind-up (he walks slower while swinging) and an overhead slam that sends a ground wave and staggers what is close." },
-      { es: "Manteniendo atacar: torbellino. Gira con el arma estirada, pega cada 0,3 s, se puede mover y gasta estamina hasta soltar.", en: "Hold attack: whirlwind. He spins with the weapon out, hits every 0.3 s, can move and drains stamina until released." },
-      { es: "Saltando y atacando, el golpe al caer también hace onda. Corriendo, estocada larga.", en: "Jump and attack: the landing hit also makes a wave. Running, a long thrust." },
-      { es: "Con un arma a dos manos el escudo vuelve a la bolsa y no deja ponérselo (mirá el aviso). Diez armas nuevas: cinco mandobles y cinco hachas danesas.", en: "With a two-handed weapon the shield returns to the bag and can't be equipped (see the notice). Ten new weapons: five greatswords and five Dane axes." },
+      { es: "Atacar dispara: dos flechas rápidas y la tercera es un abanico de tres. Las flechas se corren un poco solas hacia la criatura de adelante (más con mando).", en: "Attack shoots: two quick arrows and the third is a fan of three. Arrows nudge toward the creature ahead (more with a pad)." },
+      { es: "Manteniendo atacar se tensa (camina más lento y aparece la línea de tiro en el piso); al soltar, el tiro tenso atraviesa a todos los que cruza.", en: "Hold attack to draw (he walks slower and an aim line appears on the ground); release for a power shot that pierces everything in its path." },
+      { es: "Saltando y atacando, lluvia de cinco flechas al caer. Corriendo, dispara sin frenar.", en: "Jump and attack: a rain of five arrows on landing. Running, he shoots without stopping." },
+      { es: "La que no te vio recibe ×1,5 (número naranja). Las flechas quedan clavadas en árboles, rocas y en el piso un rato.", en: "Unaware creatures take ×1.5 (orange number). Arrows stay stuck in trees, rocks and the ground for a while." },
+      { es: "Cinco arcos dibujados (tejo, largo, rúnico, de asta, recurvo), con la cuerda que se tensa y la flecha encajada.", en: "Five bows drawn (yew, long, rune, antler, recurve), with a string that draws back and a nocked arrow." },
     ],
     botones: [
-      { es: "Darme las diez armas y abrir la Bolsa", en: "Give me the ten weapons and open the Bag", fn: (A) => {
-        ["mandoble", "espadon", "espadonRunico", "mandobleHueso", "flamigera", "hachaDanesa", "hachaGuerra", "hachaRunica2", "hachaHueso2", "labrys"].forEach((b, i) =>
-          BOTIN.dar(OBJETOS.generar({ base: b, n: 20, r: i % 4 }), { silencio: true }),
-        );
+      { es: "Darme los cinco arcos y abrir la Bolsa", en: "Give me the five bows and open the Bag", fn: (A) => {
+        ["arcoCorto", "arcoLargo", "arcoRunico", "arcoAsta", "arcoRecurvo"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme un mandoble", en: "Equip a greatsword", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "flamigera", n: Math.max(18, RPG.nivel()), r: 2 }), { silencio: true });
+      { es: "Ponerme un arco legendario", en: "Equip a legendary bow", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "arcoRecurvo", n: Math.max(17, RPG.nivel()), r: 3 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ponerme un hacha danesa", en: "Equip a Dane axe", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "labrys", n: Math.max(19, RPG.nivel()), r: 3 }), { silencio: true });
-        BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
-      } },
-      { es: "Ir con un grupo a probarla (estamina llena)", en: "Go to a group to try it (full stamina)", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -220, 160);
+      { es: "Ir a un grupo que todavía no me vio", en: "Go to a group that hasn't seen me yet", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -520, 0);
         A.jug.sta = A.jug.staMax;
       } },
       { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {

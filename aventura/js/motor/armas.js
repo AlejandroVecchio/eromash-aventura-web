@@ -228,7 +228,11 @@ window.ARMAS = (function () {
   // ---------- el arma en la mano: cómo se lleva cada tipo ----------
   // sp = { x, y, ang, s } lo que calculó el motor para la espada; ctx = { face, lado, jp, bob, gC }. Devuelve el nuevo
   // y si va detrás del cuerpo
+  // cada tipo puede traer su forma de llevar el arma (ARMAS.poseDe(tipo, fn(sp, p, ctx)), p. ej. el arco)
+  const POSES = {};
   function pose(sp, p, ctx) {
+    const f = POSES[tipoActual()];
+    if (f && !vuelo && !p.muerto) return f(sp, p, ctx);
     if (!esDosManos() || vuelo || p.muerto) return null;
     const a = p.atk,
       yb = p.y - ctx.jp * 70;
@@ -372,5 +376,5 @@ window.ARMAS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { tipo, golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia: () => !!vuelo, lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
+  return { tipo, poseDe: (id, fn) => (POSES[id] = fn), golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia: () => !!vuelo, lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
 })();

@@ -160,6 +160,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
+- **arcos-dibujo.js**: el dibujo de los arcos (forma "arco" de DIB_ARMAS)
 - **armas-dibujo.js**: el dibujo de las armas que la arena no tiene (módulo DIB_ARMAS)
   - hachas de una mano · a dos manos
 - **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
@@ -191,6 +192,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
+  - en la mano · dibujo · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)

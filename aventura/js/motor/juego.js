@@ -1165,7 +1165,7 @@
       detras = poseArma.detras || (!p.atk && miraV.vista === "N");
     }
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
-    if (p.atk && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
+    if (p.atk && !p.atk.d.sinEstela && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
         d = a.d,
         pr = Math.min(1, (a.t - d.wind) / d.swing);
@@ -2082,7 +2082,7 @@
   window.JUEGO = { J, empezar, H, W, ciervo, npcs, enemigos };
   // lo que los sistemas pueden usar del motor
   const A = {
-    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn, columnaRunica, textoFlotante, polvareda,
+    J, jug, W, H, CB, P, N, enemigos, npcs, ciervo, dist, tav, t, chispa, numero, ondaPor, dialogoLibre, cercano, dibujarJugadorEn, columnaRunica, textoFlotante, polvareda, dirGolpe,
     avisar: (k, col) => HUD.aviso(t(k), col),
     menu: (html, botones) => {
       J.modo = "menu";
