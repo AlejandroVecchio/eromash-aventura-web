@@ -632,6 +632,19 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
 - **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
 
+## Los oficios que dejaron el Puesto (`EIKHOLT.traer` en `ciudad/juego.js`; textos `cm.manta_vacia`, `cm.se_mudo`)
+
+El Puesto de Eydis tenía todo al principio del juego. Cuatro oficios se mudaron a la capital, así llegar a Eikholt abre la economía del juego:
+
+| Oficio | Antes | Ahora |
+| --- | --- | --- |
+| La mesa de alquimia (`ALQUIMIA`) | patio del Puesto | Casa de Sanación |
+| La tina de los tintes (`TINTES`) | patio del Puesto | la curtiembre |
+| El mostrador de Ingrid (`COMERCIO`) | patio del Puesto | Mercado de los Toldos, entre los toldos de la plaza |
+| El arcón (`ARCON`) | patio del Puesto | Casa de las Lindes |
+
+En el bosque cada sistema deja su cosa dentro de la elipse de la ciudad, cerca de su casa, y anota su punto en `W.PUNTOS[k]` (`mesa_alquimia`, `tina_tintes`, `mostrador_toldos`, `arcon_lindes`): el mapa y la brújula la marcan en Eikholt. En la ciudad `EIKHOLT.traer` la dibuja con su volumen junto al ancla del plano (con quien atiende: Ingrid detrás del mostrador), choca y se usa asomándose a ese punto. En el Puesto la manta de Ingrid queda vacía y avisa adónde se fue. Kolbrun sigue junto al Refugio.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

@@ -1,5 +1,5 @@
 // ---------- los tintes del casco (sistema TINTES) ----------
-// Como los tintes de WoW, Fable y The Witcher: en la tina de tintes del Puesto (asset `tinaTintes`) se tiñe el casco
+// Como los tintes de WoW, Fable y The Witcher: en la tina de tintes de la curtiembre de Eikholt (asset `tinaTintes`) se tiñe el casco
 // de Eromash. Ocho colores: el rojo de siempre, cuatro que se preparan con plata y hierbas o materiales (azul de
 // escarcha, verde de la linde, blanco de abedul, negro de cuervo y violeta de las ataduras) y dos que se ganan (luz
 // de runa: una palabra rúnica o un poder legendario; oro de Fáfnir: un conjunto entero). Lo ya preparado se cambia
@@ -109,19 +109,13 @@ window.TINTES = (function () {
     );
   }
   function ubicar() {
-    // junto al arcón, si está; si no, en el patio del Puesto
-    const ar = window.ARCON && ARCON.arcon();
-    const pp = ar ? [ar.x, ar.y] : W.PUNTOS.puesto || W.LUGARES.puesto.p;
-    let pm = null;
-    for (let k = 0; k < 120 && !pm; k++) {
-      const a = 0.3 + k * 0.67,
-        d = 200 + k * 6,
-        x = pp[0] + Math.cos(a) * d,
-        y = pp[1] + Math.sin(a) * d * 0.7;
-      const solo = !W.COSAS.some((o) => !o.oculto && Math.abs(o.x - x) < 170 && o.y - y > -60 && o.y - y < 200);
-      if (solo && W.libre(x, y, 70) && W.libre(x - 80, y, 30) && W.libre(x + 80, y, 30) && !W.CAMINOS.some((c) => W.distLinea(x, y, c.p) < c.w / 2 + 50)) pm = [x, y];
-    }
-    tina = W.agregar("tinaTintes", pm || [pp[0] + 240, pp[1]], { sem: 3, color: LISTA[st.puesto].agua });
+    // la tina se mudó del Puesto a la curtiembre de Eikholt (en el bosque, dentro de la elipse junto a la curtiembre; en la
+    // ciudad la dibuja y la usa EIKHOLT.traer, con el agua del color puesto)
+    const nc = W.NOMBRADAS.curtiembre,
+      pp = nc ? [nc.x + 200, nc.y + 220] : W.PUNTOS.puesto || W.LUGARES.puesto.p;
+    tina = W.agregar("tinaTintes", pp, { sem: 3, color: LISTA[st.puesto].agua });
+    W.PUNTOS.tina_tintes = [tina.x, tina.y];
+    if (window.EIKHOLT) EIKHOLT.traer({ k: "tina_tintes", en: [-64, 116], asset: "tinaTintes", o: () => tina.o, r: 45 });
   }
 
   function abrir() {
@@ -146,6 +140,10 @@ window.TINTES = (function () {
       if (!tina) ubicar();
       poner(LISTA[st.puesto] ? st.puesto : "rojo");
     },
+    // la tina está en la curtiembre de Eikholt: la pestaña se cierra igual en la ciudad
+    enCiudad() {
+      if (abierta && !INVENTARIO.abierta()) abierta = false;
+    },
     actualizar(dt) {
       if (abierta && !INVENTARIO.abierta()) abierta = false;
       // avisar una vez cuando se gana un color
@@ -158,7 +156,7 @@ window.TINTES = (function () {
         });
     },
     cercanos(dar) {
-      if (J.dentro || !tina) return;
+      if ((J.dentro && !(window.EIKHOLT && EIKHOLT.asomando())) || !tina) return;
       const d = Math.hypot(tina.x - jug.x, tina.y - jug.y);
       if (d < 130)
         dar(d, t("ti.usar"), abrir, tina.x, tina.y - 110);

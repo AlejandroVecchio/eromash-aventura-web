@@ -1,7 +1,7 @@
 // ---------- hierbas y alquimia (sistema ALQUIMIA) ----------
 // Como la alquimia del Witcher: seis hierbas crecen por Eldervald (cada una donde le gusta: la flor de escarcha junto
 // al agua, el cardo cerca de los túmulos y los draugr, el hongo de luna bajo los árboles) y se juntan con E; vuelven a
-// crecer a los 8 minutos. En la mesa de alquimia del Puesto se destilan:
+// crecer a los 8 minutos. En la mesa de alquimia de la Casa de Sanación de Eikholt se destilan:
 //   · pociones (se toman desde la Bolsa o con la casilla de la poción elegida en la barra o L2 + R1): duran un rato y suman a
 //     las estadísticas; cada una sube la toxicidad (máximo 100, baja 1,5 por segundo) y con mucha no se puede tomar más;
 //   · aceites para el arma: +25 % de daño contra una familia de criaturas durante 40 golpes (uno por vez).
@@ -116,17 +116,13 @@ window.ALQUIMIA = (function () {
         if (libre(x, y)) poner("escarcha", [x, y]);
       }
     });
-    // la mesa de alquimia, en el patio del Puesto
-    const pp = W.PUNTOS.puesto || pu;
-    let pm = null;
-    for (let k = 0; k < 120 && !pm; k++) {
-      const a = 2.2 + k * 0.7,
-        d = 220 + k * 6,
-        x = pp[0] + Math.cos(a) * d,
-        y = pp[1] + Math.sin(a) * d * 0.8;
-      if (W.libre(x, y, 60) && W.libre(x - 70, y, 30) && W.libre(x + 70, y, 30) && !W.CAMINOS.some((c) => W.distLinea(x, y, c.p) < c.w / 2 + 50)) pm = [x, y];
-    }
-    mesa = W.agregar("mesaAlquimia", pm || [pp[0] - 300, pp[1] - 120], { sem: 4 });
+    // la mesa de alquimia ya no está en el Puesto: está en la Casa de Sanación de Eikholt (en el bosque queda dentro de la
+    // elipse de la ciudad, junto a la casa; en la ciudad se dibuja y se usa por EIKHOLT.traer)
+    const ns = W.NOMBRADAS.sanacion,
+      ps = ns ? [ns.x + 220, ns.y + 240] : [pu[0] - 300, pu[1] - 120];
+    mesa = W.agregar("mesaAlquimia", ps, { sem: 4 });
+    W.PUNTOS.mesa_alquimia = [mesa.x, mesa.y];
+    if (window.EIKHOLT) EIKHOLT.traer({ k: "mesa_alquimia", ancla: "sanacion", dx: 3.5, dy: 2, asset: "mesaAlquimia", o: { sem: 4 }, r: 55 });
   }
   const cosechada = (p) => st.cosechadas[p.i] != null && st.cosechadas[p.i] > st.reloj;
   function aplicar() {
@@ -344,6 +340,10 @@ window.ALQUIMIA = (function () {
       aplicar();
       if (window.RPG) RPG.recalcular();
     },
+    // la mesa está en la Casa de Sanación de Eikholt: la pestaña se cierra igual en la ciudad
+    enCiudad() {
+      if (abierta && !INVENTARIO.abierta()) abierta = false;
+    },
     actualizar(dt) {
       if (abierta && !INVENTARIO.abierta()) abierta = false;
       if (J.modo === "juego" && CONTROLES.recien("pocion")) tomar(st.elegida);
@@ -366,7 +366,7 @@ window.ALQUIMIA = (function () {
       plantas.forEach((p) => p.tipo === "luna" && (p.cosa.o.noche = noche));
     },
     cercanos(dar) {
-      if (J.dentro) return;
+      if (J.dentro && !(window.EIKHOLT && EIKHOLT.asomando())) return;
       for (const p of plantas) {
         if (p.cosa.o.cosechada) continue;
         const d = Math.hypot(p.cosa.x - jug.x, p.cosa.y - jug.y);

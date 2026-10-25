@@ -1,5 +1,5 @@
 // ---------- el comercio: comprar, vender y recomprar (sistema COMERCIO) ----------
-// Dos mercaderes con lo suyo, como los de Diablo y WoW: **Ingrid** (en su mostrador del Puesto de Eydis: armas,
+// Dos mercaderes con lo suyo, como los de Diablo y WoW: **Ingrid** (en su mostrador del Mercado de los Toldos de Eikholt: armas,
 // armaduras y escudos de todos los días, y hierro y cuero para la forja) y **Kolbrun**, la buhonera de Eldrakar
 // (con su alfombra junto al Refugio: amuletos, anillos, alguna pieza rara, ámbar, esquirlas y a veces una brasa, y
 // las **piezas envueltas**: se paga sin ver qué hay adentro y puede salir cualquier cosa, hasta una legendaria).
@@ -263,9 +263,21 @@ window.COMERCIO = (function () {
   }
   // se comercia en el mostrador de Ingrid (al lado de donde ella está: hablarle sigue siendo hablarle); si ya se fue
   // al norte, el mostrador sigue con su carga y lo atiende Eydis
+  // Ingrid ya no vende en el Puesto: tiene su mostrador en el Mercado de los Toldos de Eikholt (en el bosque queda dentro
+  // de la elipse de la ciudad, junto a la plaza; en la ciudad lo dibuja y lo atiende EIKHOLT.traer). En el Puesto, su
+  // manta de siempre avisa adónde se fue.
+  let mostrador = null;
+  function ubicarIngrid() {
+    const pz = W.NOMBRADAS.pozo,
+      m0 = W.NOMBRADAS.mostrador,
+      p = pz ? [pz.x + 300, pz.y + 160] : m0 ? [m0.x, m0.y] : null;
+    if (!p) return;
+    mostrador = W.agregar("mostradorManta", p, { sem: 5 });
+    W.PUNTOS.mostrador_toldos = [mostrador.x, mostrador.y + 50];
+    if (window.EIKHOLT) EIKHOLT.traer({ k: "mostrador_toldos", en: [29.5, 11.5], asset: "mostradorManta", o: { sem: 5 }, r: 60, gente: "ingrid", gy: -1.1 });
+  }
   function posIngrid() {
-    const m = W.NOMBRADAS.mostrador;
-    return m ? [m.x, m.y + 50] : null;
+    return mostrador ? [mostrador.x, mostrador.y + 50] : null;
   }
 
   // ---------- el sistema ----------
@@ -276,6 +288,7 @@ window.COMERCIO = (function () {
       jug = A.jug;
       W = A.W;
       ubicarKolbrun();
+      ubicarIngrid();
       INVENTARIO.pestana({ id: "tienda", antes: "equipo", nombre: () => (actual ? t("av.nombre_" + actual) : t("cm.tienda")), visible: () => !!actual, pintar });
     },
     alEmpezar(extra) {
@@ -286,13 +299,25 @@ window.COMERCIO = (function () {
     actualizar() {
       if (actual && !INVENTARIO.abierta()) actual = null;
     },
+    // Ingrid atiende en Eikholt: la pestaña se cierra igual mientras se pasea por la ciudad
+    enCiudad() {
+      sistema.actualizar();
+    },
     cercanos(dar) {
-      if (J.dentro) return;
+      const enCiudad = window.EIKHOLT && EIKHOLT.asomando();
+      if (J.dentro && !enCiudad) return;
       const pi = posIngrid();
       if (pi) {
         const d = Math.hypot(pi[0] - jug.x, pi[1] - jug.y);
         if (d < RADIO) dar(d, t("cm.comerciar", [t("av.nombre_ingrid")]), () => abrir("ingrid"), pi[0], pi[1] - 150);
       }
+      // la manta vacía del Puesto
+      const m0 = W.NOMBRADAS.mostrador;
+      if (m0 && !enCiudad) {
+        const d = Math.hypot(m0.x - jug.x, m0.y + 50 - jug.y);
+        if (d < RADIO) dar(d + 20, t("cm.manta_vacia"), () => HUD.aviso(t("cm.se_mudo"), "#FFD98A"), m0.x, m0.y - 100);
+      }
+      if (enCiudad) return;
       if (kolbrun) {
         const d = Math.hypot(kolbrun.x - jug.x, kolbrun.y - jug.y);
         if (d < RADIO) dar(d, t("cm.comerciar", [t("av.nombre_kolbrun")]), () => abrir("kolbrun"), kolbrun.x, kolbrun.y - 150);

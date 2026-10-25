@@ -2,6 +2,8 @@
 // (y as. para los assets del puesto de Kolbrun)
 I18N.textos({
   "cm.tienda": { es: "Mercader", en: "Merchant" },
+  "cm.manta_vacia": { es: "Mirar · La manta de Ingrid", en: "Look · Ingrid's blanket" },
+  "cm.se_mudo": { es: "Ingrid levantó la manta: ahora vende en el Mercado de los Toldos de Eikholt, junto a la plaza.", en: "Ingrid has rolled up her blanket: she now sells at the Market of Awnings in Eikholt, by the square." },
   "cm.comerciar": { es: "Comerciar · {0}", en: "Trade · {0}" },
   "cm.saludo_ingrid": { es: "«Lo que se vende hoy, se vende hoy. Mañana es otra carga.»", en: "«What sells today, sells today. Tomorrow is another load.»" },
   "cm.saludo_kolbrun": { es: "«Tocá, tocá. Lo envuelto no se mira: se paga y se ve.»", en: "«Touch, touch. What's wrapped isn't looked at: you pay, then you see.»" },
