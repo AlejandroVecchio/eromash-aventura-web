@@ -295,10 +295,14 @@ window.INVENTARIO = (function () {
         c.stroke();
         break;
       default:
-        E(c, 0, 0, 20, 20, "#3A3634");
+        if (EXTRA_ICONO[tipo]) EXTRA_ICONO[tipo](c);
+        else E(c, 0, 0, 20, 20, "#3A3634");
     }
     c.restore();
   }
+  // íconos que suman otros sistemas (materiales, hierbas…): fn(c) dibuja alrededor de (0, 0), unos 60 de alto
+  const EXTRA_ICONO = {};
+  const iconoDe = (tipo, fn) => (EXTRA_ICONO[tipo] = fn);
 
   // ---------- el contenido de cada pestaña ----------
   const RUNAS = ["kenaz", "isa", "algiz", "sowilo"];
@@ -370,6 +374,7 @@ window.INVENTARIO = (function () {
     ];
     const llevas = window.SECUNDARIAS ? SECUNDARIAS.llevas() : [];
     llevas.forEach((o) => l.push({ id: o.id, icono: o.icono, nombre: t("sc.obj_" + o.id), desc: t("sc.obj_" + o.id + "_d"), cant: o.cant }));
+    if (window.MATERIALES) l.push(...MATERIALES.celdas());
     const piezas = window.BOTIN ? BOTIN.celdasBolsa() : [];
     return { l, piezas, encargos: llevas.length };
   }
@@ -715,5 +720,5 @@ window.INVENTARIO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { icono, abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
+  return { icono, iconoDe, abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
 })();

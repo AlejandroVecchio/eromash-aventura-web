@@ -175,6 +175,27 @@ tener que leer el código para balancear.
   o ← ↓ → ↑, la cruceta) o tocar el carril (pointer events, sirve para el celular). Las teclas se cambian en Opciones →
   Teclas o con «Teclas de la forja» en el menú de Ása (`CONTROLES.asignar`, grupo `forja`). La música sale de `SONIDO.tono`. Pausa deja y devuelve la plata.
 
+## Materiales, vetas y desarmar (`motor/materiales.js`, `MATERIALES`; vetas en `mundo/assets-materiales.js`; textos `mt.` en `textos/materiales.js`)
+
+- Cinco materiales (`MATERIALES.LISTA`): hierro de pantano, cuero curtido, ámbar, esquirla rúnica y brasa de Muspell.
+  Estado en `E.extra.mat = { tiene, vetas, reloj }`. Se ven en la Bolsa de la mochila con su ícono
+  (`INVENTARIO.iconoDe(tipo, fn)`, que sirve para cualquier cosa nueva que se lleve).
+- **Desarmar** (`BOTIN.desarmar` llama a `MATERIALES.alDesarmar`): `deDesarmar(it)` sale de la casilla y la rareza con
+  un dado fijo por pieza (lo que dice la mochila antes es lo que da). Armas hierro, armaduras cuero (y a veces
+  hierro), escudos los dos, joyas ámbar; mágica +1 y quizás ámbar, rara +1–2 esquirlas, legendaria +1 brasa y +1
+  esquirla. La plata de desarmar baja al 15 % del valor.
+- **Criaturas** (`CRIATURAS`): lobo y jabalí cuero, oso 3 cueros y a veces brasa, draugr y custodio hierro y
+  esquirlas, fatuo ámbar y esquirlas, trol y dreki brasas; los líderes tiran el doble de chance y de cantidad; los
+  semijefes sin entrada, una brasa.
+- **Vetas** (`vetaHierro`, `vetaAmbar`, `vetaRunica`, figuras): unas 30 con semilla fija, tres cerca del Puesto y el
+  resto alrededor de los lugares (la rúnica lejos de casa), cada una con un claro chico. Se pican con E o a golpes
+  (`alGolpear`, una vez por golpe; el martillo vale 2); a los 3 golpes (`GOLPES`) se rompen, sueltan lo de `VETAS` y
+  quedan peladas `VUELVE` = 600 s de juego.
+- **Forja**: `MATERIALES.costoForja(grupo, modo)`: armas 3 hierro (a dos manos y martillo 4; arco y bastón 1 hierro y
+  1 ámbar, el arco también cuero), escudos 2 hierro y 2 cuero, armaduras 3 cuero y 1 hierro; a fuego vivo +1
+  esquirla. Con una brasa aparece el modo **brasa** (`FORJA.MODOS.brasa`: como fuego vivo, la nota +0,08). Dejar a la
+  mitad devuelve plata y materiales.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

@@ -21,6 +21,8 @@ I18N.textos({
   "fg.modo_calma": { es: "Con calma", en: "Steady" },
   "fg.modo_calma_sub": { es: "{0} de plata · más lento; a lo sumo sale rara", en: "{0} silver · slower; rare at most" },
   "fg.modo_fuego": { es: "A fuego vivo", en: "Roaring fire" },
+  "fg.modo_brasa": { es: "Con la brasa de Muspell", en: "With the Muspell ember" },
+  "fg.modo_brasa_sub": { es: "{0} de plata · a fuego vivo, y la brasa sube la nota", en: "{0} silver · roaring fire, and the ember raises your score" },
   "fg.modo_fuego_sub": { es: "{0} de plata · más rápido y con acordes; la única que puede dar una legendaria", en: "{0} silver · faster, with chords; the only way to a legendary" },
   "fg.j_perfecto": { es: "¡Perfecto!", en: "Perfect!" },
   "fg.j_bien": { es: "Bien", en: "Good" },
