@@ -645,6 +645,16 @@ El Puesto de Eydis tenía todo al principio del juego. Cuatro oficios se mudaron
 
 En el bosque cada sistema deja su cosa dentro de la elipse de la ciudad, cerca de su casa, y anota su punto en `W.PUNTOS[k]` (`mesa_alquimia`, `tina_tintes`, `mostrador_toldos`, `arcon_lindes`): el mapa y la brújula la marcan en Eikholt. En la ciudad `EIKHOLT.traer` la dibuja con su volumen junto al ancla del plano (con quien atiende: Ingrid detrás del mostrador), choca y se usa asomándose a ese punto. En el Puesto la manta de Ingrid queda vacía y avisa adónde se fue. Kolbrun sigue junto al Refugio.
 
+## La pelea que dejó el Puesto (`motor/instructores.js`, `motor/contratos.js`, `motor/tablon.js`)
+
+Lo de pelea tampoco se queda en el Puesto de Eydis:
+
+- **Hallbera y el muñeco**: en el campo de práctica de la Guardia del Roble, afuera de la Puerta del Norte de Eikholt (con muñecos de paja de los reclutas). Queda afuera de la muralla porque en la ciudad no se pelea.
+- **Vör**: lee las runas junto a la piedra del Ting, en la ciudad (`EIKHOLT.traer`, punto `vor_ting`). Su prueba se hace en el muñeco de la Guardia.
+- **Ulfar**: sigue junto al Refugio.
+- **El poste de los contratos**: junto al cuartel de la Guardia, en la ciudad (punto `poste_contratos`). Los rastros y las guaridas no cambian.
+- **El tablón de cacería**: en el Refugio, con Ulfar (lo pone `TABLON` al iniciar; ya no está en eldervald.js).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

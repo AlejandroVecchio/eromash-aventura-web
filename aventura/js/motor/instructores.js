@@ -66,17 +66,34 @@ window.INSTRUCTORES = (function () {
     }
     return [p[0] + dmin, p[1]];
   }
+  // ya no están en el Puesto: Hallbera y el muñeco en el campo de práctica de la Guardia del Roble, afuera de la Puerta
+  // del Norte de Eikholt (en la ciudad no se pelea); Ulfar sigue cazando junto al Refugio; Vör lee las runas junto a la
+  // piedra del Ting (en el bosque queda dentro de la elipse; en la ciudad la pone EIKHOLT.traer)
+  const campo = () => {
+    const C = W.CIUDAD;
+    return C ? [C.c[0] + 620, C.c[1] - C.ry - 760] : W.PUNTOS.puesto || W.LUGARES.puesto.p;
+  };
   function ubicar() {
-    const pu = W.PUNTOS.puesto || W.LUGARES.puesto.p;
-    const pm = buscar([pu[0] - 240, pu[1] + 170], 0, 320);
+    const pm = buscar(campo(), 0, 520);
     muneco = A.CB.crear("muneco", pm[0], pm[1]);
     muneco.o = { brazo: 0 };
     A.enemigos.push(muneco);
     gente.hallbera = { x: pm[0] + 130, y: pm[1] - 20, mira: { vista: "S", espejo: true } };
+    // el campo de la Guardia: muñecos de paja de los reclutas y el estandarte de la cornamenta
+    [[-170, -60, "munecoPaja", {}], [-260, 40, "munecoPaja", { sem: 2 }], [230, -90, "estandarteCiervo", { sem: 31 }]].forEach(([dx, dy, id, o]) => {
+      if (W.libre(pm[0] + dx, pm[1] + dy, 40)) W.agregar(id, [pm[0] + dx, pm[1] + dy], o);
+    });
     const pr = buscar(W.LUGARES.refugio.p, 650, 950);
     gente.ulfar = { x: pr[0], y: pr[1], mira: { vista: "S", espejo: false } };
-    const pt = buscar(W.LUGARES.tumulo.p, 220, 480);
-    gente.vor = { x: pt[0], y: pt[1], mira: { vista: "S", espejo: false } };
+    const ti = W.NOMBRADAS.ting;
+    if (ti) {
+      gente.vor = { x: ti.x + 260, y: ti.y + 200, mira: { vista: "S", espejo: false } };
+      W.PUNTOS.vor_ting = [gente.vor.x, gente.vor.y];
+      if (window.EIKHOLT) EIKHOLT.traer({ k: "vor_ting", ancla: "ting", dx: 6, dy: 3, gente: "vor", gy: 0 });
+    } else {
+      const pt = buscar(W.LUGARES.tumulo.p, 220, 480);
+      gente.vor = { x: pt[0], y: pt[1], mira: { vista: "S", espejo: false } };
+    }
   }
 
   // ---------- las lecciones ----------
@@ -286,7 +303,7 @@ window.INSTRUCTORES = (function () {
       if (e === muneco && ses && ses.t >= 0 && info && info.critico) ses.crit++;
     },
     cercanos(dar) {
-      if (J.dentro) return;
+      if (J.dentro && !(window.EIKHOLT && EIKHOLT.asomando())) return;
       for (const id of IDS) {
         const g = gente[id],
           d = Math.hypot(g.x - jug.x, g.y - jug.y);

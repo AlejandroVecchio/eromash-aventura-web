@@ -1,5 +1,5 @@
-// ---------- el tablón de cacería del Puesto (sistema TABLON) ----------
-// Una cacería repetible: en el tablón de Tove se toma un pedido (cazá N criaturas de un tipo que ande por el bosque),
+// ---------- el tablón de cacería del Refugio (sistema TABLON) ----------
+// Una cacería repetible: en el tablón del Refugio se toma un pedido (cazá N criaturas de un tipo que ande por el bosque),
 // se sigue en el rastreador y se cobra en el mismo tablón. Cada pedido paga más que el anterior y uno de cada cuatro
 // trae además un fragmento de poder. Qué se pide sale de la cuenta de pedidos hechos: igual en cada partida.
 // Estado en E.extra.tablon = { pedido: { tipo, n, hechas } | null, hechos }.
@@ -68,13 +68,27 @@ window.TABLON = (function () {
     ]);
   }
 
+  // el tablón ya no está en el patio del Puesto: está en el Refugio, donde caza Ulfar
+  function ubicar() {
+    const L = W.LUGARES.refugio;
+    if (!L) return null;
+    for (let k = 0; k < 200; k++) {
+      const a = 1.1 + k * 2.39996,
+        d = L.r + 200 + k * 9,
+        x = L.p[0] + Math.cos(a) * d,
+        y = L.p[1] + Math.sin(a) * d * 0.8;
+      if (!W.libre(x, y, 70) || !W.libre(x - 90, y, 30) || !W.libre(x + 90, y, 30) || W.CAMINOS.some((c) => W.distLinea(x, y, c.p) < c.w / 2 + 40)) continue;
+      return W.agregar("tablonCaza", [x, y], {}, "tablon_caza");
+    }
+    return W.agregar("tablonCaza", [L.p[0] + 400, L.p[1] + 200], {}, "tablon_caza");
+  }
   const sistema = {
     iniciar(api) {
       A = api;
       J = A.J;
       jug = A.jug;
       W = A.W;
-      tablon = W.NOMBRADAS.tablon_caza || null;
+      tablon = W.NOMBRADAS.tablon_caza || ubicar();
     },
     alEmpezar(extra) {
       extra.tablon = Object.assign({ pedido: null, hechos: 0 }, extra.tablon || {});

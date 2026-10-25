@@ -55,10 +55,14 @@ window.CONTRATOS = (function () {
         }
         return [p[0] + dmin, p[1]];
       };
-    // el poste, frente al portón del Puesto
+    // el poste ya no está frente al Puesto: está junto al cuartel de la Guardia del Roble, en Eikholt (en el bosque queda
+    // dentro de la elipse; en la ciudad lo dibuja y lo usa EIKHOLT.traer). Los rastros siguen viniendo desde el Puesto.
     const pu = W.PUNTOS.puesto || W.LUGARES.puesto.p;
-    const pp = buscar([pu[0] + 260, pu[1] + 60], 0, 260);
+    const ng = W.NOMBRADAS.guardia,
+      pp = ng ? [ng.x - 320, ng.y + 260] : buscar([pu[0] + 260, pu[1] + 60], 0, 260);
     poste = W.agregar("posteContratos", pp, { n: 6, sem: 2 });
+    W.PUNTOS.poste_contratos = [poste.x, poste.y + 20];
+    if (window.EIKHOLT) EIKHOLT.traer({ k: "poste_contratos", ancla: "guardia", dx: -2, dy: 4, asset: "posteContratos", o: () => poste.o, r: 30 });
     for (const k of LISTA) {
       const L = W.LUGARES[k.lugar];
       const guarida = buscar(L.p, L.r + 1500, L.r + 2600, true);
@@ -287,7 +291,7 @@ window.CONTRATOS = (function () {
       return true;
     },
     cercanos(dar) {
-      if (J.dentro) return;
+      if (J.dentro && !(window.EIKHOLT && EIKHOLT.asomando())) return;
       const dp = Math.hypot(poste.x - jug.x, poste.y + 20 - jug.y);
       if (dp < 130) dar(dp, t(st.activo && st.c[st.activo].fase === "cobrar" ? "ct.accion_cobrar" : "ct.accion_poste"), menuPoste, poste.x, poste.y - 220);
       const id = st.activo;

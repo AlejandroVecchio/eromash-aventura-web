@@ -322,7 +322,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **senda.js**: la senda del Refugio (sistema SENDA)
 - **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
   - el sistema
-- **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
+- **tablon.js**: el tablón de cacería del Refugio (sistema TABLON)
 - **tintes.js**: los tintes del casco (sistema TINTES)
   - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)

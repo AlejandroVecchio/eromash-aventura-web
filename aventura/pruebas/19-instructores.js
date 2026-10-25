@@ -3,14 +3,16 @@
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push(
-    { nombre: "instructores: tres maestros en su lugar y el muñeco del Puesto aguanta todo sin moverse", fn: async (A, { igual, si }) => {
+    { nombre: "instructores: tres maestros en su lugar y el muñeco de la Guardia aguanta todo sin moverse", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       const g = INSTRUCTORES.gente(),
         m = INSTRUCTORES.muneco();
       igual(Object.keys(g).length, 3, "tres instructores:");
       si(A.enemigos.includes(m), "el muñeco es un blanco");
       const pu = A.W.PUNTOS.puesto || A.W.LUGARES.puesto.p;
-      si(Math.hypot(m.x - pu[0], m.y - pu[1]) < 900, "el muñeco está en el Puesto");
+      const C = A.W.CIUDAD;
+      si(Math.hypot(m.x - C.c[0], m.y - (C.c[1] - C.ry)) < 1800 && ((m.x - C.c[0]) / C.rx) ** 2 + ((m.y - C.c[1]) / C.ry) ** 2 > 1.05, "el muñeco está afuera de la Puerta del Norte");
+      si(EIKHOLT.traido("vor_ting"), "Vör lee las runas en el Ting");
       const x0 = m.x;
       A.CB.golpear(A.J, m, 99999, m.x - 50, m.y, 2);
       si(!m.muerto && m.activo, "no se muere");
