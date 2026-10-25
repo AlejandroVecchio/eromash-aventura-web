@@ -100,7 +100,7 @@ window.FURIA = (function () {
     rugidoT = RUGIDO_SEG;
     if (window.RPG) RPG.recalcular();
     anillos.push({ x: jug.x, y: jug.y, r: 20, R, t: 0, col: "#C8402D" });
-    J.sacudir && J.sacudir(10);
+    J.sacudir && J.sacudir(0.45); // J.sacudir es en segundos (baja 1,6 por segundo): un golpe fuerte es 0,3 a 0,6
     if (window.ANIMA) ANIMA.gesto("susto");
     if (window.SONIDO) SONIDO.tocar("rugido", { vol: 0.7, tono: 0.72 });
     A.textoFlotante(jug.x, jug.y - 150, t("ab.rugido"), "#C8402D");
@@ -154,7 +154,7 @@ window.FURIA = (function () {
     for (const e of vivas()) if (Math.hypot(e.x - jug.x, (e.y - jug.y) * 1.25) < 150) pegar(e, base() * k, jug.x, jug.y, "salto", 1.6), n++;
     A.polvareda(jug.x, jug.y, 14);
     anillos.push({ x: jug.x, y: jug.y, r: 20, R: 150, t: 0, col: "#7BC86C" });
-    J.sacudir && J.sacudir(n ? 7 : 4);
+    J.sacudir && J.sacudir(n ? 0.3 : 0.2);
     J.hitstop = Math.max(J.hitstop || 0, n ? 0.06 : 0);
     if (window.SONIDO) SONIDO.tocar(n ? "golpeFuerte" : "caida", { vol: 0.7 });
   }
