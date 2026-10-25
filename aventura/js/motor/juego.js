@@ -517,6 +517,8 @@
 
   // ---------- muerte y reaparición ----------
   function morir() {
+    // una piedra de Berkano cargada se rompe y Eromash vuelve en vez de caer (berkano.js)
+    if (window.BERKANO && BERKANO.salvar()) return;
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
@@ -698,8 +700,8 @@
     jug.canalAntes = jug.interactuando;
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
-    // la vida vuelve sola: despacio en pelea, rápido cuando ya no hay nada cerca
-    if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + (jug.pelea ? 3 : 12) * (J.regenVida || 1) * dt);
+    // la vida vuelve sola cuando ya no hay nada cerca; en pelea no (para eso están las piedras de Berkano y las hierbas)
+    if (jug.sinGolpe > 4 && !jug.muerto && !jug.pelea) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);
@@ -1791,15 +1793,8 @@
     const pe = PODERES.estado();
     if (pe) {
       HUD.bolsillo(pe.plata, pe.frag, pe.nivel);
-      HUD.barra([
-        { id: "atacar", icono: "espada", nivel: pe.espada, accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
-        { id: "esquivar", icono: "esquivar", accion: "esquivar", nombre: t("inv.b_esquivar"), listo: jug.sta >= 20 && !jug.cansado },
-        { id: "saltar", icono: "saltar", accion: "saltar", nombre: t("inv.b_saltar"), listo: true },
-        ...(window.ESCUDO && ESCUDO.puede() ? [{ id: "bloquear", icono: "bloquear", accion: "bloquear", nombre: t("inv.b_bloquear"), listo: ESCUDO.rota() <= 0 && jug.sta > 5 }] : []),
-        { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },
-        { id: "lente", icono: "lente", accion: "lente", nombre: t("inv.b_lente"), listo: tieneLente() && lenteEspera <= 0, espera: tieneLente() ? lenteEspera / 1.2 : 0 },
-        { id: "mochila", icono: "mochila", accion: "inventario", nombre: t("inv.b_mochila"), listo: true },
-      ]);
+      // la barra de abajo: habilidades, objetos, herramientas y conocimientos que eligió el jugador (interfaz/barra.js)
+      if (window.BARRA) HUD.barra(BARRA.casillas());
     }
     const o = H.objetivo(),
       m = H.idMision();
@@ -2098,6 +2093,7 @@
     },
     cerrarMenu,
     usarLente,
+    lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
     mouse: () => mouse,
     hora: () => amb.h,
