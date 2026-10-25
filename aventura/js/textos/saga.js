@@ -39,8 +39,6 @@ I18N.textos({
   "sg.e_jotunn_d": { es: "Duerme sentado en su anillo de piedras escarchadas.", en: "He sleeps seated in his ring of frosted stones." },
   "sg.e_caceria": { es: "La Cacería Salvaje", en: "The Wild Hunt" },
   "sg.e_caceria_d": { es: "Algunas noches pasa por el cielo: vencela o aguantala.", en: "Some nights it crosses the sky: defeat it or endure it." },
-  "sg.e_remates": { es: "Verdugo", en: "Executioner" },
-  "sg.e_remates_d": { es: "Rombo rojo sobre una criatura malherida: E la remata.", en: "Red diamond over a badly hurt creature: E finishes it." },
   "sg.e_instructores": { es: "Lecciones", en: "Lessons" },
   "sg.e_instructores_d": { es: "Hallbera, Ulfar y Vör enseñan en el Puesto.", en: "Hallbera, Ulfar and Vör teach at the Outpost." },
   "sg.e_alquimia": { es: "Hierbas", en: "Herbs" },
