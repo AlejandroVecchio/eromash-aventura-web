@@ -71,8 +71,11 @@ window.OBJETOS = (function () {
     bastonCristal: { slot: "arma", tipo: "baston", dosManos: true, g: "m", dano: 10, vel: 1, desde: 10, implicito: [["runico", 12]], arte: { lib: "arma", forma: "baston", fam: 2 } },
     bastonAsta: { slot: "arma", tipo: "baston", dosManos: true, g: "m", dano: 11, vel: 1, desde: 14, implicito: [["robo", 1]], arte: { lib: "arma", forma: "baston", fam: 3 } },
     ramaYggdrasil: { slot: "arma", tipo: "baston", dosManos: true, g: "f", dano: 11, vel: 1.05, desde: 18, implicito: [["runico", 15]], arte: { lib: "arma", forma: "baston", fam: 4 } },
-    escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
-    escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
+    // los escudos (motor/escudo.js): bloqueo = cuánto le sacan a un golpe de adelante; parada = la ventana en segundos
+    escudoTablas: { slot: "escudo", g: "m", arm: 3, bloqueo: 50, parada: 0.24, desde: 1, arte: { lib: "escudo" } },
+    escudoRedondo: { slot: "escudo", g: "m", arm: 5, bloqueo: 60, parada: 0.2, desde: 1, arte: { lib: "escudo" } },
+    escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, bloqueo: 70, parada: 0.18, desde: 10, arte: { lib: "escudo" } },
+    escudoCometa: { slot: "escudo", g: "m", arm: 11, bloqueo: 82, parada: 0.14, desde: 15, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },
     yelmo: { slot: "casco", g: "m", arm: 5, desde: 9, arte: { lib: "casco" } },
     jubon: { slot: "pecho", g: "m", arm: 6, desde: 1, arte: { lib: "pechera" } },
@@ -244,6 +247,7 @@ window.OBJETOS = (function () {
     // cómo pega cada tipo de arma (motor/armas.js)
     if (B.tipo) l.push({ txt: t("ar.rasgo_" + B.tipo), col: "#E0B2B2" });
     if (B.dosManos) l.push({ txt: t("ar.sin_escudo"), col: "#FF8D71" });
+    if (B.bloqueo) l.push({ txt: t("eb.l_bloqueo", [B.bloqueo, String(B.parada).replace(".", I18N.lang === "en" ? "." : ",")]), col: "#E0B2B2" });
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
     return l;

@@ -1166,6 +1166,9 @@
       sp.y += po.dy;
       detras = poseArma.detras || (!p.atk && miraV.vista === "N");
     }
+    // el escudo (motor/escudo.js): de espaldas o al costado va detrás del cuerpo, de frente o levantado, delante
+    const ctxEsc = { face, lado: miraV.vista === "N" ? -face : face, jp, bob, vista: miraV.vista, po };
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, true);
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     if (p.atk && !p.atk.d.sinEstela && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
@@ -1219,6 +1222,7 @@
       }
     }
     c.restore();
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, false);
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();
   }
