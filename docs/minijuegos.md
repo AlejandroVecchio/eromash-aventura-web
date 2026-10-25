@@ -52,9 +52,15 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 (próximamente)
 
-## El tambor del skald
+## El tambor del skald (`mj-tambor.js`)
 
-(próximamente)
+Pregunta y respuesta con Sølve. El skald toca un compás en su tambor y Eromash lo repite en el compás siguiente, con el mismo tiempo. Hay golpes al centro (graves; usar, ▼ o tocar el parche) y al borde (secos; atacar, ◀ ▶ o tocar el aro). Una aguja recorre el anillo de runas del compás y cada golpe de Sølve deja su marca. Un compás errado (golpe de más, de menos, del tipo equivocado o fuera de tiempo) le baja el ánimo a la sala; sin ánimo se termina. Devuelve `{ gano, precision, rondas }`.
+
+- **Variantes**: `base` (88 por minuto, cuatro rondas), `rapido` (118), `oido` (las marcas no se ven hasta que se tocan), `largo` (dos compases seguidos) y `fiesta` (seis rondas con dos de ánimo).
+- **Dónde está**: el Hongo Dorado (`hongo.js`). De noche, la acción de la tarima pasa a ser «Tocar el tambor con Sølve»: canta su canción y después presta el tambor.
+  - Ganar llena la estamina. La primera vez de cada noche, la sala deja propinas (`st.tamborNoche`), que suben con las veces que ya tocó.
+  - Cada noche ganada pasa a la variante siguiente (`st.tambor`).
+  - `HONGO.tamborConSolve(noche, directo)` lo abre sin caminar (pruebas).
 
 ## Hachas al blanco
 

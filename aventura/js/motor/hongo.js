@@ -371,6 +371,31 @@ window.HONGO = (function () {
       HUD.aviso(t("ho.cancion_bien"), "#73D5DB");
     });
   }
+  // de noche Sølve canta y después presta el tambor (MINIJ «tambor»): la primera vez de cada noche la sala deja
+  // propinas. directo: sin la canción antes (pruebas)
+  function tamborConSolve(esNoche = noche, directo = false) {
+    if (!esNoche) return A.dialogoLibre([["eromash", "ho.cancion_sin"]]);
+    if (!window.MINIJ || !MINIJ.JUEGOS.tambor) return escuchar();
+    if (!directo) return A.dialogoLibre([["solve", "ho.cancion_" + (cancion++ % 4)]], () => tamborConSolve(true, true));
+    const hoy = Math.floor(H.E.tiempo / LUZ.DIA + 0.5),
+      veces = st.tambor || 0;
+    MINIJ.empezar("tambor", {
+      variante: ["base", "rapido", "oido", "largo", "fiesta"][Math.min(4, veces)],
+      quien: t("ho.tambor_pide"),
+      fin: (r) => {
+        if (r.dejo) return;
+        if (!r.gano) return HUD.aviso(t("ho.tambor_mal"), "#E0B2B2");
+        jug.sta = jug.staMax;
+        if (st.tamborNoche === hoy) return HUD.aviso(t("ho.tambor_otra"), "#FFD98A");
+        st.tamborNoche = hoy;
+        st.tambor = veces + 1;
+        const plata = 12 + veces * 6 + Math.round((r.precision || 0) * 10);
+        if (PODERES.darPlata) PODERES.darPlata(plata);
+        HUD.aviso(t("ho.tambor_bien"), "lugar", t("ho.tambor_bien_sub", [plata]));
+        H.guardar && H.guardar();
+      },
+    });
+  }
   const mirar = (clave) => () => A.dialogoLibre([["eromash", clave]]);
   // ---------- los cuartos de arriba ----------
   let golpes = 0,
@@ -477,7 +502,7 @@ window.HONGO = (function () {
     if (df < 140) prueba(df + 40, t("ho.accion_fogon"), calentarse);
     if (ero.y > BARRA.y + 60 && ero.y < BARRA.y + 200 && Math.abs(ero.x - BARRA.x) < BARRA.largo + 20) prueba(ero.y - BARRA.y - 60, t("ho.accion_barra"), hidromiel);
     const dt0 = dist(TARIMA.x, TARIMA.y) - 240;
-    if (dt0 < 160) prueba(dt0 + 30, t("ho.accion_escuchar"), escuchar);
+    if (dt0 < 160) prueba(dt0 + 30, t(noche && window.MINIJ ? "ho.accion_tambor" : "ho.accion_escuchar"), noche && window.MINIJ ? () => tamborConSolve() : escuchar);
     const dtr = dist(TRAMPILLA.x, TRAMPILLA.y);
     if (dtr < 170) prueba(dtr - 60, t(st.tr ? "in.accion_bajar" : "in.accion_trampilla"), trampilla);
     const dto = dist(-380, -960);
@@ -1440,5 +1465,6 @@ window.HONGO = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return { entrar, girar: (g) => (giroObj = cam.g = g), acercar: (z) => (zoom = z), activo: () => activo, sala: { HX, HY, ZG, ZT }, gente: () => gente, cam, ero, PR: () => PR,
     // para las pruebas: en qué cuarto está, entrar a uno o volver a la galería, y lo que hay a mano
+    tamborConSolve,
     cuarto: () => en && en.id, irCuarto: (id) => (id ? entrarCuarto(CUARTOS.find((q) => q.id === id)) : en && salirCuarto()), cercanoTexto: () => (cercano() || {}).texto };
 })();
