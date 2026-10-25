@@ -68,5 +68,32 @@
       A.cerrarMenu();
       A.H.guardar(9);
     } },
+    { nombre: "instructores: charlar y pedir la prueba cierran el menú, y tocar afuera lo cierra", fn: async (A, { igual, si }) => {
+      const capa = document.getElementById("capa"),
+        boton = (clave) => [...document.querySelectorAll("#capaCaja button")].find((b) => b.textContent.includes(I18N.t(clave)));
+      INSTRUCTORES.menuMaestro("hallbera");
+      igual(A.J.modo, "menu", "abre el menú:");
+      boton("ie.charlar").click();
+      si(capa.classList.contains("oculto"), "charlar cierra el menú");
+      igual(A.J.modo, "dialogo", "y se charla:");
+      for (let i = 0; i < 10 && A.J.modo === "dialogo"; i++) A.seguirDialogo();
+      igual(A.J.modo, "menu", "al terminar vuelve el menú:");
+      capa.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      igual(A.J.modo, "juego", "tocar afuera lo cierra:");
+      si(capa.classList.contains("oculto"), "y se esconde");
+      INSTRUCTORES.menuMaestro("hallbera");
+      document.getElementById("capaCaja").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      igual(A.J.modo, "menu", "tocar adentro no lo cierra:");
+      const pb = boton("ie.pedir_prueba") || boton("ie.prueba_en_curso");
+      if (pb) {
+        pb.click();
+        si(capa.classList.contains("oculto"), "pedir la prueba cierra el menú");
+        for (let i = 0; i < 10 && A.J.modo === "dialogo"; i++) A.seguirDialogo();
+        igual(A.J.modo, "juego", "y queda jugando:");
+      }
+      if (INSTRUCTORES.sesion()) INSTRUCTORES.terminar();
+      INSTRUCTORES.estado().prueba = null;
+      A.cerrarMenu();
+    } },
   );
 }
