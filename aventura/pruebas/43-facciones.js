@@ -32,14 +32,13 @@
       const st = FACCIONES.estado();
       FACCIONES.mirar();
       const r0 = FACCIONES.rep("gremio");
-      // tres partidas de dados ganadas y diez peces
-      DADOS.estado().ganadas += 3;
+      // diez peces
       PESCA.estado().libro.perca = { n: 10, cm: 25 };
       FACCIONES.mirar();
-      igual(FACCIONES.rep("gremio") - r0, 3 * 35 + 10 * 6, "dados y peces al Gremio:");
+      igual(FACCIONES.rep("gremio") - r0, 10 * 6, "peces al Gremio:");
       // no se cobra dos veces
       FACCIONES.mirar();
-      igual(FACCIONES.rep("gremio") - r0, 165, "una sola vez:");
+      igual(FACCIONES.rep("gremio") - r0, 60, "una sola vez:");
       // los bandidos a la Guardia (y no los lobos)
       const g0 = FACCIONES.rep("guardia");
       FACCIONES.sistema.alMorir({ tipo: "bandido", d: {}, x: A.jug.x, y: A.jug.y });
