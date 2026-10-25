@@ -505,6 +505,11 @@ Como las cuevas de arañas del Skyrim y los nidos del Gothic.
 Un jefe del mundo como los gigantes del Skyrim y los jefes del WoW, con las reglas fijas de la arena.
 - Lugar: el primer punto libre en espiral desde `W.m(900, 180)`, lejos de caminos, lugares, grupos, ríos y lagunas.
   Abre un anillo de `ANILLO` = 900 con nueve menhires y el trono.
+- Por qué pelea: dormido no se lo lastima y no se levanta por un mortal. La primera visita habla (`jt.desden_*`) y el
+  mapa marca a sus tres guardianes: hrímthursar (draugr × 1,3 de tamaño, × 2,2 de vida, × 1,3 de daño) a
+  `DIST_GUARDIAN` = 2400 del anillo. Hasta vencerlos, acercarse a menos de `PATADA` = 360 del gigante tira la patada:
+  aviso en franja de 0,8 s hacia Eromash; si lo agarra (saltar la evita) no saca vida y lo lleva volando 0,7 s hasta
+  afuera del anillo. Con los tres caídos (`st.guardianes`) avisa «Hrímnir te espera» y al acercarse pelea como siempre.
 - Es una criatura de COMBATE (`jotunn`, 2600 de vida) con `e.propio`: combate.js solo le pasa el destello y este
   sistema lo mueve. Se dibuja por `d.dibujo` = `jotunnFigura`, con la pose en `e.o` (sentado, pisa, grita, expuesto).
 - Despierta a `DESPIERTA` = 620 del centro. Si Eromash se va a más de `SUELTA` = 1900 o cae, vuelve al trono curado.
