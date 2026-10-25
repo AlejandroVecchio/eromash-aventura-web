@@ -1,5 +1,6 @@
 // Textos de los dados de hueso (motor/dados.js, mundo/assets-dados.js): prefijo dd. (y as., av.nombre_, mp.ley_dados).
 I18N.textos({
+  "as.grupo.dados": { es: "Los dados de hueso", en: "Bone dice" },
   "mp.ley_dados": { es: "Dados", en: "Dice" },
   "as.mesaDados": { es: "La mesa de los dados de hueso", en: "The bone dice table" },
   "av.nombre_bersi": { es: "Bersi el Tuerto", en: "Bersi One-Eye" },

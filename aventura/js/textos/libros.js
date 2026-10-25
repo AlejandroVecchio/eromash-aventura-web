@@ -1,6 +1,7 @@
 // Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
 // Cada libro: lb.<id>_t (título), lb.<id>_a (quién lo escribió) y sus páginas lb.<id>_1, _2, …
 I18N.textos({
+  "as.grupo.libros": { es: "Los libros de Eldervald", en: "The books of Eldervald" },
   "mp.ley_libros": { es: "Libros", en: "Books" },
   "as.atrilPiedra": { es: "El atril de piedra del camino", en: "The wayside stone lectern" },
   "as.libroCaido": { es: "Un libro tirado", en: "A dropped book" },

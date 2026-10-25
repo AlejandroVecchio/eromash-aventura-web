@@ -254,8 +254,9 @@ window.INVENTARIO = (function () {
   const iconoDe = (tipo, fn) => (EXTRA_ICONO[tipo] = fn);
 
   // ---------- el contenido de cada pestaña ----------
-  const RUNAS = ["kenaz", "isa", "algiz", "sowilo"];
-  const COL_RUNA = { kenaz: "#FF8D71", isa: "#C8F2F4", algiz: "#FFD98A", sowilo: "#F5A524" };
+  // las cuatro de los altares siempre; las que suman otros sistemas (PODERES.ORDEN) solo cuando ya se tienen
+  const RUNAS_ALTAR = ["kenaz", "isa", "algiz", "sowilo"];
+  const colRuna = (r) => (PODERES.RUNAS[r] ? PODERES.RUNAS[r].col : "#3A3634");
   const tieneLente = () => A.H.tiene("lente") || A.H.tiene("lente_prestada");
   function equipo(pe) {
     const lados = {
@@ -270,7 +271,7 @@ window.INVENTARIO = (function () {
         { id: "manzanas", icono: "manzana", nombre: t("inv.st_manzanas"), desc: t("inv.manzanas_d", [pe.manzanas]), cant: pe.manzanas, falta: !pe.manzanas },
       ],
     };
-    const runas = RUNAS.map((r) => {
+    const runas = PODERES.ORDEN.filter((r) => RUNAS_ALTAR.includes(r) || pe.runas.includes(r)).map((r) => {
       const tiene = pe.runas.includes(r);
       return { id: "runa_" + r, runa: r, nombre: t("pj.runa_" + r), desc: tiene ? t("pj.runa_" + r + "_toma") + " " + (pe.runa === r ? t("inv.elegida") + "." : t("inv.elegir_runa")) : t("inv.runa_falta"), falta: !tiene, elegida: pe.runa === r, fn: tiene ? () => PODERES.elegirRuna(r) : null };
     });
@@ -349,7 +350,7 @@ window.INVENTARIO = (function () {
       c.lineTo(8, 64);
       c.closePath();
       c.fill();
-      FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : COL_RUNA[item.runa], 7);
+      FUTHARK.dibujar(c, item.runa, 64, 94, 60, item.falta ? "#3A3634" : colRuna(item.runa), 7);
     } else if (item.obj || item.fantasma) {
       // una pieza de equipo, con el dibujo de la arena (arte.js); si no cargó, se repinta sola al cargar. Una casilla
       // vacía muestra la silueta de lo que va ahí

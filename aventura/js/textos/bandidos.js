@@ -1,5 +1,6 @@
 // Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
 I18N.textos({
+  "as.grupo.bandidos": { es: "Los Sin Linde", en: "The Lawless" },
   "mp.ley_bandidos": { es: "Guaridas de bandidos", en: "Bandit hideouts" },
   "cr.bandido": { es: "Bandido Sin Linde", en: "Lawless bandit" },
   "cr.arquero": { es: "Arquero Sin Linde", en: "Lawless archer" },

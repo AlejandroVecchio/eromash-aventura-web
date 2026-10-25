@@ -14,6 +14,9 @@ window.PODERES = (function () {
     sowilo: { coste: 50, col: "#F5A524" },
   };
   const ORDEN = ["kenaz", "isa", "algiz", "sowilo"];
+  // runas que suman otros sistemas: RUNAS[r] = { coste, col }, ORDEN.push(r) y LANZAR[r] = (h) => …, con
+  // h = { golpe, pr, apuntar, vivos, efectos, avisar }
+  const LANZAR = {};
   const COSTO_ESPADA = [30, 70, 130, 220, 350],
     COSTO_COTA = [25, 60, 110, 190, 300],
     COSTO_LAMPARA = [40, 120];
@@ -249,7 +252,7 @@ window.PODERES = (function () {
       efectos.push({ tipo: "sol", x: jug.x, y: jug.y, radio, t: 0, dur: 0.9 });
       avisarSistemas("sowilo", zona);
       aplicar();
-    }
+    } else if (LANZAR[r]) LANZAR[r]({ golpe, pr, apuntar, vivos, efectos, avisar: avisarSistemas });
   }
   const avisarSistemas = (r, zona) => (window.SISTEMAS || []).forEach((s) => s.alRuna && s.alRuna(r, zona));
 
@@ -437,5 +440,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, LANZAR, pj: () => pj };
 })();

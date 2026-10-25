@@ -1,5 +1,6 @@
 // Textos de los vættir (motor/vaettir.js, mundo/assets-vaettir.js): prefijo vt. (y as., mp.ley_vaettir).
 I18N.textos({
+  "as.grupo.vaettir": { es: "Los vættir", en: "The vættir" },
   "mp.ley_vaettir": { es: "Vættir", en: "Vættir" },
   "as.manantialVaettr": { es: "El manantial de Brunna", en: "Brunna's spring" },
   "as.toconVaettr": { es: "El tocón de la puertita", en: "The stump with the little door" },

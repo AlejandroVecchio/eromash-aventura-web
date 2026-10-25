@@ -1,5 +1,6 @@
 // Textos de las facciones (motor/facciones.js, mundo/assets-facciones.js): prefijo fc. (y as., mp.ley_facciones).
 I18N.textos({
+  "as.grupo.facciones": { es: "Facciones", en: "Factions" },
   "mp.ley_facciones": { es: "Facciones", en: "Factions" },
   "as.estandarteFaccion": { es: "El estandarte de una facción", en: "A faction banner" },
   "fc.guardia": { es: "La Guardia del Roble", en: "The Oak Guard" },

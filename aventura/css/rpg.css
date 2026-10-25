@@ -238,3 +238,9 @@
 .fc-fila small { color: #8A8080; }
 .fc-fila p { margin: 2px 0 0; font-size: 14px; }
 .fc-fila .fc-como { color: #8A8080; font-size: 12px; }
+/* el códice de los elementos (motor/elementos.js) */
+.el-lista { display: grid; gap: 8px; margin: 8px 0; text-align: left; }
+.el-fila { padding: 8px 10px; background: #1A1513; }
+.el-fila.apagada { opacity: 0.6; }
+.el-fila .el-par { margin-left: 8px; font-size: 0.9em; }
+.el-fila .el-d { margin-top: 3px; font-size: 0.88em; color: #C8C0B8; }
