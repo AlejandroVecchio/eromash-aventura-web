@@ -19,15 +19,9 @@
     }
     return [p.x, p.y];
   }
-  // pelea perfecta: la franja siempre sobre el pez
+  // pelea perfecta: un clic cada dos cuadros con «¡Tirá!» y nada con «¡Esperá!»
   async function pelearBien(A) {
-    for (let i = 0; i < 400 && PESCA.actual() && PESCA.actual().fase === "pelea"; i++) {
-      const p = PESCA.actual();
-      p.z = Math.max(0, Math.min(1 - PESCA.ZONA, p.f - PESCA.ZONA / 2));
-      p.vz = 0;
-      PESCA.pelear(0.05, false);
-      p.z = Math.max(0, Math.min(1 - PESCA.ZONA, p.f - PESCA.ZONA / 2));
-    }
+    for (let i = 0; i < 800 && PESCA.actual() && PESCA.actual().fase === "pelea"; i++) PESCA.pelear(0.05, PESCA.actual().est === "cede" && i % 2 === 0);
   }
   (window.PRUEBAS = window.PRUEBAS || []).push(
     { nombre: "pesca: la caña de Sverri a la orilla, se toma con E y la orilla deja pescar", fn: async (A, { igual, si }) => {
@@ -76,20 +70,40 @@
       const [x, y] = orilla(A);
       A.jug.x = x;
       A.jug.y = y;
-      si(PESCA.empezar(), "tira el sedal");
-      igual(A.J.modo, "pesca", "modo pesca:");
+      si(PESCA.empezar(), "tira la caña");
+      igual(A.J.modo, "juego", "sin ventana, en el mundo:");
+      si(!document.getElementById("pesca"), "no hay ventana de pesca");
+      igual(PESCA.actual().fase, "lanza", "la boya vuela:");
+      si(A.jug.interactuando > 0, "Eromash queda quieto con la caña");
       // tarde
       PESCA.picar();
       await esperar(PESCA.PICA * 1000 + 300);
       igual(PESCA.actual() && PESCA.actual().res, "tarde", "tarde se va:");
       await esperar(1400);
-      igual(A.J.modo, "juego", "vuelve al juego:");
+      igual(PESCA.actual(), null, "recoge el sedal:");
       // sin sostener se suelta
       PESCA.empezar();
       PESCA.picar();
       PESCA.tirar();
       for (let i = 0; i < 400 && PESCA.actual().fase === "pelea"; i++) PESCA.pelear(0.05, false);
-      igual(PESCA.actual().res, "escapo", "sin sostener se suelta:");
+      igual(PESCA.actual().res, "escapo", "sin tirar se suelta:");
+      PESCA.cerrar();
+      // tirar mientras el pez tira corta el sedal
+      PESCA.empezar();
+      PESCA.picar();
+      PESCA.tirar();
+      Object.assign(PESCA.actual(), { est: "tira", dura: 5, cambio: 1 });
+      for (let i = 0; i < 10 && PESCA.actual().fase === "pelea"; i++) PESCA.pelear(0.05, true);
+      igual(PESCA.actual().res, "corto", "con «¡Esperá!» se corta:");
+      PESCA.cerrar();
+      // con «¡Tirá!» cada clic lo acerca
+      PESCA.empezar();
+      PESCA.picar();
+      PESCA.tirar();
+      Object.assign(PESCA.actual(), { est: "cede", dura: 5 });
+      const p0 = PESCA.actual().p;
+      PESCA.pelear(0.05, true);
+      si(PESCA.actual().p > p0, "el clic acerca");
       PESCA.cerrar();
       // bien
       const pes0 = COCINA.estado().carne.pescado || 0,

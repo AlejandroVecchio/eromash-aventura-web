@@ -170,8 +170,3 @@
 /* con tantas pestañas en la mochila, la fila se parte en dos y cada pestaña se achica un poco */
 .inv nav { flex-wrap: wrap; min-width: 0; }
 .inv-tab { padding: 6px 10px; letter-spacing: 0.08em; }
-#pesca { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; user-select: none; }
-#pesca.oculto { display: none; }
-#pesca h2 { margin: 0 0 6px; color: var(--oro); }
-#pesca canvas { width: 100%; height: auto; display: block; }
-#pesca .pe-pie { margin: 6px 0 0; color: #E0B2B2; font-size: 13px; }
