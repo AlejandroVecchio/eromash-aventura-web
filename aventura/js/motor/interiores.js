@@ -67,7 +67,7 @@ window.INTERIORES = (function () {
       mueble("mostrador", 800, 680, { s: 1 }, 320, "in.accion_mostrador", hidromiel);
       mueble("barriles", 1370, 700, { s: 0.85 }, 110, "in.accion_barriles", examinar("in.taberna_barriles"));
       mueble("mesaBanco", 470, 830, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa"));
-      mueble("mesaBanco", 1120, 850, { s: 0.95 }, 170, "in.accion_mesa", examinar("in.taberna_mesa2"));
+      mueble("mesaBanco", 1120, 850, { s: 0.95 }, 170, "in.accion_mesa", window.DADOS ? () => DADOS.abrirMesa("ulf") : examinar("in.taberna_mesa2")); // la mesa de dados de Ulf (dados.js)
       hogar(260);
       g.push({ id: "ulf", x: 640, y: 650 });
       estandarte = 990;

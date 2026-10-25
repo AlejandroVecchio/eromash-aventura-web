@@ -5,44 +5,29 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 40,
-    titulo: { es: "La pesca", en: "Fishing" },
+    pr: 41,
+    titulo: { es: "Los dados de hueso", en: "Bone dice" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
-    usa: [
-      { pr: 1, es: "niveles: cada pez nuevo da experiencia", en: "levels: each new fish gives experience" },
-      { pr: 22, es: "cocina: el pescado y dos platos nuevos en la fogata", en: "cooking: fish and two new campfire dishes" },
-      { pr: 3, es: "botín: Urriði el Viejo deja una pieza", en: "loot: Urriði the Old drops an item" },
-    ],
+    usa: [],
     mirar: [
-      { es: "A la orilla de la laguna más cercana al Puesto está el puesto de pesca de Sverri (en el mapa, clase Pesca): un banquito, un balde con un pez y la caña clavada. Con E te llevás la caña.", en: "On the bank of the lake nearest the Outpost is Sverri's fishing spot (on the map, Fishing class): a stool, a bucket with a fish and the rod stuck in the mud. Press E to take the rod." },
-      { es: "En cualquier orilla de laguna o de río aparece «Pescar» con E. La boya flota; cuando pica (se hunde y suena) hay que apretar enseguida. Después, mantener apretado sube la franja verde y soltar la deja caer: con el pez adentro la captura (la barrita dorada) se llena.", en: "At any lake or river bank “Fish” appears on E. The float bobs; when it bites (dips and makes a sound) press right away. Then holding raises the green band and releasing lets it fall: with the fish inside, the catch (the gold bar) fills up." },
-      { es: "Cada agua y cada hora tiene lo suyo: perca y lucio en lagunas, trucha y salmón en ríos (el salmón al alba y al caer el sol), la anguila de noche y el pez de escarcha en los ríos del norte. Con cuatro especies, de noche en una laguna puede picar Urriði el Viejo. El pescado se cocina en la fogata y el diario lleva el libro del pescador.", en: "Each water and hour has its own: perch and pike in lakes, trout and salmon in rivers (salmon at dawn and dusk), eels at night and frostfish in northern rivers. With four species, at night in a lake Urriði the Old may bite. Fish is cooked at the campfire and the journal keeps the angler's book." },
+      { es: "En el patio del Puesto juega Bersi el Tuerto y en Brunvik Hallgerd la Atrevida, cada una en su mesa con mantel, cubilete, vela y plata (en el mapa, clase Dados). Ulf juega en la mesa de la taberna. Con E se elige la apuesta (10, 25 o 50) o se piden las reglas.", en: "In the Outpost yard Bersi One-Eye plays and in Brunvik Hallgerd the Bold, each at their own table with cloth, cup, candle and silver (on the map, Dice class). Ulf plays at the tavern table. Press E to choose the bet (10, 25 or 50) or ask for the rules." },
+      { es: "Se tiran seis dados: los 1 valen 100, los 5 valen 50, tres iguales y las escaleras más. Se aparta lo que vale (izquierda/derecha y E, o tocando el dado) y se elige seguir tirando (Espacio) o plantarse (la lente). Una tirada sin nada pierde todo el turno; si los seis valen, se tiran los seis otra vez. Gana el primero a 2000 y se lleva el doble de la apuesta.", en: "Six dice are rolled: 1s are worth 100, 5s 50, three of a kind and straights more. Set aside what scores (left/right and E, or tap the die) and choose to roll on (Space) or stop (the lens). A roll with nothing loses the whole turn; if all six score, roll all six again. First to 2000 wins and takes double the bet." },
+      { es: "Cada jugador tiene su carácter: Bersi se planta temprano, Hallgerd arriesga hasta 650 y Ulf queda en el medio. Ganándole a los tres se abre la mesa alta (apuestas de 100 y 200). Levantarse a la mitad cuenta como perdida. El diario lleva partidas, plata ganada y tu mejor turno.", en: "Each player has a temperament: Bersi stops early, Hallgerd risks up to 650 and Ulf sits in the middle. Beating all three opens the high table (bets of 100 and 200). Getting up midway counts as a loss. The journal keeps games, silver won and your best turn." },
     ],
     botones: [
-      { es: "Llevarme al puesto de Sverri", en: "Take me to Sverri's spot", fn: (A) => {
-        const p = PESCA.puesto();
-        ir(A, [p.x, p.y], 60, 150);
+      { es: "Llevarme a la mesa de Bersi", en: "Take me to Bersi's table", fn: (A) => {
+        const m = DADOS.mesas.find((q) => q.rival === "bersi");
+        ir(A, [m.x, m.y], 0, 110);
       } },
-      { es: "Darme la caña y dejarme en la orilla", en: "Give me the rod and put me on the bank", fn: (A) => {
-        PESCA.tomarCana();
-        const p = PESCA.puesto(),
-          g = A.W.LAGOS.filter((l) => !l.seco).sort((a, b) => Math.hypot(a.p[0] - p.x, a.p[1] - p.y) - Math.hypot(b.p[0] - p.x, b.p[1] - p.y))[0];
-        let x = p.x,
-          y = p.y;
-        for (let k = 0; k < 200; k++) {
-          if (A.W.sueloEn(x, y) === 0 && A.W.libre(x, y, 14) && PESCA.aguaCerca(x, y)) break;
-          const dx = g.p[0] - x,
-            dy = g.p[1] - y,
-            l = Math.hypot(dx, dy);
-          x += (dx / l) * 20;
-          y += (dy / l) * 20;
-        }
-        A.teletransportar(x, y);
+      { es: "Llevarme a la mesa de Hallgerd", en: "Take me to Hallgerd's table", fn: (A) => {
+        const m = DADOS.mesas.find((q) => q.rival === "hallgerd");
+        ir(A, [m.x, m.y], 0, 110);
       } },
-      { es: "Noche y cuatro especies (para Urriði)", en: "Night and four species (for Urriði)", fn: (A) => {
-        PESCA.tomarCana();
-        Object.assign(PESCA.estado().libro, { perca: { n: 1, cm: 22 }, trucha: { n: 1, cm: 35 }, lucio: { n: 1, cm: 70 }, anguila: { n: 1, cm: 55 } });
-        A.H.E.tiempo = (Math.floor(A.H.E.tiempo / LUZ.DIA) + 1) * LUZ.DIA + (14 / 24) * LUZ.DIA;
+      { es: "Darme 300 de plata", en: "Give me 300 silver", fn: () => {
+        PODERES.pj().plata += 300;
+      } },
+      { es: "Abrir la mesa alta (ganados los tres)", en: "Open the high table (all three beaten)", fn: () => {
+        Object.assign(DADOS.estado().vencidos, { bersi: 1, hallgerd: 1, ulf: 1 });
       } },
     ],
   };
