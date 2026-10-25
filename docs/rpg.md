@@ -311,6 +311,12 @@ tener que leer el código para balancear.
   tónico, sangre de oso, ojo de búho, aliento de lobo, brebaje de Mímir) con duración y toxicidad (máximo 100, baja
   1,5/s); sus efectos suman por `RPG.aporte`. Aceites (`ACEITES`): +25 % contra su familia por `modDano`, 40 golpes
   que gasta `alPegar` (el muñeco no gasta).
+- Destilar es un juego (`motor/matraz.js`, `MATRAZ`, modo `matraz` por `J.modos`): el matraz de Erlenmeyer se mueve con
+  `izquierda`/`derecha`, el stick o arrastrándolo; caen motas (3 por hierba de la receta, el costado dice cuántas de qué
+  color); las de otra hierba o la podredumbre ensucian (−12 %), las de más restan 3 %. La efectividad (20 a 100 %)
+  queda con cada frasco (`st.ef["pocion:id"]`, se usan primero los mejores) y escala lo que suma (`s(s, k)`, la cura, el
+  bono y los golpes del aceite). `ALQUIMIA.destilar(cual, id, ef)` destila sin jugar. Suena a burbujas con
+  `SONIDO.burbujas(x, y)`, que se apaga a los 700 de la mesa.
 - Hooks nuevos: `celdasBolsa()` de un sistema suma casillas a la Bolsa. La poción elegida (R / △ en la Bolsa) tiene
   cosa en la barra (`cosasBarra`, se pone en cualquier casilla) y acción `pocion` (L2 + R1). Sobre el retrato, `#hudEfectos` lista efectos, aceite y toxicidad.
 - Estado en `E.extra.alq`.
