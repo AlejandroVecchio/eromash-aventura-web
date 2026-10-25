@@ -231,7 +231,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
-  - lo que hace falta · el menú de la fogata · el asador · íconos · el sistema
+  - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
@@ -274,6 +274,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
+- **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
+  - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
