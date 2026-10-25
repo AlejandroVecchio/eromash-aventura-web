@@ -58,6 +58,8 @@ I18N.textos({
   "sg.e_santuarios_d": { es: "Siete altares junto a los caminos.", en: "Seven altars by the roads." },
   "sg.e_elementos": { es: "Los elementos", en: "The elements" },
   "sg.e_elementos_d": { es: "Thurisaz en el Roble del Trueno, Laguz en su fuente y las seis reacciones.", en: "Thurisaz at the Thunder Oak, Laguz at its spring and the six reactions." },
+  "sg.e_ruta": { es: "La ruta de Eldervald", en: "The road of Eldervald" },
+  "sg.e_ruta_d": { es: "Cada oficio y cada mecánica se abre en su momento: subí de nivel y seguí la historia.", en: "Every craft and mechanic opens in its time: level up and follow the story." },
   "sg.e_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },
   "sg.e_casa_d": { es: "Se vende junto al camino del Puesto: comprala y mejorala.", en: "For sale by the Outpost road: buy it and improve it." },
 });

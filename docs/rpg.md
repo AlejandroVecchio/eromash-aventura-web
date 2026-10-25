@@ -632,6 +632,29 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
 - **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
 
+## La ruta de aprendizaje (`motor/ruta.js`, `RUTA`; textos `ru.` en `textos/ruta.js`; estado `E.extra.ruta`)
+
+No está todo abierto en la primera hora: cada sistema se abre en su momento de la historia o de nivel.
+
+| Nivel / momento | Se abre |
+| --- | --- |
+| 2 | la cocina, el tablón de cacería |
+| 3 | los instructores, la pesca |
+| llegar a Eikholt (EL-02) | la capital, el mostrador de Ingrid, el arcón |
+| Eikholt y 4 | la mesa de alquimia |
+| 5 | las mazmorras, los hörgar |
+| 6 | los contratos de caza, Kolbrun |
+| 7 | la hólmganga |
+| 8 | los tintes |
+| 10 | muescas y tallas, la casa de Hrolf |
+| 12 | los poderes legendarios |
+
+- **Cerrado pero a la vista**: la E de lo que todavía no se abrió dice desde cuándo («Mirar el tablón de cacería · desde nivel 2») y al usarla avisa en vez de abrir. RUTA envuelve el `cercanos` del sistema (`solo(texto)` cierra solo una parte: la mesa de alquimia y no las hierbas, Ingrid y no Kolbrun).
+- **Al abrirse**: un cartel grande con qué es y dónde se hace, de a uno cada 5 s. Una partida que ya venía andando no recibe todos juntos.
+- **Diario y saga**: el diario lista lo abierto y los próximos tres con su pista; la saga tiene la entrada «La ruta de Eldervald».
+- **Pruebas**: la partida de prueba (ranura 9) tiene todo abierto, salvo con `?ruta=1` o `RUTA.estricta(true)`. «Probar mecánicas» abre cada cosa directo, sin la ruta.
+- Un paso nuevo: su línea en `PASOS` (`{ id, sis, nivel, mision, solo }`) y sus textos `ru.p_<id>` y `ru.d_<id>`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
