@@ -10,7 +10,6 @@
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
       { pr: 1, es: "niveles: cada kempa paga experiencia y crece con tu nivel", en: "levels: each champion pays experience and scales with your level" },
-      { pr: 47, es: "Skuggi: en la piel no muerde, mira desde el borde", en: "Skuggi: he doesn't bite on the hide, he watches from the edge" },
     ],
     mirar: [
       { es: "Junto al camino del Puesto a Eikholt (escudo rojo en el mapa) hay una piel de buey estaqueada entre varas de avellano, con dos testigos en un banco y Hallbera al costado. Con E le pedís batirte con el siguiente de cinco kempur: Ketil el Joven, Thorgerd Lanza Larga, Björn el Muro, Ásgerd la Ligera y Úlfhild Hija del Oso, cada uno con su rotación fija de ataques.", en: "By the road from the Outpost to Eikholt (red shield on the map) there's an ox hide staked between hazel poles, with two witnesses on a bench and Hallbera beside it. Press E to ask to fight the next of five champions: Ketil the Young, Thorgerd Long-Spear, Björn the Wall, Ásgerd the Light and Úlfhild Bear's Daughter, each with a fixed attack rotation." },

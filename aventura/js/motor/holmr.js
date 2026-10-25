@@ -11,7 +11,6 @@
 //     Eromash pisa fuera sin estar saltando o baja de su 12 % (se rinde antes de caer). Al empezar los dos se curan.
 //   · Cada kempa paga plata y experiencia; el quinto deja una pieza, un fragmento y el título «Campeón del hólmr»
 //     (+5 % de daño). Después viene un retador por día (más duro, paga según el nivel).
-//   · Skuggi (companero.js) no muerde en la piel: mira desde el borde.
 // Estado en E.extra.holmr = { vencidos, ganados, perdidos, campeon, retadorDia }. Textos `hm.`.
 window.HOLMR = (function () {
   "use strict";
@@ -84,7 +83,6 @@ window.HOLMR = (function () {
     const otros = lejosDe(
       [
         ...(window.BANDIDOS ? BANDIDOS.guaridas.map((g) => g.centro) : []),
-        window.COMPANERO ? COMPANERO.lugar() : null,
         window.CASA && CASA.casa() ? [CASA.casa().x, CASA.casa().y] : null,
         window.ELEMENTOS && ELEMENTOS.roble() ? [ELEMENTOS.roble().cosa.x, ELEMENTOS.roble().cosa.y] : null,
         window.ELEMENTOS && ELEMENTOS.fuente() ? [ELEMENTOS.fuente().cosa.x, ELEMENTOS.fuente().cosa.y] : null,
