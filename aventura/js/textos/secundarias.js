@@ -45,6 +45,8 @@ I18N.textos({
   "sc.renombre_2": { es: "De confianza", en: "Trusted" },
   "sc.renombre_3": { es: "Amigo de las lindes", en: "Friend of the Boundaries" },
   "sc.renombre_4": { es: "Guardián de Eldervald", en: "Guardian of Eldervald" },
+  "sc.nivel_rec": { es: "nivel {0}", en: "level {0}" },
+  "sc.encargo_pago": { es: "Encargo cumplido: {0} · +{1} de plata", en: "Task done: {0} · +{1} silver" },
   "sc.renombre_sube": { es: "Renombre en Eikholt: {0}", en: "Renown in Eikholt: {0}" },
   "sc.descuento": { es: "{0} % menos en la forja", en: "{0}% off at the forge" },
   "sc.svend_0": { es: "Forastero. Mantené las manos donde las vea y no vamos a tener problemas.", en: "Outsider. Keep your hands where I can see them and we'll have no trouble." },
