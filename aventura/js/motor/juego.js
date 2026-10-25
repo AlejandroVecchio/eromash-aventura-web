@@ -1759,14 +1759,8 @@
     const pe = PODERES.estado();
     if (pe) {
       HUD.bolsillo(pe.plata, pe.frag, pe.nivel);
-      HUD.barra([
-        { id: "atacar", icono: "espada", nivel: pe.espada, accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
-        { id: "esquivar", icono: "esquivar", accion: "esquivar", nombre: t("inv.b_esquivar"), listo: jug.sta >= 20 && !jug.cansado },
-        { id: "saltar", icono: "saltar", accion: "saltar", nombre: t("inv.b_saltar"), listo: true },
-        { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },
-        { id: "lente", icono: "lente", accion: "lente", nombre: t("inv.b_lente"), listo: tieneLente() && lenteEspera <= 0, espera: tieneLente() ? lenteEspera / 1.2 : 0 },
-        { id: "mochila", icono: "mochila", accion: "inventario", nombre: t("inv.b_mochila"), listo: true },
-      ]);
+      // la barra de abajo: habilidades, objetos, herramientas y conocimientos que eligió el jugador (interfaz/barra.js)
+      if (window.BARRA) HUD.barra(BARRA.casillas());
     }
     const o = H.objetivo(),
       m = H.idMision();
@@ -2065,6 +2059,7 @@
     },
     cerrarMenu,
     usarLente,
+    lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
     mouse: () => mouse,
     hora: () => amb.h,

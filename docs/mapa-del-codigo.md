@@ -73,7 +73,9 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 
 | Qué | Dónde |
 |---|---|
-| HUD (retrato, barras, plata, barra de acciones, rastreador, avisos) | `interfaz/hud.js` y `css/aventura.css` |
+| HUD (retrato, barras, plata, rastreador, avisos) | `interfaz/hud.js` y `css/aventura.css` |
+| La barra de abajo: qué puede ir (habilidades, objetos, herramientas, conocimientos), sus teclas y cómo se llena | `interfaz/barra.js` (`COSAS`, `ORDEN`); se acomoda en la pestaña Barra de `interfaz/inventario.js` |
+| Las hierbas de Thora (curan) | `motor/poderes.js` (`darHierbas`, `comerHierbas`) |
 | Mochila, equipo, bolsa y diario | `interfaz/inventario.js` |
 | Mapa grande, minimapa y su leyenda | `interfaz/mapa.js` (`CAT_DE`, `CATS`, `MUESTRA`); las miniaturas en `interfaz/iconos.js` |
 | Opciones | `interfaz/opciones.js` (`filas`) |
@@ -160,6 +162,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/interfaz/ · HUD, mochila, mapa, opciones y el prólogo del mago
 
+- **barra.js**: la barra de abajo (sistema BARRA)
+  - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
 - **iconos.js**: miniaturas del mapa (ICONOS)
@@ -190,12 +194,12 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **interiores.js**: los interiores (sistema INTERIORES)
-  - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto
+  - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
-  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · lanzar runas · dibujo
+  - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
 - **regiones.js**: regiones con nombre (sistema REGIONES)
 - **ritos.js**: las piedras viejas (sistema RITOS)
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
@@ -283,7 +287,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
-- **inventario.js**: Textos de la mochila (inventario) y de la barra de acciones del HUD (prefijo inv.), los dos idiomas.
+- **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
