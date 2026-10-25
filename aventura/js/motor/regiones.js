@@ -25,6 +25,7 @@ window.REGIONES = (function () {
     return r;
   }
   const sistema = {
+    enLienzo: true, // también corre en un mapa de cero (ver juego.js)
     iniciar(api) {
       A = api;
       jug = A.jug;

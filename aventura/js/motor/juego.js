@@ -55,7 +55,12 @@
   // los sistemas que se enchufan al motor (secretos.js, hordas.js, poderes.js): cada uno puede tener iniciar,
   // alEmpezar, actualizar, cercanos, lente, piso, objetos, luces, alMorir, hud y diario
   const SIS = window.SISTEMAS || [];
-  const cadaSis = (fn, ...a) => SIS.forEach((s0) => s0[fn] && s0[fn](...a));
+  // en un mapa de cero (W.LIENZO, un proyecto nuevo del editor) los sistemas arrancan igual, pero lo que ponen en el
+  // mundo (criaturas, piedras, cofres, gente, avisos) no se ve ni se usa: solo los que dicen enLienzo
+  const LIENZO = W.LIENZO,
+    SISM = LIENZO ? SIS.filter((s0) => s0.enLienzo) : SIS,
+    DEL_MUNDO = new Set(["luces", "fondo", "piso", "objetos", "aire", "sobreLuz", "actualizar", "cuerpos", "alGolpear"]);
+  const cadaSis = (fn, ...a) => (DEL_MUNDO.has(fn) ? SISM : SIS).forEach((s0) => s0[fn] && s0[fn](...a));
   J.retrasar = (seg, fn) => J.timers.push({ t: seg, fn });
   J.alejarA = (v) => (alejarMeta = Math.max(alejarMeta, v));
   // el acercamiento que elige el jugador (rueda del mouse o las acciones acercar / alejar), recordado en este navegador
@@ -415,7 +420,7 @@
         r.marcas.forEach((m) => J.marcas.push(Object.assign({ t: 0, dura: 33 }, m)));
         setTimeout(r.al, 450);
       }
-    SIS.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
+    SISM.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
     if (!algo) setTimeout(() => (avisar("lente_nada"), ANIMA.gesto("duda")), 500);
   }
 
@@ -978,7 +983,7 @@
   function cercano() {
     let mejor = null,
       dm = Infinity;
-    for (const id in npcs) {
+    if (!LIENZO) for (const id in npcs) {
       const n = npcs[id];
       const d = Math.hypot(n.x - jug.x, n.y - jug.y);
       if (d < 110 && d < dm) {
@@ -986,20 +991,20 @@
         mejor = { texto: t("av.accion_hablar") + " · " + tav("nombre_" + id), fn: () => hablar(id), x: n.x, y: n.y - 125 };
       }
     }
-    for (const tr of trabajadores) {
+    if (!LIENZO) for (const tr of trabajadores) {
       const d = Math.hypot(tr.x - jug.x, tr.y - jug.y);
       if (d < 100 && d < dm) {
         dm = d;
         mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + CUADRILLA[tr.id]), fn: () => hablarCuadrilla(tr), x: tr.x, y: tr.y - 125 };
       }
     }
-    SIS.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn, x, y) => {
+    SISM.forEach((s0) => s0.cercanos && s0.cercanos((d, texto, fn, x, y) => {
       if (d < dm) {
         dm = d;
         mejor = { texto, fn, x, y };
       }
     }));
-    for (const it of INTER) {
+    if (!LIENZO) for (const it of INTER) {
       if (!it.cond()) continue;
       const d = dist(jug, it.p);
       if (d < it.radio && d < dm) {
@@ -1496,10 +1501,10 @@
       if (g) [x, y] = vista(x, y);
       return x > x0 - 200 && x < x1 + 200 && y > y0 - 50 && y < y1 + 300;
     };
-    Object.values(npcs).forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => dibujarNpc(n) }));
-    trabajadores.forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, camina: n.camina, hablando: n.hablando }) }));
+    if (!LIENZO) Object.values(npcs).forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => dibujarNpc(n) }));
+    if (!LIENZO) trabajadores.forEach((n) => visible(n.x, n.y) && lista.push({ x: n.x, y: n.y, f: () => GENTE.dibujar(c, n.id, n.x, n.y, J.t, { vista: n.mira.vista, espejo: n.mira.espejo, camina: n.camina, hablando: n.hablando }) }));
     enemigos.forEach((e) => e.activo && e.muerto < 0.8 && visible(e.x, e.y) && lista.push({ x: e.x, y: e.y, f: () => CB.dibujar(c, e, J.t) }));
-    if (visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ x: ciervo.x, y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
+    if (!LIENZO && visible(ciervo.x, ciervo.y) && (ciervo.activo || ciervo.derrotado || ciervo.mostrarAtaduras || H.completa("EL-04"))) lista.push({ x: ciervo.x, y: ciervo.y, f: () => CB.dibujarCiervo(c, ciervo, J.t) });
     cadaSis("objetos", lista, visible, c);
     lista.push({ x: jug.x, y: window.ALTURAS ? ALTURAS.orden() : jug.y, pie: jug.y, f: dibujarJugador, jugador: true });
     if (g) {
@@ -1968,7 +1973,8 @@
     // la misión de la historia: los objetivos cumplidos y el actual
     const mis = H.mision(),
       lista = [];
-    if (mis) {
+    if (LIENZO); // un mapa de cero no sigue la historia
+    else if (mis) {
       const objs = [];
       const txt = (ob) => tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
       for (const ob of mis.objetivos) {
@@ -1980,7 +1986,7 @@
       }
       lista.push({ rotulo: t("ui.mision", [H.etapa()]), nombre: tav("mision_" + m), objetivos: objs });
     } else lista.push({ rotulo: tav("mision_fin"), nombre: tav("obj_fin"), objetivos: [] });
-    SIS.forEach((s0) => {
+    SISM.forEach((s0) => {
       const sg = s0.seguimiento && s0.seguimiento();
       if (sg) lista.push(sg);
     });
@@ -2310,6 +2316,11 @@
   };
   window.JUEGO.A = A; // para las pruebas (aventura/pruebas)
   cadaSis("iniciar", A);
+  // mapa de cero: fuera las criaturas y las cosas que los sistemas pusieron en el mundo de base
+  if (LIENZO) {
+    enemigos.length = 0;
+    W.limpiarLienzo();
+  }
   if (q.get("jugar")) {
     empezar(Number(q.get("jugar")) || 1, true);
     const v = q.get("ver");

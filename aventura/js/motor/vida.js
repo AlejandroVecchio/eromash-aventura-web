@@ -966,6 +966,7 @@ window.VIDA = (function () {
   // ---------- el sistema ----------
   const enZona = () => !!(window.ZONAS && ZONAS.aqui());
   const sistema = {
+    enLienzo: true, // también corre en un mapa de cero (ver juego.js)
     iniciar(api) {
       A = api;
       J = A.J;

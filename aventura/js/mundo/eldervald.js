@@ -1259,6 +1259,30 @@ window.ELDERVALD = (function () {
     });
   }
 
+  // ---------- un mapa de cero (AGREGADOS.lienzo: un proyecto nuevo del editor) ----------
+  // El mundo de base se arma igual (la historia y los sistemas siguen encontrando sus lugares y sus nombres), pero
+  // no queda nada a la vista ni en el camino: ni bosque, ni caminos, ni agua, ni la quebrada, ni Eikholt. Queda el
+  // borde de montañas y lo que se puso en el editor, con todos los assets del juego.
+  const LIENZO = !!(window.AGREGADOS && window.AGREGADOS.lienzo);
+  if (LIENZO) {
+    COSAS.length = 0;
+    DECO.length = 0;
+    BARROS.length = 0;
+    for (let i = CAMINOS.length - 1; i >= 0; i--) if (!CAMINOS[i].agregado) CAMINOS.splice(i, 1);
+    RIOS.forEach((r) => (r.seco = true));
+    LAGOS.forEach((l) => (l.seco = true));
+    // los puentes y la muralla siguen en sus listas (la historia los busca), pero sin ancho ni huella
+    PUENTES.forEach((p) => (p.ancho = 0));
+    NIVELES.forEach((n) => ((n.quads = []), (n.escaleras = [])));
+    for (let gy = 0; gy < GH; gy++)
+      for (let gx = 0; gx < GW; gx++) {
+        const x = (gx + 0.5) * CELDA,
+          y = (gy + 0.5) * CELDA;
+        suelo[gy * GW + gx] = x < BORDE || y < BORDE * 0.5 || x > ANCHO - BORDE || y > ALTO - BORDE ? 3 : 0;
+      }
+    pintarAgua();
+  }
+
   // ---------- lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) ----------
   // Se aplica con el bosque ya armado, así el resto del mundo no cambia: lo sacado se busca por asset y lugar, y lo
   // agregado aparta los árboles que le quedan encima.
@@ -1357,7 +1381,7 @@ window.ELDERVALD = (function () {
       const o = Object.assign({}, a.o || {});
       if (def.piso) o.piso = true;
       const c = poner(a.id, [a.x, a.y], o);
-      c.agregado = true;
+      c.agregado = c.delMapa = true;
       if (a.id === "barro") BARROS.push({ x: a.x, y: a.y, s: (o.s || 1) * (o.esc || 1) }); // el barro agregado también frena
       const ancho = c.choque ? (c.choque.w ? c.choque.w / 2 : c.choque.r * 1.3) + 40 : 0;
       if (!ancho) return;
@@ -1384,9 +1408,25 @@ window.ELDERVALD = (function () {
   });
   // pone una cosa con el mundo ya armado (cofres, piedras rúnicas, ruinas de secretos.js)
   function agregar(id, p, o = {}, nombre) {
+    // en un mapa de cero lo que ponen los sistemas existe para ellos, pero no está en el mundo
+    if (LIENZO) {
+      const c = Object.assign({ id, x: p[0], y: p[1], o, oculto: true }, ASSETS.medidas(id, o));
+      if (nombre) NOMBRADAS[nombre] = c;
+      return c;
+    }
     const c = poner(id, p, o, nombre);
     if (!o.piso) BALDES[Math.min(BH - 1, Math.max(0, Math.floor(c.y / BALDE))) * BW + Math.min(BW - 1, Math.max(0, Math.floor(c.x / BALDE)))].push(c);
     return c;
+  }
+  // en un mapa de cero, lo que los sistemas agregaron sobre el mundo de base se saca (juego.js, después de iniciarlos)
+  function limpiarLienzo() {
+    if (!LIENZO) return;
+    const queda = (c) => c.delMapa;
+    for (let i = COSAS.length - 1; i >= 0; i--) if (!queda(COSAS[i])) COSAS.splice(i, 1);
+    BALDES.forEach((b) => {
+      for (let i = b.length - 1; i >= 0; i--) if (!queda(b[i])) b.splice(i, 1);
+    });
+    cache.clear();
   }
   // lo pintado en el piso de un tipo (hongosRocio, helechos…), separado una vez: recorrer las miles de DECO en cada
   // cuadro era caro. Se vuelve a separar si DECO cambia de largo (el editor saca o agrega).
@@ -1523,7 +1563,7 @@ window.ELDERVALD = (function () {
     }
     for (let k = 0; k < 26; k++) R(c, x0 + r() * TROZO, y0 + r() * TROZO, 4, 4, r() < 0.5 ? "#4A4A30" : "#26251A");
     // claros de los lugares: pasto más claro
-    for (const k in LUGARES) {
+    if (!LIENZO) for (const k in LUGARES) {
       const Lg = LUGARES[k];
       if (Lg.p[0] + Lg.r + mg < x0 || Lg.p[0] - Lg.r - mg > x1 || Lg.p[1] + Lg.r + mg < y0 || Lg.p[1] - Lg.r - mg > y1) continue;
       const rr = azar(k.length * 31 + Math.round(Lg.p[0]));
@@ -1537,11 +1577,13 @@ window.ELDERVALD = (function () {
       }
     }
     // la quebrada: tajo oscuro con bordes de roca y el arroyo al fondo
-    trazo(c, QUEBRADA.p, QUEBRADA.w + 60, "#4A504C");
-    trazo(c, QUEBRADA.p, QUEBRADA.w + 20, "#3A3E3A");
-    trazo(c, QUEBRADA.p, QUEBRADA.w - 40, "#1E1F1C");
-    trazo(c, QUEBRADA.p, QUEBRADA.w - 160, "#151513");
-    trazo(c, QUEBRADA.p.map(([x, y]) => [x, y + 40]), 30, "#24424A");
+    if (!LIENZO) {
+      trazo(c, QUEBRADA.p, QUEBRADA.w + 60, "#4A504C");
+      trazo(c, QUEBRADA.p, QUEBRADA.w + 20, "#3A3E3A");
+      trazo(c, QUEBRADA.p, QUEBRADA.w - 40, "#1E1F1C");
+      trazo(c, QUEBRADA.p, QUEBRADA.w - 160, "#151513");
+      trazo(c, QUEBRADA.p.map(([x, y]) => [x, y + 40]), 30, "#24424A");
+    }
     // ríos y lagunas, de a capas (orilla oscura, orilla, agua, y el brillo del medio) para que cuando se tocan se
     // junten en una sola agua
     const tramosR = [];
@@ -1556,7 +1598,7 @@ window.ELDERVALD = (function () {
     tramosR.forEach((t) => trazo(c, t.p, t.w * 0.55, "#30586A"));
     tramosR.forEach((t) => trazo(c, t.p, t.w * 0.12, "#3E6E7E"));
     // Eikholt por dentro: tierra apisonada en la plaza del Roble y las calles hacia las puertas
-    if (CIUDAD.c[0] + CIUDAD.rx + mg > x0 && CIUDAD.c[0] - CIUDAD.rx - mg < x1 && CIUDAD.c[1] + CIUDAD.ry + mg > y0 && CIUDAD.c[1] - CIUDAD.ry - mg < y1) {
+    if (!LIENZO && CIUDAD.c[0] + CIUDAD.rx + mg > x0 && CIUDAD.c[0] - CIUDAD.rx - mg < x1 && CIUDAD.c[1] + CIUDAD.ry + mg > y0 && CIUDAD.c[1] - CIUDAD.ry - mg < y1) {
       const [cx, cy] = CIUDAD.c;
       P(c, poli(cx, cy, CIUDAD.rx * 0.98, CIUDAD.ry * 0.98, 40), "#465030");
       const calles = [[[cx, cy], [cx, cy + CIUDAD.ry + 40]], [[cx, cy], [cx - CIUDAD.rx - 40, cy]], [[cx, cy], [cx + CIUDAD.rx + 40, cy]], [[cx, cy], [cx, cy - CIUDAD.ry - 40]]];
@@ -1658,7 +1700,7 @@ window.ELDERVALD = (function () {
   }
 
   return {
-    U, M, ANCHO, ALTO, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
+    U, M, ANCHO, ALTO, LIENZO, limpiarLienzo, CIUDAD, LAGOS, LUGARES, CAMINOS, RIOS, QUEBRADA, PUENTES, COSAS, NOMBRADAS, PUNTOS, DECO, BARROS, barroEn,
     m, mas, libre, vallaEntre, tramosAgua, hayMuro, NIVELES, ESCALA_CASA, cercanas, decoDe, dibujarPiso, girarVista, invalidar, repararPuente, distLinea, agregar, sueloEn, libreDeTodo, ruido, BORDE, EXTRAS,
   };
 })();

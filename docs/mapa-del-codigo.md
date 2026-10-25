@@ -419,9 +419,10 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
-  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
+  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · un mapa de cero (AGREGADOS.lienzo: un proyecto nuevo del editor) · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)
 - **luz.js**: luz, sombra y niebla de Eldervald (módulo LUZ)
+- **mapas.js**: un mapa de cero hecho en el editor de mapas (map-generator): ?mapa=<id> juega js/mundo/mapas/<id>.js
 - **texturas.js**: las texturas hechas en el editor (TEXTURAS)
   - recetas: cada forma se dibuja nueve veces corrida un cuadro, así el borde de un lado sigue en el otro · imágenes: a los colores del juego, posterizadas y espejadas en cuatro para que no tengan costura · el lienzo de cada textura (se arma una vez por receta o imagen) · los dos assets de cada textura · registrar
 
