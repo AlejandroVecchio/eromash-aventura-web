@@ -77,8 +77,11 @@ window.ARMAS = (function () {
   };
   let vuelo = null; // el hacha lanzada
   const grietas = [];
+  // otros sistemas pueden dejar la mano vacía (la lanza arrojada): ARMAS.sinArma(fn) con fn() → true mientras tanto
+  const vacias = [];
+  const manoVacia = () => !!vuelo || vacias.some((f) => f());
   function golpes(def) {
-    if (vuelo) return PUNOS;
+    if (manoVacia()) return PUNOS;
     return TIPOS[tipoActual()] || def;
   }
 
@@ -232,8 +235,8 @@ window.ARMAS = (function () {
   const POSES = {};
   function pose(sp, p, ctx) {
     const f = POSES[tipoActual()];
-    if (f && !vuelo && !p.muerto) return f(sp, p, ctx);
-    if (!esDosManos() || vuelo || p.muerto) return null;
+    if (f && !manoVacia() && !p.muerto) return f(sp, p, ctx);
+    if (!esDosManos() || manoVacia() || p.muerto) return null;
     const a = p.atk,
       yb = p.y - ctx.jp * 70;
     if (!a) {
@@ -376,5 +379,5 @@ window.ARMAS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { tipo, poseDe: (id, fn) => (POSES[id] = fn), golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia: () => !!vuelo, lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
+  return { tipo, poseDe: (id, fn) => (POSES[id] = fn), golpes, tipoActual, pose, esDosManos, girando: () => torb > 0, manoVacia, sinArma: (f) => vacias.push(f), lanzada: () => vuelo, sistema, TIPOS, SANGRA, LANZA, TORB, ONDA };
 })();

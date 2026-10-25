@@ -5,32 +5,30 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 6,
-    titulo: { es: "Arco", en: "Bow" },
+    pr: 7,
+    titulo: { es: "Lanza", en: "Spear" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: el arco es un tipo más, con sus golpes que disparan en vez de cortar", en: "weapon types: the bow is one more type, whose moves shoot instead of cutting" },
-      { pr: 5, es: "armas a dos manos: el arco también saca el escudo", en: "two-handed weapons: the bow also removes the shield" },
-      { pr: 3, es: "botín y equipo: los arcos caen como cualquier pieza", en: "loot and gear: bows drop like any piece" },
+      { pr: 4, es: "tipos de arma: la lanza es un tipo más con sus golpes; a puño limpio mientras está arrojada, como el hacha", en: "weapon types: the spear is one more type with its moves; fists while it's thrown, like the axe" },
+      { pr: 3, es: "botín y equipo: las lanzas caen como cualquier pieza y se llevan con escudo", en: "loot and gear: spears drop like any piece and go with a shield" },
     ],
     mirar: [
-      { es: "Atacar dispara: dos flechas rápidas y la tercera es un abanico de tres. Las flechas se corren un poco solas hacia la criatura de adelante (más con mando).", en: "Attack shoots: two quick arrows and the third is a fan of three. Arrows nudge toward the creature ahead (more with a pad)." },
-      { es: "Manteniendo atacar se tensa (camina más lento y aparece la línea de tiro en el piso); al soltar, el tiro tenso atraviesa a todos los que cruza.", en: "Hold attack to draw (he walks slower and an aim line appears on the ground); release for a power shot that pierces everything in its path." },
-      { es: "Saltando y atacando, lluvia de cinco flechas al caer. Corriendo, dispara sin frenar.", en: "Jump and attack: a rain of five arrows on landing. Running, he shoots without stopping." },
-      { es: "La que no te vio recibe ×1,5 (número naranja). Las flechas quedan clavadas en árboles, rocas y en el piso un rato.", en: "Unaware creatures take ×1.5 (orange number). Arrows stay stuck in trees, rocks and the ground for a while." },
-      { es: "Cinco arcos dibujados (tejo, largo, rúnico, de asta, recurvo), con la cuerda que se tensa y la flecha encajada.", en: "Five bows drawn (yew, long, rune, antler, recurve), with a string that draws back and a nocked arrow." },
+      { es: "Estocadas rectas y largas (más alcance que cualquier arma): la lanza va hacia atrás y sale derecho. El tercer golpe barre todo delante y empuja lejos.", en: "Straight, long thrusts (more reach than any weapon): the spear pulls back and shoots out. The third hit sweeps everything ahead and knocks far." },
+      { es: "Pegando con la punta (al final del alcance) hace ×1,3 y dice «¡Punta!». Conviene pelear a distancia.", en: "Hitting with the tip (at the end of the reach) deals ×1.3 and says «Tip!». Fight at a distance." },
+      { es: "Manteniendo atacar se arroja: atraviesa hasta tres, aturde al primero y se clava. Un anillo rúnico cuenta 4 s y vuelve sola con una estela; o se junta pasando por encima.", en: "Hold attack to throw it: pierces up to three, stuns the first and sticks. A rune ring counts 4 s and it returns with a trail; or walk over it." },
+      { es: "Corriendo, la embestida avanza lejos atravesando la fila. Se lleva con una mano: el escudo se queda.", en: "Running, the lunge travels far through the line. One-handed: the shield stays." },
     ],
     botones: [
-      { es: "Darme los cinco arcos y abrir la Bolsa", en: "Give me the five bows and open the Bag", fn: (A) => {
-        ["arcoCorto", "arcoLargo", "arcoRunico", "arcoAsta", "arcoRecurvo"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
+      { es: "Darme las cinco lanzas y abrir la Bolsa", en: "Give me the five spears and open the Bag", fn: (A) => {
+        ["lanzaHoja", "lanzaAlada", "lanzaRunica", "lanzaHueso", "atgeir"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme un arco legendario", en: "Equip a legendary bow", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "arcoRecurvo", n: Math.max(17, RPG.nivel()), r: 3 }), { silencio: true });
+      { es: "Ponerme un atgeir legendario", en: "Equip a legendary atgeir", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "atgeir", n: Math.max(17, RPG.nivel()), r: 3 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ir a un grupo que todavía no me vio", en: "Go to a group that hasn't seen me yet", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -520, 0);
+      { es: "Ir con un grupo a probarla", en: "Go to a group to try it", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -300, 0);
         A.jug.sta = A.jug.staMax;
       } },
       { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {

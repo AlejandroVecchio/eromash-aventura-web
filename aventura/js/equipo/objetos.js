@@ -53,6 +53,12 @@ window.OBJETOS = (function () {
     arcoRunico: { slot: "arma", tipo: "arco", dosManos: true, g: "m", dano: 10, vel: 1, desde: 10, implicito: [["runico", 8]], arte: { lib: "arma", forma: "arco", fam: 2 } },
     arcoAsta: { slot: "arma", tipo: "arco", dosManos: true, g: "m", dano: 11, vel: 1, desde: 14, implicito: [["robo", 1]], arte: { lib: "arma", forma: "arco", fam: 3 } },
     arcoRecurvo: { slot: "arma", tipo: "arco", dosManos: true, g: "m", dano: 11, vel: 1.1, desde: 17, implicito: [["crit", 4]], arte: { lib: "arma", forma: "arco", fam: 4 } },
+    // lanzas (motor/lanza.js): estocadas largas, la punta pega más, se arrojan y vuelven; con una mano (escudo sí)
+    lanzaHoja: { slot: "arma", tipo: "lanza", g: "f", dano: 9, vel: 1.05, desde: 1, arte: { lib: "arma", forma: "lanza", fam: 0 } },
+    lanzaAlada: { slot: "arma", tipo: "lanza", g: "f", dano: 10, vel: 1, desde: 5, arte: { lib: "arma", forma: "lanza", fam: 1 } },
+    lanzaRunica: { slot: "arma", tipo: "lanza", g: "f", dano: 10, vel: 1, desde: 10, implicito: [["runico", 8]], arte: { lib: "arma", forma: "lanza", fam: 2 } },
+    lanzaHueso: { slot: "arma", tipo: "lanza", g: "f", dano: 11, vel: 1, desde: 13, implicito: [["robo", 1]], arte: { lib: "arma", forma: "lanza", fam: 3 } },
+    atgeir: { slot: "arma", tipo: "lanza", g: "m", dano: 12, vel: 0.95, desde: 17, arte: { lib: "arma", forma: "lanza", fam: 4 } },
     escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
     escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },

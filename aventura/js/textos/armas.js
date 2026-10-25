@@ -28,4 +28,11 @@ I18N.textos({
   "ob.b_arcoRunico": { es: "Arco rúnico", en: "Rune Bow" },
   "ob.b_arcoAsta": { es: "Arco de asta", en: "Antler Bow" },
   "ob.b_arcoRecurvo": { es: "Arco recurvo de las estepas", en: "Steppe Recurve Bow" },
+  "ar.rasgo_lanza": { es: "Lanza · estocadas largas, con la punta ×1,3; manteniendo atacar se arroja, atraviesa y vuelve sola", en: "Spear · long thrusts, ×1.3 with the tip; hold attack to throw it: it pierces and comes back" },
+  "ar.punta": { es: "¡Punta!", en: "Tip!" },
+  "ob.b_lanzaHoja": { es: "Lanza de hoja", en: "Leaf Spear" },
+  "ob.b_lanzaAlada": { es: "Lanza alada", en: "Winged Spear" },
+  "ob.b_lanzaRunica": { es: "Lanza rúnica", en: "Rune Spear" },
+  "ob.b_lanzaHueso": { es: "Lanza de hueso", en: "Bone Spear" },
+  "ob.b_atgeir": { es: "Atgeir", en: "Atgeir" },
 });
