@@ -610,6 +610,25 @@ Espíritus de la tierra como los landvættir de las sagas y los santuarios chico
   un material de la criatura) y plata (45 % de 4 a 10). Se ve en `efectosHud`.
 - Los seis bendiciendo: amigo de los vættir (dos fragmentos). Estado en `E.extra.vaettir = { favor, vistos, amigo }`.
 
+## La pesca (`motor/pesca.js`, `PESCA`, modo `pesca`; asset `canaSverri` y los peces en `mundo/assets-pesca.js`; textos `pe.`)
+
+Como la pesca del Stardew Valley y del Zelda.
+- El puesto de Sverri: en la orilla de la laguna más cercana al Puesto (el punto que mira al Puesto, 170 afuera del
+  agua). Con E se toma la caña (`st.cana`, `o.sinCana`). Marca `pesca` en el mapa y la caña en la Bolsa.
+- `aguaCerca(x, y)`: busca agua (`sueloEn` = 1) de 50 a 190 hacia donde mira Eromash y después alrededor; si cae dentro
+  de una laguna es `lago`, si no `rio`. Con caña y fuera de pelea, `cercanos` ofrece Pescar.
+- Fases: `espera` (1,5 a 4,5 s, × 0,7 al alba y al ocaso; apretar recoge), `pica` (`PICA` = 0,8 s para apretar; si
+  no, `tarde`), `pelea` y `fin`. En la pelea la franja (`ZONA` = 0,24) sube con `SUBE` mientras se mantiene (acciones
+  interactuar, atacar, saltar o el dedo sobre la capa) y cae con `CAE`; el pez cambia de meta según `agil` y va con
+  `vel`. Adentro la captura sube `LLENA` = 0,3/s, afuera baja `VACIA` = 0,2/s × (0,8 + vel × 0,4).
+- `PECES`: perca (laguna, día), trucha (río, día), salmón (río, alba y ocaso), lucio (laguna, tarde y noche), anguila
+  (cualquiera, noche), pez de escarcha (río del norte) y Urriði el Viejo (laguna, noche, con `ESPECIES_URRIDI` = 4
+  especies, 25 %, una vez: 250 de plata, dos fragmentos, una pieza r ≥ 3). Un jugador simulado con 0,18 s de reflejos
+  pesca casi siempre los fáciles y la mitad de las veces a Urriði.
+- Cada pez: un pescado para la cocina (tres Urriði) en `COCINA.CARNES.pescado`, platos nuevos `pescadoPalo` y
+  `sopaPescado` en `COCINA.PLATOS`, experiencia (entera la primera vez, un cuarto después) y el libro del pescador
+  (`st.libro[id] = { n, cm }`, el diario). Estado en `E.extra.pesca = { cana, libro, urridi }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

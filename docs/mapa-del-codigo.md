@@ -280,6 +280,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **nemesis.js**: las némesis: las criaturas que vencieron a Eromash (sistema NEMESIS)
   - nacer y crecer · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
+- **pesca.js**: la pesca (sistema PESCA, modo "pesca")
+  - el agua · tirar, picar, pelear · la capa del minijuego · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
@@ -357,6 +359,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: vetaHierro, vetaAmbar, vetaRunica
 - **assets-norte.js**: el corredor del norte: Paso del Guardián y Antigua tala (se suma a ASSETS)
   - assets: pilarAntiguo, lonaCuadrilla, tornoVigas, tablaPuente, pilaTablones, andamio, posteCruzaron, casetaPuentero, toconMarcado, muroRaices, granTocon, cabanaLenadores
+- **assets-pesca.js**: la pesca (assets de PESCA)
+  - los peces · el puesto de pesca de Sverri
+  - assets: canaSverri
 - **assets-piedras.js**: las piedras de Eldervald: las del camino y las del rito
   - formas de piedra · Piedra del camino · Piedra del rito
   - assets: piedraCamino, piedraRito
@@ -444,6 +449,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
+- **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.

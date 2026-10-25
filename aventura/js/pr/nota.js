@@ -5,30 +5,44 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 39,
-    titulo: { es: "Los vættir, espíritus de la tierra", en: "The vættir, spirits of the land" },
+    pr: 40,
+    titulo: { es: "La pesca", en: "Fishing" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 12, es: "materiales: las ofrendas son materiales de la Bolsa", en: "materials: offerings are materials from the Bag" },
-      { pr: 36, es: "arañas: Ugla quiere seda", en: "spiders: Ugla wants silk" },
+      { pr: 1, es: "niveles: cada pez nuevo da experiencia", en: "levels: each new fish gives experience" },
+      { pr: 22, es: "cocina: el pescado y dos platos nuevos en la fogata", en: "cooking: fish and two new campfire dishes" },
+      { pr: 3, es: "botín: Urriði el Viejo deja una pieza", en: "loot: Urriði the Old drops an item" },
     ],
     mirar: [
-      { es: "Seis lugares chicos a un costado de los caminos, cada uno con su dibujo y su nombre: el manantial de Brunna, el tocón de la puertita, la piedra horadada, el túmulo chico, la roca de los líquenes y el hueco del búho. Al encontrar uno va al mapa (clase Vættir).", en: "Six small places beside the roads, each with its own drawing and name: Brunna's spring, the stump with the little door, the holed stone, the little barrow, the lichen rock and the owl's hollow. Finding one puts it on the map (Vættir class)." },
-      { es: "Con E se abre su hogar: una pista dice qué quiere (ámbar, cuero, hierro, esquirla, brasa o seda). Lo que no quiere lo devuelve; lo que quiere sube su favor. De noche, con algo de favor, se asoma medio transparente.", en: "Press E to open its home: a hint says what it wants (amber, leather, iron, shard, ember or silk). What it doesn't want it gives back; what it wants raises its favour. At night, with some favour, it peeks out half transparent." },
-      { es: "Con favor 3 se muestra, habla, regala plata y un fragmento, y bendice su tierra: abajo a la izquierda sale «Tierra de …» con el don (vida que vuelve, estamina, −10 % de daño recibido, +10 % de daño, más materiales o más plata). Con los seis sos amigo de los vættir.", en: "At favour 3 it shows itself, speaks, gives silver and a shard, and blesses its land: at the bottom left “… 's land” appears with its gift (life regen, stamina, −10% damage taken, +10% damage, more materials or more silver). With all six you're a friend of the vættir." },
+      { es: "A la orilla de la laguna más cercana al Puesto está el puesto de pesca de Sverri (en el mapa, clase Pesca): un banquito, un balde con un pez y la caña clavada. Con E te llevás la caña.", en: "On the bank of the lake nearest the Outpost is Sverri's fishing spot (on the map, Fishing class): a stool, a bucket with a fish and the rod stuck in the mud. Press E to take the rod." },
+      { es: "En cualquier orilla de laguna o de río aparece «Pescar» con E. La boya flota; cuando pica (se hunde y suena) hay que apretar enseguida. Después, mantener apretado sube la franja verde y soltar la deja caer: con el pez adentro la captura (la barrita dorada) se llena.", en: "At any lake or river bank “Fish” appears on E. The float bobs; when it bites (dips and makes a sound) press right away. Then holding raises the green band and releasing lets it fall: with the fish inside, the catch (the gold bar) fills up." },
+      { es: "Cada agua y cada hora tiene lo suyo: perca y lucio en lagunas, trucha y salmón en ríos (el salmón al alba y al caer el sol), la anguila de noche y el pez de escarcha en los ríos del norte. Con cuatro especies, de noche en una laguna puede picar Urriði el Viejo. El pescado se cocina en la fogata y el diario lleva el libro del pescador.", en: "Each water and hour has its own: perch and pike in lakes, trout and salmon in rivers (salmon at dawn and dusk), eels at night and frostfish in northern rivers. With four species, at night in a lake Urriði the Old may bite. Fish is cooked at the campfire and the journal keeps the angler's book." },
     ],
     botones: [
-      { es: "Llevarme al manantial de Brunna (con ámbar)", en: "Take me to Brunna's spring (with amber)", fn: (A) => {
-        MATERIALES.dar("ambar", 3);
-        const h = VAETTIR.hogares.find((q) => q.v.id === "manantial");
-        ir(A, [h.x, h.y], 120, 60);
+      { es: "Llevarme al puesto de Sverri", en: "Take me to Sverri's spot", fn: (A) => {
+        const p = PESCA.puesto();
+        ir(A, [p.x, p.y], 60, 150);
       } },
-      { es: "Darme uno de cada ofrenda", en: "Give me one of each offering", fn: () => {
-        ["hierro", "cuero", "ambar", "esquirla", "brasa", "seda"].forEach((m) => MATERIALES.dar(m, 1));
+      { es: "Darme la caña y dejarme en la orilla", en: "Give me the rod and put me on the bank", fn: (A) => {
+        PESCA.tomarCana();
+        const p = PESCA.puesto(),
+          g = A.W.LAGOS.filter((l) => !l.seco).sort((a, b) => Math.hypot(a.p[0] - p.x, a.p[1] - p.y) - Math.hypot(b.p[0] - p.x, b.p[1] - p.y))[0];
+        let x = p.x,
+          y = p.y;
+        for (let k = 0; k < 200; k++) {
+          if (A.W.sueloEn(x, y) === 0 && A.W.libre(x, y, 14) && PESCA.aguaCerca(x, y)) break;
+          const dx = g.p[0] - x,
+            dy = g.p[1] - y,
+            l = Math.hypot(dx, dy);
+          x += (dx / l) * 20;
+          y += (dy / l) * 20;
+        }
+        A.teletransportar(x, y);
       } },
-      { es: "Mostrarme todos en el mapa", en: "Show me all of them on the map", fn: () => {
-        VAETTIR.hogares.forEach((h) => (VAETTIR.estado().vistos[h.v.id] = 1));
-        setTimeout(() => window.MAPA && MAPA.abrir && MAPA.abrir(), 300);
+      { es: "Noche y cuatro especies (para Urriði)", en: "Night and four species (for Urriði)", fn: (A) => {
+        PESCA.tomarCana();
+        Object.assign(PESCA.estado().libro, { perca: { n: 1, cm: 22 }, trucha: { n: 1, cm: 35 }, lucio: { n: 1, cm: 70 }, anguila: { n: 1, cm: 55 } });
+        A.H.E.tiempo = (Math.floor(A.H.E.tiempo / LUZ.DIA) + 1) * LUZ.DIA + (14 / 24) * LUZ.DIA;
       } },
     ],
   };
