@@ -362,6 +362,19 @@ tener que leer el código para balancear.
 - Pestaña «Tallas» de la mochila (visible con piezas con muescas o tallas) y las tallas en la Bolsa.
 - Estado en `E.extra.engarces = { tallas, hechas }`.
 
+## Conjuntos de equipo (`motor/conjuntos.js`, `CONJUNTOS`; textos `cj.` en `textos/conjuntos.js`)
+
+- Rareza nueva en `OBJETOS.RAREZAS[4]` (`conjunto`, verde, mult 1,2, sin afijos al azar): la tirada normal nunca la da,
+  solo `CONJUNTOS.crear(juego, casilla, n)`, que pone `it.cj`, `it.cs` y dos afijos fijos al 80 % de su tirada del nivel.
+- `JUEGOS`: guardia (casco, pecho, escudo, botas), fenrir (arma, casco, piernas, amuleto), odin (arma, anillo, amuleto,
+  pecho). Bonos de 2 y 3 piezas (`bonos`) por `RPG.aporte` con `OBJETOS.aportar`; las 4: guardia `modRecibido` × 0,85,
+  fenrir al matar (`alPegar` con `murio`) +30 % de velocidad de ataque y movimiento 3 s, odin +3 de energía rúnica por
+  crítico.
+- Caen: único 25 %, semijefe 35 %, líder 2 % (`alMorir`), cofre importante 15 %.
+- `OBJETOS.nombre` y `OBJETOS.lineas` preguntan `it.cj`. Pestaña «Conjuntos» (visible con algo visto), anotado una vez
+  por segundo de lo puesto y la bolsa.
+- Estado en `E.extra.conjuntos = { vistos, completos }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

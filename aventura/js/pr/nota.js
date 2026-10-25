@@ -5,54 +5,32 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 24,
-    titulo: { es: "Muescas, tallas y palabras rúnicas", en: "Notches, carvings and runewords" },
+    pr: 25,
+    titulo: { es: "Conjuntos de equipo", en: "Gear sets" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: las piezas que caen pueden traer muescas y suman lo de sus tallas", en: "loot: dropped pieces can come with notches and add their carvings' bonuses" },
-      { pr: 11, es: "forja: Ása suma «Abrir muescas en una pieza» a su menú", en: "forge: Ása adds «Open notches in a piece» to her menu" },
-      { pr: 12, es: "materiales: abrir muescas pide hierro y una esquirla", en: "materials: opening notches costs iron and a shard" },
+      { pr: 3, es: "botín: las piezas de conjunto son una rareza nueva (verde) y caen como las demás", en: "loot: set pieces are a new (green) rarity and drop like the rest" },
+      { pr: 1, es: "niveles: los afijos fijos crecen con el nivel de la pieza", en: "levels: fixed affixes grow with the piece's level" },
     ],
     mirar: [
-      { es: "Algunas piezas caen con muescas (las comunes más seguido, las legendarias y los anillos nunca). El detalle dice «Muescas: ◇ · ◇».", en: "Some pieces drop with notches (common ones more often, legendaries and rings never). The detail says «Notches: ◇ · ◇»." },
-      { es: "Las criaturas (más los líderes y semijefes) y los cofres sueltan tallas: huesitos con una runa, de Fehu (común) a Tiwaz (rara). Cada una suma una cosa en el arma y otra en la armadura o la joya.", en: "Creatures (leaders and lesser bosses more) and chests drop carvings: little bones with a rune, from Fehu (common) to Tiwaz (rare). Each adds one thing in a weapon and another in armour or jewellery." },
-      { es: "La pestaña Tallas de la mochila: elegís la pieza, tocás una talla y queda encastrada. Vaciar devuelve las tallas por 20 de plata cada una. Con R / △ sobre una talla con tres o más se unen en la siguiente.", en: "The Carvings tab in the backpack: pick the piece, touch a carving and it's set. Emptying returns the carvings for 20 silver each. With R / △ on a carving with three or more they merge into the next." },
-      { es: "Siete palabras rúnicas, como en el Diablo 2: en una pieza común con justo esas muescas, las tallas en su orden la despiertan (cartel grande, columna rúnica, nombre propio entre «» y un bono fuerte). Tiwaz + Uruz en una espada de 2 muescas es «Juramento».", en: "Seven runewords, Diablo 2-style: in a common piece with exactly those notches, the carvings in order awaken it (big banner, rune column, its own name in «» and a strong bonus). Tiwaz + Uruz in a 2-notch sword is «Oath»." },
-      { es: "Ása abre muescas en una pieza que no tiene (las comunes reciben más) por plata, hierro y una esquirla.", en: "Ása opens notches in a piece that has none (common ones get more) for silver, iron and a shard." },
+      { es: "Tres juegos de cuatro piezas verdes: La guardia de Eikholt (defensa), El lobo de Fenrir (golpes y velocidad) y Los ojos de Odín (runas). Cada pieza tiene nombre propio y dos afijos fijos.", en: "Three sets of four green pieces: The Eikholt Guard (defence), Fenrir's Wolf (blows and speed) and Odin's Eyes (runes). Each piece has its own name and two fixed affixes." },
+      { es: "El detalle de una pieza dice de qué juego es, cuáles llevás puestas (◆) y qué suman 2, 3 y 4 piezas (en verde lo que ya está activo).", en: "A piece's detail says which set it belongs to, which ones you're wearing (◆) and what 2, 3 and 4 pieces add (what's active shows green)." },
+      { es: "El juego entero trae un poder: la guardia recibe un 15 % menos, el lobo se acelera un 30 % por 3 s al matar (sale en la tira de efectos) y Odín recupera energía rúnica con cada crítico. Completar uno se festeja una vez.", en: "The full set grants a power: the guard takes 15 % less, the wolf speeds up 30 % for 3 s on a kill (shown on the effects strip) and Odin regains rune energy with every critical. Completing one is celebrated once." },
+      { es: "Los juegos compiten por casillas (la guardia y el lobo quieren el casco; el lobo y Odín, el arma y el amuleto). La pestaña Conjuntos de la mochila muestra lo encontrado de cada juego.", en: "Sets compete for slots (the guard and the wolf both want the helm; the wolf and Odin, the weapon and the amulet). The Sets tab in the backpack shows what you've found of each set." },
+      { es: "Caen de los únicos, los semijefes, alguna vez de los líderes y de los cofres importantes.", en: "They drop from uniques, lesser bosses, sometimes leaders and important chests." },
     ],
     botones: [
-      { es: "Darme una espada común de 2 muescas con Tiwaz y Uruz (Juramento)", en: "Give me a common 2-notch sword with Tiwaz and Uruz (Oath)", fn: () => {
-        const it = OBJETOS.generar({ base: "espadaAncha", r: 0, n: 6, sinMuescas: true });
-        it.e = 2;
-        it.g = [];
-        BOTIN.dar(it);
-        ENGARCES.dar("tiwaz", 1);
-        ENGARCES.dar("uruz", 1);
-        ENGARCES.elegir(it.u);
-        INVENTARIO.abrir("tallas");
-      } },
-      { es: "Darme una pieza común justa para cada palabra y 6 tallas de cada una", en: "Give me a fitting common piece for each word and 6 of every carving", fn: () => {
-        Object.keys(ENGARCES.PALABRAS).forEach((id) => {
-          const P = ENGARCES.PALABRAS[id];
-          const b = Object.keys(OBJETOS.BASES).find((k) => OBJETOS.BASES[k].slot === P.en[0]);
-          const it = OBJETOS.generar({ base: b, r: 0, n: 6, sinMuescas: true });
-          it.e = P.tallas.length;
-          it.g = [];
-          BOTIN.dar(it);
-        });
-        ENGARCES.ORDEN.forEach((id) => ENGARCES.dar(id, 6));
-        INVENTARIO.abrir("tallas");
-      } },
-      { es: "Abrir el menú de Ása con plata y materiales", en: "Open Ása's menu with silver and materials", fn: () => {
-        PODERES.pj().plata += 600;
-        MATERIALES.dar("hierro", 6);
-        MATERIALES.dar("esquirla", 3);
-        BOTIN.dar(OBJETOS.generar({ base: "espadaHierro", r: 0, n: 5, sinMuescas: true }));
-        FORJA.abrir();
-      } },
-      { es: "Ir a cazar líderes (sueltan tallas)", en: "Go hunt leaders (they drop carvings)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
+      { es: "Darme la guardia de Eikholt entera", en: "Give me the full Eikholt Guard", fn: () => darJuego("guardia") },
+      { es: "Darme el lobo de Fenrir entero", en: "Give me the full Fenrir's Wolf", fn: () => darJuego("fenrir") },
+      { es: "Darme los ojos de Odín enteros", en: "Give me the full Odin's Eyes", fn: () => darJuego("odin") },
+      { es: "Ir a cazar (probar al lobo)", en: "Go hunting (try the wolf)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
     ],
   };
+  function darJuego(j) {
+    const n = window.RPG ? Math.max(5, RPG.nivel()) : 5;
+    Object.keys(CONJUNTOS.JUEGOS[j].piezas).forEach((cs) => BOTIN.dar(CONJUNTOS.crear(j, cs, n)));
+    INVENTARIO.abrir("bolsa");
+  }
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {
     let x = p[0] + dx,

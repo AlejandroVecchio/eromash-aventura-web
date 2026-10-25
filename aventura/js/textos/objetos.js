@@ -6,6 +6,7 @@ I18N.textos({
   "ob.r_magico": { es: "mágica", en: "magic" },
   "ob.r_raro": { es: "rara", en: "rare" },
   "ob.r_legendario": { es: "legendaria", en: "legendary" },
+  "ob.r_conjunto": { es: "de conjunto", en: "set" },
   "ob.rotulo": { es: "{0} · {1} · nivel {2}", en: "{0} · {1} · level {2}" },
 
   // ---------- bases ----------

@@ -219,6 +219,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
   - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
+- **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)
+  - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
 - **descanso.js**: el descanso (sistema DESCANSO)
@@ -359,6 +361,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
+- **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
 - **descanso.js**: Textos del descanso (motor/descanso.js): prefijo ds.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
