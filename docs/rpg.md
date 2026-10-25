@@ -595,6 +595,21 @@ Un evento de noche como la Cacería Salvaje del Witcher y las noches de invasió
 - El Cuerno de la Cacería (`celdasBolsa`, ícono `cz_cuerno`): de noche y afuera la llama ya (`tocarCuerno`), una vez
   por noche. Estado en `E.extra.caceria = { avisada, corrida, cuerno, vencidas, sobrevividas, escondidas }`.
 
+## Los vættir (`motor/vaettir.js`, `VAETTIR`; assets `manantialVaettr`, `toconVaettr`, `piedraHoradada`, `tumuloChico`, `rocaLiquenes`, `huecoBuho`, `vaettrFigura` en `mundo/assets-vaettir.js`; textos `vt.`)
+
+Espíritus de la tierra como los landvættir de las sagas y los santuarios chicos del Ni No Kuni.
+- Seis hogares (`LISTA`: id, asset, lo que quiere y su don) a un costado de los caminos, con semilla fija, en tierra
+  firme, lejos de lugares, grupos, guaridas, nidos y del jötunn, separados 6000 (si no alcanza, 4500 o 3000). Cada
+  uno abre un claro chico y pone su figura (`vaettrFigura`, `o.a` la hace aparecer).
+- A `VE` = 900 se lo encuentra (aviso y marca `vaettr`, clase Vættir). Con E (`RADIO` = 160) se abre su hogar: la pista
+  (`vt.<id>_pista`) y un botón por cada `OFRENDAS` que se tenga. Lo que no quiere lo devuelve; lo que quiere sube el
+  favor. Con `FAVOR` = 3 se muestra (60 de plata, un fragmento, 300 de experiencia, sus palabras) y bendice su tierra.
+  De noche, con favor 1 o 2, se asoma a medias.
+- La tierra (`tierra()`): el hogar bendecido más cercano a menos de `TIERRA` = 4200. Dones: vida (+6/s fuera de pelea,
+  +1,5/s en pelea), aliento (+8 de estamina/s), escudo (`modRecibido` × 0,9), golpe (`modDano` × 1,1), botín (30 % de
+  un material de la criatura) y plata (45 % de 4 a 10). Se ve en `efectosHud`.
+- Los seis bendiciendo: amigo de los vættir (dos fragmentos). Estado en `E.extra.vaettir = { favor, vistos, amigo }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

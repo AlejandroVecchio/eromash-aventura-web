@@ -5,46 +5,33 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 38,
-    titulo: { es: "La Cacería Salvaje (evento de noche)", en: "The Wild Hunt (night event)" },
+    pr: 39,
+    titulo: { es: "Los vættir, espíritus de la tierra", en: "The vættir, spirits of the land" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: aparece desde el nivel 4 y paga experiencia", en: "levels: it appears from level 4 and pays experience" },
-      { pr: 3, es: "botín: el Cazador deja una pieza", en: "loot: the Huntsman drops an item" },
-      { pr: 15, es: "bestiario: dos páginas nuevas y el Cazador entre los únicos", en: "bestiary: two new pages and the Huntsman among the uniques" },
+      { pr: 12, es: "materiales: las ofrendas son materiales de la Bolsa", en: "materials: offerings are materials from the Bag" },
+      { pr: 36, es: "arañas: Ugla quiere seda", en: "spiders: Ugla wants silk" },
     ],
     mirar: [
-      { es: "Una noche de cada tres (desde la segunda y con nivel 4) suena un cuerno lejano a las 20:30: esa noche corre la Cacería Salvaje. A las 22, si andás afuera y sin pelear, llega el Cazador de Oskoreia con cuatro sabuesos de humo, la noche se pone violeta y arriba a la izquierda corre el tiempo (75 s).", en: "One night in three (from the second, at level 4) a distant horn sounds at 20:30: that night the Wild Hunt rides. At 22, if you're outside and not fighting, the Oskoreia Huntsman arrives with four smoke hounds, the night turns violet and a 75 s timer runs on the left." },
-      { es: "El Cazador carga en línea con la lanza y los sabuesos muerden en abanico; son fantasmas (cruzan árboles, la runa del sol les pega triple). Cada 11 s cruzan los jinetes: una franja violeta larga donde estás, que pega al terminar (saltala o salite). A los 35 s, si quedan menos de dos sabuesos, vuelven dos.", en: "The Huntsman charges in a line with his spear and the hounds bite in a fan; they're ghosts (they pass through trees, the sun rune hits them triple). Every 11 s the riders sweep past: a long violet strip where you stand that hits when it ends (jump it or step out). At 35 s, if fewer than two hounds remain, two come back." },
-      { es: "Cuatro finales: tumbar al Cazador (plata, experiencia, una pieza y la primera vez su cuerno), aguantar los 75 s (algo de plata y experiencia), meterte en un pueblo o una casa (pasa de largo) o caer. El Cuerno de la Cacería queda en la Bolsa: de noche y afuera la llama a propósito, una vez por noche.", en: "Four endings: bring down the Huntsman (silver, experience, an item and the first time his horn), hold out the 75 s (some silver and experience), get into a village or house (it rides past) or fall. The Horn of the Hunt stays in your Bag: at night and outside it calls the Hunt on purpose, once per night." },
+      { es: "Seis lugares chicos a un costado de los caminos, cada uno con su dibujo y su nombre: el manantial de Brunna, el tocón de la puertita, la piedra horadada, el túmulo chico, la roca de los líquenes y el hueco del búho. Al encontrar uno va al mapa (clase Vættir).", en: "Six small places beside the roads, each with its own drawing and name: Brunna's spring, the stump with the little door, the holed stone, the little barrow, the lichen rock and the owl's hollow. Finding one puts it on the map (Vættir class)." },
+      { es: "Con E se abre su hogar: una pista dice qué quiere (ámbar, cuero, hierro, esquirla, brasa o seda). Lo que no quiere lo devuelve; lo que quiere sube su favor. De noche, con algo de favor, se asoma medio transparente.", en: "Press E to open its home: a hint says what it wants (amber, leather, iron, shard, ember or silk). What it doesn't want it gives back; what it wants raises its favour. At night, with some favour, it peeks out half transparent." },
+      { es: "Con favor 3 se muestra, habla, regala plata y un fragmento, y bendice su tierra: abajo a la izquierda sale «Tierra de …» con el don (vida que vuelve, estamina, −10 % de daño recibido, +10 % de daño, más materiales o más plata). Con los seis sos amigo de los vættir.", en: "At favour 3 it shows itself, speaks, gives silver and a shard, and blesses its land: at the bottom left “… 's land” appears with its gift (life regen, stamina, −10% damage taken, +10% damage, more materials or more silver). With all six you're a friend of the vættir." },
     ],
     botones: [
-      { es: "Llamarla ahora (de noche, en un claro)", en: "Call it now (at night, in a clearing)", fn: (A) => {
-        afueraDeNoche(A, 22.5);
-        setTimeout(() => CACERIA.empezar(CACERIA.nocheId()), 500);
+      { es: "Llevarme al manantial de Brunna (con ámbar)", en: "Take me to Brunna's spring (with amber)", fn: (A) => {
+        MATERIALES.dar("ambar", 3);
+        const h = VAETTIR.hogares.find((q) => q.v.id === "manantial");
+        ir(A, [h.x, h.y], 120, 60);
       } },
-      { es: "Una noche de Cacería a las 20:25 (oír el cuerno)", en: "A Hunt night at 20:25 (hear the horn)", fn: (A) => {
-        let n = CACERIA.nocheId() + 1;
-        while (!CACERIA.toca(n)) n++;
-        afueraDeNoche(A, 20.4, n);
+      { es: "Darme uno de cada ofrenda", en: "Give me one of each offering", fn: () => {
+        ["hierro", "cuero", "ambar", "esquirla", "brasa", "seda"].forEach((m) => MATERIALES.dar(m, 1));
       } },
-      { es: "Darme el Cuerno de la Cacería", en: "Give me the Horn of the Hunt", fn: (A) => {
-        CACERIA.estado().cuerno = true;
-        CACERIA.estado().corrida = -1;
-        afueraDeNoche(A, 23);
-        setTimeout(() => INVENTARIO.abrir("bolsa"), 1500);
+      { es: "Mostrarme todos en el mapa", en: "Show me all of them on the map", fn: () => {
+        VAETTIR.hogares.forEach((h) => (VAETTIR.estado().vistos[h.v.id] = 1));
+        setTimeout(() => window.MAPA && MAPA.abrir && MAPA.abrir(), 300);
       } },
     ],
   };
-  // de noche, nivel 4 o más y en el claro del jötunn (lejos de Hrímnir y de los pueblos)
-  function afueraDeNoche(A, h, n) {
-    while (window.RPG && RPG.nivel() < CACERIA.NIVEL_MIN) RPG.dar(500);
-    const noche = n != null ? n : CACERIA.nocheId() + 1;
-    A.H.E.tiempo = ((24 * noche + h - 9 + (h < 20 ? 24 : 0)) / 24) * LUZ.DIA;
-    if (CACERIA.caza()) CACERIA.terminar("cayo");
-    const j = JOTUNN.jefe();
-    ir(A, j.centro, 0, 760);
-  }
   // ---------- ayuda para los botones ----------
   function ir(A, p, dx = 0, dy = 0) {
     let x = p[0] + dx,
