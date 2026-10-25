@@ -27,7 +27,6 @@ window.SAGA = (function () {
     ["nemesis", "pelea", "thurisaz", "#C8402D", "NEMESIS", () => [Math.min(3, largo(NEMESIS.estado().vengadas)), 3]],
     ["remates", "pelea", "uruz", "#FF8D71", "REMATES", () => [Math.min(150, REMATES.estado().n), 150]],
     ["instructores", "oficios", "ansuz", "#FFD98A", "INSTRUCTORES", () => [Object.keys(INSTRUCTORES.LECCIONES).reduce((m, id) => m + INSTRUCTORES.aprendidas(id), 0), Object.keys(INSTRUCTORES.LECCIONES).reduce((m, id) => m + INSTRUCTORES.LECCIONES[id].length, 0)]],
-    ["signos", "oficios", "laguz", "#9A6BD8", "SIGNOS", () => [cuenta(SIGNOS.estado().sabe), largo(SIGNOS.LISTA)]],
     ["alquimia", "oficios", "berkano", "#7BC86C", "ALQUIMIA", () => [Object.keys(ALQUIMIA.HIERBAS).filter((h) => ALQUIMIA.estado().cosechadas[h] || ALQUIMIA.estado().hierbas[h]).length, largo(ALQUIMIA.HIERBAS)]],
     ["cocina", "oficios", "jera", "#F5A524", "COCINA", () => [Math.min(10, COCINA.estado().platos), 10]],
     ["pesca", "oficios", "laguz", "#5A8CA8", "PESCA", () => [Object.keys(PESCA.PECES).filter((p) => PESCA.estado().libro[p] && PESCA.estado().libro[p].n > 0).length, largo(PESCA.PECES)]],

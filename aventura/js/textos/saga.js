@@ -45,8 +45,6 @@ I18N.textos({
   "sg.e_remates_d": { es: "Rombo rojo sobre una criatura malherida: E la remata.", en: "Red diamond over a badly hurt creature: E finishes it." },
   "sg.e_instructores": { es: "Lecciones", en: "Lessons" },
   "sg.e_instructores_d": { es: "Hallbera, Ulfar y Vör enseñan en el Puesto.", en: "Hallbera, Ulfar and Vör teach at the Outpost." },
-  "sg.e_signos": { es: "Galdrar", en: "Galdrar" },
-  "sg.e_signos_d": { es: "Vör enseña los cantos rápidos.", en: "Vör teaches the quick chants." },
   "sg.e_alquimia": { es: "Hierbas", en: "Herbs" },
   "sg.e_alquimia_d": { es: "Seis hierbas, cada una donde le gusta crecer.", en: "Six herbs, each where it likes to grow." },
   "sg.e_cocina": { es: "Comidas", en: "Meals" },
