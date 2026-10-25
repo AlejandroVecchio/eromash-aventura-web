@@ -365,7 +365,7 @@ window.BOTIN = (function () {
       J = A.J;
       jug = A.jug;
       W = A.W;
-      if (window.RPG) RPG.aporte((s) => st && O().aportar(s, puestas(), st.puesto.arma));
+      if (window.RPG) RPG.aporte((s) => st && O().aportar(s, puestas(), st.puesto.arma), "botin");
       if (window.ATRIBUTOS && ATRIBUTOS.bono)
         ATRIBUTOS.bono(() => {
           const x = O().sumar(puestas());

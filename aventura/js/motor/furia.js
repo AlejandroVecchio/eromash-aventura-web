@@ -200,7 +200,7 @@ window.FURIA = (function () {
       J = A.J;
       jug = A.jug;
       iconos();
-      if (window.RPG) RPG.aporte((s) => rugidoT > 0 && (s.armadura += RUGIDO_ARMADURA));
+      if (window.RPG) RPG.aporte((s) => rugidoT > 0 && (s.armadura += RUGIDO_ARMADURA), "furia");
     },
     alEmpezar() {
       furia = 0;

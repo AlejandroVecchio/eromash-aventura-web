@@ -194,7 +194,7 @@ window.LEGENDARIOS = (function () {
           rearmar();
           if (tiene("andvaranaut")) s.plata *= 1 + N.andvaranautPlata;
           if (prisa > 0) s.velMov *= N.hermodrVel;
-        });
+        }, "legendarios");
       INVENTARIO.pestana({ id: "poderes", antes: "bestiario", nombre: () => t("lg.tab"), visible: () => Object.keys(st.aprendidos).length > 0, pintar });
     },
     alEmpezar(extra) {

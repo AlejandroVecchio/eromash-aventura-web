@@ -335,7 +335,7 @@ window.ALQUIMIA = (function () {
       iconos();
       INVENTARIO.pestana({ id: "alquimia", antes: "equipo", nombre: () => t("aq.mesa"), visible: () => abierta, pintar });
       if (window.MATRAZ) MATRAZ.iniciar(api);
-      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s, st.efk[id] != null ? st.efk[id] : 1)));
+      if (window.RPG) RPG.aporte((s) => Object.keys(st.efectos).forEach((id) => POCIONES[id] && POCIONES[id].s && POCIONES[id].s(s, st.efk[id] != null ? st.efk[id] : 1)), "alquimia");
     },
     alEmpezar(extra) {
       extra.alq = Object.assign(base(), extra.alq || {});

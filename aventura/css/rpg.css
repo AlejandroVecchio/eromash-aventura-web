@@ -206,3 +206,19 @@
 /* la hólmganga (motor/holmr.js) */
 .hm-reglas{font-size:.86em;color:#E0B2B2;border-left:3px solid #C8402D;padding-left:8px}
 .hm-premio{color:#FFD98A;font-weight:800}
+/* la hoja de Eromash (interfaz/hoja.js) */
+.inv-detalle .hj-base,.inv-detalle .hj-titulo,.inv-detalle .hj-nada,.inv-detalle .hj-tope,.inv-detalle .hj-recorte{display:block;margin-top:3px}
+.inv-detalle .hj-titulo{font-weight:800;color:#E0B2B2}
+.inv-detalle .hj-parte{display:flex;justify-content:space-between;gap:12px}
+.inv-detalle .hj-parte i{font-style:normal}
+.inv-detalle .hj-parte b{color:#7BC86C}
+.inv-detalle .hj-parte.nucleo b{color:#F2ECEC}
+.inv-detalle .hj-tope{font-size:.85em;color:#8E8A86}
+.inv-detalle .hj-recorte{color:#FF8D71;font-weight:700}
+.inv-celda.hj-topada .cant{color:#FF8D71}
+.hj-tabla{width:100%;border-collapse:collapse;font-size:.85em;margin-top:4px}
+.hj-tabla th{text-align:left;padding:3px 8px 3px 0;white-space:nowrap}
+.hj-tabla td{padding:3px 8px 3px 0;color:#E0B2B2;border-top:1px solid #2A2220}
+.hj-tabla td.hj-v{color:#F2ECEC;font-weight:800;white-space:nowrap}
+.hj-tabla em{color:#FF8D71;font-style:normal}
+.rotulo.hj-rotulo{margin-top:14px}

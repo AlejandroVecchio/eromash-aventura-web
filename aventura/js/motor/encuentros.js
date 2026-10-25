@@ -211,7 +211,7 @@ window.ENCUENTROS = (function () {
       jug = A.jug;
       W = A.W;
       JUEGOS_RUNAS.iniciar(api);
-      if (window.RPG) RPG.aporte((s) => st.inspirado > 0 && ((s.dano *= 1.1), (s.xp *= 1.1)));
+      if (window.RPG) RPG.aporte((s) => st.inspirado > 0 && ((s.dano *= 1.1), (s.xp *= 1.1)), "encuentros");
     },
     alEmpezar(extra) {
       extra.encuentros = Object.assign(base(), extra.encuentros || {});

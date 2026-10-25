@@ -271,7 +271,7 @@ window.HOLMR = (function () {
       W = A.W;
       armar();
       if (window.INVENTARIO && INVENTARIO.iconoDe) INVENTARIO.iconoDe("hm_escudo", (c) => KEMPUR_DIBUJO.escudo(c, 0, 0, 24, KEMPUR_DIBUJO.PAL[4], 1));
-      if (window.RPG) RPG.aporte((s) => st.campeon && (s.dano *= 1.05));
+      if (window.RPG) RPG.aporte((s) => st.campeon && (s.dano *= 1.05), "holmr");
     },
     alEmpezar(extra) {
       if (duelo) terminar(false, "lejos");
