@@ -194,6 +194,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las piezas de verdad, las mismas de la arena · los íconos (los de la aventura, dibujados con el mismo estilo plano que los assets) · el contenido de cada pestaña · la ventana
 - **mago.js**: el mago de Eromash (módulo MAGO)
   - el mago (coordenadas del dibujo del vikingo: 40..440 x 90..570, centro en 240,330)
+- **mapa-mazmorra.js**: el mapa de las mazmorras (sistema MAPA_MAZMORRA)
+  - lo visto de cada mazmorra · el lienzo del mapa (se pinta de a una celda, solo cuando cambia) · lo que se dibuja encima: salida, braseros, cofres, el jefe, las criaturas despiertas · el minimapa (lo pide MAPA.dibujarMini; true si estaba en una mazmorra) · el mapa grande (la tecla del mapa adentro de una mazmorra) · el sistema
 - **mapa.js**: el mapa de Eldervald (sistema MAPA)
   - las miniaturas · el mapa grande: zoom, arrastre y la marca propia · el minimapa
 - **opciones.js**: opciones (módulo OPCIONES)

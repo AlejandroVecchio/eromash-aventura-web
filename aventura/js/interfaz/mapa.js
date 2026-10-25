@@ -305,6 +305,8 @@ window.MAPA = (function () {
     if (b) b.disabled = !marca();
   }
   function abrir() {
+    // adentro de una mazmorra, su propio mapa (interfaz/mapa-mazmorra.js)
+    if (window.MAPA_MAZMORRA && MAPA_MAZMORRA.abrir()) return;
     vistaMapa.z = vistaMapa.z || 1;
     vistaMapa.cx = jug.x;
     vistaMapa.cy = jug.y;
@@ -571,6 +573,8 @@ window.MAPA = (function () {
     }
     const c = cv.getContext("2d");
     c.setTransform(k0, 0, 0, k0, 0, 0);
+    // bajo tierra, el mapa que se arma al recorrer la mazmorra
+    if (window.MAPA_MAZMORRA && MAPA_MAZMORRA.mini(c, MINI)) return flechaMini(c);
     if (!baseMini) baseMini = pintarBase(2400);
     const x0 = jug.x - LADO / 2,
       y0 = jug.y - LADO / 2,
@@ -666,7 +670,10 @@ window.MAPA = (function () {
     };
     senal(marca(), "#FFD98A");
     senal(p, "#73D5DB");
-    // Eromash en el centro, apuntando a donde mira
+    flechaMini(c);
+  }
+  // Eromash en el centro, apuntando a donde mira
+  function flechaMini(c) {
     c.save();
     c.translate(MINI / 2, MINI / 2);
     c.rotate(Math.atan2(jug.dir[1], jug.dir[0]));
@@ -686,6 +693,8 @@ window.MAPA = (function () {
 
   // dónde está Eromash: el lugar descubierto más cerca si está adentro, si no el bosque
   function lugarAqui() {
+    const Z = window.ZONAS && ZONAS.aqui();
+    if (Z) return Z.d.nombre;
     let mejor = null,
       dm = 1e9;
     for (const k of A.H.E.vistos) {

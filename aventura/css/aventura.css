@@ -247,6 +247,11 @@ body.ui-grande #hudMisiones { top: 240px; transform: none; }
 /* mapa grande: el lienzo y al costado la leyenda (cada clase se toca para mostrarla u ocultarla) */
 .mapa-cuerpo { display: flex; gap: 14px; align-items: flex-start; }
 .mapa-cuerpo .mapa-marco { flex: 1; min-width: 0; }
+/* el mapa de una mazmorra (interfaz/mapa-mazmorra.js) */
+canvas.mapa-zona { cursor: default; image-rendering: pixelated; margin: 10px auto 8px; }
+.mz-leyenda { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; color: var(--hueso); font: 600 13px "Eromash Text", system-ui, sans-serif; margin-bottom: 6px; }
+.mz-ley { display: inline-flex; align-items: center; gap: 6px; }
+.mz-ley i { width: 10px; height: 10px; transform: rotate(45deg); display: inline-block; }
 .mapa-leyenda { width: 210px; flex: none; display: flex; flex-direction: column; gap: 4px; }
 .mapa-leyenda .ley-titulo { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--oro); font-weight: 800; margin-bottom: 4px; }
 .mapa-leyenda .ley { display: flex; align-items: center; gap: 8px; padding: 3px 8px 3px 4px; background: #1A1715; border: 0; color: var(--hueso); font: 600 13px "Eromash Text", system-ui, sans-serif; text-align: left; cursor: pointer; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
