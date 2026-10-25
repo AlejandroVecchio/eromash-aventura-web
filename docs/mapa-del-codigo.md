@@ -229,6 +229,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
+- **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
+  - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
@@ -371,6 +373,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
+- **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.

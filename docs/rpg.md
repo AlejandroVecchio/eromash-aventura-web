@@ -321,6 +321,22 @@ tener que leer el código para balancear.
   cosa en la barra (`cosasBarra`, se pone en cualquier casilla) y acción `pocion` (L2 + R1). Sobre el retrato, `#hudEfectos` lista efectos, aceite y toxicidad.
 - Estado en `E.extra.alq`.
 
+## Cocina en la fogata (`motor/cocina.js`, `COCINA`, modo `cocina`; textos `co.` en `textos/cocina.js`)
+
+- Carne (`CARNES`): lobo 60 %, jabalí 75 %, oso 100 % (2), con semilla por criatura, en `alMorir`. Va a la Bolsa con
+  `celdasBolsa`.
+- Fogatas: los `fogonOlla` sin `apagado` y los `brasero` con `encendido` de `W.COSAS`. «Cocinar» abre un menú con los
+  cinco `PLATOS` (carne + hierbas de `ALQUIMIA`). Elegir uno gasta los ingredientes y pone el modo `cocina`: la tabla de cortar.
+  Cada ingrediente salta por el aire (`vuelo(n)` = 1,3 + 0,75 s por corte) con sus cortes marcados con flechas
+  (`CORTES`: lobo y jabalí 4, oso 5, pescado 3, hierbas 2); se hacen en orden deslizando (50 px) o con
+  `izquierda`/`derecha`/`arriba`/`abajo` (y el stick). Entre los ingredientes saltan uno o dos huesos que no se cortan.
+  Lo bien cortado (`precision()`: cortes bien / total, −8 por corte errado, −15 por hueso cortado) da a punto (≥ 90,
+  ×1,4 y dura ×1,5), bien (≥ 55), desparejo (≥ 20, ×0,5) o arruinado (no se come). El fuego suena en la fogata, corto.
+- Una comida por vez (`st.comida = { id, queda, k }`), suma por `RPG.aporte` y llena la vida al comer.
+- Hooks nuevos: `J.modos[nombre] = fn(dt)` corre cada cuadro mientras `J.modo` es ese nombre (juego.js), y
+  `efectosHud()` → `[{ texto, n, col }]` suma a la tira de efectos sobre el retrato (alquimia.js).
+- Estado en `E.extra.cocina`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

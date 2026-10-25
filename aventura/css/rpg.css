@@ -158,3 +158,10 @@
 #hudEfectos { position: absolute; left: 0; bottom: 100%; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; }
 #hudEfectos span { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 800; padding: 2px 6px; background: rgba(17, 17, 17, 0.82); border-left: 3px solid var(--col); color: #F2ECEC; }
 #hudEfectos span b { color: var(--col); }
+
+/* ---------- cocina (motor/cocina.js) ---------- */
+#cocina { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; }
+#cocina.oculto { display: none; }
+#cocina h2 { margin: 0 0 6px; color: var(--oro); }
+#cocina canvas { width: 100%; height: auto; display: block; }
+#cocina .co-pie { margin: 6px 0 0; color: #E0B2B2; font-size: 13px; }
