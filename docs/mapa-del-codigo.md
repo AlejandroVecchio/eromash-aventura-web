@@ -252,8 +252,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
   - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
-- **companero.js**: Skuggi, el perro compañero (sistema COMPANERO)
-  - dónde está herido: junto a un camino que sale del Puesto · el rescate · el vínculo · el perro anda · el sistema
 - **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)

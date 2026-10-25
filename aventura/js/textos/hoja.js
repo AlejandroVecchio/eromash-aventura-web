@@ -35,7 +35,6 @@ I18N.textos({
   "hj.de_cocina": { es: "Comida", en: "Meal" },
   "hj.de_conjuntos": { es: "Conjuntos", en: "Sets" },
   "hj.de_alquimia": { es: "Pociones", en: "Potions" },
-  "hj.de_companero": { es: "Skuggi", en: "Skuggi" },
   "hj.de_instructores": { es: "Lecciones de los instructores", en: "Instructors' lessons" },
   "hj.de_holmr": { es: "Campeón del hólmr", en: "Champion of the holmr" },
   "hj.de_santuarios": { es: "Bendición de los dioses", en: "Blessing of the gods" },

@@ -10,7 +10,7 @@
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
       { pr: 1, es: "niveles: la tubería de estadísticas (RPG.aporte) que ahora dice quién suma", en: "levels: the stat pipeline (RPG.aporte) that now says who adds what" },
-      { pr: 48, es: "y todas las que suman a Eromash (equipo, atributos, árbol, comidas, bendiciones, Skuggi, el hólmr…): cada una aparece con su nombre", en: "and every PR that adds to Eromash (gear, attributes, tree, meals, blessings, Skuggi, the holmr…): each shows up by name" },
+      { pr: 48, es: "y todas las que suman a Eromash (equipo, atributos, árbol, comidas, bendiciones, el hólmr…): cada una aparece con su nombre", en: "and every PR that adds to Eromash (gear, attributes, tree, meals, blessings, the holmr…): each shows up by name" },
     ],
     mirar: [
       { es: "En la mochila hay una pestaña nueva, Hoja: cada estadística de Eromash con su runa (vida, estamina, daño, crítico, velocidades, armadura, poder rúnico, regeneración, experiencia, plata, botín y lámpara). Al elegir una, abajo dice su base, qué suma cada cosa por nombre y su tope. Más abajo está la hoja entera en una tabla.", en: "The backpack has a new tab, Sheet: every stat of Eromash with its rune (health, stamina, damage, crit, speeds, armour, rune power, regeneration, experience, silver, loot and lamp). Pick one and below it shows its base, what each thing adds by name and its cap. Further down is the whole sheet in a table." },
@@ -23,13 +23,8 @@
         for (let n = RPG.nivel(); n < Math.min(RPG.TOPE, RPG.nivel() + 10); n++) x += RPG.xpPara(n);
         RPG.dar(x, A.jug.x, A.jug.y);
       } },
-      { es: "Apilar bonos (título, Skuggi, inspirado, casa) para ver el tope", en: "Stack bonuses (title, Skuggi, inspired, house) to see the cap", fn: () => {
+      { es: "Apilar bonos (título, inspirado, casa) para ver el tope", en: "Stack bonuses (title, inspired, house) to see the cap", fn: () => {
         if (window.HOLMR) HOLMR.estado().campeon = true;
-        if (window.COMPANERO) {
-          COMPANERO.estado().rescatado = true;
-          COMPANERO.estado().quieto = null;
-          COMPANERO.sumar(600);
-        }
         if (window.ENCUENTROS && ENCUENTROS.estado) ENCUENTROS.estado().inspirado = 600;
         RPG.aporte((s) => window.__notaBono && (s.dano *= 1.6), "cocina");
         window.__notaBono = true;
