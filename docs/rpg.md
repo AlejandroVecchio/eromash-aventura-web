@@ -44,6 +44,13 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## Nivel de las mazmorras y el reto (`motor/zonas.js`; textos `zn.nivel*`, `zn.reto_*`)
+
+- Cada zona tiene su nivel (`nivelZona`): el de su ficha (`d.nivel`) o el del lugar de su entrada en el bosque más 2 (con la franja de su tierra si están las tierras); una mazmorra que sale de la cueva de una tierra, 2 más que esa tierra. Antes las criaturas de adentro tomaban el nivel por su distancia al Puesto, y como las zonas viven fuera del mapa, eran todas «?».
+- `RPG.nivelDe` pregunta a `ZONAS.nivelDe` por toda criatura con `e.zona`; el jefe (único y con rotación) va 5 arriba.
+- **Reto**: vencido el jefe una vez, la entrada pregunta cómo entrar. Con reto todo despierta con 3 niveles más (`ponerReto`, que vuelve a nivelar con `RPG.renivelar`), y por eso trae mejor botín y más experiencia. El jefe del reto deja su propio cofre, `100 + 10 · nivel` de plata y un fragmento la primera vez (`E.extra.zonas.retos`).
+- Probar mecánicas tiene cada mazmorra con jefe también «con reto».
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos

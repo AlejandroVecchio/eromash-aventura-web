@@ -16,7 +16,7 @@ window.ZONAS = (function () {
   const C = 200, // una celda de mazmorra
     H = 150; // el alto de las paredes
   const armadas = []; // { id, d, x0, y0, x1, y1, ... }
-  let st = { cofres: {}, jefes: {}, fuegos: {} };
+  let st = { cofres: {}, jefes: {}, fuegos: {}, retos: {} };
   let aqui = null; // la zona donde está Eromash
 
   // ---------- los generadores (también los usa el editor) ----------
@@ -451,8 +451,58 @@ window.ZONAS = (function () {
   // ---------- entrar, salir y pasar ----------
   const zonaDe = (id) => armadas.find((z) => z.id === id);
   const dentroDe = (x, y) => armadas.find((z) => x >= z.x0 - 400 && x <= z.x1 + 400 && y >= z.y0 - 400 && y <= z.y1 + 400) || null;
+  // ---------- el nivel de cada zona y el reto ----------
+  // Cada zona tiene su nivel: el de su ficha (d.nivel) o el del lugar de su entrada en el bosque más 2 (con la franja
+  // de su tierra si están las tierras); una mazmorra que sale de la cueva de una tierra, 2 más que esa tierra. Las
+  // criaturas de adentro toman ese nivel (RPG.nivelDe pregunta acá) y el jefe, como único y con rotación, 5 más.
+  // Vencido el jefe una vez, la entrada ofrece el reto: todo vuelve a despertar con 3 niveles más (mejor botín y más
+  // experiencia, que salen del nivel) y el jefe del reto deja su propio cofre y una paga la primera vez.
+  function nivelZona(Z) {
+    if (Z.nivel) return Z.nivel;
+    const d = Z.d,
+      p = W.LUGARES.puesto.p;
+    let n = 8;
+    if (d.nivel) n = d.nivel;
+    else if (d.en) {
+      n = Math.round(1 + Math.hypot(d.en.x - p[0], d.en.y - p[1]) / 800);
+      if (window.TIERRAS) n = TIERRAS.ajustar(d.en.x, d.en.y, n);
+      n += 2;
+    } else if (d.desde && zonaDe(d.desde.zona)) n = nivelZona(zonaDe(d.desde.zona)) + 2;
+    return (Z.nivel = Math.max(3, Math.min(30, n)));
+  }
+  const RETO = 3;
+  function nivelDe(e) {
+    const Z = e.zona && zonaDe(e.zona);
+    return Z ? nivelZona(Z) + (Z.reto ? RETO : 0) : 0;
+  }
+  const hecho = (Z) => (Z.reto ? st.retos[Z.id] : st.jefes[Z.id]);
+  // poner o sacar el reto: todo despierta de nuevo con su nivel
+  function ponerReto(Z, si) {
+    if (!!Z.reto === !!si) return;
+    Z.reto = !!si;
+    Z.enemigos.forEach((e) => {
+      CB.reiniciar(e);
+      if (e.esbirroZona) (e.activo = false), (e.muerto = 1);
+      if (window.RPG && e.nivel) RPG.renivelar(e);
+    });
+    if (Z.jefe) {
+      Z.jefe.llamo = 0;
+      if (hecho(Z)) Z.jefe.e.muerto = 1;
+    }
+  }
+  // la boca de una mazmorra ya vencida pregunta cómo se entra
+  function pedirEntrada(Z) {
+    if (Z.d.tipo !== "mazmorra" || !Z.jefe || !st.jefes[Z.id]) return ponerReto(Z, false), entrar(Z);
+    const n = nivelZona(Z);
+    A.menu(`<h2>${Z.d.nombre}</h2><p class="sub">${t("zn.reto_pregunta", [n, n + RETO])}${st.retos[Z.id] ? " " + t("zn.reto_ya") : ""}</p>`, [
+      { texto: t("zn.reto_normal", [n]), fn: () => (A.cerrarMenu(), ponerReto(Z, false), entrar(Z)) },
+      { texto: t("zn.reto_si", [n + RETO]), fn: () => (A.cerrarMenu(), ponerReto(Z, true), entrar(Z)) },
+      { texto: t("ui.cerrar"), fn: A.cerrarMenu },
+    ]);
+  }
   function entrar(Z) {
     if (!Z.llegada) return;
+    setTimeout(() => HUD.aviso(t(Z.reto ? "zn.nivel_reto" : "zn.nivel", [nivelZona(Z) + (Z.reto ? RETO : 0)]), Z.reto ? "#C8402D" : "#FFD98A"), 1500);
     A.teletransportar(Z.llegada.x, Z.llegada.y);
     // el cartel dorado con su nombre (una tierra: «Tierra nueva»; una mazmorra: «Lugar descubierto») y la pista abajo
     if (window.CARTEL) {
@@ -483,9 +533,19 @@ window.ZONAS = (function () {
   // el jefe llama a dos más a los dos tercios y al tercio de la vida (nunca más de tres vivos)
   function actualizarJefe(Z) {
     const j = Z.jefe;
-    if (!j || st.jefes[Z.id]) return;
+    if (!j || hecho(Z)) return;
     const e = j.e;
     if (e.muerto > 0) {
+      if (Z.reto) {
+        // el reto superado: su cofre y una paga, una sola vez
+        st.retos[Z.id] = true;
+        HUD.aviso(t("zn.reto_superado", [e.lider.nombre]), "lugar", t("zn.jefe_vencido_sub"));
+        Z.cofres.push({ x: j.cx, y: j.cy + 40, k: Z.id + "_cr", rico: true });
+        PODERES.darPlata(100 + 10 * nivelZona(Z));
+        J.retrasar(0.8, () => PODERES.darFragmento());
+        j.esb.forEach((m) => m.activo && !m.muerto && (m.muerto = 0.001));
+        return;
+      }
       st.jefes[Z.id] = true;
       HUD.aviso(t("zn.jefe_vencido", [e.lider.nombre]), "lugar", t("zn.jefe_vencido_sub"));
       Z.cofres.push({ x: j.cx, y: j.cy + 40, k: Z.id + "_cj", rico: true });
@@ -701,7 +761,7 @@ window.ZONAS = (function () {
       });
     },
     alEmpezar(extra) {
-      extra.zonas = Object.assign({ cofres: {}, jefes: {}, fuegos: {} }, extra.zonas || {});
+      extra.zonas = Object.assign({ cofres: {}, jefes: {}, fuegos: {}, retos: {} }, extra.zonas || {});
       st = extra.zonas;
       armadas.forEach((Z) => {
         Z.enemigos.forEach((e) => {
@@ -726,14 +786,14 @@ window.ZONAS = (function () {
       actualizarJefe(aqui);
       // el jefe enciende sus braseros cuando empieza la pelea
       const j = aqui.jefe;
-      if (j && !st.jefes[aqui.id] && j.e.estado !== "quieto") aqui.fuegos.forEach((f) => aqui.d.salas[f.sala] === j.sala && (st.fuegos[f.k] = true));
+      if (j && !hecho(aqui) && j.e.estado !== "quieto") aqui.fuegos.forEach((f) => aqui.d.salas[f.sala] === j.sala && (st.fuegos[f.k] = true));
     },
     cercanos(dar) {
       // las entradas del bosque
       for (const Z of armadas) {
         if (!Z.d.en) continue;
         const d = Math.hypot(Z.d.en.x - jug.x, Z.d.en.y + 80 - jug.y);
-        if (d < 220) dar(d, t(Z.d.tipo === "mazmorra" ? "zn.accion_entrar" : "zn.accion_zarpar", [Z.d.nombre]), () => entrar(Z), Z.d.en.x, Z.d.en.y - 120);
+        if (d < 220) dar(d, t(Z.d.tipo === "mazmorra" ? "zn.accion_entrar" : "zn.accion_zarpar", [Z.d.nombre]), () => pedirEntrada(Z), Z.d.en.x, Z.d.en.y - 120);
       }
       const Z = aqui;
       if (!Z) return;
@@ -746,7 +806,7 @@ window.ZONAS = (function () {
         for (const c0 of Z.cosas) {
           if (c0.tipo !== "cueva" || !cerca(c0.x, c0.y + 60, 220)) continue;
           const M0 = c0.a && zonaDe(c0.a);
-          if (M0) dar(20, t("zn.accion_entrar", [M0.d.nombre]), () => entrar(M0), c0.x, c0.y - 200);
+          if (M0) dar(20, t("zn.accion_entrar", [M0.d.nombre]), () => pedirEntrada(M0), c0.x, c0.y - 200);
           else dar(40, t("zn.accion_cueva"), () => A.dialogoLibre([["eromash", "zn.cueva_vacia"]]), c0.x, c0.y - 200);
         }
     },
@@ -792,7 +852,7 @@ window.ZONAS = (function () {
     hud() {
       const Z = aqui,
         j = Z && Z.jefe;
-      if (j && !st.jefes[Z.id] && j.e.estado !== "quieto" && !j.e.muerto) J.jefeHud = { nombre: j.e.lider.nombre, frac: Math.max(0, j.e.vida / j.e.d.vida), ataduras: 0, ataque: "", accion: "" };
+      if (j && !hecho(Z) && j.e.estado !== "quieto" && !j.e.muerto) J.jefeHud = { nombre: j.e.lider.nombre, frac: Math.max(0, j.e.vida / j.e.d.vida), ataduras: 0, ataque: "", accion: "" };
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
@@ -818,6 +878,10 @@ window.ZONAS = (function () {
     estado: () => st,
     zonas: () => armadas,
     entrar: (id) => zonaDe(id) && entrar(zonaDe(id)),
+    pedirEntrada: (id) => zonaDe(id) && pedirEntrada(zonaDe(id)),
+    nivelDe,
+    nivelZona: (id) => zonaDe(id) && nivelZona(zonaDe(id)),
+    ponerReto: (id, si) => zonaDe(id) && ponerReto(zonaDe(id), si),
     ir: (x, y) => A.teletransportar(x, y),
   };
 })();

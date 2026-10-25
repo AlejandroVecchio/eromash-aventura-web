@@ -174,7 +174,12 @@ window.PROBAR = (function () {
         hay("ZONAS")
           ? ZONAS.zonas()
               .filter((Z) => Z.llegada)
-              .map((Z) => ({ id: "zona", texto: Z.d.nombre || Z.id, si: true, fn: () => (limpiar(), ZONAS.entrar(Z.id)) }))
+              .flatMap((Z) => {
+                const l = [{ id: "zona", texto: Z.d.nombre || Z.id, si: true, fn: () => (limpiar(), ZONAS.ponerReto(Z.id, false), ZONAS.entrar(Z.id)) }];
+                // con jefe: el reto, como si ya lo hubieras vencido (motor/zonas.js)
+                if (Z.jefe) l.push({ id: "zona_reto", texto: t("pb.zona_reto", [Z.d.nombre || Z.id]), si: true, fn: () => (limpiar(), (ZONAS.estado().jefes[Z.id] = true), ZONAS.ponerReto(Z.id, true), ZONAS.entrar(Z.id)) });
+                return l;
+              })
           : [],
     },
     {

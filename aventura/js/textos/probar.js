@@ -67,6 +67,8 @@ I18N.textos({
   "pb.caceria": { es: "Cacería Salvaje", en: "Wild Hunt" },
   "pb.caceria_d": { es: "Se hace de noche y suena el cuerno", en: "Night falls and the horn sounds" },
   // mazmorras
+  "pb.zona_reto": { es: "{0} · con reto", en: "{0} · challenge" },
+  "pb.zona_reto_d": { es: "Todo con 3 niveles más; el jefe del reto deja su cofre", en: "Everything 3 levels higher; the challenge boss leaves its chest" },
   "pb.zona_d": { es: "Entra por la escalera", en: "Enter by the stairs" },
   // ayudas
   "pb.plata": { es: "+1000 de plata", en: "+1000 silver" },
