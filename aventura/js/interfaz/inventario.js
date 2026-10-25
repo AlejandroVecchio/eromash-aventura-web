@@ -243,6 +243,57 @@ window.INVENTARIO = (function () {
         E(c, 20, 0, 5, 22, "#C8B898");
         FUTHARK.dibujar(c, "raidho", 0, 10, 24, "#5E3A1E", 3);
         break;
+      // las hierbas de Thora: un atado de hojas verdes con la cinta roja de la sanadora (objeto de la barra)
+      case "hierbas":
+        P(c, [-4, 26, -18, -14, -10, -22, 0, 16], "#4E7A3A");
+        P(c, [0, 26, -2, -26, 8, -24, 6, 18], "#7BC86C");
+        P(c, [4, 26, 22, -12, 26, -2, 8, 20], "#5E8E44");
+        P(c, [-10, -22, -4, -30, 2, -26, -2, -20], "#9AD88A");
+        R(c, -10, 10, 20, 7, "#9C2315");
+        R(c, -10, 10, 8, 7, "#5E130D");
+        break;
+      // el brebaje de Berkano: frasco de barro con el líquido rúnico y la runa en la panza (objeto de la barra)
+      case "brebaje":
+        E(c, 0, 28, 18, 5, "rgba(0,0,0,0.4)");
+        P(c, [-6, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, -8, 28, -16, 22, -18, 0, -6, -12], "#7A5634");
+        P(c, [0, -22, 6, -22, 6, -12, 18, 0, 16, 22, 8, 28, 0, 28], "#9A7048");
+        P(c, [-14, 4, 14, 4, 13, 20, 7, 25, -7, 25, -13, 20], "#3E9AA0");
+        P(c, [-14, 4, 14, 4, 12, 9, -12, 9], "#73D5DB");
+        R(c, -7, -30, 14, 8, "#5E4430");
+        FUTHARK.dibujar(c, "berkano", 0, 22, 14, "#E6FBFC", 2.6);
+        break;
+      // viajar con las runas: una piedra parada con Raidho y la luz rúnica alrededor (herramienta de la barra)
+      case "viajar":
+        E(c, 0, 26, 22, 6, "rgba(0,0,0,0.4)");
+        P(c, [-14, 26, -16, -14, -6, -28, 10, -26, 16, -10, 14, 26], "#6A7470");
+        P(c, [2, 26, 4, -27, 10, -26, 16, -10, 14, 26], "#8A9490");
+        FUTHARK.dibujar(c, "raidho", 0, 12, 26, "#73D5DB", 4);
+        c.lineWidth = 3;
+        c.strokeStyle = "rgba(115,213,219,0.55)";
+        c.beginPath();
+        c.ellipse(0, 26, 28, 8, 0, Math.PI * 1.05, Math.PI * 1.95);
+        c.stroke();
+        break;
+      // el Saber del bosque: una hoja de fresno con Ansuz y la llamita del fuego guía (conocimiento de la barra)
+      case "saber":
+        P(c, [0, 28, -18, 6, -14, -14, 0, -28, 14, -14, 18, 6], "#4E7A3A");
+        P(c, [0, 28, 0, -28, 14, -14, 18, 6], "#6E9A52");
+        FUTHARK.dibujar(c, "ansuz", 0, 12, 24, "#C8F2F4", 3);
+        P(c, [20, -12, 26, -24, 30, -12, 25, -6], "#73D5DB");
+        P(c, [25, -6, 26, -24, 30, -12], "#C8F2F4");
+        break;
+      // una casilla libre de la barra: el rombo hueco
+      case "vacia":
+        c.lineWidth = 3;
+        c.strokeStyle = "#E0B2B2";
+        c.beginPath();
+        c.moveTo(0, -22);
+        c.lineTo(22, 0);
+        c.lineTo(0, 22);
+        c.lineTo(-22, 0);
+        c.closePath();
+        c.stroke();
+        break;
       default:
         if (EXTRA_ICONO[tipo]) EXTRA_ICONO[tipo](c);
         else E(c, 0, 0, 20, 20, "#3A3634");
@@ -272,9 +323,49 @@ window.INVENTARIO = (function () {
     };
     const runas = RUNAS.map((r) => {
       const tiene = pe.runas.includes(r);
-      return { id: "runa_" + r, runa: r, nombre: t("pj.runa_" + r), desc: tiene ? t("pj.runa_" + r + "_toma") + " " + (pe.runa === r ? t("inv.elegida") + "." : t("inv.elegir_runa")) : t("inv.runa_falta"), falta: !tiene, elegida: pe.runa === r, fn: tiene ? () => PODERES.elegirRuna(r) : null };
+      return { id: "runa_" + r, runa: r, nombre: t("pj.runa_" + r), desc: tiene ? t("pj.runa_" + r + "_toma") + " " + t("bar.runa_ir") : t("inv.runa_falta"), falta: !tiene, fn: tiene ? () => irABarra("runa_" + r) : null };
     });
     return { lados: window.BOTIN ? BOTIN.lados(pe, lados) : lados, runas };
+  }
+  // la pestaña Barra: las seis casillas arriba y abajo todo lo que puede ir en ellas, por tipo. Se elige una casilla
+  // y después lo que va en ella; tocar lo que ya está en la casilla elegida la vacía.
+  function irABarra(id) {
+    const b = BARRA.estado(),
+      i = b.r.indexOf(id);
+    ranuraInv = i >= 0 ? i : Math.max(0, b.r.indexOf(null));
+    cambiar("barra");
+  }
+  function barraItems() {
+    const b = BARRA.estado(),
+      C = BARRA.COSAS;
+    const item = (id) => ({ id, runa: C[id].runa, icono: typeof C[id].icono === "function" ? C[id].icono() : C[id].icono, nombre: C[id].nombre(), desc: C[id].desc(), cant: C[id].cant ? C[id].cant() : null });
+    const ranuras = b.r.map((id, i) => {
+      const lleno = id && C[id] && C[id].tiene();
+      const it = lleno ? item(id) : { id: "vacia" + i, icono: "vacia", nombre: t("bar.vacia"), falta: true };
+      it.nombre = t("bar.casilla", [i + 1]) + " · " + it.nombre;
+      it.desc = (lleno ? it.desc + " " : "") + t("bar.casilla_d");
+      it.elegida = i === ranuraInv;
+      it.fn = () => (ranuraInv = i);
+      return it;
+    });
+    const grupos = BARRA.disponibles().map((g) => ({
+      tipo: g.tipo,
+      cosas: g.cosas.map((id) => {
+        const it = item(id),
+          en = b.r.indexOf(id);
+        it.desc += " " + (en === ranuraInv ? t("bar.sacar") : en >= 0 ? t("bar.mover", [en + 1, ranuraInv + 1]) : t("bar.poner", [ranuraInv + 1]));
+        it.elegida = en >= 0;
+        it.fn = () => {
+          if (en === ranuraInv) BARRA.sacar(ranuraInv);
+          else {
+            BARRA.poner(ranuraInv, id);
+            ranuraInv = (ranuraInv + 1) % BARRA.LARGO;
+          }
+        };
+        return it;
+      }),
+    }));
+    return { ranuras, grupos };
   }
   function bolsa(pe) {
     const l = [
@@ -310,7 +401,8 @@ window.INVENTARIO = (function () {
     pestana = "equipo",
     celdas = [], // { el, item, fila, col }
     foco = 0;
-  const PESTANAS = ["equipo", "bolsa", "diario"];
+  const PESTANAS = ["equipo", "barra", "bolsa", "diario"];
+  let ranuraInv = 0; // la casilla de la barra que se está llenando en la pestaña Barra
   // las pestañas que suman otros sistemas: { id, antes (la pestaña delante de la que va), nombre(), pintar(cuerpo, api),
   // visible() opcional: si devuelve false la pestaña no se muestra (la del mercader, solo mientras se comercia) }
   const EXTRA = {};
@@ -452,6 +544,27 @@ window.INVENTARIO = (function () {
       st.className = "inv-stats";
       st.innerHTML = `<div class="rotulo">${t("inv.stats")}</div>` + stats(pe).map(([k, v]) => `<div class="st"><span>${k}</span><b>${v}</b></div>`).join("");
       cuerpo.append(izqCol, st);
+    } else if (pestana === "barra") {
+      const { ranuras, grupos } = barraItems();
+      const fila = document.createElement("div");
+      fila.className = "inv-barra";
+      ranuras.forEach((it, k) => fila.appendChild(celda(it, 0, k, "ranura")));
+      cuerpo.appendChild(fila);
+      cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("bar.ayuda")}</p>`);
+      const caja = document.createElement("div");
+      caja.className = "inv-grupos";
+      cuerpo.appendChild(caja);
+      grupos.forEach((g, gi) => {
+        const sec = document.createElement("div");
+        sec.className = "inv-grupo";
+        sec.innerHTML = `<div class="rotulo">${t("bar.tipo_" + g.tipo)}</div>`;
+        const r = document.createElement("div");
+        r.className = "fila";
+        g.cosas.forEach((it, k) => r.appendChild(celda(it, gi + 1, k, it.runa ? "runa" : "")));
+        if (!g.cosas.length) r.insertAdjacentHTML("beforeend", `<span class="inv-nada">${t("bar.nada_" + g.tipo)}</span>`);
+        sec.appendChild(r);
+        caja.appendChild(sec);
+      });
     } else if (pestana === "bolsa") {
       const { l, piezas, encargos } = bolsa(pe);
       const g = document.createElement("div");
