@@ -181,10 +181,19 @@ window.BOTIN = (function () {
   // el nivel de objeto de un lugar: el de las criaturas de ahí, sin quedar muy por debajo de Eromash
   function nivelEn(x, y) {
     const p = W.LUGARES.puesto.p,
-      lugar = 1 + Math.hypot(x - p[0], y - p[1]) / 800,
       yo = window.RPG ? RPG.nivel() : 1;
+    let lugar = 1 + Math.hypot(x - p[0], y - p[1]) / 800;
+    if (window.TIERRAS) lugar = TIERRAS.ajustar(x, y, Math.round(lugar)); // la franja de la tierra, si está
     return Math.max(1, Math.round(Math.max(lugar, yo - 1)));
   }
+  // ---------- el botín según el nivel ----------
+  // Lo de más nivel trae mejor botín: el hallazgo (el peso de mágicas, raras y legendarias) sube un 3 % por nivel de la
+  // criatura o del lugar y un 10 % por cada nivel que te supera (hasta ×1,5). Lo gris (6 o más abajo) casi no suelta y
+  // nunca más que una mágica: conviene ir adelante. Los líderes con rango (campeón, señor) pesan más.
+  const yo = () => (window.RPG ? RPG.nivel() : 1);
+  const porNivel = (n) => 1 + 0.03 * (Math.max(1, n) - 1);
+  const porDif = (d) => (d > 0 ? Math.min(1.5, 1 + 0.1 * d) : 1);
+  const gris = (n) => n - yo() <= -6;
   // una criatura vencida: ¿suelta algo?
   function alMorir(e) {
     if (!st || e.esbirro || e.sinBotin) return;
@@ -205,9 +214,14 @@ window.BOTIN = (function () {
     if (e.tipo === "custodio" || e.tipo === "oso" || e.tipo === "trol") (chance = Math.max(chance, 0.8)), (min = Math.max(min, 1));
     const n = window.RPG ? RPG.nivelDe(e) : 1,
       tema = ARTE_OBJ.temaEn(W, e.x, e.y);
+    if (e.lider && e.lider.rango > 1) peso += 0.4 * (e.lider.rango - 1);
+    const g = gris(n) && !(e.semi || e.patron || (e.lider && e.lider.unico));
+    if (g) chance *= 0.3;
     for (let k = 0; k < veces; k++) {
       if (Math.random() >= chance) continue;
-      tirar(e.x, e.y, O().generar({ n, min, hallazgo: hallazgo() * peso, tema }));
+      const it = O().generar({ n, min, hallazgo: hallazgo() * peso * porNivel(n) * porDif(n - yo()), tema });
+      if (g && it.r > 1) continue; // lo gris no suelta raras ni legendarias
+      tirar(e.x, e.y, it);
     }
   }
   // los cofres: el botín de siempre, y a veces una pieza que vuela sola a Eromash
@@ -216,7 +230,8 @@ window.BOTIN = (function () {
     PODERES.botinCofre = function (x, y, nombre, b, importante) {
       const r = orig.apply(this, arguments);
       if (st && (importante || Math.random() < 0.4)) {
-        const it = O().generar({ n: nivelEn(x, y), min: importante ? 1 : 0, hallazgo: hallazgo() * (importante ? 2 : 1), tema: ARTE_OBJ.temaEn(W, x, y) });
+        const n = nivelEn(x, y);
+        const it = O().generar({ n, min: importante ? 1 : 0, hallazgo: hallazgo() * (importante ? 2 : 1) * porNivel(n), tema: ARTE_OBJ.temaEn(W, x, y) });
         J.retrasar(0.7, () => tirar(x, y - 20, it, true));
       }
       return r;
@@ -459,6 +474,8 @@ window.BOTIN = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     estado: () => st,
+    alMorir,
+    vuelan: () => vuelan,
     dar,
     tirar,
     equipar,
@@ -471,6 +488,8 @@ window.BOTIN = (function () {
     celdasBolsa,
     html,
     nivelEn,
+    porNivel,
+    porDif,
     alMorir,
     // el arma en la mano (con el hacha lanzada no hay nada que dibujar: Eromash pelea a puño limpio)
     dibujarArma: (c, x, y, ang, s, brillo) => !!(st && st.puesto.arma && ((window.ARMAS && ARMAS.manoVacia()) || ARTE_OBJ.dibujarArma(c, st.puesto.arma, x, y, ang, s, brillo))),

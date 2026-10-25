@@ -74,6 +74,10 @@ tener que leer el código para balancear.
   dos piezas raras o mejores, el Custodio, el oso y los troles 80 %. Los cofres: 40 % (los importantes siempre, mágica
   o mejor), y la pieza vuela sola a la bolsa. El nivel de objeto es el de la criatura; el de un cofre, el del lugar
   sin quedar más de un nivel debajo de Eromash.
+- **Botín según el nivel** (`BOTIN.porNivel`, `porDif`): el hallazgo (el peso de mágicas, raras y legendarias) sube un
+  3 % por nivel de la criatura o del cofre (×1,87 a nivel 30) y un 10 % por cada nivel que la criatura te supera, hasta
+  ×1,5. Lo gris (6 o más abajo) suelta un 30 % de lo normal y nunca más que una mágica (salvo únicos y semijefes). Los
+  líderes campeones y señores pesan +0,4 por rango. Con las tierras (`TIERRAS`), el nivel de un cofre respeta la franja.
 - Lo tirado queda en el piso (plano, gira con la cámara) con un haz del color de la rareza y su nombre; los nombres se
   apilan sin pisarse. Se junta con E. La bolsa guarda 30 piezas; desarmar da el 30 % de su valor
   (`(4 + 1,6n) × [1, 2,5, 6, 15] × (1 + 0,15 por afijo)`) en plata.
