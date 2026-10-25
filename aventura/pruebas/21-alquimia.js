@@ -52,5 +52,61 @@
       INVENTARIO.cerrar();
       A.H.guardar(9);
     } },
+    { nombre: "alquimia: destilar en el matraz, atrapar motas buenas y malas y la efectividad del frasco", fn: async (A, { igual, si }) => {
+      const st = ALQUIMIA.estado();
+      Object.assign(st.hierbas, { musgo: 9, serbal: 9 });
+      st.pociones.tonico = 0;
+      st.ef = {};
+      st.tox = 0;
+      const pocion0 = st.pociones.tonico;
+      si(ALQUIMIA.enMatraz("pocion", "tonico"), "empieza el matraz");
+      igual(A.J.modo, "matraz", "modo matraz:");
+      igual(st.hierbas.serbal, 7, "las hierbas se gastan al empezar:");
+      const S = MATRAZ.estado();
+      igual(S.pide.serbal, 6, "pide 3 motas por hierba:");
+      // una mota buena y una mala que caen justo en la boca
+      const caer = (tipo) => {
+        S.motas.length = 0;
+        S.motas.push({ tipo, x: S.mx, y: 520, v: 300, fase: 0, giro: 0, s: 14 });
+        S.cae = 99;
+        MATRAZ.paso(0.1);
+      };
+      caer("serbal");
+      igual(S.tiene.serbal, 1, "la buena entra:");
+      caer("cardo");
+      igual(S.malas, 1, "la de otra hierba ensucia:");
+      caer("podrida");
+      igual(S.malas, 2, "la podredumbre también:");
+      for (let i = 0; i < 4; i++) caer("serbal");
+      caer("serbal");
+      caer("musgo");
+      caer("musgo");
+      caer("musgo");
+      si(S.fin, "con todo lo que pide, termina");
+      igual(S.fin.ef, 76, "100 % menos 12 por cada sucia:");
+      await new Promise((r) => setTimeout(r, 30));
+      S.fin.t = 1;
+      MATRAZ.cerrar();
+      igual(st.pociones.tonico, pocion0 + 1, "queda el frasco:");
+      igual(st.ef["pocion:tonico"][0], 76, "con su efectividad:");
+      si(INVENTARIO.abierta(), "y vuelve a la mesa");
+      INVENTARIO.cerrar();
+      si(ALQUIMIA.destilar("pocion", "oso", 50), "sin jugar, con la efectividad pasada");
+      const arm0 = RPG.stats().armadura;
+      st.tox = 0;
+      si(ALQUIMIA.tomar("oso"), "toma la de 50 %");
+      igual(Math.round(RPG.stats().armadura - arm0), 10, "suma la mitad:");
+      st.efectos = {};
+      RPG.recalcular();
+      // terminar antes (Esc) con lo que haya
+      Object.assign(st.hierbas, { luna: 3, escarcha: 3 });
+      ALQUIMIA.enMatraz("pocion", "buho");
+      MATRAZ.terminar();
+      igual(MATRAZ.estado().fin.ef, 20, "sin nada juntado, el mínimo:");
+      MATRAZ.estado().fin.t = 1;
+      MATRAZ.cerrar();
+      INVENTARIO.cerrar();
+      igual(A.J.modo, "juego", "y vuelve al juego:");
+    } },
   );
 }

@@ -1979,6 +1979,8 @@
       }
     } else if (J.modo === "forja") {
       if (window.FORJA) FORJA.paso(dt); // la forja al ritmo del yunque (motor/forja.js)
+    } else if (J.modos && J.modos[J.modo]) {
+      J.modos[J.modo](dt); // los modos propios de los sistemas (la cocina en la fogata): J.modos[nombre] = fn(dt)
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
       else if (dlg && dlg.solo && (dlg.solo -= dt) <= 0) seguirDialogo();

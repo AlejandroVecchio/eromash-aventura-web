@@ -262,6 +262,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
+- **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
+  - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
