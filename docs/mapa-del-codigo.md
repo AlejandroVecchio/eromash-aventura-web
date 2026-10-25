@@ -162,6 +162,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/enemigos/ · el dibujo de las criaturas
 
+- **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
+  - Bandido · Arquero
 - **criaturas-bosque.js**: las criaturas del bosque profundo (se suman a CRIATURAS)
   - Draugr del túmulo · Jabalí de musgo · Cuervo de Hel · Fuego fatuo · Trol de musgo · Oso de zarzal
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
@@ -220,6 +222,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
+- **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)
+  - dónde: cerca de los caminos, lejos de los pueblos, de los grupos y entre ellas · la flecha de los arqueros: vuela en arco al final del aviso · el sistema
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
@@ -313,6 +317,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
 - **assets-arcon.js**: el arcón de Eromash en el Puesto (asset de ARCON)
   - assets: arconPuesto
+- **assets-bandidos.js**: el campamento de los Sin Linde (assets de BANDIDOS)
+  - assets: tiendaSinLinde, estacaSinLinde, botinSinLinde
 - **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
   - el manantial rúnico · la piedra de Berkano tirada
   - assets: manantialRunico, piedraBerkano
@@ -393,6 +399,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
+- **bandidos.js**: Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.

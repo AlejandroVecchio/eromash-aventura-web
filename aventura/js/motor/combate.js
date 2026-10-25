@@ -147,7 +147,7 @@ window.COMBATE = (function () {
     return aviso("abanico", e.x, e.y, d.aviso, { radio: d.radioGolpe, ang: d.angulo || 0.8, dir, rgb });
   }
   // lo que se oye cuando una criatura prepara el golpe: las bestias gruñen, los muertos y los fuegos zumban grave
-  const GRUNEN = { lobo: 1.25, jabali: 0.95, oso: 0.7, trol: 0.6, cuervo: 1.7, dreki: 0.45 };
+  const GRUNEN = { bandido: 1.5, arquero: 1.7, lobo: 1.25, jabali: 0.95, oso: 0.7, trol: 0.6, cuervo: 1.7, dreki: 0.45 };
   function sonarAviso(e) {
     if (!window.SONIDO) return;
     const g = GRUNEN[e.tipo];
@@ -308,7 +308,7 @@ window.COMBATE = (function () {
           let a;
           const rgb = e.lider ? RGB[e.lider.afijos[0]] : null;
           if (e.patron) a = patron(e, dir, rgb);
-          else if (lejos) a = aviso("circulo", p.x, p.y, d.aviso, { radio: d.radioGolpe, rgb: rgb || [154, 107, 216], lejos: true });
+          else if (lejos) a = aviso("circulo", p.x, p.y, d.aviso, { radio: d.radioGolpe, rgb: rgb || d.rgb || [154, 107, 216], lejos: true, de: e });
           else if (d.forma === "carga") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
           else if (d.forma === "franja") a = aviso("franja", e.x, e.y, d.aviso, { largo: d.largo, ancho: d.ancho, dir, rgb });
           else if (e.tipo === "trol" && (e.cuenta = (e.cuenta || 0) + 1) % 3 === 0) a = aviso("franja", e.x, e.y, d.aviso * 0.9, { largo: d.largo, ancho: d.ancho, dir, rgb });
