@@ -5,36 +5,43 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 44,
-    titulo: { es: "Los remates", en: "Finishers" },
+    pr: 45,
+    titulo: { es: "La casa de Hrolf", en: "Hrolf's house" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: cada arma (y la PR 5 a 9) tiene su remate", en: "weapon types: each weapon (and PRs 5 to 9) has its finisher" },
-      { pr: 18, es: "furia: cada remate da furia", en: "fury: each finisher gives fury" },
-      { pr: 1, es: "niveles: un 25 % más de experiencia", en: "levels: 25% more experience" },
+      { pr: 12, es: "materiales: las mejoras piden cuero curtido, hierro de pantano y ámbar", en: "materials: upgrades ask for cured leather, bog iron and amber" },
+      { pr: 22, es: "cocina: el fogón del patio es un fogón de cocinar de verdad", en: "cooking: the yard fire pit is a real cooking fire" },
+      { pr: 21, es: "alquimia: la huerta da hierbas", en: "alchemy: the garden yields herbs" },
+      { pr: 23, es: "descanso: la cama de pieles deja descansado el doble", en: "rest: the bearskin bed keeps you rested twice as long" },
+      { pr: 42, es: "libros: la estantería cuenta los libros leídos", en: "books: the bookshelf counts the books you've read" },
+      { pr: 1, es: "niveles: la estantería da +5 % de experiencia", en: "levels: the bookshelf gives +5% experience" },
     ],
     mirar: [
-      { es: "Una criatura malherida (menos del 22 %; las pesadas y los líderes, del 12 %) o aturdida con el doble de margen lleva un rombo rojo sobre la cabeza. Acercate y con E Eromash salta junto a ella, carga y la remata: cámara lenta, pausa, temblor y el trazo de su arma. Mientras dura nada lo toca.", en: "A badly wounded creature (under 22%; heavy ones and leaders, under 12%) or a stunned one with double that margin wears a red rhombus over its head. Get close and press E: Eromash leaps to it, winds up and finishes it: slow motion, a pause, a shake and the trail of his weapon. Nothing hits him while it lasts." },
-      { es: "Cada arma tiene el suyo: tajo cruzado (espada), hachazo al cuello (hacha), partir en dos (mandoble), aplastar (martillo), empalar (lanza), a quemarropa (arco), estallido rúnico (bastón) y puño de hierro (sin arma). Deja vida, estamina, energía rúnica, furia y más experiencia, y las criaturas de cerca se asustan un instante.", en: "Each weapon has its own: cross cut (sword), neck chop (axe), cleave in two (greatsword), crush (hammer), impale (spear), point blank (bow), rune burst (staff) and iron fist (no weapon). It gives health, stamina, rune energy, fury and extra experience, and nearby creatures flinch for a moment." },
-      { es: "Verdugo: a los 10, 50 y 150 remates, +5, +10 y +15 % de daño contra las criaturas malheridas. Los jefes de las zonas, el jötunn y el custodio no se rematan; los únicos con nombre, solo con menos del 6 %. El diario cuenta los remates y tu favorito.", en: "Executioner: at 10, 50 and 150 finishers, +5, +10 and +15% damage against badly wounded creatures. Zone bosses, the jötunn and the guardian can't be finished; named uniques only under 6%. The journal counts your finishers and your favorite." },
+      { es: "Al costado del camino que sale del Puesto está la casa de Hrolf, cerrada, con un letrero de «se vende» colgado de cadenas. Con E en el letrero se compra por 500 de plata: el letrero se da vuelta y muestra la cornamenta tallada, la casa va al mapa y aparece «Tu casa» entre los destinos de Viajar.", en: "Beside the road out of the Outpost stands Hrolf's house, locked, with a for-sale sign hanging from chains. Press E on the sign to buy it for 500 silver: the sign flips to show the carved antler, the house goes on the map and «Your house» appears among the travel destinations." },
+      { es: "Adentro: cama, hogar y en la mesa los planos. Cada mejora cuesta plata y materiales y aparece en el acto: el arcón (guarda 30 piezas), el armero (+4 % de daño), la estantería (+5 % de experiencia), el fogón del patio, la huerta y la cama de pieles de oso (descansado el doble).", en: "Inside: a bed, a hearth and the plans on the table. Each upgrade costs silver and materials and shows up at once: the chest (stores 30 pieces), the weapon rack (+4% damage), the bookshelf (+5% experience), the yard fire pit, the garden and the bearskin bed (rested twice as long)." },
+      { es: "La huerta crece durante el día y se cosecha una vez por día con E: dos hierbas y a veces una manzana. Todo queda guardado en la partida.", en: "The garden grows during the day and is harvested once a day with E: two herbs and sometimes an apple. Everything is kept in your save." },
     ],
     botones: [
-      { es: "Traer tres criaturas, una ya malherida", en: "Bring three creatures, one already badly wounded", fn: (A) => {
-        [[110, 0, "draugr", 0.12], [-80, -140, "lobo", 0.6], [160, 120, "lobo", 0.6]].forEach(([dx, dy, tipo, v]) => {
-          const e = A.CB.crear(tipo, A.jug.x + dx, A.jug.y + dy, {});
-          e.activo = true;
-          e.estado = "persigue";
-          e.vida = e.d.vida * v;
-          A.enemigos.push(e);
-        });
+      { es: "Llevarme a la casa de Hrolf", en: "Take me to Hrolf's house", fn: (A) => {
+        const c = CASA.casa();
+        if (c) ir(A, [c.letrero.x, c.letrero.y + 80]);
       } },
-      { es: "Dejar malheridas a las de cerca", en: "Badly wound everything nearby", fn: (A) => {
-        A.enemigos.forEach((e) => e.activo && !e.muerto && Math.hypot(e.x - A.jug.x, e.y - A.jug.y) < 900 && (e.vida = Math.min(e.vida, e.d.vida * 0.1)));
+      { es: "Darme 2000 de plata y materiales", en: "Give me 2000 silver and materials", fn: () => {
+        PODERES.pj().plata += 2000;
+        MATERIALES.dar("cuero", 20);
+        MATERIALES.dar("hierro", 15);
+        MATERIALES.dar("ambar", 4);
       } },
-      { es: "Darme hacha, mandoble, martillo, lanza, arco y bastón", en: "Give me axe, greatsword, hammer, spear, bow and staff", fn: () => {
-        ["hachaMano", "mandoble", "mazo", "lanzaHoja", "arcoCorto", "varaFresno"].forEach((b) => BOTIN.dar(OBJETOS.generar({ base: b, n: 3, r: 1 }), { silencio: true }));
+      { es: "Comprarla y hacerle todo", en: "Buy it and build everything", fn: () => {
+        const pj = PODERES.pj();
+        pj.plata += 2000;
+        MATERIALES.dar("cuero", 20);
+        MATERIALES.dar("hierro", 15);
+        MATERIALES.dar("ambar", 4);
+        CASA.comprar();
+        Object.keys(CASA.MEJORAS).forEach((id) => CASA.construir(id));
       } },
-      { es: "Ser verdugo (10 remates)", en: "Become an executioner (10 finishers)", fn: () => (REMATES.estado().n = Math.max(REMATES.estado().n, 10)) },
+      { es: "Dejar la huerta lista para cosechar", en: "Make the garden ready to harvest", fn: () => (CASA.estado().cosecha = -1) },
     ],
   };
   // ---------- ayuda para los botones ----------
