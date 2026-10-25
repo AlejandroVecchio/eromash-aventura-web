@@ -525,6 +525,25 @@ Un jefe del mundo como los gigantes del Skyrim y los jefes del WoW, con las regl
 - Vencerlo una vez: 320 de plata, 1500 de experiencia, dos fragmentos, una pieza r ≥ 3 y `extra.hd.unicos.hrimnir`
   (el bestiario lo muestra caído). Estado en `E.extra.jotunn = { vencido, intentos }`.
 
+## La Cacería Salvaje (`motor/caceria.js`, `CACERIA`; dibujos en `enemigos/caceria.js`; textos `cz.`)
+
+Un evento de noche como la Cacería Salvaje del Witcher y las noches de invasión del Gothic.
+- Cuándo: `nocheId()` numera las noches (de las 20 a las 20); `toca(n)` = semilla fija por noche, `CHANCE` = 0,34, nunca
+  la primera. Hace falta nivel `NIVEL_MIN` = 4. A las 20:30 suena un cuerno lejano (aviso); de 22 a 4, si Eromash está
+  afuera (no en un pueblo de `REFUGIOS`, ni en Eikholt, ni `J.dentro`) y no está en pelea (`A.enPelea`), llega.
+- Quiénes: el Cazador de Oskoreia (`cazadorSalvaje`, 560 de vida, carga en franja de 10 m, único `cazador` con el
+  afijo rúnico) y cuatro sabuesos (`sabuesoCaceria`, 55 de vida, abanico, rápidos). Llegan a `LEJOS` = 1100 por
+  detrás. Son `vuela` (cruzan árboles) y `muerto` (la runa del sol × 3). La vida y el daño suben con el nivel (`mas`).
+- Mientras corre: la casa de cada uno es la posición de Eromash (nunca sueltan), la noche se tiñe de violeta
+  (`J.ambZona.tono`), cada `PASADA` = 11 s cruzan tres jinetes por una franja de 19 m que pasa por Eromash (1,4 s de
+  aviso, `PASADA_DANO` = 18 con el tope del 35 %, saltar la evita) y a los `REFUERZO` = 35 s vuelven dos sabuesos si
+  quedan menos de dos. Aullidos y cuerno armados con `SONIDO.tono`.
+- Finales (`terminar`): `vencida` (180 de plata, 900 de experiencia, una pieza, un fragmento y el cuerno la primera
+  vez; después 110, 500 y 40 % de pieza), `sobrevivida` a los `DURA` = 75 s (50 de plata y 250 de experiencia),
+  `escondido` (entró a un pueblo o una casa: nada) y `cayo`. Los que quedan se deshacen en humo violeta.
+- El Cuerno de la Cacería (`celdasBolsa`, ícono `cz_cuerno`): de noche y afuera la llama ya (`tocarCuerno`), una vez
+  por noche. Estado en `E.extra.caceria = { avisada, corrida, cuerno, vencidas, sobrevividas, escondidas }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
