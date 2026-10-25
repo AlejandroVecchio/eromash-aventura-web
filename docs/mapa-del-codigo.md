@@ -254,8 +254,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
-- **descanso.js**: el descanso (sistema DESCANSO)
-  - los petates · el menú · descansar · el cartel con el reloj · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
   - aparecer · cada encuentro · el sistema
 - **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
@@ -357,8 +355,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-contratos.js**: los contratos de caza (assets de CONTRATOS)
   - el poste de los contratos · los rastros de una bestia
   - assets: posteContratos, rastroContrato
-- **assets-descanso.js**: el petate de pieles (asset de DESCANSO)
-  - assets: petateEromash
 - **assets-eikholt.js**: Eikholt, la capital (se suma a ASSETS)
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
 - **assets-este.js**: el este: Aserradero de Orm y Santuario de las Raíces (se suma a ASSETS)
@@ -439,7 +435,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
-- **descanso.js**: Textos del descanso (motor/descanso.js): prefijo ds.
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
