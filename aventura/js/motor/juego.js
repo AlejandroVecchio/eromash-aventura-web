@@ -1164,6 +1164,9 @@
       sp.y += po.dy;
       detras = poseArma.detras || (!p.atk && miraV.vista === "N");
     }
+    // el escudo (motor/escudo.js): de espaldas o al costado va detrás del cuerpo, de frente o levantado, delante
+    const ctxEsc = { face, lado: miraV.vista === "N" ? -face : face, jp, bob, vista: miraV.vista, po };
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, true);
     if (detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     if (p.atk && !p.atk.d.sinEstela && p.atk.t >= p.atk.d.wind && p.atk.t <= p.atk.d.wind + p.atk.d.swing + 0.05) {
       const a = p.atk,
@@ -1217,6 +1220,7 @@
       }
     }
     c.restore();
+    if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, false);
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();
   }
@@ -1788,6 +1792,7 @@
         { id: "atacar", icono: "espada", nivel: pe.espada, accion: "atacar", nombre: t("inv.b_atacar"), listo: true },
         { id: "esquivar", icono: "esquivar", accion: "esquivar", nombre: t("inv.b_esquivar"), listo: jug.sta >= 20 && !jug.cansado },
         { id: "saltar", icono: "saltar", accion: "saltar", nombre: t("inv.b_saltar"), listo: true },
+        ...(window.ESCUDO && ESCUDO.puede() ? [{ id: "bloquear", icono: "bloquear", accion: "bloquear", nombre: t("inv.b_bloquear"), listo: ESCUDO.rota() <= 0 && jug.sta > 5 }] : []),
         { id: "runa", runa: pe.runa, accion: "runa", nombre: pe.runa ? t("pj.runa_" + pe.runa) : t("inv.b_runa"), listo: !!pe.runa && pe.energia >= pe.coste, energia: pe.energia / 100, col: pe.col, grande: true },
         { id: "lente", icono: "lente", accion: "lente", nombre: t("inv.b_lente"), listo: tieneLente() && lenteEspera <= 0, espera: tieneLente() ? lenteEspera / 1.2 : 0 },
         { id: "mochila", icono: "mochila", accion: "inventario", nombre: t("inv.b_mochila"), listo: true },

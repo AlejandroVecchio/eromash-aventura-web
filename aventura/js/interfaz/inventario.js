@@ -111,6 +111,17 @@ window.INVENTARIO = (function () {
         for (let k = 0; k < 3; k++) L(c, -26 + k * 6, 14 - k * 12, 20 + k * 4, 6 - k * 14, k ? "#E0B2B2" : "#F2ECEC", 5 - k);
         P(c, [12, -20, 28, -14, 14, -4], "#F2ECEC");
         break;
+      case "bloquear":
+        // el escudo redondo de tablas con su umbo
+        E(c, 0, 0, 26, 26, "#7A5634");
+        P(c, [-26, 0, 0, -26, 0, 26], "#553A22");
+        c.lineWidth = 4;
+        c.strokeStyle = "#8A8478";
+        c.beginPath();
+        c.arc(0, 0, 25, 0, Math.PI * 2);
+        c.stroke();
+        E(c, 0, 0, 8, 8, "#C9A45A");
+        break;
       case "saltar":
         P(c, [0, -28, 18, -6, 7, -6, 7, 16, -7, 16, -7, -6, -18, -6], "#F2ECEC");
         R(c, -20, 22, 40, 5, "#E0B2B2");

@@ -5,36 +5,31 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 9,
-    titulo: { es: "Bastón rúnico", en: "Rune staff" },
+    pr: 10,
+    titulo: { es: "Escudo: bloquear y parar", en: "Shield: block and parry" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: el bastón es un tipo más; sus golpes conjuran en vez de cortar (como el arco de la PR 6)", en: "weapon types: the staff is one more type; its moves cast instead of cutting (like the PR 6 bow)" },
-      { pr: 5, es: "armas a dos manos: el bastón saca el escudo", en: "two-handed weapons: the staff removes the shield" },
-      { pr: 3, es: "botín y equipo: los bastones caen como cualquier pieza; el afijo de poder rúnico los hace pegar más", en: "loot and gear: staves drop like any piece; the rune power affix makes them hit harder" },
+      { pr: 3, es: "botín y equipo: los escudos son piezas de la casilla del escudo; ahora cada uno dice cuánto bloquea", en: "loot and gear: shields are shield-slot pieces; now each one says how much it blocks" },
+      { pr: 4, es: "tipos de arma: el arco (PR 6) y el bastón (PR 9) no bloquean; las demás armas bloquean poco sin escudo", en: "weapon types: the bow (PR 6) and staff (PR 9) can't block; other weapons block a little without a shield" },
     ],
     mirar: [
-      { es: "Atacar suelta chispas rúnicas (rombos con estela) que se tuercen solas hacia la criatura de adelante; la tercera estalla y lastima alrededor. Cada chispa que toca devuelve energía a la runa (mirá la barra de la runa).", en: "Attack releases rune sparks (diamonds with a trail) that curve toward the creature ahead; the third explodes around. Each spark that hits restores rune energy (watch the rune bar)." },
-      { es: "Manteniendo atacar se levanta el bastón y al soltar sale el sello: un círculo en el piso con Algiz que avisa 0,8 s y estalla dejando atadas (anillo violeta, quietas) a las que agarra.", en: "Hold attack to raise the staff; release for the seal: a ground circle with Algiz that warns for 0.8 s and explodes, binding (violet ring, still) whoever it catches." },
-      { es: "Corriendo, el paso de niebla: un parpadeo hacia adelante sin que nada lo toque. Al caer de un salto, una ola rúnica alrededor.", en: "Running, the mist step: a blink forward untouchable. Landing from a jump, a rune wave around." },
-      { es: "Pega con el poder rúnico además del arma: el bastón alumbra un poco alrededor de Eromash. Cinco bastones: vara de fresno, báculo de la völva, cristal rúnico, de asta y rama de Yggdrasil.", en: "It scales with rune power on top of the weapon: the staff lights up around Eromash. Five staves: ash wand, völva's staff, rune crystal, antler and Yggdrasil branch." },
+      { es: "Bloquear es G, L2 o el clic derecho (mantener). Se levanta el escudo delante del pecho, camina más lento y aparece la casilla Bloquear en la barra.", en: "Block is G, L2 or right click (hold). The shield goes up in front of the chest, he walks slower and a Block slot appears on the bar." },
+      { es: "Los golpes de adelante pierden lo que bloquea el escudo (mirá la línea «Bloquea el … %» en la mochila) a cambio de estamina. Sin estamina: «¡Guardia rota!» y tambalea.", en: "Hits from the front lose what the shield blocks (see the «Blocks …%» line in the bag) for stamina. Out of stamina: «Guard broken!» and he staggers." },
+      { es: "Levantarlo justo antes del golpe es una «¡Parada!»: no entra nada, la criatura queda aturdida, cámara lenta y el próximo golpe pega doble.", en: "Raising it right before the hit is a «Parry!»: nothing gets through, the creature is stunned, slow motion and the next hit deals double." },
+      { es: "Atacar con el escudo levantado es un empujón que aturde. El escudo se ve en el brazo: de frente, de costado o a la espalda según hacia dónde mira.", en: "Attacking with the shield up is a stunning bash. The shield shows on the arm: front, side or back depending on where he faces." },
     ],
     botones: [
-      { es: "Darme los cinco bastones y abrir la Bolsa", en: "Give me the five staves and open the Bag", fn: (A) => {
-        ["varaFresno", "baculoVolva", "bastonCristal", "bastonAsta", "ramaYggdrasil"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
+      { es: "Darme los cuatro escudos y abrir la Bolsa", en: "Give me the four shields and open the Bag", fn: (A) => {
+        ["escudoTablas", "escudoRedondo", "escudoGuarnecido", "escudoCometa"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 16, r: i }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme la rama de Yggdrasil legendaria", en: "Equip the legendary Yggdrasil branch", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "ramaYggdrasil", n: Math.max(18, RPG.nivel()), r: 3 }), { silencio: true });
+      { es: "Ponerme el escudo de tablas (la parada más fácil)", en: "Equip the plank shield (easiest parry)", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "escudoTablas", n: 4, r: 1 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ir con un grupo a probarlo (de noche se lucen más las luces)", en: "Go to a group to try it (lights show better at night)", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -380, 0);
+      { es: "Ir con un grupo con un líder a practicar paradas", en: "Go to a group with a leader to practice parries", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -200, 120);
         A.jug.sta = A.jug.staMax;
-      } },
-      { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {
-        const i = BOTIN.estado().bolsa.findIndex((it) => it.fijo === "ob.forastero");
-        if (i >= 0) BOTIN.equipar(i);
       } },
     ],
   };

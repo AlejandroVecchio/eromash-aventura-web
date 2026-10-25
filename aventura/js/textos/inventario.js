@@ -45,6 +45,7 @@ I18N.textos({
   // la barra de acciones
   "inv.b_atacar": { es: "Atacar", en: "Attack" },
   "inv.b_esquivar": { es: "Esquivar", en: "Dodge" },
+  "inv.b_bloquear": { es: "Bloquear", en: "Block" },
   "inv.b_saltar": { es: "Saltar", en: "Jump" },
   "inv.b_lente": { es: "Lente", en: "Lens" },
   "inv.b_runa": { es: "Runa", en: "Rune" },

@@ -141,6 +141,20 @@ tener que leer el código para balancear.
   1,4 s (`e.atada`, anillo violeta). Con las dos manos. Cinco: vara de fresno (1), báculo de la völva (5, regeneración
   rúnica), cristal rúnico (10), de asta (14) y rama de Yggdrasil (18).
 
+## Escudo (`motor/escudo.js`, `ESCUDO`, acción `bloquear`: G, Ctrl, L2 o clic derecho; textos `eb.`)
+
+- Manteniendo bloquear se levanta el escudo (`jug.bloquea`): camina al 60 %, no carga golpes y no recupera
+  estamina. Lo que llega de adelante (±75° de `jug.dir`, por `modRecibido`) pierde `B.bloqueo` % (sin escudo, con un
+  arma que no sea arco ni bastón, 35 %) y gasta en estamina lo bloqueado. Sin estamina: **guardia rota** (0,9 s sin
+  poder levantarlo, entra la mitad).
+- **Parada**: si el golpe llega dentro de la ventana desde que se levantó (`B.parada`; 0,18 s sin escudo) no entra
+  nada, la criatura más cercana al golpe queda aturdida 1,2 s y se le corta el aviso, cámara lenta, +20 de estamina y
+  `jug.contra` (el próximo golpe pega doble, como la esquiva justa).
+- Atacar con el escudo levantado: **empujón** (8, empuja 1,9, aturde 0,7 s, 12 de estamina).
+- Escudos: de tablas (50 %, parada 0,24 s), redondo (60 %, 0,2), guarnecido (70 %, 0,18) y de cometa (82 %, 0,14):
+  cuanto más bloquea, más difícil parar. El escudo se dibuja en el brazo con el arte de la arena (`ESCUDO.dibujar`,
+  dos pasadas desde `dibujarJugador`: detrás de espaldas y de costado, delante de frente o levantado).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

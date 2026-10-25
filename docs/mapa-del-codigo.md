@@ -209,6 +209,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
+- **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
+  - recibir · el escudo en el brazo · el sistema
 - **este.js**: el este en el juego (sistema ESTE)
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)

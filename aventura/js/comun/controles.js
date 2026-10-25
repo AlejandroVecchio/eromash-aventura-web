@@ -12,6 +12,7 @@ window.CONTROLES = (function () {
     saltar: ["Space"],
     atacar: ["KeyK"],
     esquivar: ["KeyC", "AltLeft"],
+    bloquear: ["KeyG", "ControlLeft"],
     interactuar: ["KeyE", "KeyF"],
     lente: ["KeyR"],
     runa: ["KeyQ"],
@@ -41,7 +42,8 @@ window.CONTROLES = (function () {
     runa: [5],
     cambiarRuna: [11],
     mapa: [16, 17],
-    correr: [10, 6],
+    correr: [10],
+    bloquear: [6],
     inventario: [8],
     pausa: [9],
     seguir: [0, 1],
@@ -51,13 +53,14 @@ window.CONTROLES = (function () {
     derecha: [15],
     camara: [11],
   };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   const abajo = new Set();
   let antes = {},
     ahora = {},
     mouse = false,
+    mouseDer = false,
     usandoMando = false,
     eje = { x: 0, y: 0 },
     ejeDer = { x: 0, y: 0 };
@@ -71,6 +74,7 @@ window.CONTROLES = (function () {
   addEventListener("blur", () => {
     abajo.clear();
     mouse = false;
+    mouseDer = false;
   });
   // pointer events: el mismo código sirve para mouse y, más adelante, para el toque (rumbo: celular a futuro)
   addEventListener("pointerdown", (e) => {
@@ -78,7 +82,17 @@ window.CONTROLES = (function () {
     if (e.button === 0) mouse = true;
     usandoMando = false;
   });
-  addEventListener("pointerup", () => (mouse = false));
+  addEventListener("pointerup", (e) => {
+    if (e.button === 2) mouseDer = false;
+    else mouse = false;
+  });
+  // el clic derecho también levanta el escudo (como atajo: G o L2 hacen lo mismo)
+  addEventListener("pointerdown", (e) => {
+    if (e.button === 2 && !(e.target && e.target.closest && e.target.closest("button, .ui"))) mouseDer = true;
+  });
+  addEventListener("contextmenu", (e) => {
+    if (e.target && e.target.tagName === "CANVAS") e.preventDefault();
+  });
 
   function leerMando() {
     const ps = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -92,6 +106,7 @@ window.CONTROLES = (function () {
     const g = leerMando();
     for (const a in TECLAS) if (TECLAS[a].some((k) => abajo.has(k))) ahora[a] = true;
     if (mouse) ahora.atacar = true;
+    if (mouseDer) ahora.bloquear = true;
     let x = (ahora.derecha ? 1 : 0) - (ahora.izquierda ? 1 : 0),
       y = (ahora.abajo ? 1 : 0) - (ahora.arriba ? 1 : 0);
     if (g) {

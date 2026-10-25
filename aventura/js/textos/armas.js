@@ -48,4 +48,9 @@ I18N.textos({
   "ob.b_bastonCristal": { es: "Bastón de cristal rúnico", en: "Rune Crystal Staff" },
   "ob.b_bastonAsta": { es: "Bastón de asta", en: "Antler Staff" },
   "ob.b_ramaYggdrasil": { es: "Rama de Yggdrasil", en: "Yggdrasil Branch" },
+  "eb.parada": { es: "¡Parada!", en: "Parry!" },
+  "eb.rota": { es: "¡Guardia rota!", en: "Guard broken!" },
+  "eb.l_bloqueo": { es: "Bloquea el {0} % de adelante · parada {1} s", en: "Blocks {0}% from the front · parry {1} s" },
+  "ob.b_escudoTablas": { es: "Escudo de tablas", en: "Plank Shield" },
+  "ob.b_escudoCometa": { es: "Escudo de cometa", en: "Kite Shield" },
 });
