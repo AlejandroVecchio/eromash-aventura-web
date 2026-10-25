@@ -83,6 +83,13 @@
       A.H.E.tiempo += LUZ.DIA;
       si(CASA.lista(), "al otro día vuelve a dar");
       si(CASA.sistema.diario().includes(I18N.t("hg.m_huerta")), "en el diario");
+      // la cama de pieles: «Bien abrigado» suma 10 % de experiencia un rato
+      const xp0 = RPG.stats().xp;
+      CASA.estado().abrigo = 600;
+      RPG.recalcular();
+      igual(Math.round((RPG.stats().xp / xp0) * 100), 110, "abrigado: +10 % de experiencia:");
+      CASA.sistema.actualizar(601);
+      igual(CASA.estado().abrigo, 0, "se pasa:");
       A.H.guardar(9);
       JUEGO.empezar(9, false);
       await esperar(200);
