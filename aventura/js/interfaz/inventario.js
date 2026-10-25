@@ -308,8 +308,10 @@ window.INVENTARIO = (function () {
     celdas = [], // { el, item, fila, col }
     foco = 0;
   const PESTANAS = ["equipo", "bolsa", "diario"];
-  // las pestañas que suman otros sistemas: { id, antes (la pestaña delante de la que va), nombre(), pintar(cuerpo, api) }
+  // las pestañas que suman otros sistemas: { id, antes (la pestaña delante de la que va), nombre(), pintar(cuerpo, api),
+  // visible() opcional: si devuelve false la pestaña no se muestra (la del mercader, solo mientras se comercia) }
   const EXTRA = {};
+  const vistas = () => PESTANAS.filter((p) => !EXTRA[p] || !EXTRA[p].visible || EXTRA[p].visible());
   function pestanaNueva(def) {
     EXTRA[def.id] = def;
     const i = def.antes ? PESTANAS.indexOf(def.antes) : -1;
@@ -377,7 +379,8 @@ window.INVENTARIO = (function () {
     caja.querySelector(".inv-cerrar").textContent = t("inv.cerrar");
     const nav = caja.querySelector("nav");
     nav.innerHTML = "";
-    PESTANAS.forEach((p) => {
+    if (!vistas().includes(pestana)) pestana = "equipo";
+    vistas().forEach((p) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "inv-tab" + (p === pestana ? " activa" : "");
@@ -556,9 +559,10 @@ window.INVENTARIO = (function () {
       cerrar();
       return true;
     }
-    const i = PESTANAS.indexOf(pestana);
-    if (CONTROLES.recien("esquivar") || CONTROLES.recien("runa")) cambiar(PESTANAS[(i + (CONTROLES.recien("runa") ? 1 : PESTANAS.length - 1)) % PESTANAS.length]);
-    if (CONTROLES.recien("cambiarRuna")) cambiar(PESTANAS[(i + 1) % PESTANAS.length]);
+    const V = vistas(),
+      i = V.indexOf(pestana);
+    if (CONTROLES.recien("esquivar") || CONTROLES.recien("runa")) cambiar(V[(i + (CONTROLES.recien("runa") ? 1 : V.length - 1)) % V.length]);
+    if (CONTROLES.recien("cambiarRuna")) cambiar(V[(i + 1) % V.length]);
     const e = CONTROLES.eje(),
       dir = e.x > 0.5 ? "d" : e.x < -0.5 ? "i" : e.y > 0.5 ? "b" : e.y < -0.5 ? "a" : "";
     if (dir && dir !== ejeAntes && celdas.length) mover(dir);

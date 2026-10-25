@@ -5,39 +5,38 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 12,
-    titulo: { es: "Materiales, vetas y desarmar", en: "Materials, veins and salvage" },
+    pr: 13,
+    titulo: { es: "Comercio con Ingrid y Kolbrun", en: "Trading with Ingrid and Kolbrun" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín y mochila: desarmar una pieza de la bolsa ahora da materiales", en: "loot and backpack: salvaging a piece from the bag now gives materials" },
-      { pr: 11, es: "forja: Ása cobra materiales además de plata, y la brasa abre un tercer modo", en: "forge: Ása charges materials as well as silver, and the ember opens a third mode" },
-      { pr: 8, es: "martillo: raja las vetas el doble de rápido", en: "hammer: cracks veins twice as fast" },
+      { pr: 3, es: "botín y mochila: lo que se compra y se vende son piezas de equipo, y se comercia en una pestaña de la mochila", en: "loot and backpack: what you buy and sell are gear pieces, traded in a backpack tab" },
+      { pr: 12, es: "materiales: Ingrid vende hierro y cuero; Kolbrun ámbar, esquirlas y a veces una brasa", en: "materials: Ingrid sells iron and leather; Kolbrun amber, shards and sometimes an ember" },
+      { pr: 4, es: "tipos de arma: en la venta aparecen todos los tipos de esta rama", en: "weapon types: every type in this branch shows up for sale" },
     ],
     mirar: [
-      { es: "Cinco materiales con nombre en la Bolsa de la mochila (I), cada uno con su ícono: hierro de pantano, cuero curtido, ámbar, esquirla rúnica y brasa de Muspell.", en: "Five named materials in the backpack's Bag tab (I), each with its icon: bog iron, tanned leather, amber, rune shard and Muspell ember." },
-      { es: "Desarmar (R o △ sobre una pieza) dice antes qué deja: las armas dan hierro, las armaduras cuero, las joyas ámbar; lo raro suma esquirlas y lo legendario una brasa.", en: "Salvage (R or △ on a piece) tells you first what it gives: weapons give iron, armour leather, jewellery amber; rares add shards and legendaries an ember." },
-      { es: "Vetas en el bosque (la de hierro herrumbrada, el nódulo de ámbar, la vena rúnica que late): se pican con E o a golpes, se rajan tres veces y sueltan el material. Vuelven a crecer a los 10 minutos. Con martillo, el doble.", en: "Veins in the forest (the rusty iron one, the amber nodule, the pulsing rune vein): mine them with E or by hitting them, they crack three times and drop materials. They grow back after 10 minutes. A hammer counts double." },
-      { es: "Lobos, jabalíes y el oso dejan cuero; draugr y custodios hierro; los fuegos fatuos ámbar y esquirlas; los líderes el doble.", en: "Wolves, boars and the bear drop leather; draugr and wardens iron; will-o'-wisps amber and shards; leaders twice as much." },
-      { es: "En la forja cada modo dice qué materiales pide (lo que falta en rojo). Con una brasa aparece «Con la brasa de Muspell»: a fuego vivo y la nota sube.", en: "In the forge each mode lists the materials it needs (missing ones in red). With an ember you get «With the Muspell ember»: roaring fire and a higher score." },
+      { es: "Ingrid comercia en su mostrador del Puesto (al lado de donde está ella: hablarle sigue igual). Vende armas, armaduras y escudos de todos los días, y hierro y cuero.", en: "Ingrid trades at her stall in the Outpost (next to where she stands: talking to her is unchanged). She sells everyday weapons, armour and shields, plus iron and leather." },
+      { es: "Kolbrun, la buhonera, ahora tiene su alfombra y su fardo cerca del Refugio: amuletos, anillos, alguna rara, ámbar, esquirlas y las piezas envueltas (se paga sin ver; puede salir hasta una legendaria).", en: "Kolbrun the peddler now has her rug and pack near the Refuge: amulets, rings, the odd rare, amber, shards and wrapped pieces (pay without looking; even a legendary can come out)." },
+      { es: "Se comercia en una pestaña de la mochila con el nombre del mercader, que aparece solo mientras se comercia. Tocar lo suyo compra, tocar lo de tu bolsa vende (lo raro pide dos toques) y lo vendido queda para recomprar al mismo precio.", en: "You trade in a backpack tab named after the merchant, shown only while trading. Tapping their goods buys, tapping your bag sells (rares need two taps) and what you sold stays for buyback at the same price." },
+      { es: "Lo que venden cambia cada día del juego y se guarda. Los dos están en el mapa grande con la bolsa de plata (clase «Mercaderes» en la leyenda).", en: "Their goods change every in-game day and are saved. Both are on the big map with the silver pouch (class «Merchants» in the legend)." },
     ],
     botones: [
-      { es: "Ir a la veta de hierro más cercana", en: "Go to the nearest iron vein", fn: (A) => {
-        const v = MATERIALES.vetas().filter((v) => v.tipo === "vetaHierro").sort((a, b) => Math.hypot(a.cosa.x - A.jug.x, a.cosa.y - A.jug.y) - Math.hypot(b.cosa.x - A.jug.x, b.cosa.y - A.jug.y))[0];
-        if (v) ir(A, [v.cosa.x, v.cosa.y + 70]);
+      { es: "Ir al mostrador de Ingrid (con 3000 de plata)", en: "Go to Ingrid's stall (with 3000 silver)", fn: (A) => {
+        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
+        const p = COMERCIO.posIngrid();
+        ir(A, [p[0], p[1] + 60]);
       } },
-      { es: "Ir a la vena rúnica más cercana", en: "Go to the nearest rune vein", fn: (A) => {
-        const v = MATERIALES.vetas().filter((v) => v.tipo === "vetaRunica").sort((a, b) => Math.hypot(a.cosa.x - A.jug.x, a.cosa.y - A.jug.y) - Math.hypot(b.cosa.x - A.jug.x, b.cosa.y - A.jug.y))[0];
-        if (v) ir(A, [v.cosa.x, v.cosa.y + 70]);
+      { es: "Ir a Kolbrun (con 3000 de plata)", en: "Go to Kolbrun (with 3000 silver)", fn: (A) => {
+        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
+        const k = COMERCIO.kolbrun();
+        ir(A, [k.x, k.y + 80]);
       } },
-      { es: "Darme 6 piezas para desarmar (una legendaria)", en: "Give me 6 pieces to salvage (one legendary)", fn: (A) => {
-        [0, 0, 1, 1, 2, 3].forEach((r) => BOTIN.dar(OBJETOS.generar({ n: RPG.nivel(), r, tema: 1 }), { silencio: true }));
-        INVENTARIO.abrir("bolsa");
+      { es: "Comerciar con Kolbrun ya", en: "Trade with Kolbrun now", fn: (A) => {
+        PODERES.pj().plata = Math.max(PODERES.pj().plata, 3000);
+        COMERCIO.abrir("kolbrun");
       } },
-      { es: "Darme materiales y abrir la forja", en: "Give me materials and open the forge", fn: (A) => {
-        ["hierro", "cuero", "ambar", "esquirla"].forEach((k) => MATERIALES.dar(k, 12));
-        MATERIALES.dar("brasa", 2);
-        PODERES.pj().plata = Math.max(PODERES.pj().plata, 2000);
-        FORJA.abrir();
+      { es: "Pasar al día siguiente (otra mercadería)", en: "Skip to the next day (new goods)", fn: (A) => {
+        A.H.E.tiempo += LUZ.DIA;
+        HUD.aviso("+1 día / day", "#FFD98A");
       } },
     ],
   };

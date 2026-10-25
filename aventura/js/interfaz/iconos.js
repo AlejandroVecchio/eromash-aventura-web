@@ -175,6 +175,13 @@ window.ICONOS = (function () {
       pol(c, [x - 5 * u, y - 1 * u, x - 4 * u, y - 4.5 * u, x + 4 * u, y - 4.5 * u, x + 5 * u, y - 1 * u], ROSA);
       pol(c, [x - 0.9 * u, y - 1.5 * u, x + 0.9 * u, y - 1.5 * u, x + 0.9 * u, y + 1.5 * u, x - 0.9 * u, y + 1.5 * u], OSCURO);
     },
+    // un mercader (comercio.js): la bolsa de plata atada con la runa Fehu
+    mercader(c, x, y, u, col) {
+      pol(c, [x - 4.5 * u, y + 4.5 * u, x - 5 * u, y, x - 2 * u, y - 3 * u, x + 2 * u, y - 3 * u, x + 5 * u, y, x + 4.5 * u, y + 4.5 * u], col);
+      pol(c, [x - 2 * u, y - 3 * u, x - 3 * u, y - 5.5 * u, x + 3 * u, y - 5.5 * u, x + 2 * u, y - 3 * u], ROSA);
+      linea(c, [x - 1 * u, y + 3 * u, x - 1 * u, y - 1 * u, x + 1.5 * u, y - 0.5 * u], OSCURO, 0.9 * u);
+      linea(c, [x - 1 * u, y + 1 * u, x + 1.5 * u, y + 1.5 * u], OSCURO, 0.9 * u);
+    },
     manzano(c, x, y, u, col) {
       c.fillStyle = col;
       c.beginPath();
@@ -215,7 +222,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;
