@@ -294,6 +294,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el sistema
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
+- **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
+  - empezar y terminar · cada juego · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
   - en la mano · dibujo · el sistema
 - **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
@@ -489,6 +491,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
 - **jotunn.js**: Textos de Hrímnir, el jötunn de la escarcha (motor/jotunn.js): prefijo jt. (y hd.unico_hrimnir, cr., bs., as., mp.ley_jotunn).
+- **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **libros.js**: Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
