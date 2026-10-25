@@ -61,8 +61,6 @@ I18N.textos({
   "sg.e_libros_d": { es: "Atriles de piedra junto a los caminos y en manos de líderes.", en: "Stone lecterns by the roads and in leaders' hands." },
   "sg.e_santuarios": { es: "Hörgar de los dioses", en: "Hörgar of the gods" },
   "sg.e_santuarios_d": { es: "Siete altares junto a los caminos.", en: "Seven altars by the roads." },
-  "sg.e_vaettir": { es: "Vættir", en: "Vættir" },
-  "sg.e_vaettir_d": { es: "Seis espíritus de la tierra que aceptan ofrendas.", en: "Six land spirits that accept offerings." },
   "sg.e_elementos": { es: "Los elementos", en: "The elements" },
   "sg.e_elementos_d": { es: "Thurisaz en el Roble del Trueno, Laguz en su fuente y las seis reacciones.", en: "Thurisaz at the Thunder Oak, Laguz at its spring and the six reactions." },
   "sg.e_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },

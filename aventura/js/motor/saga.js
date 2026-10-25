@@ -35,7 +35,6 @@ window.SAGA = (function () {
     ["conjuntos", "oficios", "gebo", "#9BE08C", "CONJUNTOS", () => [cuenta(CONJUNTOS.estado().completos), largo(CONJUNTOS.JUEGOS)]],
     ["libros", "mundo", "ansuz", "#F2ECEC", "LIBROS", () => [cuenta(LIBROS.estado().leidos), LIBROS.IDS.length]],
     ["santuarios", "mundo", "algiz", "#C8402D", "SANTUARIOS", () => [cuenta(SANTUARIOS.estado().vistos), largo(SANTUARIOS.LISTA)]],
-    ["vaettir", "mundo", "ingwaz", "#5E7A3E", "VAETTIR", () => [cuenta(VAETTIR.estado().vistos), largo(VAETTIR.LISTA)]],
     ["elementos", "mundo", "thurisaz", "#B8A8F0", "ELEMENTOS", () => [(ELEMENTOS.estado().roble ? 1 : 0) + (ELEMENTOS.estado().fuente ? 1 : 0) + Math.min(6, cuenta(ELEMENTOS.estado().vistas)), 8]],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
     ["companero", "gente", "raidho", "#B8AC9C", "COMPANERO", () => [COMPANERO.estado().rescatado ? COMPANERO.nivel() : 0, COMPANERO.TRUCOS]],
