@@ -5,31 +5,22 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 30,
-    titulo: { es: "Hörgar de los dioses: bendiciones", en: "Hörgar of the gods: blessings" },
+    pr: 31,
+    titulo: { es: "Sigilo: agacharse y golpear desde las sombras", en: "Stealth: crouch and strike from the shadows" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
-    usa: [
-      { pr: 1, es: "niveles: las bendiciones suman a las estadísticas y encontrar un hörgr da experiencia", en: "levels: blessings add to the stats and finding a hörgr gives experience" },
-    ],
+    usa: [],
     mirar: [
-      { es: "Siete hörgar (altares de lajas con la estela tallada, cintas del color del dios y ofrendas) al costado de los caminos, uno por dios: Thor, Odín, Tyr, Freyja, Frigg, Njörd y Ullr. Salen en el mapa con su miniatura y su clase en la leyenda.", en: "Seven hörgar (slab altars with a carved stele, ribbons in the god's colour and offerings) by the roads, one per god: Thor, Odin, Tyr, Freyja, Frigg, Njord and Ullr. They show on the map with their icon and a legend class." },
-      { es: "«Rezarle a …» abre el hörgr: pedir la bendición (gratis) u ofrendar 25 de plata para que salga una vez y media más fuerte. Dura 8 minutos, se lleva una por vez y aparece arriba de la vida con los minutos que quedan.", en: "«Pray to …» opens the hörgr: ask for the blessing (free) or offer 25 silver to make it half again as strong. It lasts 8 minutes, you carry one at a time and it shows above the life bar with the minutes left." },
-      { es: "Con la bendición puesta la runa brilla dorada y sube humo; si ya bendijo hoy queda apagada (vuelve al otro día). Encontrar los siete da el favor de los Æsir: 12 minutos por bendición y +3 % de daño y vida para siempre.", en: "With the blessing on, the rune glows gold and smoke rises; if it already blessed today it stays dark (back the next day). Finding all seven grants the Æsir's favour: 12 minutes per blessing and +3 % damage and life for good." },
+      { es: "X (o L2 + ▼ en el mando) agacha a Eromash: más bajo, más lento y con la cara concentrada. Las criaturas que no lo vieron lo notan al 45 % de la distancia (de noche, todavía menos). Correr, saltar o esquivar lo levanta. Hay casilla nueva en la barra.", en: "X (or L2 + ▼ on a pad) crouches Eromash: lower, slower and with a focused face. Creatures that haven't seen him notice him at 45 % of the distance (even less at night). Running, jumping or dodging stands him up. New slot in the action bar." },
+      { es: "El ojo sobre la cabeza: cerrado y celeste lejos de todo, se abre a medida que una se acerca a verlo, coral cuando falta poco y rojo si ya lo vieron.", en: "The eye above his head: closed and cyan far from everything, it opens as one gets close to spotting him, coral when it's close and red if he's been seen." },
+      { es: "Pegarle agachado a una que no lo vio: «Desde las sombras», ×2 encima del golpe por sorpresa; si la mata, el resto del grupo no se entera. A las 5, 15 y 30 muertes así sube la maestría (menos ruido, hasta ×3).", en: "Hitting one that hasn't seen him while crouched: «From the shadows», ×2 on top of the surprise hit; if it dies, the rest of the pack doesn't notice. At 5, 15 and 30 such kills the mastery rises (less noise, up to ×3)." },
     ],
     botones: [
-      { es: "Ir al hörgr de Thor con plata para ofrendar", en: "Go to Thor's hörgr with silver to offer", fn: (A) => {
-        const h = SANTUARIOS.horgar().thor;
-        ir(A, [h.x, h.y + 110]);
-        PODERES.pj().plata += 200;
+      { es: "Ir agachado cerca de un grupo dormido", en: "Go crouched near a sleeping pack", fn: (A) => {
+        const p = cercaDeGrupo(A, (g) => (g.miembros.every((e) => e.estado === "quieto" && !e.muerto) ? 1 : 0) * 1e6 - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y));
+        ir(A, p, 0, 520);
+        setTimeout(() => SIGILO.agacharse(true), 1500);
       } },
-      { es: "Ir al hörgr más cercano que todavía no encontraste", en: "Go to the nearest hörgr you haven't found yet", fn: (A) => {
-        const st = SANTUARIOS.estado(),
-          h = SANTUARIOS.horgar();
-        const ids = Object.keys(h).filter((id) => !st.vistos[id]).sort((a, b) => Math.hypot(h[a].x - A.jug.x, h[a].y - A.jug.y) - Math.hypot(h[b].x - A.jug.x, h[b].y - A.jug.y));
-        const id = ids[0] || "odin";
-        ir(A, [h[id].x, h[id].y + 110]);
-      } },
-      { es: "Encontrar los siete (favor de los Æsir)", en: "Find all seven (Æsir's favour)", fn: () => Object.keys(SANTUARIOS.LISTA).forEach((id) => SANTUARIOS.hallar(id)) },
+      { es: "Maestría de sombra completa", en: "Full shadow mastery", fn: () => (SIGILO.estado().muertes = 30) },
     ],
   };
   // ---------- ayuda para los botones ----------

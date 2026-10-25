@@ -831,7 +831,7 @@
       jug.enCamino = W.CAMINOS.some((cm) => !cm.sinPiso && W.distLinea(jug.x, jug.y, cm.p) < cm.w * 0.5);
       jug.pelea = enPelea();
     }
-    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? jug.atk.d.mueve || 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
+    const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? jug.atk.d.mueve || 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.agachado ? 0.55 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
       if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
