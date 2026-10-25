@@ -304,8 +304,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
-- **pesca.js**: la pesca (sistema PESCA, modo "pesca")
-  - el agua · tirar, picar, pelear · la capa del minijuego · el puesto de Sverri · el sistema
+- **pesca.js**: la pesca (sistema PESCA)
+  - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
