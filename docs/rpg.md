@@ -44,6 +44,13 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## Economía de la plata (`motor/economia.js`, `ECONOMIA`; textos `eo.` en `textos/economia.js`, estado `E.extra.eco`)
+
+- `ECONOMIA.escala(n)` = `1 + 0,07 · (n − 1)`: lo que se gana peleando y avanzando crece con el nivel.
+- La plata de las criaturas (grupos de `HORDAS` y guardianes de los ritos) se multiplica por la escala de su nivel; lo gris (6 o más abajo) suelta un 30 % (`deCriatura`).
+- Lo que pagan las misiones de la historia (`25 + 15 · misión`) y los lugares descubiertos (8) se multiplica por la escala del nivel de Eromash (`deHistoria`).
+- Las cuentas del día (desde las 6 de la mañana) y las de toda la saga, ganado y gastado, se leen en el diario.
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos
