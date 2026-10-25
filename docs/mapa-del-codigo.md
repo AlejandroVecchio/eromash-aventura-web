@@ -215,6 +215,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
 - **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
   - en la mano · dibujo · el sistema
+- **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
+  - el filtro · el arcón · la pestaña · el sistema
 - **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
@@ -300,6 +302,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
   - la mesa de alquimia
   - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
+- **assets-arcon.js**: el arcón de Eromash en el Puesto (asset de ARCON)
+  - assets: arconPuesto
 - **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
   - el manantial rúnico · la piedra de Berkano tirada
   - assets: manantialRunico, piedraBerkano
@@ -373,6 +377,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alquimia.js**: Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
 - **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
+- **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.

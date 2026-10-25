@@ -236,6 +236,8 @@ window.BOTIN = (function () {
   function juntar(s) {
     const i = st.suelo.indexOf(s);
     if (i < 0) return;
+    // lo filtrado se puede desarmar solo al juntarlo (motor/arcon.js)
+    if (window.ARCON && ARCON.alJuntar(s.it)) return void st.suelo.splice(i, 1);
     if (st.bolsa.length >= MAX_BOLSA) return HUD.aviso(t("ob.bolsa_llena"), "#C8402D");
     st.suelo.splice(i, 1);
     dar(s.it);
@@ -428,6 +430,8 @@ window.BOTIN = (function () {
       const rot = [];
       st.suelo.forEach((s) => {
         if (s.x < x0 - 100 || s.x > x1 + 100 || s.y < y0 - 60 || s.y > y1 + 400) return;
+        // lo que no pasa el filtro (motor/arcon.js) no lleva haz ni nombre, salvo la que se tiene al lado
+        if (window.ARCON && ARCON.oculta(s.it) && !(cer && cer.s === s)) return;
         const q = dibujarHaz(c, s, J.vista, cer && cer.s === s);
         if (q) rot.push(q);
       });
@@ -436,7 +440,7 @@ window.BOTIN = (function () {
     },
     luces(dar, x0, y0, x1, y1) {
       if (!st) return;
-      st.suelo.forEach((s) => s.it.r >= 1 && s.x > x0 - 200 && s.x < x1 + 200 && s.y > y0 - 200 && s.y < y1 + 200 && dar({ x: s.x, y: s.y - 30, r: s.it.r >= 2 ? 200 : 110, col: O().RAREZAS[s.it.r].col, f: 0.6 }));
+      st.suelo.forEach((s) => s.it.r >= 1 && !(window.ARCON && ARCON.oculta(s.it)) && s.x > x0 - 200 && s.x < x1 + 200 && s.y > y0 - 200 && s.y < y1 + 200 && dar({ x: s.x, y: s.y - 30, r: s.it.r >= 2 ? 200 : 110, col: O().RAREZAS[s.it.r].col, f: 0.6 }));
     },
     modDano(dano) {
       const f = window.RPG && RPG.stats().fuego;
