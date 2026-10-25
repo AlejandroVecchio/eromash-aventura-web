@@ -34,7 +34,6 @@ window.FACCIONES = (function () {
     encuentros: ["sendas", 30, () => suma(ex.encuentros && ex.encuentros.hechos)],
     peces: ["gremio", 6, () => suma(ex.pesca && ex.pesca.libro, (p) => p.n)],
     platos: ["gremio", 8, () => (ex.cocina && ex.cocina.platos) || 0],
-    dados: ["gremio", 35, () => (ex.dados && ex.dados.ganadas) || 0],
     piedras: ["ocultos", 30, () => cuenta(ex.sec && ex.sec.piedras)],
     ritos: ["ocultos", 50, () => cuenta(ex.ritos && ex.ritos.ritos)],
     horgr: ["ocultos", 40, () => cuenta(ex.santuarios && ex.santuarios.vistos)],

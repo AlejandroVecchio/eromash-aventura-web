@@ -258,8 +258,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
-- **dados.js**: los dados de hueso (sistema DADOS, modo "dados")
-  - los puntos · la partida · la capa del juego · las mesas · el sistema
 - **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
   - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
@@ -371,8 +369,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-contratos.js**: los contratos de caza (assets de CONTRATOS)
   - el poste de los contratos · los rastros de una bestia
   - assets: posteContratos, rastroContrato
-- **assets-dados.js**: la mesa de dados (assets de DADOS)
-  - assets: mesaDados
 - **assets-eikholt.js**: Eikholt, la capital (se suma a ASSETS)
   - assets: muralla, torreVigia, piedraMuralla, puertaSur, granTablero, tingCirculo, toldo, herreriaAsa, cordeleriaFolke, casaSanacion, hongoDorado, huerta
 - **assets-elementos.js**: las runas de los elementos: Thurisaz y Laguz (assets de ELEMENTOS)
@@ -464,7 +460,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **companero.js**: Textos de Skuggi, el perro compañero (motor/companero.js, personajes/perro.js): prefijo cp. (y as., mp.ley_companero).
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
-- **dados.js**: Textos de los dados de hueso (motor/dados.js, mundo/assets-dados.js): prefijo dd. (y as., av.nombre_, mp.ley_dados).
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
