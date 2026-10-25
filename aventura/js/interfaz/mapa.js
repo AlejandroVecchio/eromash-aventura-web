@@ -204,10 +204,10 @@ window.MAPA = (function () {
   const unicoMuerto = (id) => window.HORDAS && HORDAS.grupos.some((g) => g.unico === id && g.miembros.some((e) => e.lider && e.muerto > 0));
   const limpio = (g) => g && g.miembros.every((e) => e.muerto > 0);
   // las clases de marca: así se filtran en el mapa grande y se nombran en la leyenda (mp.ley_<clase>)
-  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano", mistico: "mistico", mazmorra: "zona", barca: "zona", mercader: "mercader", contrato: "contrato", instructor: "instructor", horgr: "dioses", nemesis: "nemesis", bandidos: "bandidos", nido: "nidos" };
-  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "mistico", "puente", "zona", "mercader", "contrato", "instructor", "dioses", "nemesis", "bandidos", "nidos"];
+  const CAT_DE = { campamento: "campamento", puente: "puente", altar: "altar", piedra: "piedra", piedraCamino: "camino", cofre: "cofre", manzano: "manzano", mistico: "mistico", manantial: "manantial", mazmorra: "zona", barca: "zona", mercader: "mercader", contrato: "contrato", instructor: "instructor", horgr: "dioses", nemesis: "nemesis", bandidos: "bandidos", nido: "nidos" };
+  const CATS = ["lugar", "viaje", "campamento", "altar", "cofre", "piedra", "rito", "camino", "manzano", "mistico", "manantial", "puente", "zona", "mercader", "contrato", "instructor", "dioses", "nemesis", "bandidos", "nidos"];
   // ícono de muestra de cada clase para la leyenda
-  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], mistico: ["mistico", { forma: "fresnoEcos" }], puente: ["puente", {}], zona: ["mazmorra", {}], mercader: ["mercader", {}], contrato: ["contrato", {}], instructor: ["instructor", {}], dioses: ["horgr", { col: "#C8402D" }], nemesis: ["nemesis", {}], bandidos: ["bandidos", {}], nidos: ["nido", {}] };
+  const MUESTRA = { lugar: ["casa", {}], viaje: ["piedra", { runa: "raidho", col: "#C8F2F4" }], campamento: ["campamento", {}], altar: ["altar", { runa: "kenaz", col: "#FF8D71" }], cofre: ["cofre", {}], piedra: ["piedra", { runa: "ansuz", col: "#4E8E92" }], rito: ["piedra", { runa: "isa", col: "#C8F2F4" }], camino: ["piedraCamino", {}], manzano: ["manzano", {}], mistico: ["mistico", { forma: "fresnoEcos" }], manantial: ["manantial", {}], puente: ["puente", {}], zona: ["mazmorra", {}], mercader: ["mercader", {}], contrato: ["contrato", {}], instructor: ["instructor", {}], dioses: ["horgr", { col: "#C8402D" }], nemesis: ["nemesis", {}], bandidos: ["bandidos", {}], nidos: ["nido", {}] };
   const filtro = (cat) => !st || !st.ocultas || !st.ocultas[cat];
   function cadaMarca(fn) {
     const hechas = [],
@@ -252,6 +252,8 @@ window.MAPA = (function () {
     S.manzanos.forEach((m) => visto(m.cosa.x, m.cosa.y) && poner("manzano", m.cosa.x, m.cosa.y, { apagado: m.cosa.o.cosechado }, 3));
     // los lugares místicos del bosque vivo (vida.js)
     if (window.VIDA) VIDA.lugares().forEach((l) => visto(l.x, l.y) && poner("mistico", l.x, l.y, { forma: l.id, nombre: t("as." + l.id), apagado: l.hecho }, 1));
+    // los manantiales rúnicos que curan y cargan las piedras de Berkano (berkano.js); vacíos, apagados hasta el amanecer
+    if (window.BERKANO) BERKANO.manantiales().forEach((m) => visto(m.x, m.y) && poner("manantial", m.x, m.y, { nombre: t("as.manantialRunico"), apagado: m.luz <= 0.01 }, 2));
     // las entradas de las zonas del generador: la boca de cada mazmorra y la barca de cada tierra con islas
     if (window.ZONAS) ZONAS.entradas().forEach((z) => visto(z.x, z.y) && poner(z.tipo === "mazmorra" ? "mazmorra" : "barca", z.x, z.y, { nombre: z.nombre, apagado: z.hecha }, 1));
     // los mercaderes (comercio.js)
