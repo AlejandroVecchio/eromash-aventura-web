@@ -2,6 +2,9 @@
 // (en un bloque: las pruebas comparten la página)
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+  const enJuego = async (A) => {
+    for (let i = 0; i < 40 && A.J.modo !== "juego"; i++) await esperar(50);
+  };
   // espera a que el aviso de ahora pida respuesta
   const ventana = async (d) => {
     for (let i = 0; i < 80 && !d.fin && !(d.mov && d.mov.fase === "ventana"); i++) await esperar(25);
@@ -163,6 +166,27 @@
       JUEGO.empezar(9, false);
       await esperar(200);
       si(HOLMR.estado().campeon && HOLMR.estado().vencidos === 5, "quedó guardado");
+    } },
+    { nombre: "hólmganga: al terminar, un clic en el cartel del final vuelve al bosque y el juego sigue andando", fn: async (A, { igual, si }) => {
+      await enJuego(A);
+      const errores = [],
+        oir = (e) => errores.push(e.message);
+      window.addEventListener("error", oir);
+      Object.assign(HOLMR.estado(), { vencidos: 0, retadorDia: -1 });
+      A.enemigos.forEach((e) => (e.activo = false));
+      const d = await arrancar();
+      d.fin = { gano: false, porque: "rinde", t: 2 };
+      const lz = document.getElementById("holmrLienzo"),
+        r = lz.getBoundingClientRect();
+      lz.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0 }));
+      await esperar(120);
+      igual(HOLMR.duelo(), null, "terminó:");
+      igual(A.J.modo, "juego", "vuelve al bosque:");
+      const t0 = A.J.t;
+      await esperar(200);
+      window.removeEventListener("error", oir);
+      igual(errores.join(" | "), "", "sin errores:");
+      si(A.J.t > t0, "el bosque no quedó congelado");
     } },
   );
 }

@@ -51,9 +51,11 @@
       entrada("oficios", "libro").fn();
       igual(A.J.modo, "libro", "el libro:");
       LIBROS.cerrar();
-      // los juegos de runas
+      // los juegos de runas, con el botón del menú como los toca el jugador
+      const boton = (txt) => [...document.querySelectorAll("#capaCaja button")].find((b) => b.textContent.includes(txt));
       for (const tipo of ["parejas", "simon", "mente"]) {
-        entrada("juegos", tipo).fn();
+        PROBAR.grupo(PROBAR.GRUPOS.find((g) => g.id === "juegos"));
+        boton(I18N.t("pb." + tipo)).click();
         igual(A.J.modo, "runas", tipo + ":");
         igual(JUEGOS_RUNAS.estado().tipo, tipo, "el juego:");
         JUEGOS_RUNAS.cerrar();
@@ -87,7 +89,10 @@
       entrada("ayudas", "dia").fn();
       await esperar(80);
       si(A.noche() < 0.2, "de día");
-      igual(entrada("ayudas", "curar").fn(), true, "se queda en el menú:");
+      PROBAR.grupo(PROBAR.GRUPOS.find((g) => g.id === "ayudas"));
+      [...document.querySelectorAll("#capaCaja button")].find((b) => b.textContent.includes(I18N.t("pb.curar"))).click();
+      igual(A.J.modo, "menu", "se queda en el menú:");
+      si(document.getElementById("capaCaja").textContent.includes(I18N.t("pb.g_ayudas")), "en las ayudas");
       A.cerrarMenu();
     } },
   );

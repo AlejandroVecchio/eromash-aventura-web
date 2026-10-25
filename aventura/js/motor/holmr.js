@@ -335,9 +335,9 @@ window.HOLMR = (function () {
     vista.vy = vista.vy * Math.pow(0.02, dt) - vista.y * 40 * dt;
     if (d.fin) {
       d.fin.t += dt;
-      if (d.fin.t > 1.4 && (CONTROLES.recien("interactuar") || CONTROLES.recien("seguir") || CONTROLES.recien("atacar") || clic)) cerrar();
+      const listo = d.fin.t > 1.4 && (CONTROLES.recien("interactuar") || CONTROLES.recien("seguir") || CONTROLES.recien("atacar") || clic);
       clic = null;
-      return dibujar();
+      return listo ? cerrar() : dibujar(); // al cerrar ya no hay duelo que dibujar
     }
     if (CONTROLES.recien("pausa")) {
       d.fin = { gano: false, porque: "lejos", t: 9 };
@@ -591,6 +591,7 @@ window.HOLMR = (function () {
     texto(t("hm.teclas", [g("bloquear"), g("esquivar"), g("saltar"), g("atacar")]), 800, 892, 14, "#8A8080", "center", "Eromash Text", false);
   }
   function dibujar() {
+    if (!duelo) return;
     const d = duelo,
       T = J.t + d.t,
       r = lienzo.getBoundingClientRect(),
