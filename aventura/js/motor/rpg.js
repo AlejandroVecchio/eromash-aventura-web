@@ -142,7 +142,7 @@ window.RPG = (function () {
     if (!jug) return;
     const b = (window.PODERES && PODERES.valores && PODERES.valores()) || { vida: 100, dano: 1, lampara: 1, runico: 1 };
     const n = st ? st.nivel : 1;
-    const s = { vida: b.vida + (n - 1) * 6, estamina: 100, dano: b.dano * (1 + (n - 1) * 0.03), crit: 0.1, critMult: 1.6, velAtq: 1, velMov: 1, runico: b.runico, armadura: 0, regen: 1, xp: 1, plata: 1, botin: 1, lampara: b.lampara };
+    const s = { vida: b.vida + (n - 1) * 6, estamina: 100, dano: b.dano * (1 + (n - 1) * 0.03), crit: 0.1, critMult: 1.6, velAtq: 1, velMov: 1, runico: b.runico, armadura: 0, regen: 1, regenRunica: 1, xp: 1, plata: 1, botin: 1, lampara: b.lampara };
     aportes.forEach((f) => f(s, n));
     jug.hpMax = Math.max(1, Math.round(s.vida));
     jug.hp = Math.min(jug.hp, jug.hpMax);
@@ -155,6 +155,8 @@ window.RPG = (function () {
     J.velMov = Math.max(0.6, Math.min(1.6, s.velMov));
     J.armadura = Math.max(0, s.armadura);
     J.poderRunico = s.runico;
+    J.regenRunica = s.regenRunica;
+    J.regenVida = s.regen;
     J.lampara = s.lampara;
     Object.keys(S).forEach((k) => delete S[k]);
     Object.assign(S, s);

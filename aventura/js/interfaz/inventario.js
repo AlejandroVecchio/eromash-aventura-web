@@ -376,6 +376,14 @@ window.INVENTARIO = (function () {
     foco = 0;
   const PESTANAS = ["equipo", "barra", "bolsa", "diario"];
   let ranuraInv = 0; // la casilla de la barra que se está llenando en la pestaña Barra
+  // las pestañas que suman otros sistemas: { id, antes (la pestaña delante de la que va), nombre(), pintar(cuerpo, api) }
+  const EXTRA = {};
+  function pestanaNueva(def) {
+    EXTRA[def.id] = def;
+    const i = def.antes ? PESTANAS.indexOf(def.antes) : -1;
+    if (i >= 0) PESTANAS.splice(i, 0, def.id);
+    else PESTANAS.push(def.id);
+  }
   let raiz = null;
   function armar() {
     raiz = document.createElement("div");
@@ -437,7 +445,7 @@ window.INVENTARIO = (function () {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "inv-tab" + (p === pestana ? " activa" : "");
-      b.textContent = t("inv.tab_" + p);
+      b.textContent = EXTRA[p] ? EXTRA[p].nombre() : t("inv.tab_" + p);
       b.addEventListener("click", () => cambiar(p));
       nav.appendChild(b);
     });
@@ -527,11 +535,25 @@ window.INVENTARIO = (function () {
       l.forEach((it, k) => g.appendChild(celda(it, Math.floor(k / 6), k % 6)));
       cuerpo.appendChild(g);
       if (!encargos) cuerpo.insertAdjacentHTML("beforeend", `<p class="inv-nota">${t("inv.bolsa_vacia")}</p>`);
+    } else if (EXTRA[pestana]) {
+      EXTRA[pestana].pintar(cuerpo, { celda, enfocable, pe });
     } else {
       cuerpo.innerHTML = J.htmlDiario ? J.htmlDiario() : "";
     }
     foco = Math.min(foco, Math.max(0, celdas.length - 1));
     enfocar(foco);
+  }
+  // un elemento cualquiera que se recorre con flechas o palanca como una casilla (item: { nombre, desc, fn })
+  function enfocable(el, item) {
+    const i = celdas.length;
+    celdas.push({ el, item });
+    el.addEventListener("pointerenter", () => enfocar(i));
+    el.addEventListener("focus", () => enfocar(i));
+    el.addEventListener("click", () => {
+      enfocar(i);
+      usar();
+    });
+    return el;
   }
   function enfocar(i) {
     if (!celdas.length) {
@@ -635,5 +657,5 @@ window.INVENTARIO = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { icono, abrir, cerrar, paso, abierta: () => abierta, version: () => version };
+  return { icono, abrir, cerrar, paso, abierta: () => abierta, version: () => version, pestana: pestanaNueva, repintar: () => abierta && pintar(), actual: () => (abierta ? pestana : null) };
 })();

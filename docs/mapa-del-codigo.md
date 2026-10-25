@@ -17,6 +17,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | Morir y reaparecer | `motor/juego.js`, sección `muerte y reaparición` (`dondeReaparecer`); los refugios por misión en `historia/guion.js` (`REAPARECER`) |
 | Runas (Kenaz, Isa, Algiz, Sowilo), poder rúnico, plata y fragmentos | `motor/poderes.js` (`RUNAS`, `darPlata`, `botinCofre`) |
 | Nivel, experiencia, nivel de las criaturas y estadísticas (crítico, armadura, velocidad) | `motor/rpg.js` (`xpPara`, `nivelDe`, `recalcular`, `aporte`); reglas en `docs/rpg.md` |
+| Atributos (Fuerza, Destreza, Vigor, Espíritu) y su pestaña en la mochila | `motor/atributos.js` (`efecto`, `POR_NIVEL`); pestañas extra con `INVENTARIO.pestana` |
 
 ### El mundo
 
@@ -189,6 +190,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
+- **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
+  - la pestaña
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
   - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
