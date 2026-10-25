@@ -243,8 +243,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
 - **casa.js**: la casa propia (sistema CASA)
   - dónde: junto al camino que sale del Puesto · comprar y mejorar · el arcón · la huerta · el cuarto · el sistema
-- **cerraduras.js**: cofres con candado y ganzúas (sistema CERRADURAS, modo "ganzua")
-  - empezar y terminar · el juego de la cerradura · ubicar · el sistema
 - **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
 - **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
   - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
@@ -304,8 +302,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
-- **nemesis.js**: las némesis: las criaturas que vencieron a Eromash (sistema NEMESIS)
-  - nacer y crecer · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **pesca.js**: la pesca (sistema PESCA, modo "pesca")
   - el agua · tirar, picar, pelear · la capa del minijuego · el puesto de Sverri · el sistema
@@ -361,8 +357,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-casas.js**: las casas de varios cuartos
   - La puerta de adentro · El paso secreto · El tapiz de la pared · Las tablas flojas
   - assets: puertaInterior, pasoSecreto, tapizPared, tablasFlojas
-- **assets-cerraduras.js**: el cofre con candado (asset de CERRADURAS)
-  - assets: cofreCandado
 - **assets-claro.js**: el Claro del Ciervo, versión épica (se suma a ASSETS)
   - assets: arcoAstas, paredRoca, manchaEnferma, camaMusgo, escaleraRaices, apostadero, fisura
 - **assets-comercio.js**: el puesto de Kolbrun, la buhonera de Eldrakar (assets de COMERCIO)
@@ -458,7 +452,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **casa.js**: Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).
-- **cerraduras.js**: Textos de los cofres con candado y las ganzúas (motor/cerraduras.js): prefijo gz. (y as.cofreCandado, mt.ganzua)
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
@@ -491,7 +484,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
-- **nemesis.js**: Textos de las némesis (motor/nemesis.js): prefijo nm. (y mp.ley_nemesis). Los nombres nórdicos no se traducen.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
