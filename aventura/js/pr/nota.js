@@ -5,41 +5,37 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 47,
-    titulo: { es: "Skuggi, el perro compañero", en: "Skuggi, the companion dog" },
+    pr: 48,
+    titulo: { es: "La hólmganga: duelos en la piel", en: "The holmgang: duels on the hide" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: el mordisco crece con tu nivel", en: "levels: his bite grows with your level" },
-      { pr: 21, es: "alquimia: lo que escarba puede ser una hierba", en: "alchemy: what he digs up can be a herb" },
-      { pr: 12, es: "materiales: o un cuero curtido", en: "materials: or tanned leather" },
+      { pr: 1, es: "niveles: cada kempa paga experiencia y crece con tu nivel", en: "levels: each champion pays experience and scales with your level" },
+      { pr: 47, es: "Skuggi: en la piel no muerde, mira desde el borde", en: "Skuggi: he doesn't bite on the hide, he watches from the edge" },
     ],
     mirar: [
-      { es: "Junto a un camino que sale del Puesto (marcado en el mapa con una huella) hay un perro herido. Al acercarte aparecen tres lobos: vencelos y con E lo atendés. Skuggi va con vos: te sigue al costado, corre a morder a lo que te ataca, salta fuera de los avisos del piso y cuando se cansa vuelve jadeando. Nunca muere.", en: "By a road leaving the Outpost (marked on the map with a paw print) lies a wounded dog. Get close and three wolves appear: beat them and press E to tend him. Skuggi comes with you: follows at your side, runs to bite whatever attacks you, jumps out of the ground warnings and comes back panting when tired. He never dies." },
-      { es: "Con E cerca de él le hablás: acariciarlo (una vez por día), quedate acá / seguime (si lo dejás, el mapa marca dónde espera y desde la Bolsa lo llamás) y buscá. Si te vas lejos, entrás a una casa o viajás, vuelve solo.", en: "Press E near him to talk: pet him (once a day), stay here / follow me (if you leave him, the map marks where he waits and you can call him from the Bag) and search. If you go far, enter a house or travel, he comes back on his own." },
-      { es: "El vínculo crece con cada mordisco, cada criatura que caen juntos y cada caricia, y enseña cinco trucos: muerde, derriba (cada tercer mordisco tira a las chicas), olfato (ladra y marca con una huella dorada a lo que no te vio, y escarba algo una vez por día), aullido (con tu vida baja espanta a las chicas) y lealtad (+5 % de daño con él al lado).", en: "The bond grows with every bite, every creature you bring down together and every pat, and teaches five tricks: bite, takedown (every third bite knocks small ones down), nose (barks and marks with a golden paw print what hasn't seen you, and digs something up once a day), howl (when your health is low it scatters small ones) and loyalty (+5% damage with him at your side)." },
+      { es: "Junto al camino del Puesto a Eikholt (escudo rojo en el mapa) hay una piel de buey estaqueada entre varas de avellano, con dos testigos en un banco y Hallbera al costado. Con E le pedís batirte con el siguiente de cinco kempur: Ketil el Joven, Thorgerd Lanza Larga, Björn el Muro, Ásgerd la Ligera y Úlfhild Hija del Oso, cada uno con su rotación fija de ataques.", en: "By the road from the Outpost to Eikholt (red shield on the map) there's an ox hide staked between hazel poles, with two witnesses on a bench and Hallbera beside it. Press E to ask to fight the next of five champions: Ketil the Young, Thorgerd Long-Spear, Björn the Wall, Ásgerd the Light and Úlfhild Bear's Daughter, each with a fixed attack rotation." },
+      { es: "Reglas: cuenta de tres, los dos curados. Cada kempa trae escudos (arriba, en la barra): mientras se cubre tu golpe pega un cuarto y tres golpes parten un escudo (tambalea); mientras avisa o se recupera queda «¡abierto!» y pega entero. Sin escudos el remate lo empuja fuerte.", en: "Rules: count of three, both healed. Each champion brings shields (top, on the bar): while guarding your blow deals a quarter and three blows split a shield (he staggers); while he telegraphs or recovers he's «open!» and takes full damage. Without shields your finisher knocks him far." },
+      { es: "Se gana sacándolo de la piel o cuando baja de su 12 % (se rinde). Se pierde al pisar fuera sin saltar (el borde se pone rojo si te acercás o te empujan) o al bajar de tu 12 %: nadie muere en la piel. El quinto da el título «Campeón del hólmr» (+5 % de daño), una pieza y un fragmento; después hay un retador por día.", en: "You win by knocking him off the hide or when he drops below 12% (he yields). You lose by stepping off without jumping (the edge turns red when you get close or get pushed) or dropping below 12%: nobody dies on the hide. The fifth grants the title «Champion of the holmr» (+5% damage), a piece and a fragment; afterwards there's a challenger each day." },
     ],
     botones: [
-      { es: "Llevarme al perro herido", en: "Take me to the wounded dog", fn: (A) => {
-        const l = COMPANERO.lugar();
-        ir(A, l, 0, 420);
+      { es: "Llevarme al hólmr", en: "Take me to the holmr", fn: (A) => {
+        const h = HOLMR.hallbera();
+        ir(A, [h.x, h.y], -90, 30);
       } },
-      { es: "Rescatarlo ya", en: "Rescue him now", fn: () => {
-        const ls = COMPANERO.lobos();
-        if (ls) ls.forEach((e) => (e.muerto = 1));
-        COMPANERO.atender();
+      { es: "Batirme ya con el siguiente", en: "Fight the next one now", fn: (A) => {
+        if (HOLMR.duelo()) return;
+        const h = HOLMR.hallbera();
+        A.teletransportar(h.x - 90, h.y + 30);
+        A.J.retrasar(2.2, () => HOLMR.empezar());
       } },
-      { es: "Vínculo al máximo (todos los trucos)", en: "Max bond (every trick)", fn: () => COMPANERO.sumar(600) },
-      { es: "Traer criaturas para pelear juntos", en: "Bring creatures to fight together", fn: (A) => {
-        [[200, 0, "lobo"], [220, 90, "jabali"], [160, -110, "lobo"]].forEach(([dx, dy, tipo]) => {
-          const e = A.CB.crear(tipo, A.jug.x + dx, A.jug.y + dy, {});
-          e.activo = true;
-          e.estado = "persigue";
-          A.enemigos.push(e);
-        });
+      { es: "Saltar a Úlfhild (la última)", en: "Skip to Úlfhild (the last one)", fn: () => {
+        HOLMR.estado().vencidos = 4;
       } },
-      { es: "Que pueda volver a buscar y acariciarlo hoy", en: "Let him search and be petted again today", fn: () => {
-        COMPANERO.estado().buscado = -1;
-        COMPANERO.estado().acariciado = -1;
+      { es: "Partirle los escudos (en duelo)", en: "Split his shields (in a duel)", fn: () => {
+        if (HOLMR.duelo()) HOLMR.duelo().escudos = 0;
+      } },
+      { es: "Que vuelva el retador de hoy", en: "Bring back today's challenger", fn: () => {
+        HOLMR.estado().retadorDia = -1;
       } },
     ],
   };

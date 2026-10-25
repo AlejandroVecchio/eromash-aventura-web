@@ -235,7 +235,7 @@ window.COMPANERO = (function () {
     perro.atasco = movido < v * 0.2 ? perro.atasco + dt : 0;
     return movido / Math.max(dt, 0.001) / CORRE;
   }
-  const puedeMorder = (e) => e.activo && !e.muerto && !(e.d && e.d.blanco) && !e.companero && e.tipo !== "muneco";
+  const puedeMorder = (e) => e.activo && !e.muerto && !(e.d && e.d.blanco) && !e.companero && !e.holmr && e.tipo !== "muneco"; // en la piel del hólmr no se ayuda
   function elegirObjetivo() {
     let mejor = null,
       dm = Infinity;

@@ -717,6 +717,15 @@ Cuatro facciones con cinco grados (`NIVELES` = 0, 300, 900, 2000, 3800: Desconoc
 - **Órdenes** (E cerca, o su celda en la Bolsa): acariciar, quedate acá / seguime (de lejos, «Llamar a Skuggi» lo trae), buscá y la lista de trucos.
 - **Estado** (`E.extra.companero`): rescatado, vinculo, acariciado, buscado, mordiscos, hallazgos, quieto.
 
+## La hólmganga (`motor/holmr.js`, `HOLMR`; dibujo `CRIATURAS` «kempa» en `enemigos/kempur.js`; assets `holmrPiel`, `holmrVara`, `bancoTestigos` en `mundo/assets-holmr.js`; textos `hm.`)
+
+- **El lugar**: un claro junto a un camino, lo más cerca de la línea del Puesto a Eikholt y a mitad de camino, lejos de pueblos, grupos, guaridas, la casa, el perro y los elementos. La piel (660 × 460) se dibuja en el hook `fondo`, debajo de los avisos, así gira con la cámara; las cuatro varas y el banco son assets del mundo; Hallbera y los dos testigos sentados (`GENTE.FICHAS` hallbera, testigo1, testigo2) se dibujan en `objetos`. En el mapa, un escudo (clase `holmr`).
+- **Los kempur** (`KEMPUR`): Ketil el Joven, Thorgerd Lanza Larga, Björn el Muro, Ásgerd la Ligera y Úlfhild Hija del Oso. Cada uno con su vida, daño, velocidad, alcance, aviso, espera y rotación fija (`e.patron`, nunca el mismo tres veces), escudos (3, 3, 5, 2, 3) y premio (40 / 70 / 110 / 160 / 250 de plata y 60 a 260 de experiencia). La vida crece 10 % por nivel (hasta ×2,5) y el daño 5 % (hasta ×1,8), con el tope del 35 % de siempre. Son tipo `kempa` de `COMBATE.TIPOS` con `lider.unico`, `e.holmr` y `d.plata = 0`; durante la cuenta llevan `e.propio`.
+- **El duelo**: Hallbera (E) muestra las reglas, el siguiente y el premio. Batirse pone a los dos en la piel, cura a Eromash y cuenta tres segundos (si hay criaturas peleando cerca no abre). Mientras el kempa se cubre (sin aviso, sin espera, sin aturdir), `modDano` deja un cuarto y cada tres golpes parte un escudo y lo hace tambalear 0,6 s; abierto pega entero. Sin escudos, el remate (empuje ≥ 1,3) lo empuja 720 (`alPegar`). La barra de jefe (hook `hud`, después de goinn.js) muestra los escudos ◆◇ y si está «¡abierto!».
+- **Cómo termina**: gana si el kempa sale de la piel o baja de su 12 % (un golpe nunca lo mata); pierde si Eromash pisa fuera sin `jug.salto` (también empujado: el borde se pone rojo a menos de 90) o si un golpe lo dejaría bajo su 12 % (`modRecibido` lo frena ahí y se rinde). Al perder, Hallbera lo deja en 40 % de vida. Irse lejos en la cuenta, entrar a una casa o cargar corta el duelo sin resultado. Skuggi no muerde a `e.holmr`.
+- **Premios**: plata y experiencia por cada uno; el quinto da «Campeón del hólmr» (+5 % de daño por `RPG.aporte`), un fragmento y una pieza rara o mejor. Después, un retador por día (`hm.r0..4`, la ficha de otro kempa con 25 % más de vida y su color; paga 50 + 8 × nivel).
+- **Estado** (`E.extra.holmr`): vencidos, ganados, perdidos, campeon, retadorDia. Celda en la Bolsa con lo ganado y perdido, y su línea en el diario.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

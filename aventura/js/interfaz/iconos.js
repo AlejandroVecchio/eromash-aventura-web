@@ -250,6 +250,14 @@ window.ICONOS = (function () {
       [[-4.2, -1.6], [-1.6, -4], [1.6, -4], [4.2, -1.6]].forEach(([a, b]) => pol(c, [x + (a - 1.2) * u, y + b * u, x + a * u, y + (b - 1.5) * u, x + (a + 1.2) * u, y + b * u, x + a * u, y + (b + 1.5) * u], col));
       pol(c, [x - 3 * u, y + 0.5 * u, x, y + 0.5 * u, x, y + 5 * u, x - 2 * u, y + 5 * u, x - 3.8 * u, y + 3 * u], "#8E7E6A");
     },
+    // el hólmr (holmr.js): el escudo redondo de un kempa con su cruz y el umbo
+    holmr(c, x, y, u, col) {
+      pol(c, Array.from({ length: 10 }, (_, k) => [x + Math.cos((k / 10) * Math.PI * 2) * 5.5 * u, y + Math.sin((k / 10) * Math.PI * 2) * 5.5 * u]).flat(), col);
+      pol(c, [x - 5.4 * u, y, x - 1.7 * u, y - 5.2 * u, x, y - 5.5 * u, x, y + 5.5 * u, x - 1.7 * u, y + 5.2 * u], "#9C2315");
+      pol(c, [x - 0.8 * u, y - 5.4 * u, x + 0.8 * u, y - 5.4 * u, x + 0.8 * u, y + 5.4 * u, x - 0.8 * u, y + 5.4 * u], "#FFD98A");
+      pol(c, [x - 5.4 * u, y - 0.8 * u, x + 5.4 * u, y - 0.8 * u, x + 5.4 * u, y + 0.8 * u, x - 5.4 * u, y + 0.8 * u], "#FFD98A");
+      pol(c, [x - 1.6 * u, y - 1.6 * u, x + 1.6 * u, y - 1.6 * u, x + 1.6 * u, y + 1.6 * u, x - 1.6 * u, y + 1.6 * u], "#8E8A86");
+    },
     // un atril con un libro (libros.js): el libro abierto, la hoja izquierda en sombra
     libro(c, x, y, u, col) {
       pol(c, [x - 5.5 * u, y - 3.5 * u, x, y - 2.5 * u, x + 5.5 * u, y - 3.5 * u, x + 5.5 * u, y + 3.5 * u, x, y + 4.5 * u, x - 5.5 * u, y + 3.5 * u], "#5E130D");
@@ -309,7 +317,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", nemesis: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", companero: "#B8AC9C", puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", nemesis: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", vaettr: "#5E7A3E", pesca: "#5A8CA8", dados: "#E8E0D0", libro: "#F2ECEC", faccion: "#E0B2B2", companero: "#B8AC9C", holmr: "#C8402D", puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;
