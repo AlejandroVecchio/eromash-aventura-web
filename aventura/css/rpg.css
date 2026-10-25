@@ -267,3 +267,12 @@
 .hj-tabla td.hj-v{color:#F2ECEC;font-weight:800;white-space:nowrap}
 .hj-tabla em{color:#FF8D71;font-style:normal}
 .rotulo.hj-rotulo{margin-top:14px}
+/* la saga de Eromash (motor/saga.js) */
+.sg-cabeza{display:grid;gap:6px;margin:0 0 10px}
+.sg-cabeza b{display:block;font-size:1.15em;color:#FFD98A}
+.sg-cabeza span{color:#E0B2B2;font-size:.9em}
+.sg-cabeza i{display:block;height:8px;background:linear-gradient(90deg,#FFD98A var(--p),#2A2220 var(--p))}
+.inv-detalle .sg-barra{display:block;height:6px;margin:4px 0 6px;background:#2A2220}
+.inv-detalle .sg-barra i{display:block;height:100%;background:#FFD98A}
+.inv-detalle .sg-pista{display:block}
+.inv-celda.sg-lista .cant{color:#FFD98A}

@@ -5,36 +5,40 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 49,
-    titulo: { es: "La hoja de Eromash y los topes", en: "Eromash's sheet and the caps" },
+    pr: 50,
+    titulo: { es: "La saga de Eromash", en: "The saga of Eromash" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 1, es: "niveles: la tubería de estadísticas (RPG.aporte) que ahora dice quién suma", en: "levels: the stat pipeline (RPG.aporte) that now says who adds what" },
-      { pr: 48, es: "y todas las que suman a Eromash (equipo, atributos, árbol, comidas, bendiciones, Skuggi, el hólmr…): cada una aparece con su nombre", en: "and every PR that adds to Eromash (gear, attributes, tree, meals, blessings, Skuggi, the holmr…): each shows up by name" },
+      { pr: 1, es: "niveles", en: "levels" },
+      { pr: 49, es: "y casi todas las de la tanda: cada entrada de la saga lee el estado guardado de su sistema (bestiario, contratos, Sin Linde, arañas, hólmganga, jötunn, Cacería, némesis, remates, lecciones, galdrar, hierbas, cocina, pesca, candados, dados, tintes, legendarias, conjuntos, libros, hörgar, vættir, elementos, la casa, Skuggi y facciones)", en: "and almost every PR in the batch: each saga entry reads its system's saved state (bestiary, contracts, Lawless, spiders, holmgang, jötunn, Wild Hunt, nemeses, finishers, lessons, galdrar, herbs, cooking, fishing, locks, dice, dyes, legendaries, sets, books, hörgar, vættir, elements, the house, Skuggi and factions)" },
     ],
     mirar: [
-      { es: "En la mochila hay una pestaña nueva, Hoja: cada estadística de Eromash con su runa (vida, estamina, daño, crítico, velocidades, armadura, poder rúnico, regeneración, experiencia, plata, botín y lámpara). Al elegir una, abajo dice su base, qué suma cada cosa por nombre y su tope. Más abajo está la hoja entera en una tabla.", en: "The backpack has a new tab, Sheet: every stat of Eromash with its rune (health, stamina, damage, crit, speeds, armour, rune power, regeneration, experience, silver, loot and lamp). Pick one and below it shows its base, what each thing adds by name and its cap. Further down is the whole sheet in a table." },
-      { es: "La pasada de balance: el nivel, el equipo (con sus conjuntos) y los atributos cuentan enteros, pero lo que suman los demás sistemas juntos tiene tope (daño ×1,75, vida ×1,6, experiencia, plata y botín ×2, armadura +120, crítico +25 %…). Lo que pasa el tope vale la mitad, así apilar bonos sigue sirviendo pero no se dispara. El crítico nunca pasa del 60 % (antes 75 %). Una casilla topada lleva un punto naranja.", en: "The balance pass: level, gear (with its sets) and attributes count in full, but what the other systems add together is capped (damage ×1.75, health ×1.6, experience, silver and loot ×2, armour +120, crit +25%…). Anything over the cap counts half, so stacking bonuses still helps but doesn't explode. Crit never goes over 60% (was 75%). A capped slot carries an orange dot." },
+      { es: "En la mochila hay una pestaña nueva, Saga, con el porcentaje en el nombre: todo lo que Eldervald tiene para hacer en cuatro capítulos (la pelea, los oficios, el mundo y la gente). Cada casilla lleva su runa y cuánto va (3/5); al elegirla, abajo su barra y una pista de cómo empezar. Lo que todavía no empezaste se ve apagado y lo completo en dorado.", en: "The backpack has a new tab, Saga, with the percentage in its name: everything Eldervald has to do in four chapters (the fight, the crafts, the world and the people). Each slot carries its rune and how far along it is (3/5); pick it to see its bar and a hint on how to start. What you haven't started is dimmed and what's complete is gold." },
+      { es: "La saga entera tiene un porcentaje (el promedio de las entradas) y cuatro hitos que pagan una sola vez: 25 % plata, 50 % un fragmento, 75 % una pieza rara o mejor y 100 % una legendaria y el título «Leyenda de Eldervald», que encabeza la pestaña. Una partida vieja que ya pasó hitos no los cobra de golpe al cargar.", en: "The whole saga has a percentage (the average of its entries) and four milestones that pay once: 25% silver, 50% a fragment, 75% a rare piece or better and 100% a legendary and the title «Legend of Eldervald», shown at the top of the tab. An old save that already passed milestones doesn't cash them all at once on load." },
     ],
     botones: [
-      { es: "Abrir la Hoja", en: "Open the Sheet", fn: () => INVENTARIO.abrir("hoja") },
-      { es: "Subir 10 niveles", en: "Gain 10 levels", fn: (A) => {
+      { es: "Abrir la Saga", en: "Open the Saga", fn: () => INVENTARIO.abrir("saga") },
+      { es: "Avanzar varias (hólmganga, Skuggi, la casa, 10 niveles)", en: "Advance several (holmgang, Skuggi, the house, 10 levels)", fn: (A) => {
+        if (window.HOLMR) HOLMR.estado().vencidos = 5;
+        if (window.COMPANERO) {
+          COMPANERO.estado().rescatado = true;
+          COMPANERO.sumar(600);
+        }
+        if (window.CASA) CASA.estado().tuya = true;
         let x = 0;
         for (let n = RPG.nivel(); n < Math.min(RPG.TOPE, RPG.nivel() + 10); n++) x += RPG.xpPara(n);
         RPG.dar(x, A.jug.x, A.jug.y);
+        INVENTARIO.abrir("saga");
       } },
-      { es: "Apilar bonos (título, Skuggi, inspirado, casa) para ver el tope", en: "Stack bonuses (title, Skuggi, inspired, house) to see the cap", fn: () => {
-        if (window.HOLMR) HOLMR.estado().campeon = true;
-        if (window.COMPANERO) {
-          COMPANERO.estado().rescatado = true;
-          COMPANERO.estado().quieto = null;
-          COMPANERO.sumar(600);
-        }
-        if (window.ENCUENTROS && ENCUENTROS.estado) ENCUENTROS.estado().inspirado = 600;
-        RPG.aporte((s) => window.__notaBono && (s.dano *= 1.6), "cocina");
-        window.__notaBono = true;
-        RPG.recalcular();
-        INVENTARIO.abrir("hoja");
+      { es: "Ver los cuatro hitos (completar todo un momento)", en: "See the four milestones (complete everything for a moment)", fn: () => {
+        const viejas = SAGA.ENTRADAS.map((e) => e[5]);
+        SAGA.ENTRADAS.forEach((e) => (e[5] = () => [1, 1]));
+        SAGA.revisar(false);
+        SAGA.ENTRADAS.forEach((e, i) => (e[5] = viejas[i]));
+      } },
+      { es: "Volver a cobrar los hitos", en: "Reset the milestones", fn: () => {
+        SAGA.estado().hitos = {};
+        SAGA.estado().leyenda = false;
       } },
     ],
   };

@@ -309,6 +309,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
   - los topes (la pasada de balance) · el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
+- **saga.js**: la saga de Eromash (sistema SAGA, pestaña Saga de la mochila)
+  - los hitos · la pestaña · el sistema
 - **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
   - pedir · ubicar · el sistema
 - **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
@@ -496,6 +498,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **remates.js**: Textos de los remates (motor/remates.js): prefijo rm.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
+- **saga.js**: Textos de la saga de Eromash (motor/saga.js): prefijo sg.
 - **santuarios.js**: Textos de los hörgar de los dioses (motor/santuarios.js): prefijo sn. (y as.horgr, mp.ley_dioses)
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
