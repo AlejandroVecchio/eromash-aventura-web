@@ -584,7 +584,7 @@ Quince libros con tapa, autor y páginas (`lb.<id>_t`, `_a`, `_1`…), en cuatro
 
 Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez que se abre (`aprender`) y se anuncia al cerrar.
 
-- **Dónde**: nueve atriles de piedra a 150–240 de un camino (`EN_ATRIL`, semilla 8807, lejos de pueblos, grupos, guaridas, nidos y vættir; el más cercano al Puesto lleva la crónica). Van al mapa (clase `libros`) al verlos a menos de 900 y se apagan al leerlos. Los otros seis (`DE_LIDER`, en orden) los suelta un líder al morir (40 %, un semijefe siempre) y quedan en `extra.libros.caidos` hasta juntarlos con E.
+- **Dónde**: nueve atriles de piedra a 150–240 de un camino (`EN_ATRIL`, semilla 8807, lejos de pueblos, grupos, guaridas y nidos; el más cercano al Puesto lleva la crónica). Van al mapa (clase `libros`) al verlos a menos de 900 y se apagan al leerlos. Los otros seis (`DE_LIDER`, en orden) los suelta un líder al morir (40 %, un semijefe siempre) y quedan en `extra.libros.caidos` hasta juntarlos con E.
 - **Lector**: ventana de dos páginas (la primera, la portada con el color de la tapa); izquierda/derecha, interactuar o tocar la hoja pasan, pausa o la lente cierran. Los leídos se releen desde la casilla Libros de la Bolsa (`biblioteca`).
 - **Estado** (`E.extra.libros`): leidos, vistos, caidos, soltados, saga, todos. Va al diario.
 
