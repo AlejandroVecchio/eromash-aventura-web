@@ -267,8 +267,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
 - **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
   - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
-- **holmr.js**: la hólmganga: duelos en la piel (sistema HOLMR)
-  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo · el sistema
+- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
 - **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
   - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
