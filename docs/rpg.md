@@ -33,6 +33,12 @@ tener que leer el código para balancear.
   el 20). Un recorrido entero del bosque (todos los grupos una vez, misiones, lugares, cofres, piedras) deja cerca
   del nivel 17; lo demás sale de recompensas, jefes y grupos que vuelven.
 - Cada nivel: +6 de vida y +3 % de daño (los atributos y el equipo suman el resto).
+- **Saltos de poder** (`motor/saltos.js`, `SALTOS`, textos `sl.`): los niveles 5, 10, 15, 20, 25 y 30 dan un salto
+  que se nota, en el núcleo (no se topa) y anunciado en el cartel como «Salto de poder»: Uruz despierta (+10 % de
+  vida, +2 atributos), Sangre de lobo (+10 % de daño, +0,15 al crítico, +1 habilidad), Ojo de cuervo (+4 % de crítico,
+  +6 % de velocidad de ataque, +2 atributos), Piel de oso (+25 de armadura, +10 % de vida, +1 habilidad), Voz de Ansuz
+  (+15 % de poder y energía rúnica, +2 atributos) y Einherjar (+10 % de daño y vida, +5 % de velocidad, +3 atributos,
+  +1 habilidad). Los puntos se dan una vez (`extra.rpg.saltos`); el diario dice cuál es el próximo.
 - Nivel de cada criatura: los lobos y errantes de la historia son 2 y 3, el Custodio 5. Las de los grupos: `1 +
   distancia al Puesto / 800` más lo que el grupo tiene de más duro que su distancia (`(mas − 1 − d/14000) · 8`);
   cuervos −1, troles +2, líderes +1, únicos +3, semijefes +2. Al ponerle el nivel se le suma `8 %` de vida y `4,5 %`

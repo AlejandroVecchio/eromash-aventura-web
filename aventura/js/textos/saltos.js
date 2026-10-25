@@ -1,0 +1,22 @@
+// Textos de los saltos de poder (prefijo sl.), los dos idiomas.
+I18N.textos({
+  "sl.salto": { es: "Salto de poder · {0}", en: "Power surge · {0}" },
+  "sl.titulo": { es: "Saltos de poder.", en: "Power surges." },
+  "sl.proximo": { es: "El próximo llega en el nivel {0}: {1}.", en: "The next one comes at level {0}: {1}." },
+  "sl.todos": { es: "Los tenés todos: sos de los einherjar.", en: "You have them all: you stand among the einherjar." },
+  "sl.atrib": { es: "+{0} puntos de atributo", en: "+{0} attribute points" },
+  "sl.arbol": { es: "+{0} punto de habilidad", en: "+{0} skill point" },
+  "sl.uruz": { es: "Uruz despierta", en: "Uruz awakens" },
+  "sl.uruz_d": { es: "+10 % de vida", en: "+10% life" },
+  "sl.lobo": { es: "Sangre de lobo", en: "Wolf's blood" },
+  "sl.lobo_d": { es: "+10 % de daño y críticos más fuertes", en: "+10% damage and stronger critical hits" },
+  "sl.cuervo": { es: "Ojo de cuervo", en: "Raven's eye" },
+  "sl.cuervo_d": { es: "+4 % de crítico y +6 % de velocidad de ataque", en: "+4% critical chance and +6% attack speed" },
+  "sl.oso": { es: "Piel de oso", en: "Bearhide" },
+  "sl.oso_d": { es: "+25 de armadura y +10 % de vida", en: "+25 armour and +10% life" },
+  "sl.ansuz": { es: "Voz de Ansuz", en: "Voice of Ansuz" },
+  "sl.ansuz_d": { es: "+15 % de poder rúnico y de energía rúnica", en: "+15% rune power and rune energy" },
+  "sl.einherjar": { es: "Einherjar", en: "Einherjar" },
+  "sl.einherjar_d": { es: "+10 % de daño y de vida, y +5 % de velocidad", en: "+10% damage and life, and +5% speed" },
+  "hj.de_saltos": { es: "Saltos de poder", en: "Power surges" },
+});
