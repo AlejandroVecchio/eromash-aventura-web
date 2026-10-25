@@ -5,27 +5,47 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 22,
-    titulo: { es: "Cocina en la fogata", en: "Campfire cooking" },
+    pr: 23,
+    titulo: { es: "Descansar y pasar la noche", en: "Resting and passing the night" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 21, es: "alquimia: los platos llevan hierbas, la carne va a la Bolsa con celdasBolsa y la comida sale en la tira de efectos", en: "alchemy: dishes use herbs, meat goes to the Bag via celdasBolsa and the meal shows on the effects strip" },
+      { pr: 22, es: "cocina: «Descansar junto al fuego» va en el menú de la fogata", en: "cooking: «Rest by the fire» goes in the campfire menu" },
+      { pr: 20, es: "frasco: dormir lo llena", en: "flask: sleeping refills it" },
+      { pr: 21, es: "alquimia: dormir limpia las toxinas y las hierbas vuelven a crecer", en: "alchemy: sleeping clears toxins and herbs grow back" },
+      { pr: 1, es: "niveles: «Bien descansado» suma experiencia", en: "levels: «Well rested» adds experience" },
     ],
     mirar: [
-      { es: "Los lobos, jabalíes y el oso dejan carne (sale flotando y va a la Bolsa).", en: "Wolves, boars and the bear drop meat (it floats up and goes to your Bag)." },
-      { es: "Junto a un fogón encendido (el del Puesto, el del Aserradero, el del paso) o un brasero prendido aparece «Cocinar en la fogata»: cinco platos con carne y hierbas.", en: "Next to a lit hearth (the Outpost's, the Sawmill's, the pass's) or a lit brazier, «Cook at the campfire» appears: five dishes with meat and herbs." },
-      { es: "Cocinar es un asador que gira, como en Monster Hunter: la aguja corre y hay que sacarlo con E, clic o ✕. Crudo rinde la mitad, bien rinde normal, A PUNTO (lo dorado) rinde un 40 % más y dura un 50 % más, y quemado se pierde.", en: "Cooking is a turning spit, Monster Hunter-style: the needle runs and you take it off with E, click or ✕. Raw gives half, done gives normal, PERFECT (the gold) gives 40 % more and lasts 50 % longer, and burnt is lost." },
-      { es: "Se come al toque (llena la vida) y queda una comida por vez, con sus minutos en la tira sobre el retrato.", en: "It's eaten right away (fills your life) and there's one meal at a time, with its minutes on the strip above the portrait." },
+      { es: "Junto a los fogones del Puesto, del Refugio, del Aserradero y del paso hay un petate de pieles con un trapo rojo: «Dormir en el petate». En cualquier fogata encendida, el menú de cocinar suma «Descansar junto al fuego».", en: "Next to the hearths of the Outpost, the Refuge, the Sawmill and the pass there's a fur bedroll with a red rag: «Sleep on the bedroll». At any lit campfire, the cooking menu adds «Rest by the fire»." },
+      { es: "Se elige hasta cuándo (alba, mediodía, atardecer, noche o una hora). El tiempo corre rápido: el cielo cambia detrás y el reloj gira. E, ✕ o un toque despiertan antes.", en: "You choose until when (dawn, noon, dusk, night or one hour). Time runs fast: the sky changes behind and the clock turns. E, ✕ or a tap wake you early." },
+      { es: "Al despertar: vida, estamina y frasco llenos; con 4 h o más se van las toxinas y los grupos de criaturas muertos lejos vuelven (sale cuántos).", en: "On waking: full life, stamina and flask; with 4 h or more toxins clear and dead creature packs far away come back (it tells you how many)." },
+      { es: "Con 6 h o más quedás «Bien descansado» (tira sobre el retrato): +15 % de experiencia en un refugio, +10 % afuera, por 10 minutos. Cada noche entera trae un sueño (son seis, en orden).", en: "With 6 h or more you're «Well rested» (strip above the portrait): +15 % experience in a refuge, +10 % outside, for 10 minutes. Each full night brings a dream (there are six, in order)." },
+      { es: "Afuera, de noche, a veces te despiertan unos aullidos: tres lobos y nada de descanso entero. Con enemigos cerca no se puede descansar.", en: "Outside, at night, howls sometimes wake you: three wolves and no full rest. With enemies nearby you can't rest." },
     ],
     botones: [
-      { es: "Ir al fogón del Puesto con carne y hierbas", en: "Go to the Outpost hearth with meat and herbs", fn: (A) => {
-        const f = A.W.COSAS.find((o) => o.id === "fogonOlla" && !o.o.apagado);
-        ir(A, [f.x + 40, f.y + 90]);
-        Object.assign(COCINA.estado().carne, { lobo: 4, jabali: 3, oso: 2 });
-        const h = ALQUIMIA.estado().hierbas;
-        ["serbal", "abedul", "musgo", "luna", "escarcha"].forEach((k) => (h[k] = (h[k] || 0) + 4));
+      { es: "Ir al petate del Puesto (seguro) a las 21 h", en: "Go to the Outpost bedroll (safe) at 9 pm", fn: (A) => {
+        const p = DESCANSO.petates().find((q) => q.id === "fogon");
+        ir(A, [p.cosa.x + 60, p.cosa.y + 40]);
+        A.H.E.tiempo = Math.ceil(A.H.E.tiempo / LUZ.DIA) * LUZ.DIA + (12 / 24) * LUZ.DIA;
       } },
-      { es: "Ir a cazar lobos", en: "Go hunt wolves", fn: (A) => ir(A, cercaDeGrupo(A, (g) => (g.fam === "lobos" || g.fam === "jabalies" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
+      { es: "Ir a la fogata del paso (afuera) a las 21 h", en: "Go to the pass campfire (outside) at 9 pm", fn: (A) => {
+        const p = DESCANSO.petates().find((q) => q.id === "fogon_paso") || DESCANSO.petates()[0];
+        ir(A, [p.cosa.x + 60, p.cosa.y + 40]);
+        A.H.E.tiempo = Math.ceil(A.H.E.tiempo / LUZ.DIA) * LUZ.DIA + (12 / 24) * LUZ.DIA;
+      } },
+      { es: "Vaciar el bosque (matar los grupos lejanos) para verlo volver", en: "Empty the forest (kill the far packs) to watch it come back", fn: (A) => {
+        let n = 0;
+        HORDAS.grupos.forEach((g) => {
+          if (g.unico || Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y) < 1600) return;
+          g.miembros.forEach((e) => (e.muerto = 1));
+          g.muerto = A.H.E.tiempo;
+          n++;
+        });
+        HUD.aviso(n + " ✝", "#C8402D");
+      } },
+      { es: "Envenenarse (toxicidad 80) y vaciar el frasco", en: "Poison yourself (toxicity 80) and empty the flask", fn: () => {
+        ALQUIMIA.estado().tox = 80;
+        FRASCO.estado().cargas = 0;
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

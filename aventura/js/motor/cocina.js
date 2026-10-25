@@ -64,6 +64,9 @@ window.COCINA = (function () {
         ok = alcanza(P.pide);
       return { texto: t("co.p_" + id) + (ok ? "" : " ✗"), sub: t("co.p_" + id + "_d") + " · " + pideTexto(P.pide), fn: () => (ok ? (A.cerrarMenu(), empezar(id)) : (HUD.aviso(t("co.faltan")), menuFogata())) };
     });
+    // lo que suman otros sistemas al menú del fuego: botonesFogata(f) → [{ texto, sub, fn }] (el descanso)
+    const f = fogataCerca();
+    if (f) window.SISTEMAS.forEach((s0) => s0.botonesFogata && bot.push(...s0.botonesFogata(f)));
     bot.push({ texto: t("ui.cerrar"), fn: A.cerrarMenu });
     const ahora = st.comida ? t("co.comiste", [t("co.p_" + st.comida.id), Math.ceil(st.comida.queda / 60)]) : t("co.sin_comida");
     A.menu(`<h2>${t("co.titulo")}</h2><div class="sub">${t("co.sub")} ${ahora}</div>`, bot);

@@ -327,6 +327,23 @@ tener que leer el código para balancear.
   `efectosHud()` → `[{ texto, n, col }]` suma a la tira de efectos sobre el retrato (alquimia.js).
 - Estado en `E.extra.cocina`.
 
+## Descanso (`motor/descanso.js`, `DESCANSO`; petate en `mundo/assets-descanso.js`; textos `ds.` en `textos/descanso.js`)
+
+- Dónde: el petate de pieles (`petateEromash`) junto a los fogones con nombre (`fogon`, `fogon_refugio`, `fogon_paso`,
+  `fogon_aserradero`) y «Descansar junto al fuego» en el menú de cualquier fogata encendida (hook nuevo de cocina.js:
+  `botonesFogata(f)` → `[{ texto, sub, fn }]`). Seguro = dentro de un refugio (`REFUGIOS`, igual que combate.js).
+- Menú: hasta el alba (6), el mediodía (12), el atardecer (18), la noche (22) o una hora; solo las que quedan a 1 h o
+  más. Con `A.enPelea()` no se puede.
+- El rato: `J.modo = "cine"` y el sistema corre `E.tiempo` (y el reloj de la alquimia) en 1,2 + 0,2 × horas segundos
+  (tope 3,2 s); el cielo cambia solo porque el motor sigue armando el ambiente. E, ✕, atacar o un toque cortan.
+- Al despertar (`efectos`): vida, estamina y frasco llenos. Con 4 h o más: toxicidad a 0 y los grupos de `HORDAS`
+  muertos a más de 1400 vuelven (no los únicos). Con 6 h o más y sin emboscada: «Bien descansado» 600 s, `s.xp` × 1,15 en
+  refugio o × 1,10 afuera. Pasar la noche entera (2 h dentro de 22–4) trae el sueño siguiente (6, `ds.sueno_N`).
+- Emboscada: afuera, si las horas pasan por 22–4, con semilla por día y lugar (`EMBOSCADA` = 35 %), el rato se corta
+  entre 1 y 3 h después de entrar en la noche y llegan tres lobos (pal 1, vida + 4 % por nivel) persiguiendo.
+- La cama de las casas (interiores.js) llama a `DESCANSO.dormido(horas)`: cuenta como descanso seguro.
+- Estado en `E.extra.descanso = { veces, suenos, descansado, k }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
