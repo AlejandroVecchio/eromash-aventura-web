@@ -107,7 +107,62 @@ window.DIB_ARMAS = (function () {
     c.restore();
   }
 
-  const FORMAS = { hacha };
+  // ---------- a dos manos ----------
+  // mandobles: fam 0 largo y recto con acanaladura · 1 espadón ancho · 2 rúnico con la punta abierta · 3 de hueso
+  // dentado · 4 flamígero (el filo ondulado)
+  function mandoble(c, fam, tier) {
+    const [s, b, l] = METAL[tier];
+    // el agarre largo (para las dos manos) y el pomo
+    mango(c, 62, 176, 11, tier, fam === 3);
+    // la hoja
+    if (fam === 0) filo(c, [-20, 40, -20, -320, 0, -370, 20, -320, 20, 40], [0, -370, 20, -320], tier);
+    else if (fam === 1) filo(c, [-30, 40, -30, -300, 0, -352, 30, -300, 30, 40], [0, -352, 30, -300], tier);
+    else if (fam === 2) filo(c, [-20, 40, -22, -290, -34, -330, 0, -380, 34, -330, 22, -290, 20, 40], [0, -380, 34, -330], tier);
+    else if (fam === 3) filo(c, [-22, 40, -26, -60, -14, -90, -28, -150, -14, -190, -28, -250, -10, -300, 0, -350, 12, -300, 26, -250, 14, -190, 26, -150, 12, -90, 24, -60, 22, 40], [0, -350, 12, -300], tier);
+    else {
+      const pts = [-20, 40];
+      for (let y = 0; y > -320; y -= 40) pts.push(y % 80 === 0 ? -20 : -30, y - 20);
+      pts.push(0, -370);
+      for (let y = -320; y < 40; y += 40) pts.push(y % 80 === 0 ? 30 : 20, y + 20);
+      pts.push(20, 40);
+      filo(c, pts, [0, -370, 24, -330], tier);
+    }
+    // la acanaladura (canal del medio) en las rectas
+    if (fam <= 2) DIB.alfa(c, 0.5, () => P(c, [-4, 20, 4, 20, 4, -280, 0, -300, -4, -280], s));
+    // la guarda ancha
+    P(c, [-74, 40, 74, 40, 64, 62, -64, 62], tier >= 2 ? ORO : "#5E130D");
+    P(c, [-74, 40, 0, 40, 0, 62, -64, 62], tier >= 2 ? "#C9A45A" : "#3A0E08");
+    remaches(c, [-50, 51, 50, 51], tier);
+    runa(c, fam === 2 ? "tiwaz" : "sowilo", 0, -150, 34, tier);
+  }
+  // hachas danesas: fam 0 media luna grande · 1 barbuda de guerra · 2 rúnica · 3 de hueso · 4 doble (lábrys)
+  function hacha2(c, fam, tier) {
+    mango(c, -250, 190, 11, tier, fam === 3);
+    c.save();
+    c.translate(0, -212);
+    c.scale(1.9, 1.9);
+    c.translate(0, 212);
+    const [s, b] = METAL[Math.min(tier, 3)];
+    const y0 = -236,
+      y1 = -188;
+    if (fam === 0) filo(c, [6, y0, 40, y0 - 14, 76, y0 - 34, 92, -212, 76, y1 + 34, 40, y1 + 14, 6, y1], [76, y0 - 34, 92, -212], tier);
+    else if (fam === 1) filo(c, [6, y0, 50, y0 - 12, 84, y0 - 4, 88, y1 + 28, 64, y1 + 52, 44, y1 + 20, 6, y1], [84, y0 - 4, 88, y1 + 28], tier);
+    else if (fam === 2) filo(c, [6, y0, 44, y0 - 20, 86, y0 - 40, 98, -212, 86, y1 + 40, 44, y1 + 20, 6, y1], [86, y0 - 40, 98, -212], tier);
+    else if (fam === 3) filo(c, [6, y0, 50, y0 - 18, 80, y0 - 10, 70, -222, 84, -212, 70, -200, 80, y1 + 10, 50, y1 + 18, 6, y1], [80, y0 - 10, 80, y1 + 10], tier);
+    else {
+      filo(c, [6, y0, 40, y0 - 22, 72, y0 - 30, 82, -212, 72, y1 + 30, 40, y1 + 22, 6, y1], [72, y0 - 30, 82, -212], tier);
+      filo(c, [-6, y0, -40, y0 - 22, -72, y0 - 30, -82, -212, -72, y1 + 30, -40, y1 + 22, -6, y1], [-82, -212, -72, y0 - 30], tier);
+    }
+    P(c, [-14, y0 - 6, 14, y0 - 6, 14, y1 + 6, -14, y1 + 6], s);
+    P(c, [0, y0 - 6, 14, y0 - 6, 14, y1 + 6, 0, y1 + 6], b);
+    // la punta de arriba del mango
+    P(c, [-8, y0 - 6, 8, y0 - 6, 0, y0 - 26], s);
+    remaches(c, [0, y0 + 8, 0, y1 - 8], tier);
+    runa(c, fam === 2 ? "hagalaz" : "thurisaz", 44, -200, 22, tier);
+    c.restore();
+  }
+
+  const FORMAS = { hacha, mandoble, hacha2 };
   // dibujar(c, forma, fam, tier): en coordenadas de la espada de siempre (ya rotado y escalado)
   function dibujar(c, forma, fam, tier) {
     const f = FORMAS[forma];
