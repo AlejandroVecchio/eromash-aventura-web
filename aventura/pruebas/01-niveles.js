@@ -10,6 +10,8 @@
     igual(A.jug.hpMax, vida0 + 6, "suma 6 de vida:");
     igual(A.jug.hp, A.jug.hpMax, "llena la vida:");
     si(st.xp >= 5, "sobra experiencia");
+    const anillo = A.J.marcas.filter((m) => m.tipo === "anillo").pop();
+    si(anillo && anillo.dura > 0 && anillo.dura < 5, "el anillo del piso se apaga solo enseguida, no queda como marca de la Lente");
   } },
   { nombre: "niveles: las criaturas tienen nivel y se endurecen lejos", fn: async (A, { si }) => {
     const lobo = A.enemigos.find((e) => e.tipo === "lobo" && !e.hordaGrupo);
