@@ -235,7 +235,7 @@ I18N.textos({
   "ed.cu_gen_error": { es: "La IA no pudo: {0}", en: "The AI couldn't: {0}" },
   "ed.cu_titulo": { es: "Interiores", en: "Interiors" },
   "ed.cu_volver": { es: "Volver al mapa", en: "Back to the map" },
-  "ed.cu_ayuda": { es: "Una plantilla vale para todas las casas de esa clase; una casa de varios cuartos tiene los suyos. Arrastrá muebles y gente, Supr saca, F da vuelta, + y − cambian el tamaño, flechas los corren. Elegí un mueble de la lista y hacé clic en el piso para ponerlo (Shift+clic pone varios). L prende la luz, Ctrl+Z deshace, Esc vuelve.", en: "A template applies to every house of its kind; a multi-room house has its own rooms. Drag furniture and people, Delete removes, F flips, + and − resize, arrows nudge. Pick furniture from the list and click the floor to place it (Shift+click places several). L toggles the light, Ctrl+Z undoes, Esc goes back." },
+  "ed.cu_ayuda": { es: "Una plantilla vale para todas las casas de esa clase; una casa de varios cuartos tiene los suyos. Arrastrá muebles y gente, Supr saca, F da vuelta, + y − cambian el tamaño, flechas los corren. Elegí un mueble de la lista y hacé clic en el piso para ponerlo (Shift+clic pone varios). L prende la luz, Z y X giran la vista, Ctrl+Z deshace, Esc vuelve.", en: "A template applies to every house of its kind; a multi-room house has its own rooms. Drag furniture and people, Delete removes, F flips, + and − resize, arrows nudge. Pick furniture from the list and click the floor to place it (Shift+click places several). L toggles the light, Z and X rotate the view, Ctrl+Z undoes, Esc goes back." },
   "ed.cu_pared": { es: "Pared", en: "Wall" },
   "ed.cu_ventana": { es: "Ventana", en: "Window" },
   "ed.cu_estandarte": { es: "Estandarte", en: "Banner" },
