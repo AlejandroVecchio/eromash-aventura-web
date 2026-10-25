@@ -2067,6 +2067,12 @@
 
   // ---------- arranque ----------
   HUD.armar();
+  // tocar afuera de un menú lo cierra, igual que Esc (no en el título ni mientras se espera una tecla nueva)
+  document.getElementById("capa").addEventListener("pointerdown", (e) => {
+    if (e.target.id !== "capa" || J.modo !== "menu" || !H.E || !J.cam.x) return;
+    if (document.querySelector("#capaCaja h1") || (CONTROLES.capturando && CONTROLES.capturando())) return;
+    cerrarMenu();
+  });
   addEventListener("beforeunload", () => J.modo !== "titulo" && H.guardar());
   // si se va a otra ventana o pestaña en plena partida, el juego se pausa solo (y guarda)
   const alIrse = () => {
@@ -2096,6 +2102,7 @@
       HUD.abrir(html, botones);
     },
     cerrarMenu,
+    seguirDialogo,
     usarLente,
     lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
