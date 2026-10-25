@@ -5,42 +5,31 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 19,
-    titulo: { es: "Instructores y muñeco de práctica", en: "Trainers and training dummy" },
+    pr: 20,
+    titulo: { es: "El frasco de Thora", en: "Thora's flask" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 17, es: "árbol de habilidades: cada lección da un punto de habilidad y cada maestro es de una rama", en: "skill tree: each lesson grants a skill point and each trainer belongs to a branch" },
-      { pr: 16, es: "contratos: usa los ganchos de brújula y mapa (marcasBrujula, marcasMapa)", en: "contracts: uses the compass and map hooks (marcasBrujula, marcasMapa)" },
+      { pr: 18, es: "Furia: usa el hook casillas() para su casilla en la barra y las combinaciones del mando (L2 + ✕)", en: "Fury: uses the casillas() hook for its bar slot and the gamepad combos (L2 + ✕)" },
+      { pr: 12, es: "materiales: Thora pide ámbar y esquirlas para mejorarlo", en: "materials: Thora asks for amber and shards to improve it" },
     ],
     mirar: [
-      { es: "En el patio del Puesto, al oeste del portón, está el muñeco de práctica de Hallbera. Con E: «Medir el daño» da 10 s y después el total, el daño por segundo, golpes, críticos y el mejor golpe (guarda tu mejor marca).", en: "In the Outpost yard, west of the gate, stands Hallbera's training dummy. With E: «Measure damage» gives 10 s and then total damage, DPS, hits, crits and best hit (it keeps your best mark)." },
-      { es: "Tres maestros, como en el Gothic: Hallbera junto al muñeco (Oso), Ulfar cerca del refugio (Lobo) y Vör junto al túmulo (Cuervo). Cada lección pide nivel, plata y pasar antes su prueba en el muñeco.", en: "Three trainers, Gothic-style: Hallbera by the dummy (Bear), Ulfar near the refuge (Wolf) and Vör by the barrow (Raven). Each lesson needs a level, silver and passing their trial at the dummy first." },
-      { es: "Las pruebas: daño en 10 s (Hallbera), críticos en 12 s (Ulfar) y esquivas justas al brazo del muñeco, que gira con aviso exacto en el piso (Vör). La prueba pedida se sigue en el rastreador y la brújula.", en: "Trials: damage in 10 s (Hallbera), crits in 12 s (Ulfar) and perfect dodges of the dummy's arm, which swings with an exact floor telegraph (Vör). The requested trial shows in the tracker and compass." },
-      { es: "Cada lección enseña algo propio (vida, armadura, crítico, poder rúnico…) y da +1 punto de habilidad. Los maestros salen en el mapa con su clase.", en: "Each lesson teaches something of its own (life, armour, crit, rune power…) and grants +1 skill point. Trainers appear on the map with their own class." },
+      { es: "Abajo hay una casilla nueva, el frasco (4, o L2 + ✕ con mando), con una marca por carga. Arranca con 3. Cada trago cura el 40 % de la vida de a poco (1,2 s) y frena el paso medio segundo; un golpe no corta la cura.", en: "There's a new slot at the bottom, the flask (4, or L2 + ✕ on a gamepad), with one mark per charge. It starts with 3. Each sip heals 40 % of your life gradually (1.2 s) and slows you for half a second; a hit doesn't cancel the heal." },
+      { es: "Las cargas vuelven solas al entrar a un pueblo o refugio (el Puesto, el Refugio, la Casa de las Lindes, Brunvik, el Aserradero) y cuando Thora te cura.", en: "Charges come back on their own when you enter a village or refuge (the Outpost, the Refuge, the House of the Boundaries, Brunvik, the Sawmill) and when Thora heals you." },
+      { es: "Thora, en la Casa de Sanación de Eikholt, además de curarte lo llena y lo mejora: hasta 6 cargas (plata y ámbar) y un ungüento más fuerte (plata y esquirlas, +10 % cada uno).", en: "Thora, in Eikholt's House of Healing, besides healing you fills it and improves it: up to 6 charges (silver and amber) and a stronger ointment (silver and shards, +10 % each)." },
+      { es: "Con vida llena no se toma (no se desperdicia), y vacío avisa dónde se llena.", en: "It can't be drunk at full life (no waste), and when empty it tells you where to refill it." },
     ],
     botones: [
-      { es: "Ir al muñeco y a Hallbera", en: "Go to the dummy and Hallbera", fn: (A) => {
-        const m = INSTRUCTORES.muneco();
-        ir(A, [m.x + 40, m.y + 130]);
+      { es: "Ir a pelear con la vida baja", en: "Go fight with low life", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450);
+        A.jug.hp = Math.round(A.jug.hpMax * 0.3);
       } },
-      { es: "Nivel 16 y 1500 de plata", en: "Level 16 and 1500 silver", fn: () => {
-        if (RPG.nivel() < 16) RPG.estado().nivel = 16;
-        RPG.recalcular();
+      { es: "Vaciar el frasco", en: "Empty the flask", fn: () => (FRASCO.estado().cargas = 0) },
+      { es: "Plata y materiales para mejorarlo", en: "Silver and materials to improve it", fn: () => {
         PODERES.pj().plata = Math.max(PODERES.pj().plata, 1500);
+        MATERIALES.dar("ambar", 6);
+        MATERIALES.dar("esquirla", 6);
       } },
-      { es: "Pedir la prueba de Vör (esquivas)", en: "Ask for Vör's trial (dodges)", fn: (A) => {
-        INSTRUCTORES.pedirPrueba("vor");
-        const m = INSTRUCTORES.muneco();
-        ir(A, [m.x + 40, m.y + 130]);
-      } },
-      { es: "Ir a Ulfar", en: "Go to Ulfar", fn: (A) => {
-        const g = INSTRUCTORES.gente().ulfar;
-        ir(A, [g.x, g.y + 120]);
-      } },
-      { es: "Ir a Vör", en: "Go to Vör", fn: (A) => {
-        const g = INSTRUCTORES.gente().vor;
-        ir(A, [g.x, g.y + 120]);
-      } },
+      { es: "Abrir lo que ofrece Thora", en: "Open what Thora offers", fn: () => FRASCO.menuThora() },
     ],
   };
   // ---------- ayuda para los botones ----------

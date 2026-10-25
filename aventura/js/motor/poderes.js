@@ -322,7 +322,7 @@ window.PODERES = (function () {
     cercanos(dar) {
       for (const n of GENTE_CIUDAD) {
         const d = Math.hypot(n.x - jug.x, n.y - jug.y);
-        if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => hablarCon(n));
+        if (d < 110) dar(d, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => window.PODERES.hablarCon(n)); // por window: otros sistemas la envuelven (el frasco de Thora)
       }
     },
     cuerpos(f) {
