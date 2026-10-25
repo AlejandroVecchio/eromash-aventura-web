@@ -9,11 +9,11 @@
     titulo: { es: "El frasco de Thora", en: "Thora's flask" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 18, es: "Furia: usa el hook casillas() para su casilla en la barra y las combinaciones del mando (L2 + ✕)", en: "Fury: uses the casillas() hook for its bar slot and the gamepad combos (L2 + ✕)" },
+      { pr: 18, es: "Furia: usa el hook cosasBarra() para ir en la barra y las combinaciones del mando (L2 + ✕)", en: "Fury: uses the cosasBarra() hook to go in the bar and the gamepad combos (L2 + ✕)" },
       { pr: 12, es: "materiales: Thora pide ámbar y esquirlas para mejorarlo", en: "materials: Thora asks for amber and shards to improve it" },
     ],
     mirar: [
-      { es: "Abajo hay una casilla nueva, el frasco (4, o L2 + ✕ con mando), con una marca por carga. Arranca con 3. Cada trago cura el 40 % de la vida de a poco (1,2 s) y frena el paso medio segundo; un golpe no corta la cura.", en: "There's a new slot at the bottom, the flask (4, or L2 + ✕ on a gamepad), with one mark per charge. It starts with 3. Each sip heals 40 % of your life gradually (1.2 s) and slows you for half a second; a hit doesn't cancel the heal." },
+      { es: "Abajo hay una casilla nueva, el frasco (se usa con el número de su casilla, o L2 + ✕ con mando), con una marca por carga. Arranca con 3. Cada trago cura el 40 % de la vida de a poco (1,2 s) y frena el paso medio segundo; un golpe no corta la cura.", en: "There's a new slot at the bottom, the flask (use it with its slot number, or L2 + ✕ on a gamepad), with one mark per charge. It starts with 3. Each sip heals 40 % of your life gradually (1.2 s) and slows you for half a second; a hit doesn't cancel the heal." },
       { es: "Las cargas vuelven solas al entrar a un pueblo o refugio (el Puesto, el Refugio, la Casa de las Lindes, Brunvik, el Aserradero) y cuando Thora te cura.", en: "Charges come back on their own when you enter a village or refuge (the Outpost, the Refuge, the House of the Boundaries, Brunvik, the Sawmill) and when Thora heals you." },
       { es: "Thora, en la Casa de Sanación de Eikholt, además de curarte lo llena y lo mejora: hasta 6 cargas (plata y ámbar) y un ungüento más fuerte (plata y esquirlas, +10 % cada uno).", en: "Thora, in Eikholt's House of Healing, besides healing you fills it and improves it: up to 6 charges (silver and amber) and a stronger ointment (silver and shards, +10 % each)." },
       { es: "Con vida llena no se toma (no se desperdicia), y vacío avisa dónde se llena.", en: "It can't be drunk at full life (no waste), and when empty it tells you where to refill it." },
