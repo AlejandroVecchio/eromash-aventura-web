@@ -2,8 +2,10 @@
 // Pedido de Alejandro (24/10/2026): además de gente, importar estructuras, pinturas y calcos con un dibujo propio.
 // Cada una vive en AGREGADOS.imagenes[id] = { nombre: { es, en }, clase, src, alto, choque } y se vuelve un asset
 // más (im_<id>) que se pone, se mueve, se agranda y se gira como cualquier otro:
-//   · estructura: parada con los pies en (x, y) y su sombra elíptica; `choque` la vuelve sólida.
-//   · pintura: colgada en la pared con un marco de tablas (grupo interiores: se pone también adentro de las casas).
+//   · estructura: parada con los pies en (x, y) y su sombra elíptica; `choque` la vuelve sólida. Es un dibujo plano:
+//     con la cámara girada se sigue viendo de frente (figura).
+//   · pintura: colgada en la pared con un marco de tablas (grupo interiores: se pone también adentro de las casas);
+//     girada es un cuadro de dos caras (atrás, las tablas del marco).
 //   · suelo: pintada en el piso, aplanada como se ve el piso desde la cámara (no choca, se dibuja primero).
 // src es una imagen achicada por el editor (data URL); va adentro de agregados.js, que es público.
 window.IMAGENES = (function () {
@@ -56,6 +58,25 @@ window.IMAGENES = (function () {
       DIB.E(c, x, y0 - b - 6 * s, 4 * s, 4 * s, "#3A3438");
     };
   }
+  // la pintura armada con caras: el cuadro en un plano colgado de la pared; de atrás se ven las tablas del marco
+  function pinturaV(id) {
+    return (c, x, y, t, o) => {
+      const d = tabla[id],
+        im = d && imagen(d.src);
+      if (!im) return;
+      const pr = VOL.pr(x, y, o),
+        [w, h] = medidas(d, im),
+        b = Math.max(8, Math.min(w, h) * 0.07);
+      VOL.plano(c, pr, -w / 2 - b, w / 2 + b, 0, 90 - b, 90 + h + b, ["#3A0A06", "#5E130D", "#7A2A1A"], (cc, l, hh) => {
+        DIB.R(cc, 0, -hh, b, hh, "#3A0A06");
+        DIB.R(cc, 0, -hh, l, b * 0.6, "#7A2A1A");
+        cc.drawImage(im, b, -hh + b, w, h);
+        DIB.E(cc, l / 2, -hh - 6, 4, 4, "#3A3438");
+      }, (cc, l, hh) => {
+        for (let k = 1; k < 4; k++) DIB.R(cc, 0, -(k * hh) / 4, l, 2, "#2A0806");
+      }, ["#2A0806", "#3A0A06", "#4A1008"]);
+    };
+  }
   function suelo(id) {
     return (c, x, y, t, o) => {
       const d = tabla[id],
@@ -79,9 +100,9 @@ window.IMAGENES = (function () {
       clase = d.clase || "estructura";
     imagen(d.src);
     const alto = d.alto || 160;
-    if (clase === "pintura") ASSETS.LISTA[k] = { f: pintura(id), alto: alto + 110, choque: null, grupo: "interiores", importada: id };
+    if (clase === "pintura") ASSETS.LISTA[k] = { f: pintura(id), fv: pinturaV(id), vol: true, alto: alto + 110, choque: null, grupo: "interiores", importada: id };
     else if (clase === "suelo") ASSETS.LISTA[k] = { f: suelo(id), alto: 20, choque: null, grupo: "importados", piso: true, importada: id };
-    else ASSETS.LISTA[k] = { f: estructura(id), alto, choque: d.choque ? { w: Math.round(alto * 0.5), h: Math.round(alto * 0.18) } : null, grupo: "importados", importada: id };
+    else ASSETS.LISTA[k] = { f: estructura(id), figura: true, alto, choque: d.choque ? { w: Math.round(alto * 0.5), h: Math.round(alto * 0.18) } : null, grupo: "importados", importada: id };
     I18N.textos({ ["as." + k]: { es: nom.es || nom.en || id, en: nom.en || nom.es || id } });
   }
   function quitar(id) {
