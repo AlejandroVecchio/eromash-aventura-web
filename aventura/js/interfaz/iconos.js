@@ -225,12 +225,6 @@ window.ICONOS = (function () {
       pol(c, [x - 4 * u, y, x + 5.5 * u, y, x + 3 * u, y + 2.6 * u, x - 1 * u, y + 3 * u], "#E0C88A");
       pol(c, [x + 2.6 * u, y - 1.4 * u, x + 3.4 * u, y - 1.4 * u, x + 3.4 * u, y - 0.6 * u, x + 2.6 * u, y - 0.6 * u], "#111111");
     },
-    // Skuggi, el perro (companero.js): una huella de pata
-    companero(c, x, y, u, col) {
-      pol(c, [x - 3 * u, y + 0.5 * u, x + 3 * u, y + 0.5 * u, x + 3.8 * u, y + 3 * u, x + 2 * u, y + 5 * u, x - 2 * u, y + 5 * u, x - 3.8 * u, y + 3 * u], col);
-      [[-4.2, -1.6], [-1.6, -4], [1.6, -4], [4.2, -1.6]].forEach(([a, b]) => pol(c, [x + (a - 1.2) * u, y + b * u, x + a * u, y + (b - 1.5) * u, x + (a + 1.2) * u, y + b * u, x + a * u, y + (b + 1.5) * u], col));
-      pol(c, [x - 3 * u, y + 0.5 * u, x, y + 0.5 * u, x, y + 5 * u, x - 2 * u, y + 5 * u, x - 3.8 * u, y + 3 * u], "#8E7E6A");
-    },
     // el hólmr (holmr.js): el escudo redondo de un kempa con su cruz y el umbo
     holmr(c, x, y, u, col) {
       pol(c, Array.from({ length: 10 }, (_, k) => [x + Math.cos((k / 10) * Math.PI * 2) * 5.5 * u, y + Math.sin((k / 10) * Math.PI * 2) * 5.5 * u]).flat(), col);
@@ -303,7 +297,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", libro: "#F2ECEC", companero: "#B8AC9C", holmr: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", libro: "#F2ECEC", holmr: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

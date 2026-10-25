@@ -8,7 +8,7 @@
       JUEGO.empezar(9, true);
       for (let i = 0; i < 40 && A.J.modo !== "juego"; i++) await esperar(50);
       const quienes = RPG.aportes();
-      si(quienes.length >= 16, "aportes: " + quienes.length);
+      si(quienes.length >= 15, "aportes: " + quienes.length);
       igual(quienes.filter((q) => q === "otros").length, 0, "ninguno sin nombre:");
       quienes.concat(["nivel"]).forEach((q) => si(I18N.t("hj.de_" + q) !== "hj.de_" + q, "nombre de " + q));
       RPG.recalcular();
