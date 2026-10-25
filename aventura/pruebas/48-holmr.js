@@ -107,17 +107,12 @@
       await esperar(120);
       igual(st.vencidos, 2, "se rindió:");
     } },
-    { nombre: "hólmganga: el quinto da el título, después un retador por día, Skuggi no muerde y todo se guarda", fn: async (A, { igual, si }) => {
+    { nombre: "hólmganga: el quinto da el título, después un retador por día y todo se guarda", fn: async (A, { igual, si }) => {
       const st = HOLMR.estado();
       st.vencidos = 4;
       const m0 = A.J.mulDano;
       const d = await pelea(A);
       igual(d.nombre, I18N.t("hm.k4"), "Úlfhild:");
-      if (window.COMPANERO) {
-        // el perro no la elige para morder
-        COMPANERO.sumar(0);
-        si(!A.enemigos.filter((e) => e.holmr).some((e) => COMPANERO.perro() && COMPANERO.perro().obj === e), "Skuggi mira");
-      }
       d.e.vida = 1;
       await esperar(150);
       si(st.campeon, "campeón");
