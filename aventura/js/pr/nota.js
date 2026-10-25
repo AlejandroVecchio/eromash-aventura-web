@@ -5,31 +5,33 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 20,
-    titulo: { es: "El frasco de Thora", en: "Thora's flask" },
+    pr: 21,
+    titulo: { es: "Hierbas y alquimia", en: "Herbs and alchemy" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 18, es: "Furia: usa el hook casillas() para su casilla en la barra y las combinaciones del mando (L2 + ✕)", en: "Fury: uses the casillas() hook for its bar slot and the gamepad combos (L2 + ✕)" },
-      { pr: 12, es: "materiales: Thora pide ámbar y esquirlas para mejorarlo", en: "materials: Thora asks for amber and shards to improve it" },
+      { pr: 3, es: "mochila: la Bolsa muestra hierbas, pociones y aceites (con el hook nuevo celdasBolsa) y la mesa abre su pestaña", en: "backpack: the Bag shows herbs, potions and oils (with the new celdasBolsa hook) and the table opens its tab" },
+      { pr: 18, es: "Furia: la poción elegida tiene su casilla en la barra (5 o L2 + R1)", en: "Fury: the chosen potion has its bar slot (5 or L2 + R1)" },
     ],
     mirar: [
-      { es: "Abajo hay una casilla nueva, el frasco (4, o L2 + ✕ con mando), con una marca por carga. Arranca con 3. Cada trago cura el 40 % de la vida de a poco (1,2 s) y frena el paso medio segundo; un golpe no corta la cura.", en: "There's a new slot at the bottom, the flask (4, or L2 + ✕ on a gamepad), with one mark per charge. It starts with 3. Each sip heals 40 % of your life gradually (1.2 s) and slows you for half a second; a hit doesn't cancel the heal." },
-      { es: "Las cargas vuelven solas al entrar a un pueblo o refugio (el Puesto, el Refugio, la Casa de las Lindes, Brunvik, el Aserradero) y cuando Thora te cura.", en: "Charges come back on their own when you enter a village or refuge (the Outpost, the Refuge, the House of the Boundaries, Brunvik, the Sawmill) and when Thora heals you." },
-      { es: "Thora, en la Casa de Sanación de Eikholt, además de curarte lo llena y lo mejora: hasta 6 cargas (plata y ámbar) y un ungüento más fuerte (plata y esquirlas, +10 % cada uno).", en: "Thora, in Eikholt's House of Healing, besides healing you fills it and improves it: up to 6 charges (silver and amber) and a stronger ointment (silver and shards, +10 % each)." },
-      { es: "Con vida llena no se toma (no se desperdicia), y vacío avisa dónde se llena.", en: "It can't be drunk at full life (no waste), and when empty it tells you where to refill it." },
+      { es: "Por el bosque crecen seis hierbas, cada una donde le gusta: musgo, serbal y raíz de abedul en todos lados, la flor de escarcha junto al agua, el hongo de luna (alumbra de noche) y el cardo cerca de los túmulos y los draugr. Se juntan con E y vuelven a los 8 minutos; la Lente las marca.", en: "Six herbs grow in the forest, each where it likes: moss, rowan and birch root everywhere, frostflower by the water, moon mushroom (glows at night) and thistle near barrows and draugr. Gather them with E; they regrow after 8 minutes; the Lens marks them." },
+      { es: "La mesa de alquimia del Puesto (E) abre la pestaña Alquimia: cinco pociones y cuatro aceites. Tocar una receta la destila con lo que llevás.", en: "The Outpost's alchemy table (E) opens the Alchemy tab: five potions and four oils. Touching a recipe distills it with what you carry." },
+      { es: "Las pociones se toman desde la Bolsa (o la elegida con 5) y duran un rato; cada una suma toxicidad y con mucha no se puede tomar más. Arriba del retrato aparece una tira con lo que dura cada efecto.", en: "Potions are drunk from the Bag (or the chosen one with 5) and last a while; each adds toxicity and with too much you can't drink more. A strip above the portrait shows each effect's time left." },
+      { es: "Los aceites se untan en el arma: +25 % contra una familia (no-muertos, fatuos, bestias, troles) durante 40 golpes.", en: "Oils coat your weapon: +25 % against one family (undead, wisps, beasts, trolls) for 40 hits." },
     ],
     botones: [
-      { es: "Ir a pelear con la vida baja", en: "Go fight with low life", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => (g.fam === "draugr" ? 1e6 : 0) - Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450);
-        A.jug.hp = Math.round(A.jug.hpMax * 0.3);
+      { es: "Ir a la mesa de alquimia", en: "Go to the alchemy table", fn: (A) => {
+        const m = ALQUIMIA.mesa();
+        ir(A, [m.x + 30, m.y + 140]);
       } },
-      { es: "Vaciar el frasco", en: "Empty the flask", fn: () => (FRASCO.estado().cargas = 0) },
-      { es: "Plata y materiales para mejorarlo", en: "Silver and materials to improve it", fn: () => {
-        PODERES.pj().plata = Math.max(PODERES.pj().plata, 1500);
-        MATERIALES.dar("ambar", 6);
-        MATERIALES.dar("esquirla", 6);
+      { es: "Darme hierbas de todas", en: "Give me every herb", fn: () => Object.keys(ALQUIMIA.HIERBAS).forEach((k) => (ALQUIMIA.estado().hierbas[k] = (ALQUIMIA.estado().hierbas[k] || 0) + 8)) },
+      { es: "Ir a una flor de escarcha", en: "Go to a frostflower", fn: (A) => {
+        const p = ALQUIMIA.plantas().find((q) => q.tipo === "escarcha" && !q.cosa.o.cosechada) || ALQUIMIA.plantas()[0];
+        ir(A, [p.cosa.x, p.cosa.y + 110]);
       } },
-      { es: "Abrir lo que ofrece Thora", en: "Open what Thora offers", fn: () => FRASCO.menuThora() },
+      { es: "Ir a un cardo (cerca de draugr)", en: "Go to a thistle (near draugr)", fn: (A) => {
+        const p = ALQUIMIA.plantas().find((q) => q.tipo === "cardo" && !q.cosa.o.cosechada) || ALQUIMIA.plantas()[0];
+        ir(A, [p.cosa.x, p.cosa.y + 110]);
+      } },
     ],
   };
   // ---------- ayuda para los botones ----------

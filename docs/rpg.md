@@ -300,6 +300,20 @@ tener que leer el código para balancear.
   menú de mejoras: cargas 80/160/300 de plata + 1/2/3 ámbar, fuerza 120/240/420 + 1/2/3 esquirlas.
 - La casilla de la barra (hook `casillas`) usa los íconos `frasco_<cargas>_<max>` con una marca por carga.
 
+## Hierbas y alquimia (`motor/alquimia.js`, `ALQUIMIA`; plantas y mesa en `mundo/assets-alquimia.js`; textos `aq.` en `textos/alquimia.js`)
+
+- Seis hierbas (`HIERBAS`, assets `hierba*`), unas 70 plantas con semilla fija: musgo, serbal y abedul alrededor de
+  cada lugar, hongo de luna (de noche `o.noche`, alumbra), cardo cerca de túmulo, torre, Skarnholt, santuario y de los
+  grupos de draugr, flor de escarcha en las orillas de `RIOS` y `LAGOS`. Cada una abre un claro chico. Se juntan con E
+  (1 o 2) y vuelven a los 480 s de juego (`cosechadas`, `reloj`). La Lente las marca.
+- Mesa de alquimia en el patio del Puesto: pestaña `alquimia` (solo abierta desde la mesa). Pociones (`POCIONES`:
+  tónico, sangre de oso, ojo de búho, aliento de lobo, brebaje de Mímir) con duración y toxicidad (máximo 100, baja
+  1,5/s); sus efectos suman por `RPG.aporte`. Aceites (`ACEITES`): +25 % contra su familia por `modDano`, 40 golpes
+  que gasta `alPegar` (el muñeco no gasta).
+- Hooks nuevos: `celdasBolsa()` de un sistema suma casillas a la Bolsa. La poción elegida (R / △ en la Bolsa) tiene
+  casilla y acción `pocion` (5 o L2 + R1). Sobre el retrato, `#hudEfectos` lista efectos, aceite y toxicidad.
+- Estado en `E.extra.alq`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

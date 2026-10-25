@@ -152,3 +152,9 @@
 #ieMuneco.oculto { display: none; }
 .ie-lineas span { display: block; margin: 2px 0; }
 .ie-record { color: var(--oro); }
+
+/* ---------- alquimia (motor/alquimia.js) ---------- */
+.aq-cabeza { margin: 0 0 6px; color: #E0B2B2; }
+#hudEfectos { position: absolute; left: 0; bottom: 100%; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; }
+#hudEfectos span { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 800; padding: 2px 6px; background: rgba(17, 17, 17, 0.82); border-left: 3px solid var(--col); color: #F2ECEC; }
+#hudEfectos span b { color: var(--col); }

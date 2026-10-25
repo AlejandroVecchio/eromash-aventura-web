@@ -193,6 +193,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/motor/ · el motor y los sistemas que se le enchufan
 
+- **alquimia.js**: hierbas y alquimia (sistema ALQUIMIA)
+  - dónde crece cada una · destilar y tomar · la ventana de la mesa (pestaña de la mochila, solo junto a la mesa) · la Bolsa: hierbas, pociones y aceites · íconos · el sistema
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
 - **arbol.js**: el árbol de habilidades (sistema ARBOL, pestaña Habilidades de la mochila)
@@ -269,6 +271,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
 - **agregados.js**: Lo que se agregó o se sacó del mundo con el editor de Eldervald (editor.html). Este archivo lo escribe el editor
+- **assets-alquimia.js**: las hierbas de Eldervald y la mesa de alquimia (assets de ALQUIMIA)
+  - la mesa de alquimia
+  - assets: hierbaMusgo, hierbaSerbal, hierbaAbedul, hierbaEscarcha, hierbaLuna, hierbaCardo, mesaAlquimia
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casas.js**: las casas de varios cuartos
@@ -337,6 +342,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
+- **alquimia.js**: Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
 - **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
