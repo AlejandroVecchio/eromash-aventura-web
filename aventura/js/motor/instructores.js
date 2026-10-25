@@ -135,7 +135,6 @@ window.INSTRUCTORES = (function () {
           A.dialogoLibre([[id, "ie." + id + "_prueba"]], () => pedirPrueba(id));
         } });
     }
-    window.SISTEMAS.forEach((s0) => s0.botonesInstructor && s0.botonesInstructor(id).forEach((b) => bot.push(b))); // los galdrar de Vör…
     // charlar cierra el menú, se habla y al terminar vuelve el menú del maestro
     bot.push({ texto: t("ie.charlar"), fn: () => {
       A.cerrarMenu();
