@@ -292,6 +292,15 @@ tener que leer el código para balancear.
   `practica`, así no cuenta como golpe por sorpresa.
 - Estado en `E.extra.instruc = { lec, prueba, pasada, mejor }`. Mapa: clase `instructor`.
 
+## El frasco de Thora (`motor/frasco.js`, `FRASCO`; en una casilla de la barra o con L2 + ✕ (acción `frasco`); textos `fr.` en `textos/frasco.js`)
+
+- Cargas (3 a 6, `E.extra.frasco = { cargas, max, fuerza }`). Cada trago cura `40 % × (1 + 0,1 · fuerza)` de la vida
+  máxima repartido en 1,2 s (un golpe no lo corta) y pone `jug.lento` 0,5 s. No se toma con la vida llena.
+- Se llena al entrar a un pueblo o refugio (la misma lista que `REFUGIOS` de combate.js) y cuando Thora cura: el frasco
+  envuelve `PODERES.hablarCon` (los encargos de `SECUNDARIAS` siguen hablando primero) y después del diálogo abre su
+  menú de mejoras: cargas 80/160/300 de plata + 1/2/3 ámbar, fuerza 120/240/420 + 1/2/3 esquirlas.
+- La cosa de la barra (hook `cosasBarra`) usa los íconos `frasco_<cargas>_<max>` con una marca por carga.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

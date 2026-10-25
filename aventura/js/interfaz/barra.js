@@ -164,7 +164,7 @@ window.BARRA = (function () {
         id: "r" + i,
         runa: q.runa,
         col: q.col && q.col(),
-        icono: q.icono,
+        icono: typeof q.icono === "function" ? q.icono() : q.icono, // puede cambiar (el frasco con sus cargas)
         tecla,
         elegida,
         nombre: q.corto ? q.corto() : q.nombre(), // en la casilla, el nombre corto

@@ -241,6 +241,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - los secretos de cada lugar · notar lo escondido · la brújula
 - **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
   - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
+- **frasco.js**: el frasco de Thora (sistema FRASCO)
+  - tomar · Thora · los íconos: el frasco con tantas marcas como cargas · el sistema
 - **furia.js**: la Furia y las habilidades activas (sistema FURIA)
   - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
 - **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
@@ -370,6 +372,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
+- **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.

@@ -338,7 +338,7 @@ window.INVENTARIO = (function () {
   function barraItems() {
     const b = BARRA.estado(),
       C = BARRA.COSAS;
-    const item = (id) => ({ id, runa: C[id].runa, icono: C[id].icono, nombre: C[id].nombre(), desc: C[id].desc(), cant: C[id].cant ? C[id].cant() : null });
+    const item = (id) => ({ id, runa: C[id].runa, icono: typeof C[id].icono === "function" ? C[id].icono() : C[id].icono, nombre: C[id].nombre(), desc: C[id].desc(), cant: C[id].cant ? C[id].cant() : null });
     const ranuras = b.r.map((id, i) => {
       const lleno = id && C[id] && C[id].tiene();
       const it = lleno ? item(id) : { id: "vacia" + i, icono: "vacia", nombre: t("bar.vacia"), falta: true };
