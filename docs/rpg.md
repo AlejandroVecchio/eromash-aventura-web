@@ -400,6 +400,17 @@ tener que leer el código para balancear.
   cerca. Con `st.desarmar`, `alJuntar` la desarma al juntarla (50 % de su valor en plata + `MATERIALES.alDesarmar`).
 - Las dos casillas del filtro van en la Bolsa (`celdasBolsa`). Estado en `E.extra.arcon = { piezas, cap, filtro, desarmar, guardadas }`.
 
+## Tintes del casco (`motor/tintes.js`, `TINTES`; asset `tinaTintes` en `mundo/assets-tintes.js`; textos `ti.`)
+
+- La tina va junto al arcón (se ubica en `alEmpezar`). «Teñir el casco» abre la pestaña «Tintes».
+- `LISTA`: rojo (R, de base), azul (B), verde (V), blanco (W) con 60 de plata y 3 de una hierba; negro (120 + 3 cardos)
+  y violeta (150 + 3 hongos de luna + 1 esquirla) con tonos propios (`T_negro`, `T_violeta`); luz de runa (`T_runa`,
+  se gana con una palabra rúnica o un poder legendario) y oro (G, con un conjunto entero). Lo preparado queda en
+  `st.tiene` y se cambia gratis.
+- `VIKINGO.color` es la clave del color de Eromash: juego.js, hud.js e inventario.js la usan, y `VIKINGO.tonos` pide
+  `TINTES.tonos(c)` para las claves `T_…`.
+- Estado en `E.extra.tintes = { tiene, puesto }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

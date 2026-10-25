@@ -1188,7 +1188,9 @@
     const ojos = po.ojos || (p.herido > 0 || p.muerto ? "hurt" : p.atk || p.correr ? "fierce" : "calm");
     // hacia dónde mira en el mundo, visto con la cámara (VOL.relativa: la cámara puede estar girada)
     const { vista, espejo } = VOL.relativa(po.vista || p.mira.vista, po.vista ? po.espejo : p.mira.espejo);
-    const img = VK[vista + ojos] || VK[vista + "calm"];
+    // con un tinte en el casco (motor/tintes.js) sale de VIKINGO, que guarda cada imagen una vez
+    const col = VIKINGO.color || "R",
+      img = col === "R" ? VK[vista + ojos] || VK[vista + "calm"] : VIKINGO.imagen(col, vista, VK[vista + ojos] ? ojos : "calm");
     // la estela de la esquiva: copias claras que quedan atrás
     if (!enSilueta && (!window.CALIDAD || CALIDAD.nivel !== "baja")) {
       const bl = ANIMA.blanco(img);

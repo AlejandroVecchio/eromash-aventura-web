@@ -275,6 +275,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - semijefes · encargos · proezas · renombre
 - **senda.js**: la senda del Refugio (sistema SENDA)
 - **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
+- **tintes.js**: los tintes del casco (sistema TINTES)
+  - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
   - partículas con estado · luces que dejan los eventos · clima del día · los lugares místicos · fauna chica · emisores con estado (brasas, humo, hojas, motas rúnicas…) · campos sin estado (dependen solo de la posición y el tiempo) · el fuego guía · fauna chica: liebres, pinzones, mariposas y bandadas · eventos que mandan los sistemas · capas de dibujo · el sistema
 - **zonas.js**: las zonas del generador: mazmorras oscuras y tierras con islas (sistema ZONAS)
@@ -332,6 +334,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-sotanos.js**: los secretos de adentro: alfombras, trampillas y sótanos
   - Alfombra · Trampilla · Escalera de mano · Cajones · Atril con el libro de saber · Estante de rollos · Armero · Tabla suelta · Cofre del sótano · Huesos · Cesto de la despensa · El muro falso del escondite · Sacos · Cántaros del sótano viejo
   - assets: alfombra, trampilla, escaleraMano, cajas, atril, estanteRollos, armero, tablaSuelta, cofreSotano, huesos, cesto, muroFalso, sacos, cantaros
+- **assets-tintes.js**: la tina de tintes del Puesto (asset de TINTES)
+  - assets: tinaTintes
 - **assets-vida.js**: la vida del bosque viejo: estructuras místicas y fauna chica (assets de VIDA)
   - El Fresno de los Ecos · El Anillo de los álfar · La Poza de Urd · Las flores del despertar · fauna chica (no pelea; huye)
   - assets: fresnoEcos, anilloAlfar, pozaEstrellas, floresDespertar, liebre, pinzon, mariposa, libelula, polilla, pez
@@ -401,6 +405,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
+- **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.
 

@@ -5,31 +5,32 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 27,
-    titulo: { es: "Arcón del Puesto y filtro del botín", en: "Outpost chest and loot filter" },
+    pr: 28,
+    titulo: { es: "Tintes para el casco", en: "Helmet dyes" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 3, es: "botín: el arcón guarda piezas y el filtro esconde las que tiran en el piso", en: "loot: the chest stores pieces and the filter hides the ones on the ground" },
-      { pr: 12, es: "materiales: lo filtrado se desarma solo al juntarlo", en: "materials: filtered items are dismantled when picked up" },
-      { pr: 24, es: "muescas, 25 conjuntos y 26 legendarias: el filtro nunca esconde esas piezas", en: "notches, 25 sets and 26 legendaries: the filter never hides those pieces" },
+      { pr: 21, es: "alquimia: los tintes se preparan con hierbas", en: "alchemy: dyes are made with herbs" },
+      { pr: 24, es: "palabras rúnicas o 26 poderes legendarios: ganan la luz de runa", en: "runewords or 26 legendary powers: earn rune light" },
+      { pr: 25, es: "conjuntos: uno entero gana el oro de Fáfnir", en: "sets: a full one earns Fáfnir's gold" },
+      { pr: 27, es: "arcón: la tina va al lado del arcón", en: "chest: the tub sits next to the chest" },
     ],
     mirar: [
-      { es: "En el patio del Puesto está el arcón de Eromash (roble, flejes de hierro, una piel encima): «Abrir el arcón» levanta la tapa y abre la pestaña Arcón de la mochila.", en: "In the Outpost yard stands Eromash's chest (oak, iron bands, a fur on top): «Open the chest» lifts the lid and opens the backpack's Chest tab." },
-      { es: "Tocar una pieza de la bolsa la guarda; tocar una del arcón la devuelve. «Guardar todo» vacía la bolsa. Empieza con 24 lugares y se agranda a 36 y 48 por plata.", en: "Touching a bag piece stores it; touching a chest piece takes it back. «Store everything» empties the bag. It starts with 24 slots and grows to 36 and 48 for silver." },
-      { es: "En la Bolsa hay dos casillas nuevas: el filtro del botín (todo, mágicas o mejores, raras o mejores) y «Desarmar lo filtrado». Lo filtrado no lleva luz ni nombre en el piso (salvo la que tenés al lado); con desarmar en sí, se desarma solo al juntarlo.", en: "The Bag has two new cells: the loot filter (everything, magic or better, rare or better) and «Dismantle filtered». Filtered items have no light or name on the ground (except the one next to you); with dismantle on, they're dismantled when picked up." },
+      { es: "Junto al arcón del Puesto está la tina de tintes (tina con el agua teñida, paños secándose, frascos de polvo): «Teñir el casco» abre la pestaña Tintes.", en: "Next to the Outpost chest stands the dye tub (tub with dyed water, cloths drying, powder jars): «Dye the helmet» opens the Dyes tab." },
+      { es: "Ocho colores con la cabeza de Eromash de muestra: rojo de Eikholt, azul de escarcha, verde de la linde, blanco de abedul, negro de cuervo, violeta de las ataduras (se preparan con plata y hierbas), luz de runa y oro de Fáfnir (se ganan).", en: "Eight colours with Eromash's head as a sample: Eikholt red, frost blue, boundary green, birch white, raven black, binding violet (made with silver and herbs), rune light and Fáfnir's gold (earned)." },
+      { es: "El color se ve en el mundo, en el retrato del HUD y en la mochila, y el agua de la tina toma el último color. Lo ya preparado se cambia gratis.", en: "The colour shows in the world, in the HUD portrait and in the backpack, and the tub's water takes the last colour. What you've already made changes for free." },
     ],
     botones: [
-      { es: "Ir al arcón con la bolsa llena de cosas", en: "Go to the chest with a full bag", fn: (A) => {
-        const ar = ARCON.arcon();
-        ir(A, [ar.x, ar.y + 90]);
-        for (let i = 0; i < 12; i++) BOTIN.dar(OBJETOS.generar({ n: Math.max(3, RPG.nivel()) }));
+      { es: "Ir a la tina con plata y hierbas para todos los colores", en: "Go to the tub with silver and herbs for every colour", fn: (A) => {
+        const tn = TINTES.tina();
+        ir(A, [tn.x, tn.y + 90]);
         PODERES.pj().plata += 600;
+        const h = ALQUIMIA.estado().hierbas;
+        ["escarcha", "musgo", "abedul", "cardo", "luna"].forEach((k) => (h[k] = (h[k] || 0) + 3));
+        MATERIALES.dar("esquirla", 1);
       } },
-      { es: "Tirar 12 piezas de todas las rarezas acá (para ver el filtro)", en: "Drop 12 pieces of every rarity here (to see the filter)", fn: (A) => {
-        for (let i = 0; i < 12; i++) {
-          const a = (i / 12) * Math.PI * 2;
-          BOTIN.tirar(A.jug.x + Math.cos(a) * 160, A.jug.y + Math.sin(a) * 120, OBJETOS.generar({ r: i % 4, n: 5 }));
-        }
+      { es: "Ganar la luz de runa y el oro (un poder y un conjunto)", en: "Earn rune light and gold (a power and a set)", fn: () => {
+        LEGENDARIOS.aprender("hel");
+        CONJUNTOS.estado().completos.guardia = 1;
       } },
     ],
   };

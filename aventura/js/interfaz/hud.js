@@ -41,9 +41,10 @@ window.HUD = (function () {
   function retrato(nombre, titulo, ojos) {
     if (cambia("nom", nombre)) $("hNombre").textContent = nombre;
     if (cambia("tit", titulo)) $("hTitulo").textContent = titulo;
-    if (caraClave === ojos && caraImg && caraImg.complete) return;
-    caraClave = ojos;
-    caraImg = VIKINGO.imagen("R", "S", ojos);
+    const col = VIKINGO.color || "R";
+    if (caraClave === ojos + col && caraImg && caraImg.complete) return;
+    caraClave = ojos + col;
+    caraImg = VIKINGO.imagen(col, "S", ojos);
     const pintar = () => {
       const cv = $("hRetrato"),
         c = cv.getContext("2d");
