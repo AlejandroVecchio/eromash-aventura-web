@@ -36,8 +36,6 @@ window.CONTROLES = (function () {
     hab3: [],
     frasco: [],
     pocion: [],
-    signo: ["KeyY"],
-    cambiarSigno: ["KeyN"],
     pausa: ["Escape", "KeyP"],
     acercar: ["Equal", "NumpadAdd"],
     alejar: ["Minus", "NumpadSubtract"],
@@ -80,9 +78,9 @@ window.CONTROLES = (function () {
   };
   // combinaciones del mando: L2 (el escudo) + □ △ ○ son las habilidades activas L2 + ✕ el frasco y L2 + R1 la poción elegida; mientras se aprietan juntos, esos
   // botones no hacen lo suyo
-  const COMBOS = { hab1: [6, 2], hab2: [6, 3], hab3: [6, 1], frasco: [6, 0], pocion: [6, 5], signo: [6, 4], cambiarSigno: [6, 15] };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○", frasco: "L2+✕", pocion: "L2+R1", signo: "L2+L1", cambiarSigno: "L2+▶", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
-  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", hab1: "1", hab2: "2", hab3: "3", frasco: "4", pocion: "5", signo: "Y", cambiarSigno: "N", ranura1: "1", ranura2: "2", ranura3: "3", ranura4: "4", ranura5: "5", ranura6: "6", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
+  const COMBOS = { hab1: [6, 2], hab2: [6, 3], hab3: [6, 1], frasco: [6, 0], pocion: [6, 5] };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○", frasco: "L2+✕", pocion: "L2+R1", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
+  const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", hab1: "1", hab2: "2", hab3: "3", frasco: "4", pocion: "5", ranura1: "1", ranura2: "2", ranura3: "3", ranura4: "4", ranura5: "5", ranura6: "6", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   // ---------- teclas propias ----------
   // El jugador puede cambiar la tecla principal de cada acción (Opciones → Teclas, y la forja desde su menú). Se
