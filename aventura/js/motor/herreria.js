@@ -31,16 +31,16 @@ window.HERRERIA = (function () {
   const PILA = { x: -470, y: 50 };
   const MUELA = { x: 560, y: -150 };
   const CARBON = { x: 760, y: -420 };
-  const BANCO = { x: -RX + 110, y: 330 };
-  const ARMERO = { x: -RX + 50, y: -110 };
+  const BANCO = { x: 260, y: 420 };
+  const ARMERO = { x: -RX + 200, y: -170 };
   const PANOPLIA = { x: 380, y: -RY + 8 };
   const GATA = { x: 110, y: -380 };
   const MUEBLES = [
     { id: "pilaTemplar", ...PILA },
     { id: "muelaAfilar", ...MUELA, gira: true },
     { id: "montonCarbon", ...CARBON },
-    { id: "bancoForja", ...BANCO, giro: -90 },
-    { id: "armeroForja", ...ARMERO, giro: -90 },
+    { id: "bancoForja", ...BANCO },
+    { id: "armeroForja", ...ARMERO },
     { id: "panopliaHerramientas", ...PANOPLIA, o: { z: 170 }, pared: "n" },
     { id: "yunque", ...YUNQUE, o: { s: 1.3 } },
   ];
@@ -56,8 +56,8 @@ window.HERRERIA = (function () {
     [FORJA.x - 210, -RY, FORJA.x + 210, FORJA.y + 135],
     [FUELLE.x - 340, FUELLE.y - 60, FUELLE.x + 150, FUELLE.y + 60],
     [PILA.x - 150, PILA.y - 65, PILA.x + 150, PILA.y + 65],
-    [-RX, ARMERO.y - 190, -RX + 100, ARMERO.y + 190],
-    [-RX, BANCO.y - 225, -RX + 190, BANCO.y + 225],
+    [ARMERO.x - 190, ARMERO.y - 50, ARMERO.x + 190, ARMERO.y + 50],
+    [BANCO.x - 225, BANCO.y - 60, BANCO.x + 225, BANCO.y + 60],
   ];
   function libre(x, y, r = 40) {
     if (x < -RX + 60 || x > RX - 60 || y < -RY + 60 || y > RY - 50) return false;
@@ -101,9 +101,9 @@ window.HERRERIA = (function () {
     fundido = 0,
     saliendo = 0;
   const ero = { x: PUERTA.x, y: PUERTA.y - 160 };
-  const cam = { x: 0, y: 0, g: 0.52, esc: 0.5 };
+  const cam = { x: 0, y: 0, g: 0, esc: 0.5 };
   let zoom = 0.5,
-    giroObj = 0.52,
+    giroObj = 0,
     pegar = true;
   const globos = [];
   let proximoGlobo = 3;
@@ -127,7 +127,7 @@ window.HERRERIA = (function () {
     activo = true;
     ero.x = PUERTA.x;
     ero.y = PUERTA.y - 170;
-    if (st.g != null) giroObj = cam.g = st.g;
+    giroObj = cam.g = 0; // siempre de frente al entrar (pedido de Alejandro); Z/X giran igual
     if (st.zoom != null) zoom = st.zoom;
     pegar = true;
     armarGente();
@@ -166,8 +166,8 @@ window.HERRERIA = (function () {
     if (window.SONIDO) SONIDO.bucle("herr_fuego", "fogata", 0);
     INTERIORES.bajarDesde(puerta, () => {
       activo = true;
-      ero.x = TRAMPILLA.x - 150;
-      ero.y = TRAMPILLA.y - 40;
+      ero.x = TRAMPILLA.x;
+      ero.y = TRAMPILLA.y - 130;
       fundido = 1;
       pegar = true;
       J.dentro = sistemaTaller;
@@ -258,8 +258,8 @@ window.HERRERIA = (function () {
     cerca(PILA.x, PILA.y + 120, 170, t("hr.accion_pila"), mirar("hr.m_pila"), 20);
     cerca(MUELA.x, MUELA.y + 120, 170, t("hr.accion_muela"), afilar, 10);
     cerca(PANOPLIA.x, -RY + 120, 220, t("hr.accion_herramientas"), mirar("hr.m_herramientas"));
-    cerca(ARMERO.x + 140, ARMERO.y, 200, t("hr.accion_armas"), mirar("hr.m_armas"));
-    cerca(BANCO.x + 230, BANCO.y, 200, t("hr.accion_banco"), mirar("hr.m_banco"));
+    cerca(ARMERO.x, ARMERO.y + 130, 200, t("hr.accion_armas"), mirar("hr.m_armas"));
+    cerca(BANCO.x, BANCO.y - 130, 200, t("hr.accion_banco"), mirar("hr.m_banco"));
     cerca(CARBON.x - 120, CARBON.y + 180, 200, t("hr.accion_carbon"), mirar("hr.m_carbon"), 20);
     cerca(GATA.x, GATA.y + 60, 150, t("hr.accion_gata"), acariciar, -10);
     cerca(TRAMPILLA.x, TRAMPILLA.y, 170, t(st.tr ? "in.accion_bajar" : "in.accion_trampilla"), trampilla, -40);
@@ -493,7 +493,7 @@ window.HERRERIA = (function () {
     if (J.modo === "juego" || J.modo === "dialogo") jugadorPaso(dt);
     vidaPaso(dt);
     if (window.SONIDO) SONIDO.bucle("herr_fuego", "fogata", (0.25 + 0.25 * fuego) * Math.max(0.3, 1 - Math.hypot(ero.x - FORJA.x, ero.y - FORJA.y) / 2200));
-    if ((st.t = (st.t || 0) + dt) > 1) (st.t = 0), (st.g = giroObj), (st.zoom = zoom);
+    if ((st.t = (st.t || 0) + dt) > 1) (st.t = 0), (st.zoom = zoom);
   }
   let PR = null;
   function armarProyector(cw, ch) {
@@ -745,6 +745,12 @@ window.HERRERIA = (function () {
       lista.push({ k: PR.hondo(PUERTA.x, RY), f: () => {
         const M = ["#1E1A20", "#3E3842", "#57515B"],
           x = PUERTA.x;
+        // con la pared de adelante cortada, el marco queda bajo como el zócalo y no tapa el taller
+        if (!paredVista.s()) {
+          VOL.caja(c, PR, x - 200, RY - 20, 0, x - 160, RY + 30, 110, M);
+          VOL.caja(c, PR, x + 160, RY - 20, 0, x + 200, RY + 30, 110, M);
+          return;
+        }
         VOL.caja(c, PR, x - 200, RY - 20, 0, x - 160, RY + 30, 400, M);
         VOL.caja(c, PR, x + 160, RY - 20, 0, x + 200, RY + 30, 400, M);
         VOL.caja(c, PR, x - 220, RY - 24, 390, x + 220, RY + 34, 440, ["#2A0806", "#5A2A16", "#7A3E20"], {
