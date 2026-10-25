@@ -44,6 +44,17 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## Fallos y diferencia de nivel (`motor/fallos.js`, `FALLOS`; textos `fl.` en `textos/fallos.js`)
+
+Como en el WoW, la diferencia de nivel decide. `d` = nivel de la criatura menos el de Eromash.
+
+- **Eromash falla** con `5 % + 3 % · d + 0,8 % · d²` si la criatura está arriba (tope 85 %), y baja hasta 2 % si está abajo. Cuando acierta entra `1 − 5 % · d` del daño (mínimo 40 %), o hasta 130 % contra las de mucho menos nivel. Contra una «?» (10 arriba) falla el 85 % y pega la mitad: un nivel 1 no le gana.
+- **La criatura erra** con `5 % + 4 % · |d| + 0,8 % · d²` si está abajo (tope 75 %); desde 3 niveles arriba pega golpes **aplastantes** (×1,5, siempre bajo el tope del 35 %).
+- **Nunca fallan** el golpe por sorpresa y el contraataque de la esquiva justa. Las runas, las flechas y lo que se tira no fallan, pero pegan según el nivel (`CB.golpear` envuelto).
+- La **Destreza** baja los fallos (0,15 % por punto sobre la base); otros sistemas suman con `FALLOS.precision(fn(e))`.
+- `J.herir(dano, ox, oy, tipo, de)`: quien pega pasa la criatura como quinto argumento (combate.js, jotunn.js) para que se tire su fallo.
+- La Hoja muestra la tabla contra −6, −3, 0, +3, +5, +7 y «?». Probar mecánicas → Pelea → «Un grupo «?»».
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos

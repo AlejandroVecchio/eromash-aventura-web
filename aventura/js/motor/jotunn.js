@@ -274,7 +274,7 @@ window.JOTUNN = (function () {
     let dio = false;
     for (const a of jefe.avisos) {
       if (!dio && CB.contiene(a, jug.x, jug.y)) {
-        J.herir(Math.min(A0.dano, tope()), e.x, e.y, a.ataque === "linea" || a.ataque === "grito" ? "helado" : null);
+        J.herir(Math.min(A0.dano, tope()), e.x, e.y, a.ataque === "linea" || a.ataque === "grito" ? "helado" : null, e);
         dio = true;
       }
       J.quitarAviso(a);

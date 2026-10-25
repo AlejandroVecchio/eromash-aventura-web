@@ -120,7 +120,8 @@
     if (i >= 0) J.avisos.splice(i, 1);
   };
   J.sacudir = (f) => window.OPCIONES && !OPCIONES.v("temblor") ? 0 : (J.cam.sac = Math.max(J.cam.sac, f));
-  J.herir = (dano, ox, oy, tipo) => {
+  // de: la criatura que pega, si se sabe (la diferencia de nivel decide si erra: motor/fallos.js)
+  J.herir = (dano, ox, oy, tipo, de) => {
     // esquivar o saltar justo cuando el golpe llega: el mundo va lento un instante, vuelve estamina y el próximo golpe pega doble
     if (!jug.muerto && (jug.salto > 0 || jug.esq > 0) && J.t - (jug.justaT || -9) > 0.8) {
       jug.justaT = J.t;
@@ -131,6 +132,11 @@
     }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
+    if (de && window.FALLOS) {
+      const r = FALLOS.recibir(de, dano);
+      if (r.falla) return void (jug.inv = Math.max(jug.inv, 0.25));
+      dano = r.dano;
+    }
     for (const s0 of SIS) if (s0.modRecibido) dano = s0.modRecibido(dano, tipo, ox, oy); // bloqueo, pociones, bendiciones
     if (J.armadura) dano = Math.round(dano * (100 / (100 + J.armadura))); // la armadura de lo que lleva puesto
     if (J.alHerir) dano = J.alHerir(dano); // el escudo de Algiz se come el golpe
@@ -923,14 +929,19 @@
       if (W.hayMuro(jug.x, jug.y, e.x, e.y)) continue;
       const sorpresa = e.estado === "quieto",
         critico = Math.random() < (J.critProb != null ? J.critProb : 0.1);
-      let dano = d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? J.critMult || 1.6 : 1);
       const info = { d, critico, sorpresa, contra };
+      // contra más nivel se falla más y entra menos (motor/fallos.js); la sorpresa y el contraataque no fallan
+      const entra = window.FALLOS ? FALLOS.tirar(e, info) : 1;
+      if (entra == null) continue;
+      let dano = d.dano * J.mulDano * (contra ? 2 : 1) * (sorpresa ? 1.5 : 1) * (critico ? J.critMult || 1.6 : 1) * entra;
       for (const s0 of SIS) if (s0.modDano) dano = s0.modDano(dano, e, info); // debilidades, sigilo, reacciones
       dano = Math.round(dano);
       chispa(e.x, e.y - 30);
       numero(e.x, e.y - 60, dano, critico || contra ? "#FFD98A" : sorpresa ? "#FF8D71" : null, critico || contra);
       if (sorpresa) textoFlotante(e.x, e.y - 100, t("mj.sorpresa"), "#FF8D71");
+      J.golpeTirado = true; // ya se tiró el fallo y el nivel: CB.golpear no lo vuelve a contar
       const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
+      J.golpeTirado = false;
       cadaSis("alPegar", e, dano, info, murio);
       if (window.SONIDO) {
         SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });

@@ -261,6 +261,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
+- **fallos.js**: los fallos y la diferencia de nivel (sistema FALLOS)
+  - las cuentas (también las muestran la Hoja y la ventana del bestiario) · el golpe de Eromash · el golpe de la criatura · el sistema
 - **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
   - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
 - **frasco.js**: el frasco de Thora (sistema FRASCO)
@@ -466,6 +468,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
+- **fallos.js**: Textos de los fallos y la diferencia de nivel (prefijo fl.), los dos idiomas.
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
 - **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en

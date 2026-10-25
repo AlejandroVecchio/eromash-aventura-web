@@ -67,6 +67,16 @@ window.HOJA = (function () {
       return `<tr><th style="color:${RUNA[k][1]}">${t("hj.k_" + k)}</th><td class="hj-v">${valor(k, d.final)}</td><td>${partes.join(" · ")}</td></tr>`;
     }).join("");
     cuerpo.insertAdjacentHTML("beforeend", `<div class="rotulo inv-piezas hj-rotulo">${t("hj.tabla")}</div><table class="hj-tabla">${filas}</table>`);
+    // contra criaturas de otro nivel: cuánto se falla, cuánto entra y cuánto te esquivan (motor/fallos.js)
+    if (window.FALLOS) {
+      const F = FALLOS,
+        p = F.precisionActual(),
+        fila = (d) => {
+          const nom = d >= 10 ? t("fl.hoja_pregunta") : d === 0 ? t("fl.hoja_igual") : t("fl.hoja_dif", [(d > 0 ? "+" : "−") + Math.abs(d)]);
+          return `<tr><th>${nom}</th><td class="hj-v">${pct(Math.max(0, F.fallo(d) - p))}</td><td>${pct(F.mult(d))}</td><td>${pct(F.esquiva(d))}</td></tr>`;
+        };
+      cuerpo.insertAdjacentHTML("beforeend", `<div class="rotulo inv-piezas hj-rotulo">${t("fl.hoja_titulo")}</div><table class="fl-tabla"><tr><th></th><td class="hj-v">${t("fl.col_fallas")}</td><td>${t("fl.col_entra")}</td><td>${t("fl.col_esquiva")}</td></tr>${[-6, -3, 0, 3, 5, 7, 10].map(fila).join("")}</table><p class="aq-cabeza">${t("fl.hoja_nota")}</p>`);
+    }
   }
   // el ícono: el rombo con la runa de la estadística
   function icono(k) {
