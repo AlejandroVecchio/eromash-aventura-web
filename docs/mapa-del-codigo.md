@@ -448,7 +448,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
-- **dados.js**: Textos de los dados de hueso (motor/dados.js, mundo/assets-dados.js): prefijo dd. (y as., av.nombre_, mp.ley_dados).
 - **editor.js**: Textos del editor de Eldervald (prefijo ed.), los dos idiomas.
   - sección Zonas (tecla M) · importar (tecla N): gente, estructuras, pinturas, calcos y texturas · capas propias (pestaña Capas, L) · la barra de menús · «Probar con todas» (panel IA)
 - **eikholt.js**: Textos de Eikholt en 3D (prefijo ek.): el mapa aparte de la capital, sus cámaras, sus lugares y el banco de casas.
