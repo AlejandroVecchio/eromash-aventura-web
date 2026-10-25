@@ -65,12 +65,13 @@ window.MATRAZ = (function () {
   }
   function cerrar() {
     if (!S) return;
-    const s = S;
+    const s = S,
+      ef = s.fin ? s.fin.ef : efectividad();
     S = null;
     lienzo.style.display = "none";
     J.modo = s.modoAntes || "juego";
     if (CONTROLES.soltar) CONTROLES.soltar();
-    s.op.fin(s.fin ? s.fin.ef : efectividad());
+    s.op.fin(ef);
   }
 
   // ---------- el lienzo ----------
