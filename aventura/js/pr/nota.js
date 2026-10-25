@@ -10,20 +10,16 @@
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
       { pr: 1, es: "niveles", en: "levels" },
-      { pr: 49, es: "y casi todas las de la tanda: cada entrada de la saga lee el estado guardado de su sistema (bestiario, contratos, Sin Linde, arañas, hólmganga, jötunn, Cacería, lecciones, hierbas, cocina, pesca, tintes, legendarias, conjuntos, libros, hörgar, elementos, la casa y Skuggi)", en: "and almost every PR in the batch: each saga entry reads its system's saved state (bestiary, contracts, Lawless, spiders, holmgang, jötunn, Wild Hunt, lessons, herbs, cooking, fishing, dyes, legendaries, sets, books, hörgar, elements, the house and Skuggi)" },
+      { pr: 49, es: "y casi todas las de la tanda: cada entrada de la saga lee el estado guardado de su sistema (bestiario, contratos, Sin Linde, arañas, hólmganga, jötunn, Cacería, lecciones, hierbas, cocina, pesca, tintes, legendarias, conjuntos, libros, hörgar, elementos, y la casa)", en: "and almost every PR in the batch: each saga entry reads its system's saved state (bestiary, contracts, Lawless, spiders, holmgang, jötunn, Wild Hunt, lessons, herbs, cooking, fishing, dyes, legendaries, sets, books, hörgar, elements, and the house)" },
     ],
     mirar: [
-      { es: "En la mochila hay una pestaña nueva, Saga, con el porcentaje en el nombre: todo lo que Eldervald tiene para hacer en cuatro capítulos (la pelea, los oficios, el mundo y la gente). Cada casilla lleva su runa y cuánto va (3/5); al elegirla, abajo su barra y una pista de cómo empezar. Lo que todavía no empezaste se ve apagado y lo completo en dorado.", en: "The backpack has a new tab, Saga, with the percentage in its name: everything Eldervald has to do in four chapters (the fight, the crafts, the world and the people). Each slot carries its rune and how far along it is (3/5); pick it to see its bar and a hint on how to start. What you haven't started is dimmed and what's complete is gold." },
+      { es: "En la mochila hay una pestaña nueva, Saga, con el porcentaje en el nombre: todo lo que Eldervald tiene para hacer en tres capítulos (la pelea, los oficios y el mundo). Cada casilla lleva su runa y cuánto va (3/5); al elegirla, abajo su barra y una pista de cómo empezar. Lo que todavía no empezaste se ve apagado y lo completo en dorado.", en: "The backpack has a new tab, Saga, with the percentage in its name: everything Eldervald has to do in three chapters (the fight, the crafts and the world). Each slot carries its rune and how far along it is (3/5); pick it to see its bar and a hint on how to start. What you haven't started is dimmed and what's complete is gold." },
       { es: "La saga entera tiene un porcentaje (el promedio de las entradas) y cuatro hitos que pagan una sola vez: 25 % plata, 50 % un fragmento, 75 % una pieza rara o mejor y 100 % una legendaria y el título «Leyenda de Eldervald», que encabeza la pestaña. Una partida vieja que ya pasó hitos no los cobra de golpe al cargar.", en: "The whole saga has a percentage (the average of its entries) and four milestones that pay once: 25% silver, 50% a fragment, 75% a rare piece or better and 100% a legendary and the title «Legend of Eldervald», shown at the top of the tab. An old save that already passed milestones doesn't cash them all at once on load." },
     ],
     botones: [
       { es: "Abrir la Saga", en: "Open the Saga", fn: () => INVENTARIO.abrir("saga") },
-      { es: "Avanzar varias (hólmganga, Skuggi, la casa, 10 niveles)", en: "Advance several (holmgang, Skuggi, the house, 10 levels)", fn: (A) => {
+      { es: "Avanzar varias (hólmganga, la casa, 10 niveles)", en: "Advance several (holmgang, the house, 10 levels)", fn: (A) => {
         if (window.HOLMR) HOLMR.estado().vencidos = 5;
-        if (window.COMPANERO) {
-          COMPANERO.estado().rescatado = true;
-          COMPANERO.sumar(600);
-        }
         if (window.CASA) CASA.estado().tuya = true;
         let x = 0;
         for (let n = RPG.nivel(); n < Math.min(RPG.TOPE, RPG.nivel() + 10); n++) x += RPG.xpPara(n);

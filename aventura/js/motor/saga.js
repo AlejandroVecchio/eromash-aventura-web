@@ -1,6 +1,6 @@
 // ---------- la saga de Eromash (sistema SAGA, pestaña Saga de la mochila) ----------
-// El cierre de los sistemas de rol: todo lo que Eldervald tiene para hacer, en un solo lugar y en cuatro capítulos
-// (la pelea, los oficios, el mundo y la gente), como el registro de progreso del Witcher o la página de logros del
+// El cierre de los sistemas de rol: todo lo que Eldervald tiene para hacer, en un solo lugar y en tres capítulos
+// (la pelea, los oficios y el mundo), como el registro de progreso del Witcher o la página de logros del
 // Diablo. Cada entrada lee el estado guardado de su sistema (nada se cuenta dos veces), dice cuánto va y una pista
 // de cómo empezar. La saga entera tiene un porcentaje (el promedio de las entradas) y cuatro hitos que pagan:
 // 25 % plata, 50 % un fragmento, 75 % una pieza rara o mejor y 100 % una legendaria y el título «Leyenda de
@@ -13,7 +13,7 @@ window.SAGA = (function () {
   const t = (k, v) => I18N.t(k, v);
   const cuenta = (o) => Object.keys(o || {}).filter((k) => o[k]).length;
   const largo = (o) => (Array.isArray(o) ? o.length : Object.keys(o || {}).length);
-  const CAPS = ["pelea", "oficios", "mundo", "gente"];
+  const CAPS = ["pelea", "oficios", "mundo"];
   // cada entrada: [id, capítulo, runa, color, sistema que la necesita, n() → [hecho, total]]
   const ENTRADAS = [
     ["nivel", "pelea", "mannaz", "#73D5DB", "RPG", () => [RPG.nivel(), RPG.TOPE]],
@@ -35,7 +35,6 @@ window.SAGA = (function () {
     ["santuarios", "mundo", "algiz", "#C8402D", "SANTUARIOS", () => [cuenta(SANTUARIOS.estado().vistos), largo(SANTUARIOS.LISTA)]],
     ["elementos", "mundo", "thurisaz", "#B8A8F0", "ELEMENTOS", () => [(ELEMENTOS.estado().roble ? 1 : 0) + (ELEMENTOS.estado().fuente ? 1 : 0) + Math.min(6, cuenta(ELEMENTOS.estado().vistas)), 8]],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
-    ["companero", "gente", "raidho", "#B8AC9C", "COMPANERO", () => [COMPANERO.estado().rescatado ? COMPANERO.nivel() : 0, COMPANERO.TRUCOS]],
   ];
   const HITOS = [25, 50, 75, 100];
   const base = () => ({ hitos: {}, leyenda: false });

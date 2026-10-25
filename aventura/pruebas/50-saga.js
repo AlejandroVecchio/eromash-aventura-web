@@ -15,14 +15,11 @@
       });
       si(SAGA.porcentaje() < 10, "partida nueva, casi nada: " + SAGA.porcentaje());
     } },
-    { nombre: "saga: lo hecho en otros sistemas cuenta (hólmganga, Skuggi, la casa) y sube el porcentaje", fn: async (A, { igual, si }) => {
+    { nombre: "saga: lo hecho en otros sistemas cuenta (hólmganga, la casa) y sube el porcentaje", fn: async (A, { igual, si }) => {
       const p0 = SAGA.porcentaje();
       HOLMR.estado().vencidos = 5;
       const h = SAGA.entradas().find((e) => e.id === "holmr");
       igual(h.hecho, 5, "la hólmganga entera:");
-      COMPANERO.estado().rescatado = true;
-      COMPANERO.sumar(600);
-      igual(SAGA.entradas().find((e) => e.id === "companero").frac, 1, "Skuggi con todos los trucos:");
       CASA.estado().tuya = true;
       si(SAGA.entradas().find((e) => e.id === "casa").hecho >= 1, "la casa comprada");
       si(SAGA.porcentaje() > p0, "sube " + [p0, SAGA.porcentaje()]);

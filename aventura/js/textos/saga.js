@@ -21,7 +21,6 @@ I18N.textos({
   "sg.cap_pelea": { es: "La pelea", en: "The fight" },
   "sg.cap_oficios": { es: "Los oficios", en: "The crafts" },
   "sg.cap_mundo": { es: "El mundo", en: "The world" },
-  "sg.cap_gente": { es: "La gente", en: "The people" },
   // las entradas: nombre y pista de cómo empezar
   "sg.e_nivel": { es: "Nivel", en: "Level" },
   "sg.e_nivel_d": { es: "Todo da experiencia: criaturas, misiones, lugares, cofres y piedras.", en: "Everything gives experience: creatures, quests, places, chests and stones." },
@@ -61,6 +60,4 @@ I18N.textos({
   "sg.e_elementos_d": { es: "Thurisaz en el Roble del Trueno, Laguz en su fuente y las seis reacciones.", en: "Thurisaz at the Thunder Oak, Laguz at its spring and the six reactions." },
   "sg.e_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },
   "sg.e_casa_d": { es: "Se vende junto al camino del Puesto: comprala y mejorala.", en: "For sale by the Outpost road: buy it and improve it." },
-  "sg.e_companero": { es: "Skuggi", en: "Skuggi" },
-  "sg.e_companero_d": { es: "Se oyen lobos junto a un camino que sale del Puesto.", en: "Wolves can be heard by a road out of the Outpost." },
 });
