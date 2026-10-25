@@ -124,6 +124,13 @@ tener que leer el código para balancear.
   primero y se clava; se junta pasando por encima o vuelve sola a los 4 s (anillo rúnico en el piso). Mientras tanto,
   puños: `ARMAS.sinArma(fn)` deja la mano vacía mientras fn() da true. Se lleva con escudo. Cinco: de hoja (1), alada
   (5), rúnica (10), de hueso (13) y atgeir (17).
+- **Martillo** (`motor/martillo.js`, `MARTILLO`; dibujo `equipo/martillos-dibujo.js`): 21 / 23 / 42 (el remate
+  `temblor` hace un anillo en el piso), lento y con `peso`. Todo golpe con `machaca` suma uno a `e.machaca`; al tercero
+  (o con el remate o el trueno) la criatura queda **quebrada** (`e.quebrado`, 4 s): `modDano` le da ×1,25 a todo lo
+  que la toque, de cualquier sistema. Corriendo, hombrazo de 18 que aturde 0,6 s. **Cargado (0,65 s, 20 de
+  estamina), el trueno** (`MARTILLO.TRUENO`): un giro de 16 y rayos sobre las 4 criaturas más cercanas a menos de
+  280 (26 de daño, aturden 0,8 s y quiebran), con luz. Con escudo. Cinco: mazo (1), maza de pestañas (6), martillo
+  rúnico (11), quijada de jötunn (14) y mazo de piedra (18).
 
 ## Pruebas
 

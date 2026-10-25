@@ -35,4 +35,11 @@ I18N.textos({
   "ob.b_lanzaRunica": { es: "Lanza rúnica", en: "Rune Spear" },
   "ob.b_lanzaHueso": { es: "Lanza de hueso", en: "Bone Spear" },
   "ob.b_atgeir": { es: "Atgeir", en: "Atgeir" },
+  "ar.rasgo_martillo": { es: "Martillo · cada tercer golpe quiebra (recibe ×1,25 de todo); manteniendo atacar, el trueno", en: "Hammer · every third hit shatters (takes ×1.25 from everything); hold attack to call thunder" },
+  "ar.quebrada": { es: "¡Quebrada!", en: "Shattered!" },
+  "ob.b_mazo": { es: "Mazo de hierro", en: "Iron Maul" },
+  "ob.b_mazaPestanas": { es: "Maza de pestañas", en: "Flanged Mace" },
+  "ob.b_martilloRunico": { es: "Martillo rúnico", en: "Rune Hammer" },
+  "ob.b_quijada": { es: "Quijada de jötunn", en: "Jötunn Jawbone" },
+  "ob.b_mazoPiedra": { es: "Mazo de piedra atada", en: "Bound Stone Maul" },
 });
