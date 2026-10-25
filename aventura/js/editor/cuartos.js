@@ -637,8 +637,8 @@ window.EDITOR_CUARTOS = (function () {
   $("cuGenIA").onclick = async () => {
     const txt = $("cuGenTexto").value.trim();
     if (!txt) return E.avisar(t("ed.cu_gen_sin_texto"));
-    const ia = window.EDITOR_IA && EDITOR_IA.elegida();
-    if (!ia || (!ia.clave && ia.quien !== "otra")) return E.avisar(t("ed.cu_gen_sin_clave"));
+    const ia = window.EDITOR_IA && EDITOR_IA.paraTarea("generar");
+    if (!ia) return E.avisar(t("ed.cu_gen_sin_clave"));
     const sistema =
       "Convertís el pedido de una casa vikinga de un juego en JSON, solo JSON, sin texto alrededor: " +
       '{"nombre": texto corto en el idioma del pedido, "cuartos": total de cuartos contando los secretos (1 a 7), "secretos": cuartos escondidos (0 a 3), ' +
@@ -646,7 +646,7 @@ window.EDITOR_CUARTOS = (function () {
     $("cuGenIA").disabled = true;
     E.avisar(t("ed.cu_gen_pensando"));
     try {
-      const r = await EDITOR_IA.llamar(ia.quien, ia.modelo, ia.clave, [{ role: "user", content: txt }], sistema);
+      const r = (await EDITOR_IA.llamarTarea("generar", [{ role: "user", content: txt }], sistema)).txt;
       const js = JSON.parse((r.match(/\{[\s\S]*\}/) || ["{}"])[0]);
       const op = {
         cuartos: Math.max(1, Math.min(7, +js.cuartos || 3)),
