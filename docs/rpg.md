@@ -483,6 +483,23 @@ Como los campamentos de bandidos del Skyrim y del Gothic.
   (botin.js) y 120 de experiencia.
 - Estado en `E.extra.bandidos = { saqueados: { i: 1 } }`.
 
+## Nidos de arañas (`motor/aranas.js`, `ARANAS`; dibujos en `enemigos/aranas.js`; assets `nidoArana`, `sacoHuevos` en `mundo/assets-aranas.js`; textos `ar.`)
+
+Como las cuevas de arañas del Skyrim y los nidos del Gothic.
+- Tipos en `COMBATE.TIPOS`: `arana` (60 de vida, 12 de daño, forma `carga`: se agacha y salta 5,5 m en línea) y
+  `aranaReina`, la tejedora (130 de vida, 18 de daño, forma `lejos` con aviso blanco, pesada). En el bestiario.
+- Nidos: `N` = 3, en una grilla de 1100 con semilla fija, lejos del Puesto (6000), de los caminos (1000), de los
+  lugares, la ciudad, los grupos y las lagunas, y entre ellos (7000). Cada uno es un grupo de HORDAS de la familia
+  `aranas` con la tejedora de líder, un claro, el nido, cuatro sacos y cinco telas fijas.
+- Tela: `telas[] = { x, y, r, hasta }` (`hasta` null = fija). Pisarla sin saltar pone `jug.lento` (× 0,6) y
+  `jug.enTela`. Cuando termina un aviso de la tejedora (`a.de`), queda una tela de `TELA_DURA` = 8 s donde cayó.
+- Veneno: ARANAS envuelve `J.herir`; si muerde una araña, `st.veneno = 5` s a 3 de vida por segundo, nunca por
+  debajo de 1. Lo cura un trago del frasco (`FRASCO.bebiendo()`) o una venda.
+- Sacos: con E dan 1 o 2 de seda (`MATERIALES`), y el 45 % revientan en dos arañitas (`e.cria`, se sacan al morir o a
+  3000). Vuelven a crecer al día siguiente (`cortados["n:k"] = día`).
+- Vendas: `botonesFogata` teje una con `VENDA_SEDA` = 2; desde la Bolsa (`celdasBolsa`) curan el veneno y 30 de vida.
+- Estado en `E.extra.aranas = { cortados, vendas, veneno }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
