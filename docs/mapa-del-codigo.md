@@ -295,8 +295,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
-- **pesca.js**: la pesca (sistema PESCA, modo "pesca")
-  - el agua · tirar, picar, pelear · la capa del minijuego · el puesto de Sverri · el sistema
+- **pesca.js**: la pesca (sistema PESCA)
+  - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
 - **regateo.js**: el regateo (sistema REGATEO)
@@ -318,8 +318,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
 - **tintes.js**: los tintes del casco (sistema TINTES)
   - la pestaña · el sistema
-- **vaettir.js**: los vættir, espíritus de la tierra (sistema VAETTIR)
-  - dónde: a un costado de los caminos, repartidos · favor y ofrendas · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
   - partículas con estado · luces que dejan los eventos · clima del día · los lugares místicos · fauna chica · emisores con estado (brasas, humo, hojas, motas rúnicas…) · campos sin estado (dependen solo de la posición y el tiempo) · el fuego guía · fauna chica: liebres, pinzones, mariposas y bandadas · eventos que mandan los sistemas · capas de dibujo · el sistema
 - **zonas.js**: las zonas del generador: mazmorras oscuras y tierras con islas (sistema ZONAS)
@@ -393,8 +391,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: alfombra, trampilla, escaleraMano, cajas, atril, estanteRollos, armero, tablaSuelta, cofreSotano, huesos, cesto, muroFalso, sacos, cantaros
 - **assets-tintes.js**: la tina de tintes del Puesto (asset de TINTES)
   - assets: tinaTintes
-- **assets-vaettir.js**: los hogares de los vættir (assets de VAETTIR)
-  - assets: manantialVaettr, toconVaettr, piedraHoradada, tumuloChico, rocaLiquenes, huecoBuho, vaettrFigura
 - **assets-vida.js**: la vida del bosque viejo: estructuras místicas y fauna chica (assets de VIDA)
   - El Fresno de los Ecos · El Anillo de los álfar · La Poza de Urd · Las flores del despertar · fauna chica (no pelea; huye)
   - assets: fresnoEcos, anilloAlfar, pozaEstrellas, floresDespertar, liebre, pinzon, mariposa, libelula, polilla, pez
@@ -476,7 +472,6 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **sigilo.js**: Textos del sigilo (motor/sigilo.js): prefijo sl.
 - **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
 - **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
-- **vaettir.js**: Textos de los vættir (motor/vaettir.js, mundo/assets-vaettir.js): prefijo vt. (y as., mp.ley_vaettir).
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.
 

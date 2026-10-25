@@ -544,36 +544,27 @@ Un evento de noche como la Cacería Salvaje del Witcher y las noches de invasió
 - El Cuerno de la Cacería (`celdasBolsa`, ícono `cz_cuerno`): de noche y afuera la llama ya (`tocarCuerno`), una vez
   por noche. Estado en `E.extra.caceria = { avisada, corrida, cuerno, vencidas, sobrevividas, escondidas }`.
 
-## Los vættir (`motor/vaettir.js`, `VAETTIR`; assets `manantialVaettr`, `toconVaettr`, `piedraHoradada`, `tumuloChico`, `rocaLiquenes`, `huecoBuho`, `vaettrFigura` en `mundo/assets-vaettir.js`; textos `vt.`)
+## La pesca (`motor/pesca.js`, `PESCA`, en el mundo; asset `canaSverri` y los peces en `mundo/assets-pesca.js`; textos `pe.`)
 
-Espíritus de la tierra como los landvættir de las sagas y los santuarios chicos del Ni No Kuni.
-- Seis hogares (`LISTA`: id, asset, lo que quiere y su don) a un costado de los caminos, con semilla fija, en tierra
-  firme, lejos de lugares, grupos, guaridas, nidos y del jötunn, separados 6000 (si no alcanza, 4500 o 3000). Cada
-  uno abre un claro chico y pone su figura (`vaettrFigura`, `o.a` la hace aparecer).
-- A `VE` = 900 se lo encuentra (aviso y marca `vaettr`, clase Vættir). Con E (`RADIO` = 160) se abre su hogar: la pista
-  (`vt.<id>_pista`) y un botón por cada `OFRENDAS` que se tenga. Lo que no quiere lo devuelve; lo que quiere sube el
-  favor. Con `FAVOR` = 3 se muestra (60 de plata, un fragmento, 300 de experiencia, sus palabras) y bendice su tierra.
-  De noche, con favor 1 o 2, se asoma a medias.
-- La tierra (`tierra()`): el hogar bendecido más cercano a menos de `TIERRA` = 4200. Dones: vida (+6/s fuera de pelea,
-  +1,5/s en pelea), aliento (+8 de estamina/s), escudo (`modRecibido` × 0,9), golpe (`modDano` × 1,1), botín (30 % de
-  un material de la criatura) y plata (45 % de 4 a 10). Se ve en `efectosHud`.
-- Los seis bendiciendo: amigo de los vættir (dos fragmentos). Estado en `E.extra.vaettir = { favor, vistos, amigo }`.
-
-## La pesca (`motor/pesca.js`, `PESCA`, modo `pesca`; asset `canaSverri` y los peces en `mundo/assets-pesca.js`; textos `pe.`)
-
-Como la pesca del Stardew Valley y del Zelda.
+Todo pasa en el mundo, sin ventana: Eromash tira la caña desde la orilla, el bosque sigue andando y la barra aparece a su costado.
 - El puesto de Sverri: en la orilla de la laguna más cercana al Puesto (el punto que mira al Puesto, 170 afuera del
   agua). Con E se toma la caña (`st.cana`, `o.sinCana`). Marca `pesca` en el mapa y la caña en la Bolsa.
 - `aguaCerca(x, y)`: busca agua (`sueloEn` = 1) de 50 a 190 hacia donde mira Eromash y después alrededor; si cae dentro
   de una laguna es `lago`, si no `rio`. Con caña y fuera de pelea, `cercanos` ofrece Pescar.
-- Fases: `espera` (1,5 a 4,5 s, × 0,7 al alba y al ocaso; apretar recoge), `pica` (`PICA` = 0,8 s para apretar; si
-  no, `tarde`), `pelea` y `fin`. En la pelea la franja (`ZONA` = 0,24) sube con `SUBE` mientras se mantiene (acciones
-  interactuar, atacar, saltar o el dedo sobre la capa) y cae con `CAE`; el pez cambia de meta según `agil` y va con
-  `vel`. Adentro la captura sube `LLENA` = 0,3/s, afuera baja `VACIA` = 0,2/s × (0,8 + vel × 0,4).
+- Fases: `lanza` (`LANZA` = 0,55 s: la boya vuela en arco hasta el agua), `espera` (1,5 a 4,5 s, × 0,7 al alba y al
+  ocaso), `pica` (`PICA` = 0,8 s para clavar con interactuar, atacar, saltar o un toque; si no, `tarde`), `pelea` y
+  `fin` (el pez sale del agua en arco hasta Eromash). Mientras tanto `actualizar` deja `jug.interactuando` en 0,1: no
+  camina ni pega. Moverse recoge el sedal (`cancela`); perder vida lo suelta.
+- La pelea (`pelear(dt, tiron)`): el pez alterna `cede` («¡Tirá!», 1,2 a 2,4 s según `agil`) y `tira` («¡Esperá!», 0,7
+  a 1,5 s). Con `cede` cada tirón suma `GANA` / (0,6 + vel × 0,6) a la captura y `TENSA` = 0,07 a la tensión; con `tira`
+  cada tirón (pasada la `GRACIA` de 0,25 s) suma `TENSA_MAL` = 0,3 y con la tensión en 1 se corta el sedal (`corto`).
+  La tensión afloja `AFLOJA` = 0,7/s y sin tirar la captura baja (0,05 cediendo, 0,09 tirando, × 0,5 + vel); en 0 se
+  suelta, en 1 se pesca. Arranca en `EMPIEZA` = 0,22.
+- El dibujo: boya, ondas y sombra del pez en el piso (`sobreLuz`); la caña que se dobla, el sedal, el pez que sale y la
+  barra con la captura, la tensión y el cartel, derechos en la vista con `J.baseT` (del lado contrario al agua).
 - `PECES`: perca (laguna, día), trucha (río, día), salmón (río, alba y ocaso), lucio (laguna, tarde y noche), anguila
   (cualquiera, noche), pez de escarcha (río del norte) y Urriði el Viejo (laguna, noche, con `ESPECIES_URRIDI` = 4
-  especies, 25 %, una vez: 250 de plata, dos fragmentos, una pieza r ≥ 3). Un jugador simulado con 0,18 s de reflejos
-  pesca casi siempre los fáciles y la mitad de las veces a Urriði.
+  especies, 25 %, una vez: 250 de plata, dos fragmentos, una pieza r ≥ 3). 
 - Cada pez: un pescado para la cocina (tres Urriði) en `COCINA.CARNES.pescado`, platos nuevos `pescadoPalo` y
   `sopaPescado` en `COCINA.PLATOS`, experiencia (entera la primera vez, un cuarto después) y el libro del pescador
   (`st.libro[id] = { n, cm }`, el diario). Estado en `E.extra.pesca = { cana, libro, urridi }`.
