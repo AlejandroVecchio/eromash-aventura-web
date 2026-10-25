@@ -435,5 +435,5 @@ window.PODERES = (function () {
     if (i >= 0) pj.sel = i;
     return i >= 0;
   }
-  return { valores: () => (pj ? valores() : null), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
+  return { valores: () => (pj ? valores() : null), darEnergia: (n) => (energia = Math.max(0, Math.min(100, energia + n))), estado, elegirRuna, hablarCon, soltar, botinCofre, darPlata, darFragmento, darManzana, darRuna, tiene: (r) => !!(pj && pj.runas.includes(r)), RUNAS, ORDEN, pj: () => pj };
 })();

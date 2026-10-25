@@ -165,6 +165,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas de una mano · a dos manos
 - **arte.js**: el dibujo de cada pieza de equipo (módulo ARTE_OBJ)
   - qué dibujo de la arena le toca · amuletos y anillos (propios) · dibujar
+- **bastones-dibujo.js**: el dibujo de los bastones rúnicos (forma "baston" de DIB_ARMAS)
 - **lanzas-dibujo.js**: el dibujo de las lanzas (forma "lanza" de DIB_ARMAS)
 - **martillos-dibujo.js**: el dibujo de los martillos y mazas (forma "martillo" de DIB_ARMAS)
 - **objetos.js**: los objetos de equipo: bases, rarezas, afijos y nombres (módulo OBJETOS)
@@ -200,6 +201,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
 - **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
   - la pestaña
+- **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
+  - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
@@ -215,7 +218,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
 - **interiores.js**: los interiores (sistema INTERIORES)
-  - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto
+  - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · HUD de cada cuadro · menús · bucle · arranque
 - **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")

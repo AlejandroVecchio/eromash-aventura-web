@@ -5,30 +5,31 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 8,
-    titulo: { es: "Martillo", en: "Hammer" },
+    pr: 9,
+    titulo: { es: "Bastón rúnico", en: "Rune staff" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 4, es: "tipos de arma: el martillo es un tipo más con sus golpes", en: "weapon types: the hammer is one more type with its moves" },
-      { pr: 3, es: "botín y equipo: los martillos caen como cualquier pieza y se llevan con escudo", en: "loot and gear: hammers drop like any piece and go with a shield" },
+      { pr: 4, es: "tipos de arma: el bastón es un tipo más; sus golpes conjuran en vez de cortar (como el arco de la PR 6)", en: "weapon types: the staff is one more type; its moves cast instead of cutting (like the PR 6 bow)" },
+      { pr: 5, es: "armas a dos manos: el bastón saca el escudo", en: "two-handed weapons: the staff removes the shield" },
+      { pr: 3, es: "botín y equipo: los bastones caen como cualquier pieza; el afijo de poder rúnico los hace pegar más", en: "loot and gear: staves drop like any piece; the rune power affix makes them hit harder" },
     ],
     mirar: [
-      { es: "Golpes lentos y pesados (Eromash se inclina más). Al tercer golpe la criatura queda «¡Quebrada!»: un rombo partido sobre la cabeza y recibe ×1,25 de todo durante 4 s, también de flechas, lanzas y runas.", en: "Slow, heavy hits (Eromash leans more). On the third hit the creature is «Shattered!»: a split diamond over its head and it takes ×1.25 from everything for 4 s, arrows, spears and runes too." },
-      { es: "El remate baja desde arriba y hace temblar el piso alrededor.", en: "The finisher comes down from above and shakes the ground around." },
-      { es: "Manteniendo atacar, el trueno: golpea el piso y caen rayos rúnicos sobre las cuatro criaturas más cercanas, que quedan aturdidas y quebradas.", en: "Hold attack for thunder: he slams the ground and rune lightning strikes the four closest creatures, stunning and shattering them." },
-      { es: "Corriendo, un empujón con el hombro que aturde. Cinco martillos: mazo, maza de pestañas, martillo rúnico, quijada de jötunn y mazo de piedra.", en: "Running, a shoulder bash that stuns. Five hammers: maul, flanged mace, rune hammer, jötunn jawbone and stone maul." },
+      { es: "Atacar suelta chispas rúnicas (rombos con estela) que se tuercen solas hacia la criatura de adelante; la tercera estalla y lastima alrededor. Cada chispa que toca devuelve energía a la runa (mirá la barra de la runa).", en: "Attack releases rune sparks (diamonds with a trail) that curve toward the creature ahead; the third explodes around. Each spark that hits restores rune energy (watch the rune bar)." },
+      { es: "Manteniendo atacar se levanta el bastón y al soltar sale el sello: un círculo en el piso con Algiz que avisa 0,8 s y estalla dejando atadas (anillo violeta, quietas) a las que agarra.", en: "Hold attack to raise the staff; release for the seal: a ground circle with Algiz that warns for 0.8 s and explodes, binding (violet ring, still) whoever it catches." },
+      { es: "Corriendo, el paso de niebla: un parpadeo hacia adelante sin que nada lo toque. Al caer de un salto, una ola rúnica alrededor.", en: "Running, the mist step: a blink forward untouchable. Landing from a jump, a rune wave around." },
+      { es: "Pega con el poder rúnico además del arma: el bastón alumbra un poco alrededor de Eromash. Cinco bastones: vara de fresno, báculo de la völva, cristal rúnico, de asta y rama de Yggdrasil.", en: "It scales with rune power on top of the weapon: the staff lights up around Eromash. Five staves: ash wand, völva's staff, rune crystal, antler and Yggdrasil branch." },
     ],
     botones: [
-      { es: "Darme los cinco martillos y abrir la Bolsa", en: "Give me the five hammers and open the Bag", fn: (A) => {
-        ["mazo", "mazaPestanas", "martilloRunico", "quijada", "mazoPiedra"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
+      { es: "Darme los cinco bastones y abrir la Bolsa", en: "Give me the five staves and open the Bag", fn: (A) => {
+        ["varaFresno", "baculoVolva", "bastonCristal", "bastonAsta", "ramaYggdrasil"].forEach((b, i) => BOTIN.dar(OBJETOS.generar({ base: b, n: 18, r: i % 4 }), { silencio: true }));
         INVENTARIO.abrir("bolsa");
       } },
-      { es: "Ponerme el martillo rúnico legendario", en: "Equip the legendary rune hammer", fn: (A) => {
-        BOTIN.dar(OBJETOS.generar({ base: "martilloRunico", n: Math.max(11, RPG.nivel()), r: 3 }), { silencio: true });
+      { es: "Ponerme la rama de Yggdrasil legendaria", en: "Equip the legendary Yggdrasil branch", fn: (A) => {
+        BOTIN.dar(OBJETOS.generar({ base: "ramaYggdrasil", n: Math.max(18, RPG.nivel()), r: 3 }), { silencio: true });
         BOTIN.equipar(BOTIN.estado().bolsa.length - 1);
       } },
-      { es: "Ir con un grupo a probarlo (estamina llena)", en: "Go to a group to try it (full stamina)", fn: (A) => {
-        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -200, 120);
+      { es: "Ir con un grupo a probarlo (de noche se lucen más las luces)", en: "Go to a group to try it (lights show better at night)", fn: (A) => {
+        ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), -380, 0);
         A.jug.sta = A.jug.staMax;
       } },
       { es: "Volver a la espada del forastero", en: "Back to the stranger's sword", fn: (A) => {

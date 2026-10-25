@@ -65,6 +65,12 @@ window.OBJETOS = (function () {
     martilloRunico: { slot: "arma", tipo: "martillo", g: "m", dano: 12, vel: 0.9, desde: 11, implicito: [["runico", 10]], arte: { lib: "arma", forma: "martillo", fam: 2 } },
     quijada: { slot: "arma", tipo: "martillo", g: "f", dano: 13, vel: 0.88, desde: 14, implicito: [["robo", 1]], arte: { lib: "arma", forma: "martillo", fam: 3 } },
     mazoPiedra: { slot: "arma", tipo: "martillo", g: "m", dano: 14, vel: 0.82, desde: 18, arte: { lib: "arma", forma: "martillo", fam: 4 } },
+    // bastones rúnicos (motor/baston.js): pegan con el poder rúnico, chispas que buscan y el sello; dos manos
+    varaFresno: { slot: "arma", tipo: "baston", dosManos: true, g: "f", dano: 9, vel: 1, desde: 1, implicito: [["runico", 4]], arte: { lib: "arma", forma: "baston", fam: 0 } },
+    baculoVolva: { slot: "arma", tipo: "baston", dosManos: true, g: "m", dano: 10, vel: 1, desde: 5, implicito: [["regenRunica", 10]], arte: { lib: "arma", forma: "baston", fam: 1 } },
+    bastonCristal: { slot: "arma", tipo: "baston", dosManos: true, g: "m", dano: 10, vel: 1, desde: 10, implicito: [["runico", 12]], arte: { lib: "arma", forma: "baston", fam: 2 } },
+    bastonAsta: { slot: "arma", tipo: "baston", dosManos: true, g: "m", dano: 11, vel: 1, desde: 14, implicito: [["robo", 1]], arte: { lib: "arma", forma: "baston", fam: 3 } },
+    ramaYggdrasil: { slot: "arma", tipo: "baston", dosManos: true, g: "f", dano: 11, vel: 1.05, desde: 18, implicito: [["runico", 15]], arte: { lib: "arma", forma: "baston", fam: 4 } },
     escudoRedondo: { slot: "escudo", g: "m", arm: 5, desde: 1, arte: { lib: "escudo" } },
     escudoGuarnecido: { slot: "escudo", g: "m", arm: 8, desde: 10, arte: { lib: "escudo" } },
     casco: { slot: "casco", g: "m", arm: 3, desde: 1, arte: { lib: "casco" } },

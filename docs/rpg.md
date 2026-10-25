@@ -131,6 +131,15 @@ tener que leer el código para balancear.
   estamina), el trueno** (`MARTILLO.TRUENO`): un giro de 16 y rayos sobre las 4 criaturas más cercanas a menos de
   280 (26 de daño, aturden 0,8 s y quiebran), con luz. Con escudo. Cinco: mazo (1), maza de pestañas (6), martillo
   rúnico (11), quijada de jötunn (14) y mazo de piedra (18).
+- **Bastón rúnico** (`motor/baston.js`, `BASTON`; dibujo `equipo/bastones-dibujo.js`): pega con el arma **y** el
+  poder rúnico (`J.mulDano × J.poderRunico`). Los golpes traen `conjuro`, `sello`, `parpadeo` u `ola` y el sistema
+  los hace al terminar el envión. Combo: chispas de 10 / 10 / 12 que estalla (16 en 90 alrededor); las chispas
+  vuelan 760 a 900 por segundo y se tuercen 4 rad/s hacia la criatura más cercana delante (`BASTON.CHISPA`); cada
+  una que toca da 2 de energía rúnica (`PODERES.darEnergia`). Corriendo, **paso de niebla**: 230 adelante, 0,35 s
+  intocable. Al caer, ola de 20 en 150. **Cargado (0,6 s, 12 de estamina), el sello** (`BASTON.SELLO`): un círculo
+  con Algiz en la criatura apuntada (o a 270) que avisa 0,8 s en el piso y estalla: 34 en 130 y las deja atadas
+  1,4 s (`e.atada`, anillo violeta). Con las dos manos. Cinco: vara de fresno (1), báculo de la völva (5, regeneración
+  rúnica), cristal rúnico (10), de asta (14) y rama de Yggdrasil (18).
 
 ## Pruebas
 

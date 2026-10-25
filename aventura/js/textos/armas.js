@@ -42,4 +42,10 @@ I18N.textos({
   "ob.b_martilloRunico": { es: "Martillo rúnico", en: "Rune Hammer" },
   "ob.b_quijada": { es: "Quijada de jötunn", en: "Jötunn Jawbone" },
   "ob.b_mazoPiedra": { es: "Mazo de piedra atada", en: "Bound Stone Maul" },
+  "ar.rasgo_baston": { es: "Bastón · chispas rúnicas que buscan y devuelven energía; corriendo, paso de niebla; manteniendo atacar, el sello", en: "Staff · seeking rune sparks that restore energy; running, mist step; hold attack for the seal" },
+  "ob.b_varaFresno": { es: "Vara de fresno", en: "Ash Wand" },
+  "ob.b_baculoVolva": { es: "Báculo de la völva", en: "Völva's Staff" },
+  "ob.b_bastonCristal": { es: "Bastón de cristal rúnico", en: "Rune Crystal Staff" },
+  "ob.b_bastonAsta": { es: "Bastón de asta", en: "Antler Staff" },
+  "ob.b_ramaYggdrasil": { es: "Rama de Yggdrasil", en: "Yggdrasil Branch" },
 });
