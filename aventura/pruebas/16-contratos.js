@@ -3,10 +3,12 @@
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push(
-    { nombre: "contratos: el poste está frente al Puesto y cada contrato tiene rastros y guarida", fn: async (A, { igual, si }) => {
+    { nombre: "contratos: el poste está junto a la Guardia de Eikholt y cada contrato tiene rastros y guarida", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       const p = CONTRATOS.poste();
-      si(p && Math.hypot(p.x - A.W.LUGARES.puesto.p[0], p.y - A.W.LUGARES.puesto.p[1]) < 2500, "el poste está cerca del Puesto");
+      const C = A.W.CIUDAD;
+      si(p && ((p.x - C.c[0]) / C.rx) ** 2 + ((p.y - C.c[1]) / C.ry) ** 2 < 1, "el poste está en Eikholt");
+      si(EIKHOLT.traido("poste_contratos"), "y la ciudad lo trae");
       igual(ASSETS.sinGiro().filter((k) => /Contrat/.test(k)).length, 0, "los assets aguantan el giro:");
       const L = CONTRATOS.lugares();
       CONTRATOS.LISTA.forEach((k) => si(L[k.id].rastros.length === 3 && L[k.id].guarida, k.id + " con rastros y guarida"));
