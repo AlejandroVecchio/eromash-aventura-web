@@ -12,13 +12,12 @@
       { pr: 12, es: "materiales: las mejoras piden cuero curtido, hierro de pantano y ámbar", en: "materials: upgrades ask for cured leather, bog iron and amber" },
       { pr: 22, es: "cocina: el fogón del patio es un fogón de cocinar de verdad", en: "cooking: the yard fire pit is a real cooking fire" },
       { pr: 21, es: "alquimia: la huerta da hierbas", en: "alchemy: the garden yields herbs" },
-      { pr: 23, es: "descanso: la cama de pieles deja descansado el doble", en: "rest: the bearskin bed keeps you rested twice as long" },
       { pr: 42, es: "libros: la estantería cuenta los libros leídos", en: "books: the bookshelf counts the books you've read" },
       { pr: 1, es: "niveles: la estantería da +5 % de experiencia", en: "levels: the bookshelf gives +5% experience" },
     ],
     mirar: [
       { es: "Al costado del camino que sale del Puesto está la casa de Hrolf, cerrada, con un letrero de «se vende» colgado de cadenas. Con E en el letrero se compra por 500 de plata: el letrero se da vuelta y muestra la cornamenta tallada, la casa va al mapa y aparece «Tu casa» entre los destinos de Viajar.", en: "Beside the road out of the Outpost stands Hrolf's house, locked, with a for-sale sign hanging from chains. Press E on the sign to buy it for 500 silver: the sign flips to show the carved antler, the house goes on the map and «Your house» appears among the travel destinations." },
-      { es: "Adentro: cama, hogar y en la mesa los planos. Cada mejora cuesta plata y materiales y aparece en el acto: el arcón (guarda 30 piezas), el armero (+4 % de daño), la estantería (+5 % de experiencia), el fogón del patio, la huerta y la cama de pieles de oso (descansado el doble).", en: "Inside: a bed, a hearth and the plans on the table. Each upgrade costs silver and materials and shows up at once: the chest (stores 30 pieces), the weapon rack (+4% damage), the bookshelf (+5% experience), the yard fire pit, the garden and the bearskin bed (rested twice as long)." },
+      { es: "Adentro: cama, hogar y en la mesa los planos. Cada mejora cuesta plata y materiales y aparece en el acto: el arcón (guarda 30 piezas), el armero (+4 % de daño), la estantería (+5 % de experiencia), el fogón del patio, la huerta y la cama de pieles de oso (dormir en ella deja «Bien abrigado»: +10 % de experiencia por 10 minutos).", en: "Inside: a bed, a hearth and the plans on the table. Each upgrade costs silver and materials and shows up at once: the chest (stores 30 pieces), the weapon rack (+4% damage), the bookshelf (+5% experience), the yard fire pit, the garden and the bearskin bed (rested twice as long)." },
       { es: "La huerta crece durante el día y se cosecha una vez por día con E: dos hierbas y a veces una manzana. Todo queda guardado en la partida.", en: "The garden grows during the day and is harvested once a day with E: two herbs and sometimes an apple. Everything is kept in your save." },
     ],
     botones: [
