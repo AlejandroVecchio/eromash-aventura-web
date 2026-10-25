@@ -306,6 +306,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - los topes (la pasada de balance) · el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
 - **saga.js**: la saga de Eromash (sistema SAGA, pestaña Saga de la mochila)
   - los hitos · la pestaña · el sistema
+- **sanacion.js**: la Casa de Sanación por dentro (sistema SANACION)
+  - la casa · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
 - **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
   - pedir · ubicar · el sistema
 - **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
@@ -393,6 +395,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: piedraCamino, piedraRito
 - **assets-puesto.js**: El Puesto de Eydis imaginado (versión de Alejandro, 22/10/2026; se suma a ASSETS)
   - assets: palisada, portonPuesto, mesaRutas, tableroTablillas, tablonCaza, fogonOlla, mostradorManta, ahumadero, tendedero, perraGrima, piedraVioleta
+- **assets-sanacion.js**: lo de adentro de la Casa de Sanación (assets armados con caras)
+  - El hogar con el caldero · El estante de los frascos · Las hierbas colgadas · La mesa de los morteros · La cama de los enfermos · La cortina de lino · La tina de los baños tibios · La mesa de Berkano · El jergón de Hlíf
+  - assets: hogarCaldero, estanteFrascos, colgaderoHierbas, mesaMorteros, camaSanacion, cortinaLino, tinaBano, mesaBerkano, jergon
 - **assets-santuarios.js**: los hörgar de los dioses (assets de SANTUARIOS)
   - assets: horgr
 - **assets-secretos.js**: los secretos de Eldervald: cofres, piedras rúnicas, altares y ruinas
@@ -489,6 +494,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
 - **saga.js**: Textos de la saga de Eromash (motor/saga.js): prefijo sg.
+- **sanacion.js**: textos de la Casa de Sanación por dentro (sn.) y de sus muebles (as.)
 - **santuarios.js**: Textos de los hörgar de los dioses (motor/santuarios.js): prefijo sn. (y as.horgr, mp.ley_dioses)
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
