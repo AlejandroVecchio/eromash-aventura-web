@@ -713,7 +713,7 @@
     jug.lento = Math.max(0, jug.lento - dt);
     lenteEspera = Math.max(0, lenteEspera - dt);
     // la vida vuelve sola cuando ya no hay nada cerca; en pelea no (para eso están las piedras de Berkano y las hierbas)
-    if (jug.sinGolpe > 4 && !jug.muerto && !jug.pelea) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
+    if (jug.sinGolpe > 4 && !jug.muerto && !jug.pelea) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * (window.PODERES && PODERES.escalaCura ? PODERES.escalaCura() : 1) * dt);
     // empujón
     if (Math.abs(jug.vx) + Math.abs(jug.vy) > 1) {
       moverJugador(jug.vx * dt, jug.vy * dt);
