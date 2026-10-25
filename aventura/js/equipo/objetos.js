@@ -208,6 +208,8 @@ window.OBJETOS = (function () {
     } else if (r >= 2) it.nm = [Math.floor(rnd() * SUST.length), Math.floor(rnd() * DE.length)];
     // las muescas para las tallas (motor/engarces.js)
     if (window.ENGARCES && !op.sinMuescas) ENGARCES.alGenerar(it, rnd);
+    // el poder de las legendarias (motor/legendarios.js)
+    if (window.LEGENDARIOS) LEGENDARIOS.alGenerar(it, rnd);
     return it;
   }
 
@@ -225,6 +227,7 @@ window.OBJETOS = (function () {
     if (it.fijo) return t(it.fijo);
     if (it.pr && window.ENGARCES) return ENGARCES.nombre(it);
     if (it.cj && window.CONJUNTOS) return CONJUNTOS.nombre(it);
+    if (it.po && window.LEGENDARIOS) return LEGENDARIOS.nombre(it);
     const B = BASES[it.b],
       base = nombreBase(it),
       en = I18N.lang === "en";
@@ -262,6 +265,7 @@ window.OBJETOS = (function () {
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
     if (it.e && window.ENGARCES) ENGARCES.lineas(it).forEach((q) => l.push(q));
     if (it.cj && window.CONJUNTOS) CONJUNTOS.lineas(it).forEach((q) => l.push(q));
+    if (it.po && window.LEGENDARIOS) LEGENDARIOS.lineas(it).forEach((q) => l.push(q));
     return l;
   }
   // qué tipo de pieza es y su nivel: «Espada ancha · rara · nivel 7»
