@@ -75,6 +75,8 @@ window.FORJA = (function () {
           const b = baseDe(g);
           return { texto: t("ob.b_" + b), sub: t("fg.grupo_" + g.id), fn: () => elegirModo(g, b) };
         })
+        // lo que suman otros sistemas al menú de Ása: botonesAsa() → [{ texto, sub, fn }] (las muescas)
+        .concat(window.SISTEMAS.flatMap((s0) => (s0.botonesAsa ? s0.botonesAsa() : [])))
         .concat([{ texto: t("ui.cerrar"), fn: A.cerrarMenu }]),
     );
   }

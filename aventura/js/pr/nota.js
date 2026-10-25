@@ -5,47 +5,52 @@
 (function () {
   "use strict";
   const NOTA = {
-    pr: 23,
-    titulo: { es: "Descansar y pasar la noche", en: "Resting and passing the night" },
+    pr: 24,
+    titulo: { es: "Muescas, tallas y palabras rúnicas", en: "Notches, carvings and runewords" },
     // las PRs anteriores que esta usa y para qué (vacío: no depende de ninguna)
     usa: [
-      { pr: 22, es: "cocina: «Descansar junto al fuego» va en el menú de la fogata", en: "cooking: «Rest by the fire» goes in the campfire menu" },
-      { pr: 20, es: "frasco: dormir lo llena", en: "flask: sleeping refills it" },
-      { pr: 21, es: "alquimia: dormir limpia las toxinas y las hierbas vuelven a crecer", en: "alchemy: sleeping clears toxins and herbs grow back" },
-      { pr: 1, es: "niveles: «Bien descansado» suma experiencia", en: "levels: «Well rested» adds experience" },
+      { pr: 3, es: "botín: las piezas que caen pueden traer muescas y suman lo de sus tallas", en: "loot: dropped pieces can come with notches and add their carvings' bonuses" },
+      { pr: 11, es: "forja: Ása suma «Abrir muescas en una pieza» a su menú", en: "forge: Ása adds «Open notches in a piece» to her menu" },
+      { pr: 12, es: "materiales: abrir muescas pide hierro y una esquirla", en: "materials: opening notches costs iron and a shard" },
     ],
     mirar: [
-      { es: "Junto a los fogones del Puesto, del Refugio, del Aserradero y del paso hay un petate de pieles con un trapo rojo: «Dormir en el petate». En cualquier fogata encendida, el menú de cocinar suma «Descansar junto al fuego».", en: "Next to the hearths of the Outpost, the Refuge, the Sawmill and the pass there's a fur bedroll with a red rag: «Sleep on the bedroll». At any lit campfire, the cooking menu adds «Rest by the fire»." },
-      { es: "Se elige hasta cuándo (alba, mediodía, atardecer, noche o una hora). El tiempo corre rápido: el cielo cambia detrás y el reloj gira. E, ✕ o un toque despiertan antes.", en: "You choose until when (dawn, noon, dusk, night or one hour). Time runs fast: the sky changes behind and the clock turns. E, ✕ or a tap wake you early." },
-      { es: "Al despertar: vida, estamina y frasco llenos; con 4 h o más se van las toxinas y los grupos de criaturas muertos lejos vuelven (sale cuántos).", en: "On waking: full life, stamina and flask; with 4 h or more toxins clear and dead creature packs far away come back (it tells you how many)." },
-      { es: "Con 6 h o más quedás «Bien descansado» (tira sobre el retrato): +15 % de experiencia en un refugio, +10 % afuera, por 10 minutos. Cada noche entera trae un sueño (son seis, en orden).", en: "With 6 h or more you're «Well rested» (strip above the portrait): +15 % experience in a refuge, +10 % outside, for 10 minutes. Each full night brings a dream (there are six, in order)." },
-      { es: "Afuera, de noche, a veces te despiertan unos aullidos: tres lobos y nada de descanso entero. Con enemigos cerca no se puede descansar.", en: "Outside, at night, howls sometimes wake you: three wolves and no full rest. With enemies nearby you can't rest." },
+      { es: "Algunas piezas caen con muescas (las comunes más seguido, las legendarias y los anillos nunca). El detalle dice «Muescas: ◇ · ◇».", en: "Some pieces drop with notches (common ones more often, legendaries and rings never). The detail says «Notches: ◇ · ◇»." },
+      { es: "Las criaturas (más los líderes y semijefes) y los cofres sueltan tallas: huesitos con una runa, de Fehu (común) a Tiwaz (rara). Cada una suma una cosa en el arma y otra en la armadura o la joya.", en: "Creatures (leaders and lesser bosses more) and chests drop carvings: little bones with a rune, from Fehu (common) to Tiwaz (rare). Each adds one thing in a weapon and another in armour or jewellery." },
+      { es: "La pestaña Tallas de la mochila: elegís la pieza, tocás una talla y queda encastrada. Vaciar devuelve las tallas por 20 de plata cada una. Con R / △ sobre una talla con tres o más se unen en la siguiente.", en: "The Carvings tab in the backpack: pick the piece, touch a carving and it's set. Emptying returns the carvings for 20 silver each. With R / △ on a carving with three or more they merge into the next." },
+      { es: "Siete palabras rúnicas, como en el Diablo 2: en una pieza común con justo esas muescas, las tallas en su orden la despiertan (cartel grande, columna rúnica, nombre propio entre «» y un bono fuerte). Tiwaz + Uruz en una espada de 2 muescas es «Juramento».", en: "Seven runewords, Diablo 2-style: in a common piece with exactly those notches, the carvings in order awaken it (big banner, rune column, its own name in «» and a strong bonus). Tiwaz + Uruz in a 2-notch sword is «Oath»." },
+      { es: "Ása abre muescas en una pieza que no tiene (las comunes reciben más) por plata, hierro y una esquirla.", en: "Ása opens notches in a piece that has none (common ones get more) for silver, iron and a shard." },
     ],
     botones: [
-      { es: "Ir al petate del Puesto (seguro) a las 21 h", en: "Go to the Outpost bedroll (safe) at 9 pm", fn: (A) => {
-        const p = DESCANSO.petates().find((q) => q.id === "fogon");
-        ir(A, [p.cosa.x + 60, p.cosa.y + 40]);
-        A.H.E.tiempo = Math.ceil(A.H.E.tiempo / LUZ.DIA) * LUZ.DIA + (12 / 24) * LUZ.DIA;
+      { es: "Darme una espada común de 2 muescas con Tiwaz y Uruz (Juramento)", en: "Give me a common 2-notch sword with Tiwaz and Uruz (Oath)", fn: () => {
+        const it = OBJETOS.generar({ base: "espadaAncha", r: 0, n: 6, sinMuescas: true });
+        it.e = 2;
+        it.g = [];
+        BOTIN.dar(it);
+        ENGARCES.dar("tiwaz", 1);
+        ENGARCES.dar("uruz", 1);
+        ENGARCES.elegir(it.u);
+        INVENTARIO.abrir("tallas");
       } },
-      { es: "Ir a la fogata del paso (afuera) a las 21 h", en: "Go to the pass campfire (outside) at 9 pm", fn: (A) => {
-        const p = DESCANSO.petates().find((q) => q.id === "fogon_paso") || DESCANSO.petates()[0];
-        ir(A, [p.cosa.x + 60, p.cosa.y + 40]);
-        A.H.E.tiempo = Math.ceil(A.H.E.tiempo / LUZ.DIA) * LUZ.DIA + (12 / 24) * LUZ.DIA;
-      } },
-      { es: "Vaciar el bosque (matar los grupos lejanos) para verlo volver", en: "Empty the forest (kill the far packs) to watch it come back", fn: (A) => {
-        let n = 0;
-        HORDAS.grupos.forEach((g) => {
-          if (g.unico || Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y) < 1600) return;
-          g.miembros.forEach((e) => (e.muerto = 1));
-          g.muerto = A.H.E.tiempo;
-          n++;
+      { es: "Darme una pieza común justa para cada palabra y 6 tallas de cada una", en: "Give me a fitting common piece for each word and 6 of every carving", fn: () => {
+        Object.keys(ENGARCES.PALABRAS).forEach((id) => {
+          const P = ENGARCES.PALABRAS[id];
+          const b = Object.keys(OBJETOS.BASES).find((k) => OBJETOS.BASES[k].slot === P.en[0]);
+          const it = OBJETOS.generar({ base: b, r: 0, n: 6, sinMuescas: true });
+          it.e = P.tallas.length;
+          it.g = [];
+          BOTIN.dar(it);
         });
-        HUD.aviso(n + " ✝", "#C8402D");
+        ENGARCES.ORDEN.forEach((id) => ENGARCES.dar(id, 6));
+        INVENTARIO.abrir("tallas");
       } },
-      { es: "Envenenarse (toxicidad 80) y vaciar el frasco", en: "Poison yourself (toxicity 80) and empty the flask", fn: () => {
-        ALQUIMIA.estado().tox = 80;
-        FRASCO.estado().cargas = 0;
+      { es: "Abrir el menú de Ása con plata y materiales", en: "Open Ása's menu with silver and materials", fn: () => {
+        PODERES.pj().plata += 600;
+        MATERIALES.dar("hierro", 6);
+        MATERIALES.dar("esquirla", 3);
+        BOTIN.dar(OBJETOS.generar({ base: "espadaHierro", r: 0, n: 5, sinMuescas: true }));
+        FORJA.abrir();
       } },
+      { es: "Ir a cazar líderes (sueltan tallas)", en: "Go hunt leaders (they drop carvings)", fn: (A) => ir(A, cercaDeGrupo(A, (g) => -Math.hypot(g.centro[0] - A.jug.x, g.centro[1] - A.jug.y)), 0, 450) },
     ],
   };
   // ---------- ayuda para los botones ----------

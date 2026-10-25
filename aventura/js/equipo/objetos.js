@@ -204,6 +204,8 @@ window.OBJETOS = (function () {
         s = it.a.find((q) => !AFIJOS[q[0]].p);
       it.nm = [p ? p[0] : "", s ? s[0] : ""];
     } else if (r >= 2) it.nm = [Math.floor(rnd() * SUST.length), Math.floor(rnd() * DE.length)];
+    // las muescas para las tallas (motor/engarces.js)
+    if (window.ENGARCES && !op.sinMuescas) ENGARCES.alGenerar(it, rnd);
     return it;
   }
 
@@ -219,6 +221,7 @@ window.OBJETOS = (function () {
   function nombre(it) {
     if (!it) return "";
     if (it.fijo) return t(it.fijo);
+    if (it.pr && window.ENGARCES) return ENGARCES.nombre(it);
     const B = BASES[it.b],
       base = nombreBase(it),
       en = I18N.lang === "en";
@@ -254,6 +257,7 @@ window.OBJETOS = (function () {
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
     if (it.forja != null) l.push({ txt: t("fg.l_forjada", [it.forja]), col: "#FFD98A" });
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
+    if (it.e && window.ENGARCES) ENGARCES.lineas(it).forEach((q) => l.push(q));
     return l;
   }
   // qué tipo de pieza es y su nivel: «Espada ancha · rara · nivel 7»
@@ -269,7 +273,7 @@ window.OBJETOS = (function () {
       if (!it) return;
       const B = BASES[it.b];
       if (it.ar) s.armadura = (s.armadura || 0) + it.ar;
-      (B.implicito || []).concat(it.a).forEach(([k, v]) => (s[k] = (s[k] || 0) + v));
+      (B.implicito || []).concat(it.a, it.ex || []).forEach(([k, v]) => (s[k] = (s[k] || 0) + v));
     });
     return s;
   }

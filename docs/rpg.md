@@ -344,6 +344,24 @@ tener que leer el código para balancear.
 - La cama de las casas (interiores.js) llama a `DESCANSO.dormido(horas)`: cuenta como descanso seguro.
 - Estado en `E.extra.descanso = { veces, suenos, descansado, k }`.
 
+## Muescas, tallas y palabras rúnicas (`motor/engarces.js`, `ENGARCES`; textos `en.` en `textos/engarces.js`)
+
+- Muescas (`it.e`, `it.g` = tallas puestas): al generar (`OBJETOS.generar` llama a `ENGARCES.alGenerar`; `sinMuescas`
+  lo evita) salen en común 30 % (1 al máximo), mágica 14 % (hasta máximo − 1), rara 6 % (1); legendarias nunca. Máximo
+  por casilla (`MAX`): arma, escudo, pecho y casco 3; piernas, botas y amuleto 2; anillos 0.
+- Tallas (`TALLAS`, de común a rara: Fehu, Uruz, Thurisaz, Jera, Algiz, Ansuz, Hagalaz, Tiwaz): cada una suma
+  `arma` en un arma y `otro` en lo demás. Caen 3,5 % de cualquier criatura, 22 % de un líder, siempre de un único y
+  dos de un semijefe (`alMorir`), y 25 % de los cofres (siempre de los importantes). `sortear(nivel)` deja salir las
+  raras recién desde nivel 3 en adelante (3 + nivel/3 tallas posibles). Tres iguales se unen en la siguiente (`unir`).
+- Encastrar (`engarzar`) es en orden y para siempre; `vaciar` devuelve todo por 20 de plata por talla.
+- Palabras (`PALABRAS`): pieza **común**, casilla de la lista, muescas = largo de la receta y tallas en ese orden. Suman
+  su `da` además de las tallas; nombre «…» (`OBJETOS.nombre` pregunta `it.pr`) y el detalle suma sus líneas
+  (`ENGARCES.lineas`). Lo que suman las tallas y la palabra queda en `it.ex`, que `OBJETOS.sumar` lee.
+- Ása (hook nuevo de forja.js: `botonesAsa()` → `[{ texto, sub, fn }]`): abre muescas en una pieza sin muescas que no
+  sea legendaria (común: el máximo, mágica: máximo − 1, rara: 1) por 40 + 10 × nivel de plata, 2 de hierro y 1 esquirla.
+- Pestaña «Tallas» de la mochila (visible con piezas con muescas o tallas) y las tallas en la Bolsa.
+- Estado en `E.extra.engarces = { tallas, hechas }`.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y
