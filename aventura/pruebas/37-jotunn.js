@@ -16,9 +16,44 @@
         const dos = r.concat(r);
         for (let i = 0; i < r.length; i++) si(!(dos[i] === dos[i + 1] && dos[i + 1] === dos[i + 2]), "fase " + f + " sin tres iguales");
       });
+      // sin vencer a sus tres guardianes no pelea: habla, y al acercarse patea fuera del anillo
+      const st = JOTUNN.estado();
+      igual(j.guard.length, 3, "tres guardianes:");
+      si(j.guard.every((g) => Math.hypot(g.x - j.centro[0], g.y - j.centro[1]) > JOTUNN.ANILLO * 1.5), "andan lejos del anillo");
+      si(!JOTUNN.desafiado(), "todavía no lo desafió");
       A.jug.x = j.centro[0];
       A.jug.y = j.centro[1] + 400;
       A.jug.hp = A.jug.hpMax;
+      A.jug.inv = 0;
+      A.jug.salto = 0;
+      await esperar(150);
+      igual(A.J.modo, "dialogo", "el gigante habla:");
+      for (let i = 0; i < 10 && A.J.modo === "dialogo"; i++) {
+        window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyE" }));
+        await esperar(50);
+        window.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyE" }));
+        await esperar(50);
+      }
+      si(st.visto, "lo vio");
+      igual(j.estado, "duerme", "sigue sentado:");
+      si(JOTUNN.sistema.marcasMapa().length === 4, "el mapa marca a los guardianes");
+      A.jug.x = j.e.x;
+      A.jug.y = j.e.y + 250;
+      A.jug.inv = 0;
+      A.J.avisos.length = 0;
+      await esperar(120);
+      si(j.patada && A.J.avisos.includes(j.patada.a) && COMBATE.contiene(j.patada.a, A.jug.x, A.jug.y), "aviso exacto de la patada");
+      const hp0 = A.jug.hp;
+      for (let i = 0; i < 40 && (j.patada || j.vuelo); i++) await esperar(50);
+      si(Math.hypot(A.jug.x - j.centro[0], A.jug.y - j.centro[1]) > JOTUNN.ANILLO, "lo sacó del anillo");
+      igual(A.jug.hp, hp0, "la patada no saca vida:");
+      igual(JOTUNN.sistema.modDano(100, j.e), 0, "dormido no se lo lastima:");
+      // los tres guardianes caen: ahora pelea
+      j.guard.forEach((g) => ((g.activo = true), A.CB.golpear(A.J, g, 999999, g.x, g.y, 1)));
+      await esperar(150);
+      si(JOTUNN.desafiado(), "desafiado con los tres caídos");
+      A.jug.x = j.centro[0];
+      A.jug.y = j.centro[1] + 400;
       await esperar(120);
       igual(j.estado, "ruge", "despertó:");
       for (let i = 0; i < 60 && j.estado === "ruge"; i++) await esperar(50);
