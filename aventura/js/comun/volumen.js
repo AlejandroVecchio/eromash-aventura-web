@@ -365,6 +365,31 @@ window.VOL = (function () {
     cara(c, pr, [[u1, w1, z], [u1, w0, z], [u1, wm, hz]], op.hastial || col, op.frontis);
     cara(c, pr, [[u0, w1, z], [u1, w1, z], [u1, wm, hz], [u0, wm, hz]], col, op.faldon);
   }
+  // una bóveda (tapa de arcón, toldo de carro, techo de túnel): medio cilindro a lo largo de u, de w0 a w1, con el
+  // arranque en z y alto h; op: { n: tramos, punta: color de las dos puntas, faja: fn(c, largo, alto) en la faja de
+  // adelante (la más cercana al frente), sinPuntas }
+  function boveda(c, pr, u0, u1, w0, w1, z, h, col, op = {}) {
+    const n = op.n || 5,
+      wm = (w0 + w1) / 2,
+      rw = (w1 - w0) / 2,
+      arco = Array.from({ length: n + 1 }, (_, i) => {
+        const a = (i / n) * Math.PI;
+        return [wm + Math.cos(a) * rw, z + Math.sin(a) * h];
+      }),
+      fajas = [];
+    for (let i = 0; i < n; i++) {
+      const [wa, za] = arco[i],
+        [wb, zb] = arco[i + 1];
+      fajas.push({ i, p: afuera([[u0, wa, za], [u1, wa, za], [u1, wb, zb], [u0, wb, zb]], [0, (wa + wb) / 2 - wm, (za + zb) / 2 - z]) });
+    }
+    fajas.sort((a, b) => pr.hondo(0, a.p[0][1] + a.p[2][1]) - pr.hondo(0, b.p[0][1] + b.p[2][1]));
+    fajas.forEach((f) => {
+      const p = f.p;
+      cara(c, pr, p, col, f.i === 0 && op.faja ? medida(Math.abs(p[1][0] - p[0][0]) || 1, Math.hypot(p[3][1] - p[0][1], p[3][2] - p[0][2]) || 1, op.faja) : null);
+    });
+    if (op.sinPuntas) return;
+    [u0, u1].forEach((u) => cara(c, pr, afuera(arco.map(([w, zz]) => [u, w, zz]), [u - (u0 + u1) / 2, 0, 0]), op.punta || col));
+  }
   // una pirámide (o un cono facetado si la planta es redonda): planta [[u, w], …] en z0 y la punta en (pu, pw, z1)
   function piramide(c, pr, planta, z0, pu, pw, z1, col) {
     const n = planta.length,
@@ -537,7 +562,7 @@ window.VOL = (function () {
     mezcla, tonos, tono,
     proyector, pr, sub, prSeg, prVista,
     area, cara, enCara, medida, normal, afuera,
-    caja, cubo, prisma, cilindro, cono, rollo, techo, piramide, redonda, palo, plano, lamina, aguaUna, halo,
+    caja, cubo, prisma, cilindro, cono, rollo, techo, boveda, piramide, redonda, palo, plano, lamina, aguaUna, halo,
     enPiso, calco, sombra, elipse, punto, escena,
     relativa, angulo, ejeMundo, sinSombra,
   };

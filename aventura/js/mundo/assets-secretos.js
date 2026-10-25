@@ -3,7 +3,7 @@
 // Las runas encendidas son las únicas cosas que brillan de verdad en el bosque: así el jugador las ve de lejos.
 (function () {
   "use strict";
-  const { P, E, R, L, alfa, sombra, halo, RUNICO, RUNICO_CLARO, VIOLETA, poli, azar } = DIB;
+  const { P, E, R, L, alfa, sombra, halo, RUNICO, RUNICO_CLARO, VIOLETA, poli, azar, TAU } = DIB;
   const C = ASSETS.C;
   const F = FUTHARK;
   const COL_RUNA = { kenaz: "#FF8D71", isa: "#C8F2F4", algiz: "#FFD98A", sowilo: "#F5A524" };
@@ -531,20 +531,424 @@
       });
   }
 
+  // ======================================================================
+  //  ARMADOS CON CARAS (todo girable, comun/volumen.js)
+  // ======================================================================
+  const T = C.T,
+    menhir = (...a) => ASSETS.KIT.menhirV(...a);
+  // el arcón del leñador: el cuerpo de roble con zunchos y esquineros, la tapa abombada con Fehu en la cerradura y el
+  // asa de soga; abierto, la tapa parada atrás y la paja del fondo
+  function arconLenadorV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      zunchos = (cc, l, h) => {
+        R(cc, 0, -h / 2 - 0.7, l, 1.4, C.maderaSombra);
+        [8, l - 22].forEach((u) => R(cc, u, -h, 4, h, C.hierro));
+        R(cc, 0, -6, 6, 6, C.hierro);
+        R(cc, l - 6, -6, 6, 6, C.hierro);
+      };
+    VOL.sombra(c, pr, 4, 0, 38, 20);
+    VOL.caja(c, pr, -30, -14, 0, 30, 14, 24, T.madera, {
+      frente: (cc, l, h) => {
+        zunchos(cc, l, h);
+        if (!o.abierto) {
+          R(cc, l / 2 - 6, -h + 2, 12, 13, C.hierro);
+          R(cc, l / 2 - 6, -h + 2, 12, 2, C.hierroLuz);
+          F.dibujar(cc, "fehu", l / 2, -5, 9, C.ambar, 1.5);
+        }
+      },
+      atras: zunchos,
+      der: (cc, l, h) => {
+        cc.strokeStyle = "#B08A58";
+        cc.lineWidth = 2.4;
+        cc.beginPath();
+        cc.moveTo(l * 0.25, -h * 0.7);
+        cc.quadraticCurveTo(l * 0.5, -h * 0.2, l * 0.75, -h * 0.7);
+        cc.stroke();
+      },
+      izq: (cc, l, h) => R(cc, 0, -h / 2 - 0.7, l, 1.4, C.maderaSombra),
+      tapa: o.abierto ? "#1E140C" : null,
+    });
+    if (o.abierto) {
+      VOL.enPiso(c, pr, (cc) => {
+        R(cc, -26, -12, 52, 24, "#6E5A30");
+        [-14, -4, 6].forEach((u, k) => L(cc, u, -4 + k * 3, u + 7, -2 + k * 3, "#B08A58", 1.2));
+      }, 22);
+      const p2 = VOL.sub(pr, 0, -14, 24, 0);
+      VOL.caja(c, p2, -30, -6, 0, 30, 0, 26, T.madera, { frente: (cc, l, h) => [8, l - 22].forEach((u) => R(cc, u, -h, 4, h, C.hierro)) });
+      return;
+    }
+    VOL.boveda(c, pr, -30, 30, -14, 14, 24, 12, T.madera, { punta: C.madera });
+    [-20, 10].forEach((u) => VOL.boveda(c, pr, u, u + 4, -14.5, 14.5, 24, 12.5, T.hierro, { sinPuntas: false }));
+  }
+  // el cofre rúnico: piedra azul oscura, la banda de runas, herrajes negros; sellado con la cadena violeta y Naudiz;
+  // abierto, la tapa parada y la luz que sube
+  function cofreRunicoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      late = 0.7 + Math.sin(t * 2.2 + (o.sem || 0)) * 0.3,
+      PI = ["#232C3A", "#2E3A4C", "#3E4E66"],
+      banda = (cc, l, h) => {
+        R(cc, 0, -h + 10, l, 8, "#1A202A");
+        ["ansuz", "raidho", "kenaz", "gebo", "wunjo"].forEach((r, i) => alfa(cc, o.sellado ? 0.35 : 0.9, () => F.dibujar(cc, r, l * (0.12 + i * 0.19), -h + 17, 6, RUNICO, 1.2)));
+      };
+    VOL.halo(c, pr, 0, 0, o.abierto ? 40 : 30, o.abierto ? 50 : 60, !o.abierto && o.sellado ? VIOLETA : RUNICO, o.abierto ? 0.5 : late * 0.8);
+    VOL.sombra(c, pr, 4, 0, 40, 22);
+    VOL.caja(c, pr, -32, -15, 0, 32, 15, 30, PI, {
+      frente: (cc, l, h) => {
+        banda(cc, l, h);
+        if (o.sellado && !o.abierto) {
+          cc.strokeStyle = "#6B4FA0";
+          cc.lineWidth = 3;
+          cc.setLineDash([5, 3]);
+          cc.beginPath();
+          cc.moveTo(2, -h + 2);
+          cc.lineTo(l - 2, -2);
+          cc.moveTo(l - 2, -h + 2);
+          cc.lineTo(2, -2);
+          cc.stroke();
+          cc.setLineDash([]);
+          R(cc, l / 2 - 8, -h + 2, 16, 18, "#2A2238");
+          alfa(cc, late, () => F.dibujar(cc, "naudiz", l / 2, -h + 17, 12, VIOLETA, 2));
+        } else if (!o.abierto) {
+          R(cc, l / 2 - 5, -h + 2, 10, 12, C.hierroLuz);
+          F.dibujar(cc, "dagaz", l / 2, -h + 12, 8, RUNICO_CLARO, 1.4);
+        }
+      },
+      atras: banda,
+      tapa: o.abierto ? "#0C1018" : null,
+    });
+    if (o.abierto) {
+      const p2 = VOL.sub(pr, 0, -15, 30);
+      VOL.caja(c, p2, -32, -6, 0, 32, 0, 24, PI, { frente: (cc, l, h) => F.dibujar(cc, "dagaz", l / 2, -h / 2 + 6, 12, RUNICO_CLARO, 1.6) });
+      const q = pr(0, 0, 32);
+      alfa(c, 0.5, () => P(c, [q[0] - 26 * pr.s, q[1], q[0] + 26 * pr.s, q[1], q[0] + 18 * pr.s, q[1] - 38 * pr.s, q[0] - 14 * pr.s, q[1] - 38 * pr.s], RUNICO));
+      return;
+    }
+    VOL.caja(c, pr, -32.5, -15.5, 28, 32.5, 15.5, 32, T.hierro);
+    VOL.boveda(c, pr, -32, 32, -15, 15, 32, 14, ["#2A3446", "#36445A", "#4A5C78"]);
+  }
+  // la urna del túmulo: bronce verdoso facetado, las dos cabezas de dragón como asas, la tapa con monedas que asoman
+  function urnaTumuloV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      BR = ["#46604A", "#5E7A5A", "#7E9A6E"],
+      oro = "#FFD98A";
+    VOL.sombra(c, pr, 4, 0, 36, 22);
+    const S = VOL.escena(pr);
+    [-1, 1].forEach((k) =>
+      S.poner(k * 30, 0, () => {
+        VOL.piramide(c, pr, [[k * 28, -5], [k * 28, 5], [k * 34, 0]], 14, k * 46, 0, 34, BR);
+        const q = pr(k * 42, 0, 30);
+        R(c, q[0] - 1.5 * pr.s, q[1] - 1 * pr.s, 3 * pr.s, 2 * pr.s, oro);
+      }, 20),
+    );
+    S.poner(0, 0, () => {
+      VOL.cono(c, pr, 0, 0, 28, 32, 0, 24, BR, { n: 10, sinTapa: true });
+      if (o.abierto) {
+        VOL.elipse(c, pr, 0, 0, 24, 30, 16, "#1A1410");
+        VOL.cilindro(c, VOL.sub(pr, -40, 18, 0, 0.6), 0, 0, 24, 0, 5, BR, { n: 10, rw: 14 });
+        return;
+      }
+      VOL.cono(c, pr, 0, 0, 32, 22, 24, 30, BR, { n: 10, tapa: BR[1] });
+      for (let k = 0; k < 5; k++) VOL.elipse(c, pr, -14 + k * 7, (k % 2) * 3, 30.5, 3.5, 3.5, oro);
+      const g = 0.5 + Math.sin(t * 3 + x) * 0.5,
+        q = pr(6, 0, 36);
+      alfa(c, g, () => R(c, q[0], q[1] - 3 * pr.s, 2 * pr.s, 6 * pr.s, "#FFF4D0"));
+    });
+    S.dibujar();
+  }
+  // el arca enterrada: el montículo, el arca torcida medio hundida con su zuncho y argolla, las raíces y el musgo;
+  // oculta, apenas un destello; abierta, el pozo, la tierra sacada y la tapa tirada boca abajo
+  function arcaEnterradaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    if (o.oculto) {
+      const g = Math.max(0, Math.sin(t * 1.3 + (o.sem || 0) * 3)) ** 8,
+        q = pr(0, 0, 6),
+        s = pr.s;
+      alfa(c, g, () => P(c, [q[0], q[1] - 10 * s, q[0] + 2 * s, q[1] - 4 * s, q[0] + 8 * s, q[1] - 2 * s, q[0] + 2 * s, q[1], q[0], q[1] + 6 * s, q[0] - 2 * s, q[1], q[0] - 8 * s, q[1] - 2 * s, q[0] - 2 * s, q[1] - 4 * s], "#FFF4D0"));
+      return;
+    }
+    if (!o.abierto) VOL.halo(c, pr, 0, 0, 16, 46, C.ambar, 0.5 + Math.sin(t * 3) * 0.2);
+    VOL.cono(c, pr, 0, 0, 46, 30, 0, 6, ["#2E2418", C.humus, "#4A3A26"], { n: 10 });
+    if (o.abierto) {
+      VOL.elipse(c, pr, 0, 0, 6.2, 26, 16, "#140E08");
+      VOL.cono(c, pr, 36, 6, 18, 8, 0, 12, ["#3A2E1E", "#4A3A26", "#5E4A32"], { n: 7 });
+      const p2 = VOL.sub(pr, -40, 4, 0, 0.4);
+      VOL.caja(c, p2, -14, -10, 0, 14, 10, 4, ["#5E4A36", "#6E5A44", "#8E7858"]);
+      VOL.caja(c, p2, -3, -10.5, 0, 0, 10.5, 4.5, T.hierro);
+    } else {
+      const p2 = VOL.sub(pr, 0, 0, 0, 0.12);
+      VOL.caja(c, p2, -26, -12, 2, 26, 12, 20, ["#4E3C2A", C.maderaVieja, "#8E7858"], {
+        frente: (cc, l, h) => {
+          L(cc, 0, -h / 2, l, -h / 2, "#3E2E20", 1.2);
+          R(cc, l / 2 - 2, -h, 5, h, C.hierro);
+          cc.strokeStyle = C.hierroLuz;
+          cc.lineWidth = 2;
+          cc.beginPath();
+          cc.arc(l / 2 + 0.5, -h / 2, 3.6, 0, Math.PI * 2);
+          cc.stroke();
+        },
+        tapa: "#8E7858",
+      });
+      VOL.caja(c, p2, -2.5, -12.5, 2, 2.5, 12.5, 20.5, T.hierro, { sin: ["frente"] });
+    }
+    VOL.palo(c, pr, -46, 4, 0, -30, 6, 18, 3, C.troncoSombra);
+    VOL.palo(c, pr, -30, 6, 18, -14, 4, 20, 3, C.troncoSombra);
+    VOL.palo(c, pr, 44, -2, 0, 30, -4, 12, 3, C.troncoSombra);
+    VOL.elipse(c, pr, -18, 0, 20.5, 9, 6, C.musgoClaro);
+    VOL.elipse(c, pr, 22, 10, 4, 9, 5, C.musgo2);
+    VOL.elipse(c, pr, -34, 14, 2, 7, 4, C.musgo2);
+  }
+  // la piedra del susurro: el menhir ancho con la serpiente tallada que baja en S y las runas en sus huecos (adelante),
+  // la espalda lisa con musgo, el halo y las motas cuando está viva
+  function piedraSusurroV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      viva = o.viva ? 1 : 0,
+      late = viva ? 0.85 + Math.sin(t * 1.8 + (o.sem || 0)) * 0.15 : 0.25 + Math.max(0, Math.sin(t * 1.1 + (o.sem || 0))) * 0.35,
+      runas = o.runas || ["ansuz", "laguz", "othala", "eihwaz"];
+    VOL.halo(c, pr, 0, 0, 60, viva ? 130 : 60, RUNICO, late);
+    VOL.sombra(c, pr, 8, 0, 34, 22);
+    menhir(c, pr, 37, 18, 124, ["#40444C", "#565A62", "#6C7078"], (cc, W, H) => {
+      const col = viva ? RUNICO_CLARO : "#3A3E46",
+        x0 = W / 2,
+        w = W / 2;
+      cc.strokeStyle = viva ? RUNICO : "#34383F";
+      cc.lineWidth = 7;
+      cc.lineCap = "round";
+      cc.beginPath();
+      cc.moveTo(x0 - w * 0.5, -H * 0.84);
+      cc.bezierCurveTo(x0 + w * 0.95, -H * 0.78, x0 + w * 0.8, -H * 0.52, x0, -H * 0.48);
+      cc.bezierCurveTo(x0 - w * 0.85, -H * 0.44, x0 - w * 0.85, -H * 0.2, x0 + w * 0.55, -H * 0.1);
+      cc.stroke();
+      const hx = x0 - w * 0.5,
+        hy = -H * 0.84;
+      P(cc, [hx - 6, hy - 4, hx + 4, hy - 8, hx + 8, hy, hx, hy + 4], viva ? RUNICO : "#34383F");
+      R(cc, hx, hy - 4, 2, 2, viva ? "#FFFFFF" : "#22252A");
+      const pos = [[0.1, 0.66], [-0.45, 0.62], [0.42, 0.3], [-0.35, 0.22]],
+        rh = Math.min(16, H * 0.13);
+      alfa(cc, 0.4 + late * 0.6, () => runas.forEach((r, i) => F.dibujar(cc, r, x0 + pos[i][0] * w, -pos[i][1] * H + rh / 2, rh, col, 2)));
+      E(cc, x0 - w * 0.7, -4, 10, 4, C.musgo2);
+    });
+    if (viva) {
+      const q = pr(0, 0, 40),
+        s = pr.s;
+      for (let k = 0; k < 5; k++) {
+        const u = (t * 0.25 + k / 5 + (o.sem || 0)) % 1;
+        alfa(c, Math.sin(u * Math.PI), () => R(c, q[0] + Math.sin(k * 2.3 + t) * 26 * s, q[1] - u * 110 * s, 2.5 * s, 2.5 * s, RUNICO_CLARO));
+      }
+    }
+  }
+  // el altar de runa: el escalón redondo con el círculo grabado, los dos bloques, la losa y la runa que flota y gira
+  // (o el humo, si ya se la llevaron)
+  function altarRunaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      col = COL_RUNA[o.runa] || RUNICO,
+      fl = Math.sin(t * 1.6) * 5,
+      PG = ["#40444C", "#565A62", "#6C7078"];
+    if (!o.tomada) VOL.halo(c, pr, 0, 0, 70, 120, col, 0.75 + Math.sin(t * 2) * 0.2);
+    VOL.sombra(c, pr, 6, 0, 56, 30);
+    VOL.cilindro(c, pr, 0, 0, 44, 0, 6, PG, { n: 14, tapa: "#565A62" });
+    VOL.enPiso(c, pr, (cc) =>
+      alfa(cc, o.tomada ? 0.25 : 0.7, () => {
+        cc.strokeStyle = col;
+        cc.lineWidth = 1.5;
+        cc.beginPath();
+        cc.ellipse(0, 0, 36, 36, 0, 0, TAU);
+        cc.stroke();
+      }),
+    6.5);
+    [-22, 22].forEach((u) => VOL.cubo(c, pr, u, 0, 10, 16, 28, ["#3E4248", "#4A4E56", "#62666E"], null, 6));
+    VOL.caja(c, pr, -35, -14, 34, 35, 14, 42, ["#4A4E56", "#5E626A", "#6C7078"]);
+    if (o.tomada) {
+      const q = pr(0, 0, 46),
+        s = pr.s;
+      for (let k = 0; k < 3; k++) {
+        const u = (t * 0.3 + k / 3) % 1;
+        alfa(c, (1 - u) * 0.4, () => E(c, q[0] + Math.sin(u * 6 + k) * 8 * s, q[1] - 4 * s - u * 60 * s, (6 + u * 10) * s, (4 + u * 6) * s, "#8A8E96"));
+      }
+      return;
+    }
+    const q = pr(0, 0, 64 + fl),
+      s = pr.s,
+      giro = Math.cos(t * 0.9),
+      h = 46 * s;
+    c.save();
+    c.translate(q[0], q[1]);
+    c.scale(Math.max(0.18, Math.abs(giro)), 1);
+    F.dibujar(c, o.runa || "isa", 0, h / 2, h, giro > 0 ? col : "#FFF4E8", 6 * s);
+    c.restore();
+    for (let k = 0; k < 6; k++) {
+      const a = t * 1.2 + (k * Math.PI) / 3,
+        m = pr(Math.cos(a) * 30, Math.sin(a) * 30, 64 + fl);
+      alfa(c, 0.8, () => R(c, m[0] - 1.5 * s, m[1] - 1.5 * s, 3 * s, 3 * s, col));
+    }
+  }
+  // el salón quemado: la ceniza en el piso, el zócalo de piedra, los postes carbonizados con brasas, las dos vigas
+  // caídas y el escudo partido contra un poste
+  function salonQuemadoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      w = 190,
+      CB = ["#1E1816", "#2A2220", "#3E322C"],
+      r = azar(42);
+    VOL.enPiso(c, pr, (cc) => {
+      P(cc, poli(0, 0, w + 20, 70, 11, 0.3, [1, 0.9, 1.05, 0.95, 1, 0.88, 1.04]), "#3A342A");
+      P(cc, poli(20, -4, w * 0.7, 46, 9, 0.7, [1, 0.85, 1.1, 0.9]), "#443C31");
+    });
+    const S = VOL.escena(pr);
+    for (let k = 0; k < 18; k++) {
+      const u = -w + (k / 17) * w * 2;
+      S.poner(u, -40, () => VOL.prisma(c, pr, VOL.redonda(u, -40, 10, 6, k), 0, 10, k % 3 ? T.roca : [C.rocaSombra, C.rocaSombra, C.roca]));
+      if (k % 3 === 0) S.poner(u, 40, () => VOL.prisma(c, pr, VOL.redonda(u + r() * 8, 40, 9, 6, k), 0, 8, T.roca));
+    }
+    [[-170, 110], [-120, 60], [-60, 140], [0, 40], [60, 128], [120, 70], [170, 100]].forEach(([u, h], k) => {
+      const ww = k % 2 ? 38 : -38;
+      S.poner(u, ww, () => {
+        VOL.cubo(c, pr, u, ww, 11, 11, h, CB, { frente: (cc, l, hh) => R(cc, l / 2 - 1.5, -hh, 3, hh * 0.6, "#5E130D") });
+        VOL.piramide(c, pr, [[u - 6, ww - 6], [u + 6, ww - 6], [u + 6, ww + 6], [u - 6, ww + 6]], h, u + 2, ww, h + 8, CB);
+      });
+    });
+    S.poner(0, -38, () => VOL.rollo(c, VOL.sub(pr, 0, -38, 0), -64, 64, 0, 130, 5, CB, { n: 5 }), 130);
+    S.poner(95, 38, () => VOL.palo(c, pr, 60, 38, 128, 130, 30, 0, 10, CB[1]), 60);
+    S.poner(-112, 46, () => {
+      const p2 = VOL.sub(pr, -112, 46, 0, 0.2);
+      VOL.plano(c, p2, -16, 16, 0, 6, 42, null, (cc, l, h) => {
+        E(cc, l / 2, -h / 2, 16, 18, "#5E130D");
+        P(cc, [l / 2, -h / 2 - 18, l / 2 + 16, -h / 2, l / 2, -h / 2 + 18], "#9C2315");
+        E(cc, l / 2, -h / 2, 4, 4, C.hierroLuz);
+      });
+    });
+    S.dibujar();
+  }
+  // la entrada del túmulo: el montículo de pasto y, adelante, el dolmen: las jambas, el dintel con las runas de muerte,
+  // la boca negra, las calaveras y los ojos que miran
+  function tumuloEntradaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o);
+    VOL.sombra(c, pr, 10, 0, 180, 120, 0.45);
+    const S = VOL.escena(pr);
+    S.poner(0, 0, () => {
+      VOL.cono(c, pr, 0, -20, 170, 90, 0, 80, [C.pastoSombra, C.pasto, "#6A7A34"], { n: 12, sinTapa: true });
+      VOL.cono(c, pr, 0, -20, 90, 30, 80, 120, [C.pastoSombra, C.pasto, "#6A7A34"], { n: 12, tapa: C.pasto });
+    });
+    S.poner(0, 150, () => {
+      VOL.cubo(c, pr, -38, 140, 16, 20, 70, ["#3E4248", "#4A4E56", "#62666E"]);
+      VOL.cubo(c, pr, 38, 140, 16, 20, 70, ["#3E4248", "#4A4E56", "#62666E"]);
+      VOL.plano(c, pr, -30, 30, 140, 0, 66, "#08090A");
+      VOL.caja(c, pr, -54, 128, 68, 54, 152, 90, ["#4A4E56", "#5E626A", "#6C7078"], {
+        frente: (cc, l, h) => ["hagalaz", "perthro", "isa", "eihwaz", "hagalaz"].forEach((r, i) => F.dibujar(cc, r, 18 + i * 18, -2, 12, o.vivo ? VIOLETA : "#3A3E46", 2)),
+      });
+      if (o.vivo) {
+        const g = Math.max(0, Math.sin(t * 0.7)) ** 3,
+          a = pr(-6, 141, 34),
+          b = pr(6, 141, 34),
+          s = pr.s;
+        alfa(c, g, () => {
+          R(c, a[0] - 2 * s, a[1], 4 * s, 2 * s, "#8CF0B4");
+          R(c, b[0] - 2 * s, b[1], 4 * s, 2 * s, "#8CF0B4");
+        });
+      }
+    });
+    [[-58, 160], [52, 162]].forEach(([u, w]) =>
+      S.poner(u, w, () => {
+        VOL.cilindro(c, pr, u, w, 7, 0, 10, ["#B8AC94", C.hueso, "#F2ECEC"], { n: 7 });
+        VOL.plano(c, pr, u - 5, u + 5, w + 7, 2, 9, null, (cc, l, h) => {
+          R(cc, 1, -h + 2, 2, 2, "#1A1410");
+          R(cc, l - 3, -h + 2, 2, 2, "#1A1410");
+        }, () => {});
+      }),
+    );
+    S.dibujar();
+  }
+  // la torre del cuervo: la torre de piedra con sus hileras, la puerta, la ventana y la grieta, las almenas rotas,
+  // el estandarte negro con el cuervo rojo y los cuervos posados
+  function torreCuervoV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      w = 56,
+      h = 290,
+      hileras = (puerta) => (cc, l, hh) => {
+        for (let k = 1; k < 12; k++) L(cc, 2, -k * 24, l - 2, -k * 24, "#4A4C50", 1.5);
+        if (puerta) {
+          P(cc, [l / 2 - 16, 0, l / 2 - 16, -52, l / 2, -64, l / 2 + 16, -52, l / 2 + 16, 0], "#141210");
+          L(cc, l / 2 + 26, -120, l / 2 + 14, -170, "#2C2C30", 2);
+          L(cc, l / 2 + 14, -170, l / 2 + 30, -210, "#2C2C30", 2);
+        }
+        R(cc, l / 2 - 6, -180, 12, 24, "#141210");
+      };
+    VOL.sombra(c, pr, 16, 0, 90, 60, 0.45);
+    VOL.prisma(c, pr, [[-w, -w], [w, -w], [w, w], [-w, w]].map(([u, v]) => [u * 0.95, v * 0.95]), 0, 1, ["#45474B", "#5A5C60", "#707276"], { sinTapa: true });
+    VOL.caja(c, pr, -w, -w, 0, w, w, h, ["#45474B", "#5A5C60", "#707276"], { frente: hileras(true), atras: hileras(false), izq: hileras(false), der: hileras(false), tapa: "#4A4C50" });
+    const S = VOL.escena(pr);
+    [[-w + 7, -w + 7, 26], [0, -w + 7, 16], [w - 7, -w + 7, 30], [w - 7, 0, 12], [w - 7, w - 7, 10], [0, w - 7, 22], [-w + 7, w - 7, 18], [-w + 7, 0, 8]].forEach(([u, v, hh]) =>
+      S.poner(u, v, () => VOL.cubo(c, pr, u, v, 14, 14, hh, ["#45474B", "#5A5C60", "#707276"], null, h)),
+    );
+    S.poner(-30, 0, () => {
+      VOL.palo(c, pr, -30, 0, h, -30, 0, h + 110, 3, C.maderaSombra);
+      const v = Math.sin(t * 2.4) * 6;
+      VOL.plano(c, pr, -30, 30, 0, h + 62, h + 108, null, (cc, l, hh) => {
+        P(cc, [0, -hh, l + v, -hh + 6, l - 4 + v, -6, 0, 0], "#111111");
+        P(cc, [14, -24, 26, -34, 36, -30, 48 + v * 0.6, -36, 38, -22, 24, -18], "#9C2315");
+      });
+    }, 1);
+    S.dibujar();
+    [[-w + 7, -w + 7, h + 26], [w - 7, w - 7, h + 10]].forEach(([u, v, z], k) => {
+      const q = pr(u, v, z),
+        s = pr.s,
+        cab = Math.sin(t * 1.5 + k * 3) > 0.6 ? 2 : 0;
+      P(c, [q[0] - 8 * s, q[1], q[0], q[1] - 12 * s, q[0] + 8 * s, q[1]], "#111111");
+      E(c, q[0] + 4 * s, q[1] - (14 + cab) * s, 5 * s, 4 * s, "#111111");
+      P(c, [q[0] + 8 * s, q[1] - (14 + cab) * s, q[0] + 13 * s, q[1] - (13 + cab) * s, q[0] + 8 * s, q[1] - (12 + cab) * s], "#3A3634");
+    });
+  }
+  // el carro de la caravana: la caja, el toldo de aros (rojo o rosado) con su rotura, las ruedas (una rota), la rueda
+  // suelta y las cajas reventadas
+  function carroCaravanaV(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      v = o.v || 0,
+      tela = v % 2 ? ["#B88A8A", "#E0B2B2", "#F2D2D2"] : ["#5E130D", "#9C2315", "#C8402D"];
+    VOL.sombra(c, pr, 6, 0, 84, 34);
+    const rueda = (u, w, sana) => {
+      const p2 = VOL.sub(pr, u, 0, 0, Math.PI / 2);
+      VOL.rollo(c, p2, w - 2, w + 2, 0, 16, 16, T.oscura, { n: 10, corte: sana ? C.madera : "#1A1410" });
+    };
+    const S = VOL.escena(pr);
+    S.poner(-88, 0, () => {
+      VOL.cubo(c, pr, -92, -6, 24, 22, 22, T.vieja, { tapa: "#2A2018" });
+      VOL.piramide(c, pr, [[-100, -10], [-84, -10], [-84, 6], [-100, 6]], 22, -88, -14, 34, T.madera);
+      VOL.elipse(c, pr, -72, 22, 0, 6, 3, "#C8A040");
+    });
+    [-1, 1].forEach((k) => S.poner(0, k * 24, () => {
+      rueda(-48, k * 24, true);
+      rueda(44, k * 24, k > 0 ? false : true);
+    }, 1));
+    S.poner(0, 0, () => {
+      VOL.caja(c, pr, -70, -20, 20, 64, 20, 40, T.madera);
+      VOL.boveda(c, pr, -66, 62, -20, 20, 40, 70, tela, {
+        n: 6,
+        punta: tela[0],
+        faja: (cc, l, h) => {
+          [-40, 0, 40].forEach((u) => R(cc, l / 2 + u - 1, -h, 2, h, C.maderaSombra));
+        },
+      });
+      const q = pr(18, 18, 74),
+        s = pr.s;
+      if (pr.mira(0, 1)[1] > 0.2)
+        P(c, [q[0] - 8 * s, q[1] - 12 * s, q[0] + 8 * s, q[1] - 6 * s, q[0], q[1] + 14 * s, q[0] + 12 * s, q[1] + 26 * s, q[0] - 12 * s, q[1] + 18 * s], "#1A1410");
+    });
+    S.poner(88, 10, () => VOL.cilindro(c, pr, 88, 10, 18, 0, 3, T.oscura, { n: 10 }));
+    S.dibujar();
+  }
+
   Object.assign(ASSETS.LISTA, {
-    arconLenador: { f: arconLenador, alto: 50, choque: { w: 60, h: 14 }, grupo: "secretos" },
-    cofreRunico: { f: cofreRunico, alto: 54, choque: { w: 66, h: 14 }, grupo: "secretos", luz: true },
-    urnaTumulo: { f: urnaTumulo, alto: 46, choque: { w: 64, h: 14 }, grupo: "secretos" },
-    arcaEnterrada: { f: arcaEnterrada, alto: 30, choque: null, grupo: "secretos" },
-    piedraSusurro: { f: piedraSusurro, alto: 125, choque: { r: 26 }, grupo: "secretos", luz: true },
-    altarRuna: { f: altarRuna, alto: 110, choque: { r: 34 }, grupo: "secretos", luz: true },
-    brasero: { f: brasero, alto: 60, choque: { r: 16 }, grupo: "secretos", luz: true },
-    salonQuemado: { f: salonQuemado, alto: 150, choque: null, grupo: "ruinas" },
-    tumuloEntrada: { f: tumuloEntrada, alto: 130, choque: { w: 320, h: 50 }, grupo: "ruinas" },
-    torreCuervo: { f: torreCuervo, alto: 420, choque: { r: 50 }, grupo: "ruinas" },
-    carroCaravana: { f: carroCaravana, alto: 116, choque: { w: 150, h: 26 }, grupo: "ruinas" },
-    totemCampamento: { f: totemCampamento, alto: 116, choque: { r: 6 }, grupo: "ruinas" },
-    manzanoIdunn: { f: manzanoIdunn, alto: 140, choque: { r: 10 }, grupo: "secretos", luz: true },
+    arconLenador: { f: arconLenador, fv: arconLenadorV, vol: true, alto: 50, choque: { w: 60, h: 14 }, grupo: "secretos" },
+    cofreRunico: { f: cofreRunico, fv: cofreRunicoV, vol: true, alto: 54, choque: { w: 66, h: 14 }, grupo: "secretos", luz: true },
+    urnaTumulo: { f: urnaTumulo, fv: urnaTumuloV, vol: true, alto: 46, choque: { w: 64, h: 14 }, grupo: "secretos" },
+    arcaEnterrada: { f: arcaEnterrada, fv: arcaEnterradaV, vol: true, alto: 30, choque: null, grupo: "secretos" },
+    piedraSusurro: { f: piedraSusurro, fv: piedraSusurroV, vol: true, alto: 125, choque: { r: 26 }, grupo: "secretos", luz: true },
+    altarRuna: { f: altarRuna, fv: altarRunaV, vol: true, alto: 110, choque: { r: 34 }, grupo: "secretos", luz: true },
+    brasero: { f: brasero, figura: true, alto: 60, choque: { r: 16 }, grupo: "secretos", luz: true },
+    salonQuemado: { f: salonQuemado, fv: salonQuemadoV, vol: true, alto: 150, choque: null, grupo: "ruinas" },
+    tumuloEntrada: { f: tumuloEntrada, fv: tumuloEntradaV, vol: true, alto: 130, choque: { w: 320, h: 50 }, grupo: "ruinas" },
+    torreCuervo: { f: torreCuervo, fv: torreCuervoV, vol: true, alto: 420, choque: { r: 50 }, grupo: "ruinas" },
+    carroCaravana: { f: carroCaravana, fv: carroCaravanaV, vol: true, alto: 116, choque: { w: 150, h: 26 }, grupo: "ruinas" },
+    totemCampamento: { f: totemCampamento, figura: true, alto: 116, choque: { r: 6 }, grupo: "ruinas" },
+    manzanoIdunn: { f: manzanoIdunn, figura: true, alto: 140, choque: { r: 10 }, grupo: "secretos", luz: true },
   });
   ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, {
     cofreRunico: { sellado: true },
