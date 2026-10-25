@@ -236,6 +236,18 @@ tener que leer el código para balancear.
 - Los cuatro únicos con nombre salen de `E.extra.hd.unicos` (hordas.js). Estado en
   `E.extra.bestiario = { vistas, muertes }`.
 
+## Contratos de caza (`motor/contratos.js`, `CONTRATOS`; poste y rastros en `mundo/assets-contratos.js`; textos `ct.` en `textos/contratos.js`)
+
+- El poste de los contratos (`posteContratos`) está frente al Puesto de Eydis. Seis bestias con nombre (`LISTA`), cada
+  una de un tipo de `CB.TIPOS`, con su nivel recomendado, escolta, afijos de líder, plata y trofeo. Se toma uno por vez.
+- Fases (`E.extra.contratos.c[id].fase`): `rastros` (tres `rastroContrato` en el piso, se examinan con E, la Lente los
+  resalta), `guarida` (la bestia aparece como líder con `e.contrato` al acercarse a menos de 1300), `cobrar` (se vuelve
+  al poste) y `vencido`. Repetirlo más tarde paga la mitad.
+- Se sigue en el rastreador (`seguimiento`), en la brújula (hook nuevo `marcasBrujula()` → `[{ x, y, col }]` de
+  exploracion.js) y en el mapa (hook nuevo `marcasMapa()` → `[{ tipo, x, y, op }]` de mapa.js, clase `contrato`).
+- Trofeos (`TROFEOS`): se cuelga uno del cinto (`colgar`) y suma por `RPG.aporte` (velocidad de ataque, estamina,
+  armadura, botín, energía rúnica, vida). Se ven y se cuelgan desde la Bolsa (`CONTRATOS.celdas()`).
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

@@ -241,6 +241,21 @@ window.EXPLORA = (function () {
           c.stroke();
         });
       });
+    // lo que marcan otros sistemas (un contrato de caza…): un rombo de su color con la distancia
+    SISTEMAS.forEach((s0) =>
+      (s0.marcasBrujula ? s0.marcasBrujula() : []).forEach((m) =>
+        marcar(m.x, m.y, (x, d) => {
+          c.fillStyle = m.col || "#FF8D71";
+          c.beginPath();
+          c.moveTo(x, 2);
+          c.lineTo(x + 5, 8);
+          c.lineTo(x, 14);
+          c.lineTo(x - 5, 8);
+          c.fill();
+          metros(x, d, m.col || "#FF8D71");
+        }, true),
+      ),
+    );
     // la marca propia (banderín dorado) y el objetivo (rombo rúnico), con la distancia
     const mk = window.MAPA && MAPA.marca();
     if (mk)

@@ -182,6 +182,11 @@ window.ICONOS = (function () {
       linea(c, [x - 1 * u, y + 3 * u, x - 1 * u, y - 1 * u, x + 1.5 * u, y - 0.5 * u], OSCURO, 0.9 * u);
       linea(c, [x - 1 * u, y + 1 * u, x + 1.5 * u, y + 1.5 * u], OSCURO, 0.9 * u);
     },
+    // un contrato de caza (contratos.js): el pergamino clavado con las tres rayas de la garra
+    contrato(c, x, y, u, col) {
+      pol(c, [x - 4 * u, y - 5 * u, x + 4 * u, y - 5 * u, x + 4.5 * u, y + 5 * u, x - 4.5 * u, y + 5 * u], CLARO);
+      for (let k = -1; k <= 1; k++) linea(c, [x + (k * 2 - 1) * u, y - 3 * u, x + (k * 2 + 1) * u, y + 3 * u], col, 1 * u);
+    },
     manzano(c, x, y, u, col) {
       c.fillStyle = col;
       c.beginPath();
@@ -232,7 +237,7 @@ window.ICONOS = (function () {
     },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

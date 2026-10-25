@@ -375,6 +375,7 @@ window.INVENTARIO = (function () {
     const llevas = window.SECUNDARIAS ? SECUNDARIAS.llevas() : [];
     llevas.forEach((o) => l.push({ id: o.id, icono: o.icono, nombre: t("sc.obj_" + o.id), desc: t("sc.obj_" + o.id + "_d"), cant: o.cant }));
     if (window.MATERIALES) l.push(...MATERIALES.celdas());
+    if (window.CONTRATOS) l.push(...CONTRATOS.celdas());
     const piezas = window.BOTIN ? BOTIN.celdasBolsa() : [];
     return { l, piezas, encargos: llevas.length };
   }
