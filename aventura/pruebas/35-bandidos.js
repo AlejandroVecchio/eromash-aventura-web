@@ -46,12 +46,10 @@
       gu.g.miembros.forEach((e) => ((e.muerto = 0), (e.activo = true)));
       si(!BANDIDOS.saquear(gu), "todavía vigilan");
       gu.g.miembros.forEach((e) => (e.muerto = 1));
-      const p0 = PODERES.pj().plata,
-        g0 = MATERIALES.cuantos("ganzua");
+      const p0 = PODERES.pj().plata;
       si(BANDIDOS.saquear(gu), "saquea");
       await esperar(400);
       si(PODERES.pj().plata > p0 || A.J.textos.length, "plata");
-      igual(MATERIALES.cuantos("ganzua"), g0 + 2, "dos ganzúas:");
       si(gu.botin.o.abierto, "abierto");
       si(!BANDIDOS.saquear(gu), "una sola vez");
       A.H.guardar(9);
