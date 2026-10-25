@@ -648,7 +648,6 @@ window.INTERIORES = (function () {
       const falta = (((7 - h + 24) % 24) / 24) * LUZ.DIA;
       A.H.E.tiempo += falta;
       HUD.aviso(t("in.dormiste_noche"), "#E0B2B2");
-      if (window.DESCANSO) DESCANSO.dormido((falta / LUZ.DIA) * 24);
     } else HUD.aviso(t("in.dormiste"), "#E0B2B2");
     A.H.guardar();
   }
