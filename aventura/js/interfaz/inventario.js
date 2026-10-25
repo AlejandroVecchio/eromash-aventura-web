@@ -376,6 +376,8 @@ window.INVENTARIO = (function () {
     llevas.forEach((o) => l.push({ id: o.id, icono: o.icono, nombre: t("sc.obj_" + o.id), desc: t("sc.obj_" + o.id + "_d"), cant: o.cant }));
     if (window.MATERIALES) l.push(...MATERIALES.celdas());
     if (window.CONTRATOS) l.push(...CONTRATOS.celdas());
+    // lo que suman otros sistemas a la Bolsa: celdasBolsa() → [{ id, icono, nombre, desc | html, cant, fn, alt }]
+    window.SISTEMAS.forEach((s0) => s0.celdasBolsa && l.push(...s0.celdasBolsa()));
     const piezas = window.BOTIN ? BOTIN.celdasBolsa() : [];
     return { l, piezas, encargos: llevas.length };
   }
