@@ -49,7 +49,7 @@ window.INTERIORES = (function () {
       ventana = 1130;
     } else if (tipo === "herreria") {
       pared = "piedra";
-      mueble("forjaAsa", 760, FONDO + 40, { s: 1 }, 170, "in.accion_forja", examinar("in.herreria_forja"));
+      mueble("forjaAsa", 760, FONDO + 40, { s: 1 }, 170, "in.accion_forja", window.FORJA ? () => FORJA.abrir() : examinar("in.herreria_forja"));
       mueble("yunque", 560, 790, { s: 1.1 }, 80, "in.accion_yunque", examinar("in.herreria_yunque"));
       mueble("barriles", 1300, 720, { s: 0.9 }, 110, "in.accion_barriles", examinar("in.herreria_barriles"));
       g.push({ id: "asa", x: 980, y: 760 });

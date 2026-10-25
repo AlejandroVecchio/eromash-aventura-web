@@ -2124,6 +2124,8 @@
       if (CONTROLES.recien("pausa") && H.E && J.cam.x) {
         if (document.querySelector("#capaCaja h1") == null) cerrarMenu();
       }
+    } else if (J.modo === "forja") {
+      if (window.FORJA) FORJA.paso(dt); // la forja al ritmo del yunque (motor/forja.js)
     } else if (J.modo === "dialogo") {
       if (CONTROLES.recien("seguir") || CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) seguirDialogo();
       else if (dlg && dlg.solo && (dlg.solo -= dt) <= 0) seguirDialogo();

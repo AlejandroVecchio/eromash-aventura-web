@@ -155,6 +155,26 @@ tener que leer el código para balancear.
   cuanto más bloquea, más difícil parar. El escudo se dibuja en el brazo con el arte de la arena (`ESCUDO.dibujar`,
   dos pasadas desde `dibujarJugador`: detrás de espaldas y de costado, delante de frente o levantado).
 
+## Forja al ritmo del yunque (`motor/forja.js`, `FORJA`, modo `forja`; textos `fg.` en `textos/forja.js`)
+
+- Se abre desde Ása («Forjar una pieza nueva» en su menú de `PODERES`) o desde su yunque (`forjaAsa` en la
+  herrería de `interiores.js`). Cada grupo (`FORJA.GRUPOS`: los tipos de arma y las piezas de armadura) ofrece la
+  base más nueva para el nivel de objeto (nivel de Eromash + 1). Costo: (40 + 12 × nivel) × modo, con la rebaja del
+  renombre.
+- Modos (`FORJA.MODOS`): **con calma** (84 ppm, a lo sumo rara) y **a fuego vivo** (112 ppm, acordes, ×1,6 de plata,
+  puede dar legendaria).
+- La canción (`FORJA.partitura(modo, semilla)`): un compás de cuenta, 4 de **fuelle** (notas largas en los carriles de
+  afuera: mantenerlas calienta el hierro), 8 de **martillo** (negras y corcheas según la densidad, más seguidas hacia
+  el final) y el **temple** (una barra con atacar). Las notas bajan en 1,5 s (`VIAJE`). Juicios (`JUICIO`): perfecto
+  ±50 ms (1), bien ±95 ms (0,7), flojo ±145 ms (0,35); las largas valen 2 (el golpe y mantenerla).
+- La nota = puntos / máximo + racha × 0,05 + temple (perfecto +0,06, bien +0,03, falla −0,06). Rareza: < 0,55 común,
+  < 0,78 mágica, < 0,93 rara, si no legendaria (tope del modo). `calidad` = (nota − 0,4) / 0,6 va a
+  `OBJETOS.generar`: los números se tiran en la parte alta (el daño o la armadura hasta +8 % / +18 % del techo de
+  siempre) y la pieza guarda `it.forja` («Forjada por Ása · martillada al … %»).
+- Controles por acciones: los cuatro carriles son las acciones `carril1`..`carril4` (A S D W de izquierda a derecha,
+  o ← ↓ → ↑, la cruceta) o tocar el carril (pointer events, sirve para el celular). Las teclas se cambian en Opciones →
+  Teclas o con «Teclas de la forja» en el menú de Ása (`CONTROLES.asignar`, grupo `forja`). La música sale de `SONIDO.tono`. Pausa deja y devuelve la plata.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

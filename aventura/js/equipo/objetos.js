@@ -173,8 +173,11 @@ window.OBJETOS = (function () {
     const it = { u: uid(), b, r, n, a: [], tema: op.tema != null ? op.tema : 1, v: Math.floor(rnd() * 1000) };
     // el número principal: el daño del arma o la armadura de la pieza, que crece con el nivel de objeto
     const crece = 1 + 0.04 * (n - 1);
-    if (B.dano) it.d = Math.round(B.dano * crece * R.mult * (0.95 + rnd() * 0.1) * 10) / 10;
-    if (B.arm) it.ar = Math.max(1, Math.round(B.arm * (1 + 0.07 * (n - 1)) * R.mult * (0.9 + rnd() * 0.2)));
+    // calidad (0 a 1, la forja de Ása): tira los números en la parte alta y puede pasar un poco del techo de siempre
+    const q = op.calidad != null ? Math.max(0, Math.min(1, op.calidad)) : null;
+    if (q != null) it.forja = Math.round(q * 100);
+    if (B.dano) it.d = Math.round(B.dano * crece * R.mult * (q != null ? 0.92 + q * 0.16 : 0.95 + rnd() * 0.1) * 10) / 10;
+    if (B.arm) it.ar = Math.max(1, Math.round(B.arm * (1 + 0.07 * (n - 1)) * R.mult * (q != null ? 0.88 + q * 0.3 : 0.9 + rnd() * 0.2)));
     // los afijos: en las mágicas a lo sumo un prefijo y un sufijo; en las raras y legendarias hasta tres de cada uno
     const cant = R.afijos[0] + Math.floor(rnd() * (R.afijos[1] - R.afijos[0] + 1));
     const tope = r === 1 ? 1 : 3;
@@ -188,7 +191,7 @@ window.OBJETOS = (function () {
         A = AFIJOS[k],
         [lo, hi] = A.v(n);
       // las legendarias tiran siempre en la parte alta
-      const u = r === 3 ? 0.6 + rnd() * 0.4 : rnd();
+      const u = q != null ? Math.max(r === 3 ? 0.6 : 0, q * 0.75 + rnd() * 0.25) : r === 3 ? 0.6 + rnd() * 0.4 : rnd();
       const v = Math.round(lo + (hi - lo) * u);
       it.a.push([k, Math.max(1, v)]);
       if (A.p) pre++;
@@ -249,6 +252,7 @@ window.OBJETOS = (function () {
     if (B.dosManos) l.push({ txt: t("ar.sin_escudo"), col: "#FF8D71" });
     if (B.bloqueo) l.push({ txt: t("eb.l_bloqueo", [B.bloqueo, String(B.parada).replace(".", I18N.lang === "en" ? "." : ",")]), col: "#E0B2B2" });
     (B.implicito || []).forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#E0B2B2" }));
+    if (it.forja != null) l.push({ txt: t("fg.l_forjada", [it.forja]), col: "#FFD98A" });
     it.a.forEach(([k, v]) => l.push({ txt: fmt(k, v), col: "#73D5DB" }));
     return l;
   }
