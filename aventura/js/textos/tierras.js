@@ -1,0 +1,20 @@
+// Textos de las tierras de Eldervald y sus niveles (prefijo ti.), los dos idiomas.
+I18N.textos({
+  "ti.lindes": { es: "Las Lindes", en: "The Marches" },
+  "ti.tumulos": { es: "Llano de los Túmulos", en: "Barrow Flats" },
+  "ti.skeld": { es: "Camino de Skeld", en: "Skeld's Road" },
+  "ti.corona": { es: "La Corona de Eikholt", en: "Eikholt's Crown" },
+  "ti.skarn": { es: "Colinas de Skarnholt", en: "Skarnholt Hills" },
+  "ti.talado": { es: "El Talado", en: "The Felling" },
+  "ti.ulvdal": { es: "Hondonada de Ulvdal", en: "Ulvdal Hollow" },
+  "ti.claro": { es: "El Claro Viejo", en: "The Old Glade" },
+  "ti.orm": { es: "Bosque de Orm", en: "Orm's Wood" },
+  "ti.paso": { es: "El Paso del Norte", en: "The North Pass" },
+  "ti.brunvik": { es: "Marismas de Brunvik", en: "Brunvik Marshes" },
+  "ti.paramo": { es: "El Páramo Blanco", en: "The White Moor" },
+  "ti.torre": { es: "Tierras de la Torre", en: "Tower Lands" },
+  "ti.raices": { es: "Las Raíces del Este", en: "The Eastern Roots" },
+  "ti.niveles": { es: "Niveles {0}–{1}", en: "Levels {0}–{1}" },
+  "ti.peligro": { es: "Las criaturas de esta tierra te superan: vas a fallar seguido.", en: "The creatures here outmatch you: you'll miss often." },
+  "ti.peligro_mucho": { es: "Esta tierra es para alguien mucho más fuerte. Volvé cuando hayas crecido.", en: "This land is for someone far stronger. Come back when you've grown." },
+});

@@ -323,6 +323,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
   - el sistema
 - **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
+- **tierras.js**: las tierras de Eldervald y sus niveles (sistema TIERRAS)
+  - el mapa grande · el sistema
 - **tintes.js**: los tintes del casco (sistema TINTES)
   - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
@@ -504,6 +506,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
 - **sigilo.js**: Textos del sigilo (motor/sigilo.js): prefijo sl.
 - **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
+- **tierras.js**: Textos de las tierras de Eldervald y sus niveles (prefijo ti.), los dos idiomas.
 - **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.

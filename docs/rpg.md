@@ -44,6 +44,24 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## Las tierras y sus niveles (`motor/tierras.js`, `TIERRAS`; textos `ti.` en `textos/tierras.js`)
+
+Como las zonas del WoW, el mapa grande se reparte en catorce tierras con nombre, cada una con su franja de niveles. Una criatura sigue tomando el nivel de su distancia al Puesto, pero queda dentro de la franja de la tierra donde vive (`TIERRAS.ajustar`, desde `RPG.nivelDe`). Las de nivel fijo de la historia no cambian.
+
+| Tierra | Niveles | Tierra | Niveles |
+|---|---|---|---|
+| Las Lindes | 1–4 | Hondonada de Ulvdal | 9–13 |
+| Llano de los Túmulos | 3–6 | El Claro Viejo | 10–14 |
+| Camino de Skeld | 3–6 | Bosque de Orm | 11–15 |
+| La Corona de Eikholt | 4–7 | El Paso del Norte | 12–16 |
+| Colinas de Skarnholt | 5–8 | Marismas de Brunvik | 13–17 |
+| El Talado | 7–11 | El Páramo Blanco | 14–19 |
+| Tierras de la Torre | 16–21 | Las Raíces del Este | 18–24 |
+
+- Cada tierra es la región más cercana a su centro (`LISTA`, en píxeles del mapa). Al entrar sale su nombre con la franja; la primera vez que te supera por 5 o más niveles, un aviso.
+- El mapa grande dibuja los bordes y los nombres con el color de peligro (`RPG.color`) de la mitad de su franja.
+- Estado: `E.extra.tierras.vistas`.
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos

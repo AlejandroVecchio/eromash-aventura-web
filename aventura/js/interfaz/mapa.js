@@ -425,6 +425,8 @@ window.MAPA = (function () {
       kn = niebla.width / W.ANCHO;
     c.drawImage(fondo, wx0 * kf, wy0 * kf, vw * kf, vh * kf, 0, 0, cv.width, cv.height);
     c.drawImage(niebla, wx0 * kn, wy0 * kn, vw * kn, vh * kn, 0, 0, cv.width, cv.height);
+    // las tierras con su franja de niveles (motor/tierras.js)
+    if (window.TIERRAS && !W.LIENZO) TIERRAS.dibujarMapa(c, cv, (x, y) => aLienzo(cv, x, y), vistaMapa.z);
     const nombres = [],
       zi = Math.min(1.6, 1 + (vistaMapa.z - 1) * 0.15);
     tocables = [];
