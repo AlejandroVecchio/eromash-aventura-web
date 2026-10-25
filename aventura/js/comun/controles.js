@@ -159,13 +159,19 @@ window.CONTROLES = (function () {
     usandoMando = false,
     eje = { x: 0, y: 0 },
     ejeDer = { x: 0, y: 0 };
+  // Alt abre la barra del navegador y le saca el foco a la página. Si no se cancela, después de
+  // esquivar el teclado no mueve hasta que se hace clic para devolver el foco.
+  const esAlt = (e) => e.code === "AltLeft" || e.code === "AltRight" || e.key === "Alt";
   addEventListener("keydown", (e) => {
     if (e.target && e.target.tagName === "INPUT") return;
-    if (e.code === "Tab") e.preventDefault();
+    if (e.code === "Tab" || esAlt(e)) e.preventDefault();
     abajo.add(e.code);
     usandoMando = false;
   });
-  addEventListener("keyup", (e) => abajo.delete(e.code));
+  addEventListener("keyup", (e) => {
+    if (esAlt(e)) e.preventDefault();
+    abajo.delete(e.code);
+  });
   addEventListener("blur", () => {
     abajo.clear();
     mouse = false;
