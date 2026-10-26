@@ -53,6 +53,7 @@ window.MUNDO25 = (function () {
       f.ropa = "#5A5E5A";
     }
     if (rol === "pescador") f.gorro = "#4A6A7A";
+    if (rol === "borracho") f.gorro = undefined;
     if (rol === "viajero") f.capa = elige(["#9C2315", "#56667A", "#6E5A3E"]);
     f.ropaSombra = tono(f.ropa, -0.25);
     f.pielSombra = tono(f.piel, -0.15);
@@ -261,6 +262,13 @@ window.MUNDO25 = (function () {
         if (libre(x, y, 20)) poner({ id: vecino("guardia"), x, y, vx: 0, vy: 0, s: 1, porton: k });
       }
     }
+    // de 22 a 2, tres parroquianos del Hongo Dorado salen a tomar aire y vuelven tambaleándose (`p.borracho`)
+    const hp = plano.anclas.hongo_puerta;
+    if (hp)
+      for (let i = 0; i < 3; i++) {
+        const [x, y] = buscarLibre(hp[0] + (i - 1) * 220, hp[1] + 260 + (i % 2) * 120);
+        poner({ id: vecino("borracho"), x, y, vx: 30, vy: 0, s: 1, horas: [22, 2], borracho: { cx: x, cy: y, f: i * 2.1 } });
+      }
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
     const tf = plano.cosas.find((o) => o.id === "hnefatafl");
     if (tf)
@@ -307,6 +315,18 @@ window.MUNDO25 = (function () {
         continue;
       }
       if (!p.vx && !p.vy) continue;
+      if (p.borracho) {
+        // pasos que no saben adónde van, sin alejarse mucho de la puerta del Hongo
+        const b = p.borracho;
+        if (p.charla > 0) continue;
+        b.f += dt;
+        const vx = Math.sin(b.f * 0.7) * 45 + Math.sin(b.f * 2.3) * 25 + (b.cx - p.x) * 0.15,
+          vy = Math.cos(b.f * 0.5) * 30 + Math.sin(b.f * 1.9) * 18 + (b.cy - p.y) * 0.15;
+        if (libre(p.x + vx * dt, p.y + vy * dt)) (p.x += vx * dt), (p.y += vy * dt);
+        p.vx = vx;
+        p.vy = vy;
+        continue;
+      }
       if (p.ronda === "oficios") {
         // la ronda de noche sigue el anillo de los oficios, a paso de guardia
         const a = Math.atan2(p.y, p.x) + (p.dir * 55 * dt) / Math.hypot(p.x, p.y),

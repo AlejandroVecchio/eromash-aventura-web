@@ -198,7 +198,7 @@ window.EIKHOLT = (function () {
       [bx, by] = V(p.x, p.y);
     jug.mira = VIKINGO.vista(bx - ax, by - ay, jug.mira);
   }
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5 };
   const charlas = {};
   function hablarVecino(p) {
     mirarA(p);
