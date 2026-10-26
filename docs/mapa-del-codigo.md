@@ -124,6 +124,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **fama.js**: lo que se cuenta de Eromash en Eikholt (módulo FAMA25)
 - **juego.js**: Eikholt en el juego (sistema EIKHOLT)
   - el plano y el bosque · la gente · lo que se puede hacer cerca · Eromash camina · la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) · armar la ciudad (la primera vez que se entra) · entrar y salir · el cuadro · el mapa propio (ciudad/mapa.js): la M abre el de la ciudad y desde ahí se pasa al del bosque · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
+- **ladron.js**: el ladrón del mercado (módulo LADRON25)
 - **luces.js**: la luz de la capital (módulo LUCES25)
   - los faroleros · el color de cada hora
 - **mapa.js**: el mapa propio de Eikholt (MAPA25): el minimapa de la ciudad y el mapa grande con la M

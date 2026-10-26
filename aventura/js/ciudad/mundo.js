@@ -54,6 +54,7 @@ window.MUNDO25 = (function () {
     }
     if (rol === "pescador") f.gorro = "#4A6A7A";
     if (rol === "borracho") f.gorro = undefined;
+    if (rol === "ladron") (f.capa = "#3A3026"), (f.gorro = "#46423E"), (f.delantal = undefined);
     if (rol === "viajero") f.capa = elige(["#9C2315", "#56667A", "#6E5A3E"]);
     f.ropaSombra = tono(f.ropa, -0.25);
     f.pielSombra = tono(f.piel, -0.15);
@@ -269,6 +270,8 @@ window.MUNDO25 = (function () {
         const [x, y] = buscarLibre(hp[0] + (i - 1) * 220, hp[1] + 260 + (i % 2) * 120);
         poner({ id: vecino("borracho"), x, y, vx: 30, vy: 0, s: 1, horas: [22, 2], borracho: { cx: x, cy: y, f: i * 2.1 } });
       }
+    // el ratero del mercado (LADRON25): solo se ve mientras huye
+    poner({ id: vecino("ladron"), x: 0, y: 0, vx: 0, vy: 0, s: 1, ladron: true });
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
     const tf = plano.cosas.find((o) => o.id === "hnefatafl");
     if (tf)
@@ -315,6 +318,7 @@ window.MUNDO25 = (function () {
         continue;
       }
       if (!p.vx && !p.vy) continue;
+      if (p.ladron) continue; // lo mueve LADRON25
       if (p.borracho) {
         // pasos que no saben adónde van, sin alejarse mucho de la puerta del Hongo
         const b = p.borracho;

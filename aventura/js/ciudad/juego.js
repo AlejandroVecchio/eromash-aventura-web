@@ -152,6 +152,7 @@ window.EIKHOLT = (function () {
   // los vecinos con nombre son los de CAPITAL: se esconden si la historia los mandó afuera de la ciudad
   const deCapital = (id) => window.CAPITAL && CAPITAL.gente.find((n) => n.id === id);
   function oculto(p) {
+    if (p.ladron) return !(window.LADRON25 && LADRON25.activo());
     if (p.asamblea) return !(window.ASAMBLEA25 && ASAMBLEA25.hoy(A));
     if (!p.nombrado) return false;
     const n = deCapital(p.id);
@@ -222,7 +223,7 @@ window.EIKHOLT = (function () {
     let mejor = null,
       dm = Infinity;
     for (const p of MUNDO25.gente()) {
-      if (p.visible === false || (!p.rol && !p.nombrado)) continue;
+      if (p.visible === false || (!p.rol && !p.nombrado) || p.ladron) continue;
       const d = Math.hypot(p.x - e.x, p.y - e.y);
       if (d > 2.2 * M || d >= dm) continue;
       dm = d;
@@ -712,6 +713,7 @@ window.EIKHOLT = (function () {
     if (window.ASAMBLEA25) ASAMBLEA25.actualizar(plano, MUNDO25.gente(), A);
     if (window.ESCONDIDAS25 && J.modo === "juego") ESCONDIDAS25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     if (window.PROMESAS25) PROMESAS25.actualizar(st);
+    if (window.LADRON25 && J.modo === "juego") LADRON25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();

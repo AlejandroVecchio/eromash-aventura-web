@@ -209,6 +209,14 @@ window.PROBAR = (function () {
                 },
               },
               { id: "ek_escondidas", si: hay("ESCONDIDAS25"), fn: () => (hora(10), enCiudad(null, null, () => { const k = MUNDO25.gente().find((q) => q.id === "tyra"); const e = EIKHOLT.ero(); if (k) (e.x = k.x + 60), (e.y = k.y + 40); })) },
+              {
+                id: "ek_ladron",
+                si: hay("LADRON25"),
+                fn: () => {
+                  for (let k = 0; k < 2 && !(hora(13.2), Math.floor(((A.H.E.tiempo / LUZ.DIA) * 24 + 3) / 24) % 2 === 1); k++) A.H.E.tiempo += LUZ.DIA;
+                  enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.ladron) s.ladron.dia = -1; const L = EIKHOLT.plano().lugares.mercado; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 300); });
+                },
+              },
               { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

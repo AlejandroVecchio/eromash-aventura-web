@@ -38,7 +38,7 @@ window.SAGA = (function () {
     // una apuesta en el hnefatafl (todo en E.extra.eikholt)
     ["eikholt", "mundo", "othala", "#FFD98A", "EIKHOLT", () => {
       const s = EIKHOLT.estado() || {};
-      return [Math.min(9, (s.recados || {}).hechos || 0) + Math.min(5, (s.casasVistas || []).length) + ((s.escondidas || {}).ganadas ? 1 : 0) + ((s.ting || {}).ultimo ? 1 : 0) + (s.promesas ? 1 : 0) + (s.tafl ? 1 : 0), 18];
+      return [Math.min(9, (s.recados || {}).hechos || 0) + Math.min(5, (s.casasVistas || []).length) + ((s.escondidas || {}).ganadas ? 1 : 0) + ((s.ting || {}).ultimo ? 1 : 0) + (s.promesas ? 1 : 0) + (s.tafl ? 1 : 0) + ((s.ladron || {}).atrapados ? 1 : 0), 19];
     }],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
   ];
