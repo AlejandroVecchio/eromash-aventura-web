@@ -200,6 +200,14 @@ window.PROBAR = (function () {
               ...["carpinteria", "curtiembre", "cordeleria", "hospederia", "cuartel"].map((k) => ({ id: "ek_" + k, si: hay("INTERIORES") && !!INTERIORES.CUARTOS[k], fn: () => (plata(200), adentroDe(k)) })),
               { id: "ek_mercado", si: hay("MERCADO25"), fn: () => (plata(300), enCiudad(null, null, () => { const q = EIKHOLT.plano().puestos.find((c) => c.vende === "hierbas"); const e = EIKHOLT.ero(); (e.x = q.x), (e.y = q.y); })) },
               { id: "ek_tablon", si: hay("RECADOS25"), fn: () => enCiudad(null, null, () => { const L = EIKHOLT.plano().lugares.tablon; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 60); }) },
+              {
+                id: "ek_ting",
+                si: hay("ASAMBLEA25"),
+                fn: () => {
+                  for (let k = 0; k < 3 && !(hora(12), ASAMBLEA25.hoy(A)); k++) A.H.E.tiempo += LUZ.DIA;
+                  enCiudad(null, null, () => { const [x, y] = ASAMBLEA25.atril(EIKHOLT.plano()); const e = EIKHOLT.ero(); (e.x = x), (e.y = y + 100); });
+                },
+              },
               { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

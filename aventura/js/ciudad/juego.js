@@ -152,6 +152,7 @@ window.EIKHOLT = (function () {
   // los vecinos con nombre son los de CAPITAL: se esconden si la historia los mandó afuera de la ciudad
   const deCapital = (id) => window.CAPITAL && CAPITAL.gente.find((n) => n.id === id);
   function oculto(p) {
+    if (p.asamblea) return !(window.ASAMBLEA25 && ASAMBLEA25.hoy(A));
     if (!p.nombrado) return false;
     const n = deCapital(p.id);
     return !n || n.fuera || !dentroElipse(n.x, n.y, 1.1);
@@ -269,6 +270,9 @@ window.EIKHOLT = (function () {
     // el tablón de la plaza y el recado tomado (RECADOS25): ganan a todo lo demás cuando están a mano
     const rc = window.RECADOS25 && RECADOS25.cercano(plano, e, st, A);
     if (rc) mejor = rc;
+    // la asamblea del Ting (ASAMBLEA25): cerca de Bergljot, escuchar el asunto del día y dar la voz
+    const ta = window.ASAMBLEA25 && ASAMBLEA25.cercano(plano, e, st, A);
+    if (ta && !rc) mejor = ta;
     return mejor;
   }
 
@@ -655,6 +659,7 @@ window.EIKHOLT = (function () {
     if (!activo) return;
     RECORRER25.callados = J.modo !== "juego";
     RECORRER25.actualizar(dt, tiempo, h, cam, null);
+    if (window.ASAMBLEA25) ASAMBLEA25.actualizar(plano, MUNDO25.gente(), A);
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();

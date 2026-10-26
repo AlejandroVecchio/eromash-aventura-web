@@ -31,6 +31,8 @@ I18N.textos({
   "pb.ek_mercado_d": { es: "Delante del puesto de las hierbas", en: "In front of the herb stall" },
   "pb.ek_tablon": { es: "Recados del tablón", en: "Board errands" },
   "pb.ek_tablon_d": { es: "El tablón de la plaza", en: "The square's notice board" },
+  "pb.ek_ting": { es: "La asamblea del Ting", en: "The Ting assembly" },
+  "pb.ek_ting_d": { es: "El próximo día de asamblea, a las 12, junto a Bergljot", en: "The next assembly day, at noon, next to Bergljot" },
   "pb.ek_ronda": { es: "La ronda de noche", en: "The night watch" },
   "pb.ek_ronda_d": { es: "A las 23, junto a las antorchas", en: "At 23:00, next to the torches" },
   "pb.g_zonas": { es: "Mazmorras", en: "Dungeons" },

@@ -237,6 +237,16 @@ window.MUNDO25 = (function () {
     ];
     for (const [id, c0, dx, dy, horas, o] of VECINOS) if (c0) gente.push(Object.assign({ id, x: c0[0] + dx, y: c0[1] + dy, vx: 0, vy: 0, s: 1, horas, nombrado: true }, o || {}));
     for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
+    // la asamblea del Ting (ASAMBLEA25): cada tres días, de 11 a 13, la ciudad rodea la piedra; en el juego se ven solo
+    // los días de asamblea (lo decide oculto() de ciudad/juego.js)
+    if (plano.ting)
+      for (let i = 0; i < 16; i++) {
+        const a = Math.PI * 0.15 + (i / 15) * Math.PI * 0.7 + (rr() - 0.5) * 0.08,
+          r = 560 + (i % 3) * 110 + rr() * 40,
+          x = plano.ting[0] + Math.cos(a) * r,
+          y = plano.ting[1] + 120 + Math.sin(a) * r * 0.8;
+        if (libre(x, y, 22)) poner({ id: vecino(i % 6 ? null : "guardia"), x, y, vx: 0, vy: 0, s: 1, horas: [11, 13], asamblea: true });
+      }
     // cada puesto del mercado tiene su puestero de día, parado a un costado del mostrador (del lado que esté libre):
     // pregona lo suyo cuando Eromash pasa cerca (RECORRER25) y no se va con la lluvia, que tiene el toldo
     for (const q of plano.puestos || []) {
