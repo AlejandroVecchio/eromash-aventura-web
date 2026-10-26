@@ -2,10 +2,11 @@
 // Juegos que todos conocen, jugados con piedras rúnicas, para la gente del camino (encuentros.js):
 //   parejas  el memotest: dieciséis piedras boca abajo, ocho pares de runas; encontrarlas todas en `VUELTAS` vueltas
 //   simon    Simón dice: cuatro piedras en rombo se encienden en orden y hay que repetirlo; cada ronda una más
-//   mente    el Mastermind: cuatro runas escondidas entre seis; cada intento dice cuántas están en su lugar (oro)
-//            y cuántas están pero en otro lugar (blanco)
-// Se juega con las flechas o el stick y E (o tocando las piedras); Esc deja el juego. Al terminar, `op.fin(res)` recibe
-// { gano, ...lo de cada juego } y quien lo pidió paga. Lienzo propio de 1600 × 900, como el matraz.
+//   mente    el Mastermind: cuatro runas escondidas entre seis; cada intento marca en cada piedra si la runa está
+//            en su lugar (oro), en otro lugar (blanco) o no está (apagada)
+// Se juega con las flechas o el stick y E, o con el mouse o el dedo tocando las piedras; Esc deja el juego. Al
+// terminar, `op.fin(res)` recibe { gano, ...lo de cada juego } y quien lo pidió paga. Lienzo propio de 1600 × 900,
+// como el matraz.
 window.JUEGOS_RUNAS = (function () {
   "use strict";
   let A, J;
@@ -152,7 +153,12 @@ window.JUEGOS_RUNAS = (function () {
     const oro = g.filter((r, k) => S.codigo[k] === r).length,
       cuenta = (a, r) => a.filter((q) => q === r).length,
       blanco = [...new Set(g)].reduce((n, r) => n + Math.min(cuenta(g, r), cuenta(S.codigo, r)), 0) - oro;
-    S.filas.push({ g: g.slice(), oro, blanco });
+    // la pista de cada lugar, debajo de su runa: oro si está en su lugar, blanco si está en otro (cada runa del verso
+    // se cuenta una vez, como arriba, y se reparte de izquierda a derecha)
+    const quedan = {};
+    S.codigo.forEach((r, k) => g[k] !== r && (quedan[r] = (quedan[r] || 0) + 1));
+    const marcas = g.map((r, k) => (S.codigo[k] === r ? "oro" : quedan[r] > 0 ? (quedan[r]--, "blanco") : null));
+    S.filas.push({ g: g.slice(), oro, blanco, marcas });
     S.ahora = [];
     sonar(oro === S.largo ? 880 : 520 + oro * 80, 0.25);
     if (oro === S.largo) terminar({ gano: true, intentos: S.filas.length });
@@ -165,7 +171,7 @@ window.JUEGOS_RUNAS = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "runasLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;display:none";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto;display:none";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     lienzo.addEventListener("pointerdown", (e) => {
@@ -329,8 +335,7 @@ window.JUEGOS_RUNAS = (function () {
     },
     mente() {
       // las filas jugadas y la de ahora
-      const af = altoFila(),
-        xr = 590 + S.largo * 72; // dónde van los rombos de la respuesta
+      const af = altoFila();
       for (let f = 0; f < S.intentos; f++) {
         const y = 150 + f * af,
           fila = S.filas[f],
@@ -338,17 +343,16 @@ window.JUEGOS_RUNAS = (function () {
         P([560, y, 1200, y, 1200, y + 64, 560, y + 64], ahora ? "#2A2220" : "#161210");
         for (let s = 0; s < S.largo; s++) {
           const r = fila ? fila.g[s] : ahora ? S.ahora[s] : null;
-          const x = 576 + s * 72;
-          P([x, y + 7, x + 56, y + 7, x + 56, y + 57, x, y + 57], "#3A3634");
-          if (r != null) runa(S.de[r], x + 28, y + 32, 20, COLORES[r], 0.22);
+          const x = 576 + s * 72,
+            m = fila && fila.marcas[s];
+          // la pista queda en la misma piedra: un marco del color y un rombo en la esquina (oro en su lugar, blanco
+          // en otro, sin marca si no está)
+          if (m) P([x - 4, y + 3, x + 60, y + 3, x + 60, y + 61, x - 4, y + 61], m === "oro" ? "#FFD98A" : "#F2ECEC");
+          P([x, y + 7, x + 56, y + 7, x + 56, y + 57, x, y + 57], fila && !m ? "#221C1A" : "#3A3634");
+          if (r != null) runa(S.de[r], x + 28, y + 32, 20, fila && !m ? "#56524E" : COLORES[r], 0.22);
+          if (m) rombo(x + 50, y + 13, 7, m === "oro" ? "#FFD98A" : "#F2ECEC");
         }
-        if (fila) {
-          for (let p = 0; p < S.largo; p++) {
-            const col = p < fila.oro ? "#FFD98A" : p < fila.oro + fila.blanco ? "#F2ECEC" : "#3A3634";
-            rombo(xr + Math.floor(p / 2) * 26, y + 20 + (p % 2) * 24, 9, col);
-          }
-          texto(t("jr.mente_dice", [fila.oro, fila.blanco]), 1186, y + 38, 15, "#E0B2B2", "right", 500);
-        }
+        if (fila) texto(t("jr.mente_dice", [fila.oro, fila.blanco]), 1186, y + 38, 15, "#E0B2B2", "right", 500);
       }
       texto(t("jr.intentos", [S.filas.length, S.intentos]), 1380, 92, 22, "#F2ECEC", "right");
       // las seis runas para elegir
@@ -363,6 +367,8 @@ window.JUEGOS_RUNAS = (function () {
       texto(t("jr.mente_oro"), 258, 206, 15, "#F2ECEC", "left", 500);
       rombo(240, 236, 10, "#F2ECEC");
       texto(t("jr.mente_blanco"), 258, 242, 15, "#F2ECEC", "left", 500);
+      P([231, 263, 249, 263, 249, 281, 231, 281], "#221C1A");
+      texto(t("jr.mente_nada"), 258, 278, 15, "#F2ECEC", "left", 500);
     },
   };
 

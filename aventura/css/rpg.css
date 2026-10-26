@@ -161,7 +161,7 @@
 #hudEfectos span b { color: var(--col); }
 
 /* ---------- cocina (motor/cocina.js) ---------- */
-#cocina { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; }
+#cocina { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; pointer-events: auto; }
 #cocina.oculto { display: none; }
 #cocina h2 { margin: 0 0 6px; color: var(--oro); }
 #cocina canvas { width: 100%; height: auto; display: block; }
@@ -177,7 +177,7 @@
 #pesca .pe-pie { margin: 6px 0 0; color: #E0B2B2; font-size: 13px; }
 
 /* el lector de libros (motor/libros.js) */
-#libro { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(760px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; user-select: none; }
+#libro { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(760px, calc(100vw - 32px)); padding: 16px 20px; background: #161210; z-index: 30; text-align: center; touch-action: none; user-select: none; pointer-events: auto; }
 #libro.oculto { display: none; }
 #libro .lb-hojas { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: #5E130D; padding: 10px; }
 #libro .lb-hoja { position: relative; min-height: 300px; padding: 26px 26px 34px; text-align: left; color: #3A2A1C; font-size: 16px; line-height: 1.55; cursor: pointer; }

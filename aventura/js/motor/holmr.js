@@ -145,7 +145,7 @@ window.HOLMR = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "holmrLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;display:none;cursor:crosshair";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto;display:none;cursor:crosshair";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     lienzo.addEventListener("pointerdown", (e) => {
