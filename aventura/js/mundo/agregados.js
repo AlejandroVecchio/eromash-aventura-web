@@ -18,6 +18,8 @@ window.AGREGADOS = {
   casas: {},
   // zonas fuera del mapa (sección Zonas): mazmorras oscuras y tierras con islas, cada una con su entrada en el bosque
   zonas: {},
+  // Eikholt cambiada con el editor (pestaña Eikholt): cosas del plano sacadas o movidas y assets puestos (ciudad/agregados.js)
+  eikholt: { quitar: [], mover: [], poner: [] },
   // gente propia (Importar NPC): nombre, diálogo, lugar y sus dibujos por vista (imágenes achicadas)
   npcs: [],
   // regiones con nombre (el juego muestra el nombre al entrar) y piezas guardadas del editor

@@ -154,12 +154,15 @@ window.PODERES = (function () {
     // uno de cada tres cofres trae hierbas de Thora (se llevan hasta cinco, se comen desde la barra de abajo)
     const hierbas = pj.hierbas < MAX_HIERBAS && Math.random() < 0.35;
     if (hierbas) darHierbas(1);
+    // uno de cada cuatro trae una piedra de Loki (las pistas de los minijuegos)
+    const loki = window.LOKI && Math.random() < 0.25 && LOKI.dar(1, true);
     const partes = [nombre];
     if (b.plata) partes.push(t("sx.botin_plata", [b.plata]));
     if (b.vida) partes.push(t("sx.botin_vida"));
     if (hierbas) partes.push(t("bar.botin_hierbas"));
+    if (loki) partes.push(t("lk.botin"));
     HUD.aviso(partes.join(" · "), "#FFD98A");
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("botin");
   }
   // la plata que entra seguida se suma en un solo número (no una lluvia de «+9»)
   function darPlata(n) {
@@ -180,7 +183,7 @@ window.PODERES = (function () {
     if (pj.frag % 3 === 0) {
       pj.nivel++;
       aplicar();
-      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.ANIMA) ANIMA.absorber({ col: "#FFD98A", col2: "#FFE7A8", forma: "chispa" });
       if (window.VIDA) VIDA.evento("nivel", jug.x, jug.y);
       HUD.aviso(t("pj.nivel_runico", [pj.nivel]), "#73D5DB");
     } else HUD.aviso(t("pj.fragmento", [pj.frag % 3]), "#73D5DB");
@@ -219,9 +222,8 @@ window.PODERES = (function () {
 
   // ---------- lanzar runas ----------
   function apuntar() {
-    const m = A.mouse();
-    if (m.usado && !CONTROLES.mando()) return Math.atan2((m.y - (jug.y - 30)) * 1.25, m.x - jug.x);
-    return Math.atan2(jug.dir[1] * 1.25, jug.dir[0]);
+    const c = A.dirCursor();
+    return c != null ? c : Math.atan2(jug.dir[1] * 1.25, jug.dir[0]);
   }
   const vivos = () => A.enemigos.filter((e) => e.activo && !e.muerto && Math.abs(e.x - jug.x) < 900 && Math.abs(e.y - jug.y) < 700);
   // lanza una runa (la de su casilla en la barra de abajo, o la elegida)

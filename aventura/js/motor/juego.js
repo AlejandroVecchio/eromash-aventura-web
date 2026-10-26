@@ -267,9 +267,10 @@
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
-    ANIMA.gesto("feliz");
+    ANIMA.gesto("grito", 0, { col: "#FFD98A" });
     if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
+    J.retrasar(3.4, adondeIr);
     etapaVista = H.etapa();
     etapaDesde = J.t;
   }
@@ -280,6 +281,7 @@
     if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) {
       HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
       if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
+      J.retrasar(1.4, adondeIr);
     }
     etapaVista = e;
     etapaDesde = J.t;
@@ -287,6 +289,36 @@
   function textoObjetivo(ob) {
     return tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
   }
+  // adónde ir ahora: el objetivo, el lugar conocido más cercano a donde está, los metros y hacia qué lado
+  function lugarCerca(p) {
+    let mejor = null,
+      dm = Infinity;
+    for (const k in W.LUGARES) {
+      const L = W.LUGARES[k],
+        d = Math.hypot(L.p[0] - p[0], L.p[1] - p[1]) - L.r;
+      if (d < dm && tav("lugar_" + k) !== "av.lugar_" + k) {
+        dm = d;
+        mejor = k;
+      }
+    }
+    if (!mejor || dm > 60 * W.M) return t("mj.en_el_bosque");
+    return dm <= 0 ? tav("lugar_" + mejor) : t("mj.cerca_de", [tav("lugar_" + mejor)]);
+  }
+  let adondeT = -9;
+  function adondeIr() {
+    const o = H.objetivo();
+    if (!o || LIENZO || J.t - adondeT < 2) return; // varios objetivos seguidos: un solo cartel
+    adondeT = J.t;
+    const p = dondeObjetivo(),
+      txt = textoObjetivo(o);
+    if (!p) return HUD.aviso(t("mj.ahora", [txt]), "#73D5DB", t("mj.ir_titulo"));
+    const d = dist(jug, p);
+    if (d < 12 * W.M) return HUD.aviso(t("mj.ir_aqui", [txt]), "#73D5DB", t("mj.ir_titulo"));
+    const a = Math.atan2(p[1] - jug.y, p[0] - jug.x),
+      k = ((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8;
+    HUD.aviso(t("mj.ir_a", [txt, lugarCerca(p), Math.round(d / 43), t("mj.dir_" + k)]), "#73D5DB", t("mj.ir_titulo"));
+  }
+  J.adondeIr = adondeIr;
   // si pasan cuatro minutos sin avanzar, un recordatorio de qué hacer y por dónde
   function pistaSiHaceFalta() {
     if (J.modo !== "juego" || J.dentro || jug.pelea || J.t - etapaDesde < 240 || J.t - pistaDada < 240) return;
@@ -298,8 +330,7 @@
   // lo que la gente tiene para decir: «!» dorado sobre a quien manda el objetivo, «…» sobre quien tiene algo nuevo
   const oidos = () => (H.E.extra.oidos = H.E.extra.oidos || {});
   function senalDe(n) {
-    const o = H.objetivo();
-    if (o && o.donde === n.id) return "!";
+    if (H.abiertos().some((o) => o.donde === n.id)) return "!";
     const k = H.dialogoDe(n.id);
     return k && !oidos()[k] ? "…" : null;
   }
@@ -348,9 +379,14 @@
   inter(P.pedestal, "accion_contactar", () => en("EL-06") && tiene("nucleo_puesto") && !tiene("runa_paso"), () => cineNucleo());
   inter(P.sello, "accion_tocar", () => en("EL-07") && tiene("sello_visto") && !tiene("voz_santuario"), () => dialogo("runa_santuario"), 150);
   inter(P.sello, "accion_calco", () => en("EL-07") && tiene("voz_santuario") && !tiene("calco"), () => {
-    jug.interactuando = 0.8;
-    H.anotar("diario_calco");
-    H.marcar("calco");
+    const calco = () => {
+      jug.interactuando = 0.8;
+      H.anotar("diario_calco");
+      H.marcar("calco");
+    };
+    // antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (MINIJ «rayo»)
+    if (!window.MINIJ || !MINIJ.JUEGOS.rayo) return calco();
+    MINIJ.empezar("rayo", { variante: "ataduras", semilla: 707, quien: t("mn.rayo_sello_quien"), fin: (r) => (r.gano ? calco() : !r.dejo && HUD.aviso(t("mn.rayo_sello_mal"), "#E0B2B2")) });
   }, 150);
   inter(P.nucleo, "accion_recoger", () => en("EL-05") && tiene("ciervo_vencido") && !tiene("nucleo") && !!nucleoSuelo, () => {
     jug.interactuando = 0.6;
@@ -476,6 +512,7 @@
       // la cuadrilla sale por el camino despejado
       trabajadores.forEach((tr) => (tr.destino = [P.carro[0] + tr.i * 40, P.carro[1] + 60]));
     }
+    if (id === "eydis_inicio") J.retrasar(0.6, () => HUD.aviso(t("mj.croquis_abrir", [CONTROLES.glifo("mapa"), CONTROLES.glifo("diario")]), "#73D5DB", t("mj.ir_titulo")));
     if (id === "orm_puente") return repararPuente();
     if (id === "salida_norte") {
       jug.x = P.puente[0];
@@ -590,11 +627,18 @@
   // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
   const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
   const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
-  // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
+  // hacia dónde apunta el cursor, con el ángulo de los golpes (la y del piso ×1,25); null con mando, sin mouse o encima de Eromash
+  function dirCursor() {
+    if (!mouse.usado || CONTROLES.mando()) return null;
+    posMouse();
+    const dx = mouse.x - jug.x,
+      dy = (mouse.y - (jug.y - 30)) * 1.25;
+    return Math.hypot(dx, dy) < 10 ? null : Math.atan2(dy, dx);
+  }
+  // hacia dónde va un golpe: el cursor, o la palanca corrida hacia la criatura más cercana
   function dirGolpe() {
-    const dir = Math.atan2(jug.dir[1], jug.dir[0]);
-    if (mouse.usado && !CONTROLES.mando()) return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-    return apuntar(dir);
+    const c = dirCursor();
+    return c != null ? c : apuntar(Math.atan2(jug.dir[1], jug.dir[0]));
   }
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
@@ -687,16 +731,30 @@
       SONIDO.latido();
     }
   }
+  // dónde cae un punto del mundo en la pantalla, en píxeles de la página (para lo que se dibuja encima del juego)
+  J.aPantalla = (x, y) => {
+    const [vx, vy] = VOL.vista(x, y, J.cam.x, J.cam.y, J.giro || 0);
+    return [(((vx - J.cam.x) * esc + cw / 2) * innerWidth) / (cw || 1), (((vy - J.cam.y) * esc + ch / 2) * innerHeight) / (ch || 1)];
+  };
   function polvareda(x, y, n) {
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
   }
-  let mouse = { x: 0, y: 0, usado: false };
-  lienzo.addEventListener("pointermove", (e) => {
+  // el mouse se guarda en la pantalla y se pasa al mundo cuando se pide: si Eromash camina con el mouse quieto, el
+  // cursor sigue apuntando a lo que tiene debajo
+  let mouse = { x: 0, y: 0, usado: false, px: 0, py: 0 };
+  function posMouse() {
     const k = cw / innerWidth;
     // en la vista, y de ahí al mundo (la cámara puede estar girada)
-    [mouse.x, mouse.y] = VOL.mundo((e.clientX * k) / esc + J.cam.x - cw / 2 / esc, (e.clientY * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+    [mouse.x, mouse.y] = VOL.mundo((mouse.px * k) / esc + J.cam.x - cw / 2 / esc, (mouse.py * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+    return mouse;
+  }
+  lienzo.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch") return; // el toque apunta con la palanca, como el mando
+    mouse.px = e.clientX;
+    mouse.py = e.clientY;
     mouse.usado = true;
+    posMouse();
   });
   function puedeMover() {
     return J.modo === "juego" && !jug.muerto && jug.interactuando <= 0;
@@ -775,7 +833,16 @@
       jug.staEspera = 0.6;
       jug.esq = 0.3;
       jug.inv = Math.max(jug.inv, 0.26);
-      jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
+      // con mouse, hacia el cursor; con mando o palanca, hacia donde se mueve (quieto, un paso atrás)
+      const c = dirCursor();
+      if (c != null) {
+        const ux = Math.cos(c),
+          uy = Math.sin(c) / 1.25,
+          l = Math.hypot(ux, uy);
+        jug.esqDir = [ux / l, uy / l];
+        jug.dir = jug.esqDir.slice();
+        jug.mira = VIKINGO.vista(ux, uy, jug.mira);
+      } else jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
       jug.atk = null;
       jug.carga = 0;
       polvareda(jug.x, jug.y, 5);
@@ -1230,8 +1297,10 @@
     }
     c.save();
     c.globalAlpha = po.alfa;
-    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
+    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && !po.tinte && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45; // absorbiendo no parpadea: se tiene que ver
     if (p.esq > 0) c.globalAlpha = 0.8;
+    // la energía que absorbe (ANIMA.absorber): las partículas de atrás van antes del cuerpo
+    if (!enSilueta) ANIMA.dibujarAbsorbe(c, p.x + po.dx, yy + h - 6, false);
     // desde los pies: así aplastarse y estirarse no lo despegan del piso
     c.translate(p.x + po.dx, yy + h - 6);
     if (vista === "E" && espejo) c.scale(-1, 1);
@@ -1245,7 +1314,16 @@
         c.drawImage(bl, -w / 2, -h + 6, w, h);
       }
     }
+    // teñido del color de la energía que absorbe
+    if (po.tinte && po.tinte.k > 0) {
+      const ti = ANIMA.blanco(img, po.tinte.col);
+      if (ti) {
+        c.globalAlpha = po.tinte.k * po.alfa;
+        c.drawImage(ti, -w / 2, -h + 6, w, h);
+      }
+    }
     c.restore();
+    if (!enSilueta) ANIMA.dibujarAbsorbe(c, p.x + po.dx, yy + h - 6, true);
     if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, false);
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();
@@ -1328,12 +1406,31 @@
     }
   }
   // la columna de luz sobre el objetivo y la flecha en el borde si está fuera de pantalla
-  function dondeObjetivo() {
-    const o = H.objetivo();
+  // con varios objetivos abiertos (los de un mismo par) marca el más cercano; dentro de Eikholt, el ancla de la ciudad
+  // que corresponde a ese punto del bosque (pasada otra vez al bosque, que es donde el motor ve a Eromash)
+  function destinoDe(o) {
     if (!o || !o.donde) return null;
-    if (npcs[o.donde]) return [npcs[o.donde].x, npcs[o.donde].y];
-    if (o.donde === "ciervo") return ciervo.derrotado ? null : [ciervo.x, ciervo.y];
-    return P[o.donde] || null;
+    let p = null;
+    if (npcs[o.donde]) p = [npcs[o.donde].x, npcs[o.donde].y];
+    else if (o.donde === "ciervo") p = ciervo.derrotado ? null : [ciervo.x, ciervo.y];
+    else p = P[o.donde] || null;
+    if (p && window.EIKHOLT && EIKHOLT.activo() && EIKHOLT.aBosque) {
+      const an = EIKHOLT.anclas()[o.donde];
+      p = EIKHOLT.aBosque(...(an || EIKHOLT.lugarDe(p[0], p[1])));
+    }
+    return p;
+  }
+  function dondeObjetivo() {
+    let mejor = null,
+      dm = Infinity;
+    for (const o of H.abiertos()) {
+      const p = destinoDe(o);
+      if (p && dist(jug, p) < dm) {
+        dm = dist(jug, p);
+        mejor = p;
+      }
+    }
+    return mejor;
   }
   // rgb/col: el color del haz y de la flecha (rúnico para la misión, dorado para la marca propia del mapa)
   function dibujarHaz(p, x0, y0, x1, y1, rgb = "115,213,219", col = DIB.RUNICO) {
@@ -1977,11 +2074,13 @@
     else if (mis) {
       const objs = [];
       const txt = (ob) => tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
+      // los cumplidos y los abiertos ahora (con un par, varios a la vez, cada uno con sus metros)
+      const ab = H.abiertos();
       for (const ob of mis.objetivos) {
         if (tiene(ob.hecho)) objs.push({ texto: txt(ob), estado: "hecho" });
-        else {
-          objs.push({ texto: txt(ob), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
-          break;
+        else if (ab.includes(ob)) {
+          const q = destinoDe(ob);
+          objs.push({ texto: txt(ob), estado: "actual", metros: q ? Math.max(1, dist(jug, q) / 43) : null });
         }
       }
       lista.push({ rotulo: t("ui.mision", [H.etapa()]), nombre: tav("mision_" + m), objetivos: objs });
@@ -2116,7 +2215,13 @@
     ]);
   }
   // el diario se lee en la pestaña Diario de la mochila (inventario.js)
+  // EL-01: el croquis de Eydis está en el diario y en el mapa; abrir cualquiera de los dos lo cuenta como leído
+  function leerCroquis() {
+    if (en("EL-01") && tiene("el01_acepto") && !tiene("croquis_leido")) H.marcar("croquis_leido");
+  }
+  J.leerCroquis = leerCroquis;
   function htmlDiario() {
+    leerCroquis();
     const lista = H.E.diario.length ? H.E.diario.map((k) => `<p>${tav(k)}</p>`).join("") : `<p>${t("ui.diario_vacio")}</p>`;
     let extra = "";
     const pr = H.E.extra.prologo;
@@ -2166,8 +2271,9 @@
       else if (CONTROLES.recien("diario")) diario();
     }
     if (J.dentro && (J.modo === "juego" || J.modo === "dialogo")) {
-      // adentro de una casa el bosque queda en pausa
+      // adentro de una casa el bosque queda en pausa (la Lente igual se recarga: en Eikholt se usa en la mesa y el patio)
       J.t += dt;
+      lenteEspera = Math.max(0, lenteEspera - dt);
       H.E.tiempo += dt;
       J.timers.forEach((tm) => (tm.t -= dt));
       J.timers.filter((tm) => tm.t <= 0).forEach((tm) => tm.fn());
@@ -2281,7 +2387,8 @@
     usarLente,
     lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
-    mouse: () => mouse,
+    mouse: () => (mouse.usado ? posMouse() : mouse),
+    dirCursor,
     hora: () => amb.h,
     noche: () => amb.n,
     amb: () => amb,

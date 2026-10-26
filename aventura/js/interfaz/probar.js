@@ -108,6 +108,12 @@ window.PROBAR = (function () {
       id: "juegos",
       lista: () => [
         ...["parejas", "simon", "mente"].map((tipo) => ({ id: tipo, si: hay("JUEGOS_RUNAS"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo)) })),
+        // sus variantes (las que piden los hörgar)
+        ...(hay("JUEGOS_RUNAS") ? ["parejas", "simon", "mente"] : []).flatMap((tipo) =>
+          Object.keys(JUEGOS_RUNAS.VARIANTES[tipo])
+            .filter((v) => v !== "base")
+            .map((v) => ({ id: tipo + "_" + v, si: true, texto: t("pb." + tipo) + " · " + t("jr.v_" + tipo + "_" + v), sub: t("pb.jr_v_d"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo, { variante: v })) }))
+        ),
         {
           id: "holmr",
           si: hay("HOLMR") && !!HOLMR.centro(),
@@ -192,10 +198,24 @@ window.PROBAR = (function () {
           : [],
     },
     {
+      // los gestos de Eromash (personajes/animacion.js), los de uso y los de reserva, y absorber con varias energías
+      id: "gestos",
+      lista: () => [
+        ...(window.ANIMA ? ANIMA.GESTOS : []).map((g) => ({ id: "gesto", texto: t("pb.ge_" + g), si: true, fn: () => (A.cerrarMenu(), J.retrasar(0.3, () => ANIMA.gesto(g, 0, g === "tesoro" ? { col: "#F5A524" } : {}))) })),
+        ...[
+          ["runico", "#73D5DB", "#C8F2F4", "rombo"],
+          ["oro", "#FFD98A", "#FFE7A8", "chispa"],
+          ["vida", "#7BC86C", "#F2ECEC", "cuadro"],
+          ["violeta", "#9A6BD8", "#E0B2B2", "chispa"],
+        ].map(([id, col, col2, forma]) => ({ id: "absorber", texto: t("pb.ab_" + id), si: hay("ANIMA"), fn: () => (A.cerrarMenu(), J.retrasar(0.3, () => ANIMA.absorber({ col, col2, forma }))) })),
+      ],
+    },
+    {
       id: "ayudas",
       lista: () => [
         { id: "plata", queda: true, si: hay("PODERES"), fn: () => (PODERES.darPlata(1000), HUD.aviso(t("pb.listo"), "#FFD98A")) },
         { id: "materiales", queda: true, si: true, fn: () => (darTodo(), HUD.aviso(t("pb.listo"), "#7BC86C")) },
+        { id: "loki", queda: true, si: hay("LOKI"), fn: () => (LOKI.dar(5, true), HUD.aviso(t("pb.listo"), "#7BC86C")) },
         { id: "niveles", queda: true, si: hay("RPG"), fn: () => niveles(5) },
         { id: "curar", queda: true, si: true, fn: () => ((jug.hp = jug.hpMax), (jug.sta = jug.staMax), HUD.aviso(t("pb.listo"), "#7BC86C")) },
         { id: "noche", queda: true, si: true, fn: () => hora(23) },

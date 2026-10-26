@@ -1,0 +1,20 @@
+// Textos de los objetivos opcionales de cada misión principal (motor/opcionales.js): prefijo oq.
+I18N.textos({
+  "oq.rotulo": { es: "Opcional", en: "Optional" },
+  "oq.nombre": { es: "De camino", en: "Along the way" },
+  "oq.cumplido": { es: "Opcional cumplido: {0} · +{1} de plata", en: "Optional done: {0} · +{1} silver" },
+  "oq.piedra_carro": { es: "Leé la piedra del susurro más cercana al carro", en: "Read the whispering stone nearest the cart" },
+  "oq.atril_puesto": { es: "Leé el libro del atril cerca del Puesto", en: "Read the book on the lectern near the Outpost" },
+  "oq.cofre_refugio": { es: "Abrí el cofre escondido cerca del Refugio", en: "Open the hidden chest near the Shelter" },
+  "oq.comer_refugio": { es: "Cociná un plato en una fogata y comelo", en: "Cook a dish at a campfire and eat it" },
+  "oq.herreria": { es: "Entrá a la herrería de Ása en Eikholt", en: "Step into Ása's smithy in Eikholt" },
+  "oq.hongo": { es: "Entrá a la taberna del Hongo Dorado", en: "Step into the Golden Mushroom tavern" },
+  "oq.horgr_tala": { es: "Encontrá el hörgr más cercano a la antigua tala", en: "Find the hörgr nearest the old logging site" },
+  "oq.cofre_quebrada": { es: "Abrí el cofre escondido cerca de la quebrada", en: "Open the hidden chest near the ravine" },
+  "oq.comer_ciervo": { es: "Comé un plato de la fogata antes de enfrentar al Ciervo", en: "Eat a campfire dish before facing the Stag" },
+  "oq.piedra_claro": { es: "Leé la piedra del susurro cerca del Claro", en: "Read the whispering stone near the Glade" },
+  "oq.pesca_paso": { es: "Pescá algo con la caña de Sverri", en: "Catch something with Sverri's rod" },
+  "oq.atril_paso": { es: "Leé el libro del atril más cercano al Paso", en: "Read the book on the lectern nearest the Pass" },
+  "oq.horgr_aserradero": { es: "Encontrá el hörgr más cercano al aserradero", en: "Find the hörgr nearest the sawmill" },
+  "oq.piedra_santuario": { es: "Leé la piedra del susurro cerca del Santuario", en: "Read the whispering stone near the Sanctuary" },
+});

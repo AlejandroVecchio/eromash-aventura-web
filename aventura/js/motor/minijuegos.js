@@ -4,10 +4,12 @@
 // luz de arriba a la derecha, las runas del futhark (las de JUEGOS_RUNAS), el puntero y los controles por acciones, el
 // cartel del final y el pie con las teclas. Cada minijuego se registra con
 //   MINIJ.registrar(tipo, { armar(S), paso(S, dt), tocar(S, i), hit(S, x, y) → i, arrastre(S, x, y, fase),
-//                            dibujar(S, D), variantes: { id: op }, pie: clave, res(S) → texto })
+//                            dibujar(S, D), variantes: { id: op }, pie: clave, res(S) → texto, pista(S) → true })
 // y se juega con MINIJ.empezar(tipo, { variante, quien, x, y, fin(res) }): `fin` recibe { gano, dejo, ... } y quien lo
 // pidió (un cofre, un encargo, un acertijo) decide qué pasa. Las variantes reutilizan el mismo juego con otras reglas.
 // Probar mecánicas lista solo todo lo registrado (`MINIJ.lista()`). Textos `mn.` (y los de cada juego).
+// `pista(S)` da una ayuda y devuelve true si la dio: el botón «Pista» (o la Lente) la paga con una piedra de Loki
+// (motor/loki.js); un juego sin `pista` muestra el botón apagado.
 window.MINIJ = (function () {
   "use strict";
   let A, J;
@@ -30,6 +32,7 @@ window.MINIJ = (function () {
     const v = Object.assign({}, (def.variantes && def.variantes[op.variante || "base"]) || {}, op.reglas || {});
     S = { tipo, def, op, v, variante: op.variante || "base", t: 0, fin: null, cur: 0, luz: {}, rnd: DIB.azar(op.semilla != null ? op.semilla : Math.floor(Math.random() * 1e9)), modoAntes: J.modo === "menu" || J.modo === "dialogo" ? "juego" : J.modo };
     def.armar(S);
+    if (window.LOKI) LOKI.alAbrirJuego();
     J.modo = "minij";
     lienzo.style.display = "block";
     if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
@@ -66,13 +69,14 @@ window.MINIJ = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "minijLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;display:none";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto;display:none";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     lienzo.addEventListener("pointerdown", (e) => {
       if (!S) return;
       if (S.fin) return S.fin.t > 0.4 && cerrar();
       const [x, y] = aJuego(e);
+      if (window.LOKI && LOKI.dentro(x, y)) return pedirPista();
       apretado = true;
       lienzo.setPointerCapture && lienzo.setPointerCapture(e.pointerId);
       if (S.def.arrastre && S.def.arrastre(S, x, y, "baja") === true) return;
@@ -98,10 +102,17 @@ window.MINIJ = (function () {
     lienzo.addEventListener("pointercancel", soltar);
   }
 
+  // una pista de Loki: el juego la da y la piedra se gasta (o avisa que no quedan o que no hay nada que ayudar)
+  function pedirPista() {
+    if (!S || S.fin || !window.LOKI) return;
+    S.pistaAviso = LOKI.avisoDe(LOKI.usar(() => !!(S.def.pista && S.def.pista(S))));
+  }
+
   // ---------- cada cuadro (lo llama juego.js por J.modos) ----------
   function paso(dt) {
     if (!S) return;
     S.t += dt;
+    if (S.pistaAviso) S.pistaAviso.t -= dt;
     Object.keys(S.luz).forEach((k) => (S.luz[k] -= dt) <= 0 && delete S.luz[k]);
     if (S.fin) {
       S.fin.t += dt;
@@ -109,6 +120,7 @@ window.MINIJ = (function () {
       return dibujar();
     }
     if (CONTROLES.recien("pausa")) return terminar({ gano: false, dejo: true });
+    if (CONTROLES.recien("lente")) pedirPista();
     // el reloj de las variantes contra el tiempo
     if (S.v.tiempo) {
       S.queda = Math.max(0, S.v.tiempo - S.t);
@@ -173,6 +185,7 @@ window.MINIJ = (function () {
     if (sub) texto(sub, 220, 124, 17, "#E0B2B2", "left", 500);
     if (S.v.tiempo) texto(t("mn.queda", [Math.ceil(S.queda != null ? S.queda : S.v.tiempo)]), 1380, 124, 20, (S.queda || 99) < 10 ? "#FF8D71" : "#73D5DB", "right", 700);
     S.def.dibujar(S, D);
+    if (window.LOKI && !S.fin) LOKI.boton(c, !!S.def.pista, S.pistaAviso);
     texto(t(S.def.pie || "mn.pie", [CONTROLES.glifo("interactuar"), CONTROLES.glifo("pausa"), CONTROLES.glifo("arriba")]), 800, 892, 16, "#E0B2B2", "center", 400);
     if (S.fin) {
       DIB.alfa(c, Math.min(0.75, S.fin.t * 2), () => P([0, 0, W0, 0, W0, H0, 0, H0], "#111111"));
@@ -205,6 +218,7 @@ window.MINIJ = (function () {
     cerrar,
     paso,
     tocar: (i) => S && !S.fin && S.def.tocar(S, i),
+    pista: pedirPista,
     activo: () => !!S,
     estado: () => S,
     // lo registrado, para Probar mecánicas: [{ tipo, variante }]

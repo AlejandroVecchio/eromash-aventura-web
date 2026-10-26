@@ -138,7 +138,7 @@ window.COMERCIO = (function () {
     BOTIN.dar(it, { silencio: true });
     HUD.aviso(t("cm.envuelta_era", [OBJETOS.nombre(it)]), OBJETOS.COL_TEXTO[it.r]);
     if (window.SONIDO) SONIDO.tocar(it.r >= 2 ? "mision" : "plata", { vol: 0.55 });
-    if (it.r >= 2 && window.ANIMA) ANIMA.gesto("feliz");
+    if (it.r >= 2 && window.ANIMA) ANIMA.gesto("tesoro", 0, { col: OBJETOS.RAREZAS[it.r].col });
     return it;
   }
   function vender(id, it) {

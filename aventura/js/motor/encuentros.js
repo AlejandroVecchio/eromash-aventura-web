@@ -176,7 +176,7 @@ window.ENCUENTROS = (function () {
     RPG.recalcular();
     HUD.aviso(t("ec.inspirado_d"), "lugar", t("ec.inspirado"));
     if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5, tono: 1.3 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("asiente");
   }
   function emboscada() {
     enc.lobos = [];

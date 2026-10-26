@@ -182,7 +182,7 @@ window.LIBROS = (function () {
     CONTROLES.soltar && CONTROLES.soltar();
     if (l && l.nuevo.length) {
       l.nuevo.forEach((m, i) => J.retrasar(0.2 + i * 1.8, () => HUD.aviso(m[0], m[1], m[2])));
-      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.ANIMA) ANIMA.gesto("asiente");
     }
   }
   // los leídos, para releer (desde la Bolsa)
