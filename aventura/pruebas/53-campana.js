@@ -125,6 +125,16 @@
           r.pasos.push("E:" + c.texto);
           c.fn();
           await esperar(900);
+          // si pidió el rayo de luz (el sello de EL-07), lo resuelve dando vuelta los espejos del camino
+          const M = window.MINIJ && MINIJ.estado();
+          if (M && M.def === MINIJ.JUEGOS.rayo) {
+            Object.values(M.celda)
+              .filter((x) => x.tipo === "espejo" && x.bien && !x.fijo && x.forma !== x.bien)
+              .forEach((x) => MINIJ.JUEGOS.rayo.tocar(M, x.y * M.v.c + x.x));
+            await esperar(1200);
+            MINIJ.cerrar();
+            r.pasos.push("rayo");
+          }
           await esperarModo();
           continue;
         }
