@@ -6,7 +6,7 @@ window.OPCIONES = (function () {
   "use strict";
   const t = (k, v) => I18N.t(k, v);
   const CLAVE = "eromash.aventura.opciones";
-  const v = { brujula: true, temblor: true, numeros: true, flechas: true, apuntar: true, aura: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
+  const v = { brujula: true, temblor: true, numeros: true, flechas: true, apuntar: true, mirarMouse: true, aura: true, correr: "mantener", interfaz: "normal", dialogos: "manual" };
   try {
     Object.assign(v, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
@@ -43,6 +43,7 @@ window.OPCIONES = (function () {
     lista.push({ texto: t("op.numeros"), valor: siNo(v.numeros), fn: alternar("numeros") });
     lista.push({ texto: t("op.flechas"), valor: siNo(v.flechas), fn: alternar("flechas") });
     lista.push({ texto: t("op.aura"), valor: siNo(v.aura), fn: alternar("aura") });
+    lista.push({ texto: t("op.mirarMouse"), valor: siNo(v.mirarMouse), fn: alternar("mirarMouse") });
     lista.push({ texto: t("op.apuntar"), valor: siNo(v.apuntar), fn: alternar("apuntar") });
     lista.push({ texto: t("op.correr"), valor: t("op.correr_" + v.correr), fn: () => (v.correr = v.correr === "mantener" ? "alternar" : "mantener") });
     lista.push({ texto: t("op.dialogos"), valor: t("op.dialogos_" + v.dialogos), fn: () => (v.dialogos = v.dialogos === "manual" ? "solos" : "manual") });

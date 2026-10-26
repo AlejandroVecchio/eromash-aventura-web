@@ -1,5 +1,5 @@
 // ---------- explorar Eldervald (sistema EXPLORA) ----------
-// Lo que hace que salir del camino valga la pena y se entienda: la brújula de arriba (hacia dónde mira Eromash, el
+// Lo que hace que salir del camino valga la pena y se entienda: la brújula de arriba (sigue a la cámara, con el
 // objetivo, la marca propia, las zonas de los mapas del tesoro y un «?» por cada lugar sin descubrir cerca), el «?»
 // sobre la cabeza cuando nota algo escondido a un paso (con un tintineo que suena de ese lado), el zumbido de las
 // piedras del susurro dormidas, los hitos de lo explorado (pagan plata y fragmentos) y el diario de lo que falta en
@@ -130,7 +130,7 @@ window.EXPLORA = (function () {
   // ---------- la brújula ----------
   const ANCHO = 420,
     ALTO = 44,
-    CAMPO = Math.PI / 2; // de la punta al centro: 90°
+    CAMPO = Math.PI; // de la punta al centro: media vuelta (la banda es la vuelta entera)
   let paseBr = 0;
   function brujula() {
     const el = document.getElementById("hudBrujula");
@@ -148,11 +148,14 @@ window.EXPLORA = (function () {
     const c = cv.getContext("2d");
     c.setTransform(k0, 0, 0, k0, 0, 0);
     c.clearRect(0, 0, ANCHO, ALTO);
-    // hacia dónde mira, suavizado para que no salte con cada golpe
-    const quiere = Math.atan2(jug.dir[1], jug.dir[0]);
+    // como en los juegos grandes, la brújula sigue a la cámara, no a Eromash: el centro es lo que queda hacia arriba
+    // en la pantalla (el norte mientras la cámara no gire) y la banda da la vuelta entera, así cada marca está siempre
+    // en el mismo lado que en la pantalla. Se suaviza por si la cámara gira.
+    const giro = J.giro || 0,
+      quiere = Math.atan2(-Math.cos(giro), -Math.sin(giro));
     if (rumbo == null) rumbo = quiere;
     let dif = Math.atan2(Math.sin(quiere - rumbo), Math.cos(quiere - rumbo));
-    rumbo += dif * 0.18;
+    rumbo += dif * 0.25;
     const enX = (a) => {
       const r = Math.atan2(Math.sin(a - rumbo), Math.cos(a - rumbo));
       return { x: ANCHO / 2 + (r / CAMPO) * (ANCHO / 2), r };

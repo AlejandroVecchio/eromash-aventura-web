@@ -593,7 +593,10 @@
   // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
   function dirGolpe() {
     const dir = Math.atan2(jug.dir[1], jug.dir[0]);
-    if (mouse.usado && !CONTROLES.mando()) return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
+    if (mouse.usado && !CONTROLES.mando()) {
+      mouseAlMundo();
+      return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
+    }
     return apuntar(dir);
   }
   function atacarCon(d, dir, side = 1) {
@@ -691,13 +694,40 @@
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
   }
-  let mouse = { x: 0, y: 0, usado: false };
-  lienzo.addEventListener("pointermove", (e) => {
+  let mouse = { x: 0, y: 0, usado: false, cx: 0, cy: 0 };
+  // el puntero en la vista, y de ahí al mundo (la cámara puede estar girada); se vuelve a pasar en cada cuadro porque
+  // la cámara sigue a Eromash aunque el mouse quede quieto
+  function mouseAlMundo() {
+    if (!mouse.usado) return;
     const k = cw / innerWidth;
-    // en la vista, y de ahí al mundo (la cámara puede estar girada)
-    [mouse.x, mouse.y] = VOL.mundo((e.clientX * k) / esc + J.cam.x - cw / 2 / esc, (e.clientY * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+    [mouse.x, mouse.y] = VOL.mundo((mouse.cx * k) / esc + J.cam.x - cw / 2 / esc, (mouse.cy * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+  }
+  lienzo.addEventListener("pointermove", (e) => {
+    mouse.cx = e.clientX;
+    mouse.cy = e.clientY;
     mouse.usado = true;
+    mouseAlMundo();
   });
+  // con mouse (y sin mando) Eromash mira hacia el puntero, como en los juegos de acción de PC; corriendo mira hacia
+  // donde va. Opción «Mirar hacia el mouse».
+  const conMouse = () => mouse.usado && !CONTROLES.mando() && (!window.OPCIONES || OPCIONES.v("mirarMouse"));
+  function mirarAlMouse(mov) {
+    mouseAlMundo();
+    const dx = mouse.x - jug.x,
+      dy = mouse.y - (jug.y - 30);
+    if (Math.hypot(dx, dy) < 24) return;
+    const a = Math.atan2(dy, dx);
+    // quieto o con el escudo alzado, lo de adelante también es el mouse (la esquiva quieta es un paso atrás, lejos del
+    // puntero, y el escudo para lo que viene de ese lado)
+    if (!mov || jug.bloquea) jug.dir = [Math.cos(a), Math.sin(a)];
+    if (jug.atk || jug.correr) return;
+    const m = VIKINGO.vista(dx, dy, jug.mira);
+    if (m.vista === jug.mira.vista && m.espejo === jug.mira.espejo) return (jug.miraA = a);
+    // un margen chico para que no tiemble justo en la diagonal
+    if (jug.miraA != null && Math.abs(Math.atan2(Math.sin(a - jug.miraA), Math.cos(a - jug.miraA))) < 0.14) return;
+    jug.miraA = a;
+    jug.mira = m;
+  }
   function puedeMover() {
     return J.modo === "juego" && !jug.muerto && jug.interactuando <= 0;
   }
@@ -848,8 +878,9 @@
     const vel = VEL_PASO[jug.paso] * (J.velMov || 1) * (jug.atk ? jug.atk.d.mueve || 0.35 : 1) * (jug.lento > 0 ? 0.6 : 1) * (jug.agachado ? 0.55 : 1) * (jug.enCamino && !jug.atk ? 1.12 : 1) * (jug.salto > 0 && jug.saltoLargo ? 1.35 : 1);
     if (mov) {
       moverJugador(e.x * vel * dt, e.y * vel * dt);
-      if (!jug.atk) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
+      if (!jug.atk && (!conMouse() || jug.correr)) jug.mira = VIKINGO.vista(e.x, e.y, jug.mira);
     }
+    if (conMouse()) mirarAlMouse(mov);
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
     // polvo bajo las botas al correr y vaho al jadear
     jug.polvo = (jug.polvo || 0) - dt;
