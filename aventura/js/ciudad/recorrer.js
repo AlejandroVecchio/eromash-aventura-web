@@ -968,10 +968,21 @@ window.RECORRER25 = (function () {
     }
     return mejor && { a: mejor, d: dm };
   }
+  // los cuervos del Roble y de las piedras levantan vuelo todos hacia (dx, dy) (CUERVOS25)
+  function volarCuervos(dx, dy) {
+    const l = Math.hypot(dx, dy) || 1;
+    for (const a of animales)
+      if (a.tipo === "cuervo") {
+        a.vuela = 1;
+        a.vz = 260;
+        a.vx = (dx / l) * 340 + (Math.random() - 0.5) * 80;
+        a.vy = (dy / l) * 340 + (Math.random() - 0.5) * 80;
+      }
+  }
   function mimar(a) {
     a.mimo = 2;
     if (a.tipo === "perro") a.sigue = 25;
   }
-  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
   return api;
 })();

@@ -282,6 +282,9 @@ window.EIKHOLT = (function () {
     // la mesa de hnefatafl: apostar o mirar la partida (TAFL25)
     const tf = window.TAFL25 && TAFL25.cercano(plano, e, st, A, MUNDO25.gente());
     if (tf && !rc && !ta && !es) mejor = tf;
+    // la ofrenda del Roble: dejar carne a los cuervos de Odín (CUERVOS25)
+    const cv = window.CUERVOS25 && CUERVOS25.cercano(plano, e, st, A);
+    if (cv && !rc && !ta && !es) (mejor = cv), (dm = cv.d);
     // el perro del corral y los gatos mansos: acariciarlos (RECORRER25.animalCerca)
     const an = RECORRER25.animalCerca(1.4 * M);
     if (an && an.d < dm && !rc && !ta && !es)
