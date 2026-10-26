@@ -287,6 +287,9 @@ window.EIKHOLT = (function () {
     // la ofrenda del Roble: dejar carne a los cuervos de Odín (CUERVOS25)
     const cv = window.CUERVOS25 && CUERVOS25.cercano(plano, e, st, A);
     if (cv && !rc && !ta && !es) (mejor = cv), (dm = cv.d);
+    // lo perdido de hoy: hablar con la dueña, levantarlo del piso y devolverlo (PERDIDOS25)
+    const pd = window.PERDIDOS25 && PERDIDOS25.cercano(plano, e, st, A, MUNDO25.gente());
+    if (pd && !rc && !ta && !es) (mejor = pd), (dm = pd.d);
     // el perro del corral y los gatos mansos: acariciarlos (RECORRER25.animalCerca)
     const an = RECORRER25.animalCerca(1.4 * M);
     if (an && an.d < dm && !rc && !ta && !es)
@@ -744,6 +747,7 @@ window.EIKHOLT = (function () {
     camaraPaso(dt || 1e-4, cw, ch);
     MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), historia);
     c.setTransform(1, 0, 0, 1, 0, 0);
+    if (window.PERDIDOS25) PERDIDOS25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
     climaCiudad(c, cw, ch, dt);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)

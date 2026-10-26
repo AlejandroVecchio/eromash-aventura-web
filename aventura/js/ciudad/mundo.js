@@ -270,6 +270,11 @@ window.MUNDO25 = (function () {
         const [x, y] = buscarLibre(hp[0] + (i - 1) * 220, hp[1] + 260 + (i % 2) * 120);
         poner({ id: vecino("borracho"), x, y, vx: 30, vy: 0, s: 1, horas: [22, 2], borracho: { cx: x, cy: y, f: i * 2.1 } });
       }
+    // la vecina que perdió algo hoy (PERDIDOS25), junto al pozo
+    if (L.pozo) {
+      const [x, y] = buscarLibre(L.pozo[0] - 260, L.pozo[1] + 180);
+      poner({ id: vecino("vecina"), x, y, vx: 0, vy: 0, s: 1, horas: [8, 19], perdio: true });
+    }
     // el ratero del mercado (LADRON25): solo se ve mientras huye
     poner({ id: vecino("ladron"), x: 0, y: 0, vx: 0, vy: 0, s: 1, ladron: true });
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)

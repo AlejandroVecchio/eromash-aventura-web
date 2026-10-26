@@ -133,6 +133,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mundo.js**: la ciudad viva (módulo MUNDO25)
 - **muralla.js**: la muralla doble de Eikholt en volumen (módulo MURALLA25)
 - **oficios.js**: lo de los oficios que va en volumen (módulo OFICIOS25)
+- **perdidos.js**: lo perdido en Eikholt (módulo PERDIDOS25)
 - **plano.js**: el plano de la capital en 2.5D (módulo PLANO25)
   - el río · los lugares con nombre y lo que reservan · las calles · la empalizada, las atalayas y las piedras de la cúpula · el Roble y la plaza · los edificios con nombre (las casas especiales, cada una con su ficha) · el noroeste: Sanación, sus hierbas, la hospedería y la cordelería · el noreste: la Guardia, su campo de entrenamiento, los forasteros y el corral de caravanas · las casas de la gente · lo que llena la tierra entre los barrios: huertas cercadas, galpones con heno y montecitos · árboles sueltos entre las casas · el río: los dos puentes, el muelle y los botes · lo que cuenta algo: detalles con historia y cofres escondidos (revisión 7)
 - **porton.js**: las puertas de la empalizada (módulo PORTON25)
