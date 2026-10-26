@@ -5,7 +5,8 @@
 //   mente    el Mastermind: cuatro runas escondidas entre seis; cada intento marca en cada piedra si la runa está
 //            en su lugar (oro), en otro lugar (blanco) o no está (apagada)
 // Se juega con las flechas o el stick y E, o con el mouse o el dedo tocando las piedras; Esc deja el juego. Al
-// terminar, `op.fin(res)` recibe { gano, ...lo de cada juego } y quien lo pidió paga. Lienzo propio de 1600 × 900,
+// terminar, `op.fin(res)` recibe { gano, ...lo de cada juego } y quien lo pidió paga. El botón «Pista» (o la Lente)
+// gasta una piedra de Loki (motor/loki.js) por la ayuda de cada juego (PISTA). Lienzo propio de 1600 × 900,
 // como el matraz.
 window.JUEGOS_RUNAS = (function () {
   "use strict";
@@ -55,6 +56,7 @@ window.JUEGOS_RUNAS = (function () {
       v = VARIANTES[tipo][variante];
     S = { tipo, op, variante, v, vueltasMax: v.vueltas || VUELTAS, meta: v.meta || META, largo: v.largo || LARGO, intentos: v.intentos || INTENTOS, t: 0, fin: null, cur: 0, rnd: DIB.azar(op.semilla != null ? op.semilla : Math.floor(Math.random() * 1e9)), luz: {}, modoAntes: J.modo === "menu" || J.modo === "dialogo" ? "juego" : J.modo };
     ARMAR[tipo]();
+    if (window.LOKI) LOKI.alAbrirJuego();
     J.modo = "runas";
     lienzo.style.display = "block";
     if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
@@ -147,6 +149,41 @@ window.JUEGOS_RUNAS = (function () {
       if (S.ahora.length === S.largo) probar();
     }
   }
+  // las pistas de Loki: cada una da la ayuda y devuelve true, o false si ahora no hay nada que ayudar
+  const PISTA = {
+    // parejas: Loki junta un par (el de la piedra que está dada vuelta, si hay una)
+    parejas() {
+      if (S.espera > 0 || S.vistazo > 0) return false;
+      const abierta = S.abiertas.length === 1 ? S.cartas[S.abiertas[0]] : null,
+        a = abierta ? S.abiertas[0] : S.cartas.findIndex((q) => !q.hecha);
+      if (a < 0) return false;
+      const b = S.cartas.findIndex((q, i) => i !== a && !q.hecha && q.r === S.cartas[a].r);
+      if (b < 0) return false;
+      S.cartas[a].hecha = S.cartas[b].hecha = true;
+      S.abiertas = [];
+      S.luz["c" + a] = S.luz["c" + b] = 0.9;
+      if (S.cartas.every((q) => q.hecha)) terminar({ gano: true, vueltas: S.vueltas });
+      return true;
+    },
+    // simon: la plegaria se vuelve a mostrar entera y se repite desde el principio
+    simon() {
+      if (S.fase !== "repite") return false;
+      Object.assign(S, { idx: 0, fase: "muestra", muestra: 0, reloj: 0.35 });
+      return true;
+    },
+    // mente: Loki susurra una runa del verso en su lugar
+    mente() {
+      S.revela = S.revela || [];
+      const k = S.codigo.findIndex((r, q) => !S.revela.includes(q));
+      if (k < 0) return false;
+      S.revela.push(k);
+      return true;
+    },
+  };
+  function pedirPista() {
+    if (!S || S.fin || !window.LOKI) return;
+    S.pistaAviso = LOKI.avisoDe(LOKI.usar(() => PISTA[S.tipo]()));
+  }
   // mente: cuántas en su lugar y cuántas en otro (contando bien las repetidas: cada runa del verso vale una vez)
   function probar() {
     const g = S.ahora;
@@ -181,6 +218,7 @@ window.JUEGOS_RUNAS = (function () {
         k = Math.min(r.width / 1600, r.height / 900),
         x = (e.clientX - r.left - (r.width - 1600 * k) / 2) / k,
         y = (e.clientY - r.top - (r.height - 900 * k) / 2) / k;
+      if (window.LOKI && LOKI.dentro(x, y)) return pedirPista();
       const hit = casillas().find((q) => x > q.x && x < q.x + q.w && y > q.y && y < q.y + q.h);
       if (hit) (S.cur = Math.max(0, hit.i)), tocar(hit.i);
     });
@@ -213,6 +251,7 @@ window.JUEGOS_RUNAS = (function () {
   function paso(dt) {
     if (!S) return;
     S.t += dt;
+    if (S.pistaAviso) S.pistaAviso.t -= dt;
     Object.keys(S.luz).forEach((k) => (S.luz[k] -= dt) <= 0 && delete S.luz[k]);
     if (S.fin) {
       S.fin.t += dt;
@@ -220,6 +259,7 @@ window.JUEGOS_RUNAS = (function () {
       return dibujar();
     }
     if (CONTROLES.recien("pausa")) return terminar({ gano: false, dejo: true, ronda: S.sec ? S.sec.length - 1 : 0, intentos: S.filas ? S.filas.length : 0, vueltas: S.vueltas || 0 });
+    if (CONTROLES.recien("lente")) pedirPista();
     const ok = CONTROLES.recien("interactuar") || CONTROLES.recien("seguir");
     if (S.tipo === "simon") {
       // las flechas tocan cada piedra del rombo
@@ -297,6 +337,7 @@ window.JUEGOS_RUNAS = (function () {
     const sub = [S.op.quien, S.variante !== "base" ? t("jr.v_" + S.tipo + "_" + S.variante) : ""].filter(Boolean).join(" · ");
     if (sub) texto(sub, 220, 124, 17, "#E0B2B2", "left", 500);
     DIBUJAR[S.tipo]();
+    if (window.LOKI && !S.fin) LOKI.boton(c, true, S.pistaAviso);
     texto(t("jr.pie_" + (S.tipo === "simon" ? "simon" : S.tipo), [CONTROLES.glifo("interactuar"), CONTROLES.glifo("pausa"), CONTROLES.glifo("arriba")]), 800, 892, 16, "#E0B2B2", "center", 400);
     if (S.fin) {
       DIB.alfa(c, Math.min(0.75, S.fin.t * 2), () => P([0, 0, 1600, 0, 1600, 900, 0, 900], "#111111"));
@@ -369,6 +410,15 @@ window.JUEGOS_RUNAS = (function () {
       texto(t("jr.mente_blanco"), 258, 242, 15, "#F2ECEC", "left", 500);
       P([231, 263, 249, 263, 249, 281, 231, 281], "#221C1A");
       texto(t("jr.mente_nada"), 258, 278, 15, "#F2ECEC", "left", 500);
+      // lo que susurró Loki: las runas del verso en su lugar
+      if (S.revela && S.revela.length) {
+        texto(t("jr.mente_loki"), 232, 336, 15, "#7BC86C", "left", 600);
+        for (let q = 0; q < S.largo; q++) {
+          const x = 232 + q * 44;
+          P([x, 350, x + 36, 350, x + 36, 390, x, 390], S.revela.includes(q) ? "#2A3A2A" : "#221C1A");
+          if (S.revela.includes(q)) runa(S.de[S.codigo[q]], x + 18, 370, 13, COLORES[S.codigo[q]], 0.24);
+        }
+      }
     },
   };
 
@@ -381,6 +431,7 @@ window.JUEGOS_RUNAS = (function () {
     },
     empezar,
     tocar,
+    pista: pedirPista,
     terminar,
     cerrar,
     paso,

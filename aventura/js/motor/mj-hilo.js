@@ -178,6 +178,21 @@
       if (fase === "sube") soltar(S);
       return true;
     },
+    // la pista de Loki: un hilo sin terminar queda tejido como en la solución (corta lo que estaba en su camino)
+    pista(S) {
+      if (S.gano) return false;
+      const h = S.hilos.findIndex((_, q) => !completo(S, q));
+      if (h < 0) return false;
+      S.sol[h].forEach((cel) => {
+        const otro = dueno(S, cel);
+        if (otro >= 0 && otro !== h) S.hilos[otro] = S.hilos[otro].slice(0, S.hilos[otro].indexOf(cel));
+      });
+      S.hilos[h] = S.sol[h].slice();
+      S.mano = -1;
+      S.luz["h" + h] = 0.9;
+      revisar(S);
+      return true;
+    },
     res: (S) => t("mn.hilo_res", [S.movs]),
     dibujar(S, D) {
       const c = D.c,

@@ -73,6 +73,8 @@ I18N.textos({
   // mazmorras
   "pb.zona_d": { es: "Entra por la escalera", en: "Enter by the stairs" },
   // ayudas
+  "pb.loki": { es: "+5 piedras de Loki", en: "+5 Loki stones" },
+  "pb.loki_d": { es: "Para las pistas de los minijuegos", en: "For minigame hints" },
   "pb.plata": { es: "+1000 de plata", en: "+1000 silver" },
   "pb.materiales": { es: "Materiales, hierbas y carne", en: "Materials, herbs and meat" },
   "pb.niveles": { es: "Subir 5 niveles", en: "Gain 5 levels" },

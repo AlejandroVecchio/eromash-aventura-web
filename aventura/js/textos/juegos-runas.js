@@ -14,6 +14,7 @@ I18N.textos({
   "jr.mente_oro": { es: "La runa está y en su lugar", en: "Right rune, right place" },
   "jr.mente_blanco": { es: "La runa está, pero en otro lugar", en: "Right rune, wrong place" },
   "jr.mente_nada": { es: "Apagada: la runa no está en el verso", en: "Dimmed: the rune isn't in the verse" },
+  "jr.mente_loki": { es: "Loki te susurró:", en: "Loki whispered:" },
   "jr.mente_dice": { es: "{0} en su lugar · {1} en otro", en: "{0} in place · {1} elsewhere" },
   "jr.gano": { es: "¡Ganaste!", en: "You won!" },
   "jr.perdio": { es: "Esta vez no", en: "Not this time" },
