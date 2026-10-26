@@ -152,6 +152,7 @@ window.JOTUNN = (function () {
     HUD.aviso(t("jt.despierta_d"), "lugar", t("hd.unico_hrimnir"));
     if (window.SONIDO) SONIDO.tocar("rugido", { vol: 0.8, tono: 0.55, x: jefe.e.x, y: jefe.e.y });
     if (window.ANIMA) ANIMA.gesto("susto");
+    if (window.ANIMA) J.retrasar(1.0, () => ANIMA.gesto("pisoton")); // y le contesta plantándose
   }
   // ---------- el desafío: sin sus guardianes caídos, la patada ----------
   function desdenar(dt) {
@@ -203,7 +204,10 @@ window.JOTUNN = (function () {
     jug.x = v.x0 + (v.x1 - v.x0) * q;
     jug.y = v.y0 + (v.y1 - v.y0) * q;
     jug.salto = Math.max(jug.salto, 0.05);
-    if (k >= 1) jefe.vuelo = null;
+    if (k >= 1) {
+      jefe.vuelo = null;
+      if (window.ANIMA) ANIMA.gesto("mareo"); // cae aturdido, con las estrellas girando
+    }
   }
   // los guardianes: cada uno que cae queda anotado; con los tres, el gigante espera
   function mirarGuardianes() {
@@ -274,7 +278,9 @@ window.JOTUNN = (function () {
     let dio = false;
     for (const a of jefe.avisos) {
       if (!dio && CB.contiene(a, jug.x, jug.y)) {
-        J.herir(Math.min(A0.dano, tope()), e.x, e.y, a.ataque === "linea" || a.ataque === "grito" ? "helado" : null);
+        const helado = a.ataque === "linea" || a.ataque === "grito";
+        J.herir(Math.min(A0.dano, tope()), e.x, e.y, helado ? "helado" : null);
+        if (helado && window.ANIMA) J.retrasar(0.35, () => !jug.muerto && ANIMA.gesto("tiritar")); // la escarcha lo deja temblando
         dio = true;
       }
       J.quitarAviso(a);

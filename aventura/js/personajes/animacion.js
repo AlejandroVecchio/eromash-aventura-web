@@ -39,7 +39,8 @@ window.ANIMA = (function () {
   //   reverencia  se inclina hondo ante un dios y se queda un momento (hörgar, bendiciones)
   //   desafio     levanta el mentón y se planta (una parada justa)
   //   sacudirse   se sacude entero como un perro mojado, con gotas del color (tintes, salir del agua)
-  // De reserva: tiritar (frío), desperezarse (al despertar, quieto mucho), mareo (aturdido), pisoton (intimidar),
+  // Los que eran de reserva: tiritar (la escarcha de Hrímnir), desperezarse (al despertar y tras 35 s quieto),
+  // mareo (al caer de la patada de Hrímnir), pisoton (contesta al rugido de un semijefe o al despertar del gigante),
   // y los de siempre: duda, susto. «feliz» queda solo por compatibilidad: no se usa.
   const DUR = { duda: 1.3, feliz: 0.9, susto: 0.7, botin: 0.8, tesoro: 1.15, grito: 1.25, asiente: 0.8, alivio: 1.0, reverencia: 1.5, desafio: 0.6, sacudirse: 0.9, tiritar: 1.6, desperezarse: 1.7, mareo: 1.8, pisoton: 0.75 };
   const GESTOS = Object.keys(DUR).filter((g) => g !== "feliz");
@@ -249,6 +250,8 @@ window.ANIMA = (function () {
       st.vistaAntes = vista;
     }
     st.quietoT = mov || p.atk || p.salto > 0 || p.esq > 0 || p.interactuando > 0 ? 0 : st.quietoT + dt;
+    // mucho rato quieto fuera de pelea: se despereza (el gesto vuelve a poner quietoT en 0)
+    if (st.quietoT > 35 && !st.gesto && !p.pelea && !p.muerto && p.hp >= p.hpMax * 0.3) gesto("desperezarse");
     st.parpadeo -= dt;
     if (st.parpadeo < -0.13) st.parpadeo = 2.4 + ((st.t * 7.31) % 1) * 2.6;
     if (p.muerto) st.muerteT = st.muerteT < 0 ? 0 : st.muerteT + dt;
