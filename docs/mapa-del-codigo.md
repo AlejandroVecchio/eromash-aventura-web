@@ -284,7 +284,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
   - dónde está cada uno · las lecciones · el muñeco · el sistema
 - **interiores.js**: los interiores (sistema INTERIORES)
-  - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
+  - quien vive en cada casa · cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (sistema JOTUNN)
   - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el desafío: sin sus guardianes caídos, la patada · el sistema
 - **juego.js**: el motor de la aventura (módulo JUEGO)
@@ -393,7 +393,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: munecoPractica
 - **assets-interiores.js**: los muebles de adentro (interiores)
   - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco
-  - assets: escritorioRunico, hogarPiedra, camaPieles, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
+  - assets: escritorioRunico, hogarPiedra, camaPieles, gatoCasa, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
 - **assets-jotunn.js**: el asiento de Hrímnir (assets de JOTUNN)
   - assets: asientoJotunn, menhirEscarcha, jotunnFigura
 - **assets-libros.js**: los libros de Eldervald (assets de LIBROS)

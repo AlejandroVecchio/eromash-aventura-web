@@ -20,6 +20,24 @@ window.INTERIORES = (function () {
   const TIPO_DE = { casaEikholt: "casa", casaLindes: "lindes", herreriaAsa: "herreria", casaSanacion: "sanacion", hongoDorado: "taberna" };
   // cuartos que arman otros sistemas (la casa propia de casa.js): CUARTOS[tipo](ayuda, edificio, clave) → { pared, ventana, estandarte, repisa }
   const CUARTOS = {};
+  // ---------- quien vive en cada casa ----------
+  // Cada casa de la gente tiene su dueño, con nombre (la casa es «la casa de …»): sale de la semilla de la casa, así es
+  // siempre el mismo. De día está en lo suyo y contesta según cómo vive (in.vecino_<variante>_N); de 22 a 6 duerme.
+  const VECINAS = ["vecina", "vecina2"],
+    VECINOS = [["vecina", "vecino"], ["vecina", "vecina2"], ["trabajador3", "vecino"], ["hg_cazador"], ["vecina2", "trabajador"]];
+  function vecinoDe(sem, vi) {
+    const r = DIB.azar(Math.round(sem * 1000) + 313),
+      fichas = VECINOS[vi],
+      ficha = fichas[Math.floor(r() * fichas.length)],
+      mujer = VECINAS.includes(ficha),
+      h = LUZ.hora(A.H.E.tiempo);
+    return { ficha, nombre: "vec_" + ((mujer ? 0 : 6) + Math.floor(r() * 6)), noche: h >= 22 || h < 6 };
+  }
+  const charlasVecino = {};
+  function hablarVecino(vec, vi) {
+    const k = (charlasVecino[vec.nombre] = charlasVecino[vec.nombre] == null ? 0 : charlasVecino[vec.nombre] + 1);
+    A.dialogoLibre([[vec.nombre, "in.vecino_" + vi + "_" + (k % 4)]]);
+  }
   // ---------- cómo es cada cuarto ----------
   // muebles: { id, x, y, o, r (medio ancho que choca), accion: clave de texto, fn }
   function armarCuarto(tipo, edificio, clave, editor) {
@@ -29,7 +47,18 @@ window.INTERIORES = (function () {
       v = edificio.o.v != null ? edificio.o.v : Math.floor(sem * 3) % 3;
     const mueble = (id, x, y, o, r, accion, fn) => m.push({ id, x, y, o: Object.assign({ s: 1 }, o), r, accion, fn });
     const arcon = (x, y) => mueble("arconCasa", x, y, { abierto: !!st.cofres[clave] }, 90, "in.accion_arcon", (q) => abrirArcon(q, clave));
-    const cama = (x, y, s) => mueble("camaPieles", x, y, { s: s || 1 }, 210, "in.accion_cama", dormir);
+    // quien vive en la casa (solo las de la gente): de noche duerme en su cama y la cama no se usa
+    const vec = tipo === "casa" && !editor ? vecinoDe(sem, v % 5) : null;
+    const cama = (x, y, s) => {
+      if (vec && vec.noche) {
+        vec.enCama = true;
+        const f = (window.GENTE && GENTE.FICHAS[vec.ficha]) || {};
+        mueble("camaPieles", x, y, { s: s || 1, ocupada: true, pelo: f.pelo, piel: f.piel }, 210, null, () => A.dialogoLibre([["eromash", "in.vecino_duerme", [t("av.nombre_" + vec.nombre)]]]));
+        m[m.length - 1].etiqueta = () => t("sn.accion_mirar", [t("av.nombre_" + vec.nombre)]);
+        return;
+      }
+      mueble("camaPieles", x, y, { s: s || 1 }, 210, "in.accion_cama", dormir);
+    };
     const hogar = (x) => mueble("hogarPiedra", x, FONDO + 30, { s: 0.85 }, 150, "in.accion_hogar", calentarse);
     const examinar = (clave2) => () => A.dialogoLibre([["eromash", clave2]]);
     // la tabla suelta de la pared con un nicho detrás
@@ -121,6 +150,18 @@ window.INTERIORES = (function () {
         repisa = true;
       }
     }
+    if (vec) {
+      const vi = v % 5,
+        rg = DIB.azar(Math.round(sem * 1000) + 419);
+      // de día, en lo suyo: a la mesa, en el telar, en el escritorio, junto al armero o al atril
+      if (!vec.noche) g.push({ id: vec.ficha, x: [720, 470, 560, 560, 860][vi], y: [700, FONDO + 160, 680, FONDO + 170, 700][vi], nombre: vec.nombre, hablar: () => hablarVecino(vec, vi) });
+      // el gato de la casa, hecho un ovillo junto al hogar (o al pie de la cama donde no hay hogar)
+      rg();
+      if (rg() < 0.8) mueble("gatoCasa", [520, 960, 930, 1000, 1010][vi], [FONDO + 150, FONDO + 150, 720, FONDO + 175, 730][vi], { s: 1, pal: Math.floor(rg() * 3) }, 50, "in.accion_gato", () => {
+        if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.2, tono: 1.6 });
+        A.dialogoLibre([["eromash", "in.gato_" + Math.floor(Math.random() * 4)]]);
+      });
+    }
     // la trampilla del sótano: a la vista en los cuartos grandes, debajo de la alfombra en algunas casas
     const lugarTrampilla = { lindes: [1120, 690], herreria: [1180, 850], sanacion: [770, 830], taberna: [800, 855] };
     const LT = [[480, 735], [620, 725], [900, 690], [760, 700], [960, 860]];
@@ -154,7 +195,7 @@ window.INTERIORES = (function () {
         m.push(al);
       } else if (escondida) m.push({ id: "alfombra", x: tx - 190, y: ty + 8, o: { s: 0.5, movida: true }, r: 0, piso: true, quieto: true });
     }
-    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa };
+    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa, vecino: vec && vec.nombre };
     return aplicarCambios(res, tipo === "casa" ? "casa_" + (v % 5) : tipo, clave);
   }
 
@@ -636,7 +677,7 @@ window.INTERIORES = (function () {
     jug.anda = 0;
     jug.mira = { vista: "N", espejo: false };
     if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.45 });
-    HUD.aviso(p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : t("in.nombre_" + p.tipo), "#FFD98A");
+    HUD.aviso(p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : cuarto.vecino ? t("in.casa_de", [t("av.nombre_" + cuarto.vecino)]) : t("in.nombre_" + p.tipo), "#FFD98A");
   }
   function salir() {
     if (!dentro || dentro.saliendo) return;
@@ -746,7 +787,8 @@ window.INTERIORES = (function () {
     }
     for (const n of dentro.gente) {
       const d = Math.hypot(dentro.ix - n.x, dentro.iy - n.y);
-      if (d < 190) prueba(d - 40, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => PODERES.hablarCon(n));
+      // la gente gana a los muebles que tiene al lado (el dueño detrás de su mesa)
+      if (d < 190) prueba(d - 90, t("av.accion_hablar") + " · " + t("av.nombre_" + (n.nombre || n.id)), () => (n.hablar ? n.hablar() : PODERES.hablarCon(n)));
     }
     return mejor;
   }

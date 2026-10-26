@@ -162,6 +162,15 @@
     // almohada
     P(c, poli(x - 105 * s, y - 120 * s, 40 * s, 18 * s, 7, 0.3), "#F2ECEC");
     P(c, poli(x - 98 * s, y - 126 * s, 26 * s, 10 * s, 7, 0.3), "#FFFFFF");
+    // o.ocupada: alguien duerme tapado hasta la nariz (la manta sube y baja)
+    if (o.ocupada) {
+      const r = Math.sin(t * 1.6) * 3 * s,
+        pelo = o.pelo || "#7A5634";
+      P(c, poli(x - 100 * s, y - 138 * s, 26 * s, 20 * s, 8, 0.2), pelo);
+      P(c, poli(x - 86 * s, y - 132 * s, 16 * s, 12 * s, 7, 0.2), o.piel || "#E0B898");
+      P(c, [x - 70 * s, y - 70 * s, x - 66 * s, y - 136 * s - r, x + 40 * s, y - 150 * s - r, x + 150 * s, y - 132 * s, x + 200 * s, y - 70 * s], "#7A5634");
+      P(c, [x + 40 * s, y - 150 * s - r, x + 150 * s, y - 132 * s, x + 200 * s, y - 70 * s, x + 110 * s, y - 90 * s], "#9A7448");
+    }
   }
 
   // ---------- El arcón de la casa ----------
@@ -447,6 +456,31 @@
     VOL.caja(c, pr, -170, -74, 70, 196, 74, 100, ["#A89880", "#C8B8A0", "#DCCCB4"]);
     VOL.prisma(c, pr, [[-30, -82], [80, -86], [214, -70], [214, 84], [60, 88], [-40, 80]], 96, 116, ["#5A3E22", "#7A5634", "#9A7448"]);
     VOL.prisma(c, pr, VOL.redonda(-115, 0, 40, 8, 0.3, 50), 100, 120, ["#C8C0B8", "#F2ECEC", "#FFFFFF"]);
+    if (o.ocupada) {
+      const r = Math.sin(t * 1.6) * 3,
+        pelo = o.pelo || "#7A5634";
+      VOL.cilindro(c, pr, -112, 0, 24, 120, 150, [pelo, pelo, pelo], { n: 8, tapa: pelo });
+      VOL.prisma(c, pr, [[-80, -70], [60, -80], [200, -66], [200, 70], [60, 80], [-80, 72]], 100, 146 + r, ["#5A3E22", "#7A5634", "#9A7448"]);
+    }
+  }
+  // el gato de la casa: hecho un ovillo junto al hogar, la cola alrededor y las orejas paradas; respira y a veces
+  // mueve una oreja. o.pal: 0 gris, 1 naranja, 2 negro. Redondo y parejo: igual de cualquier lado.
+  function gatoCasa(c, x, y, t, o) {
+    const s = o.s || 1,
+      PAL = [["#6E6A70", "#8E8A90", "#B0ACB2"], ["#B8642A", "#D8843A", "#F0A85A"], ["#1E1A1E", "#2E2A30", "#4A4650"]][(o.pal || 0) % 3],
+      r = Math.sin(t * 1.4) * 1.5 * s,
+      oreja = Math.sin(t * 0.7) > 0.97 ? 4 * s : 0;
+    sombra(c, x, y + 2 * s, 46 * s, 10 * s, 0.4);
+    // el cuerpo y la cola
+    P(c, poli(x, y - 20 * s - r, 40 * s, 22 * s + r, 10, 0), PAL[1]);
+    P(c, poli(x - 10 * s, y - 14 * s, 26 * s, 12 * s, 9, 0), PAL[0]);
+    P(c, [x + 30 * s, y - 6 * s, x + 44 * s, y - 14 * s, x + 30 * s, y - 2 * s, x - 20 * s, y + 2 * s, x - 30 * s, y - 4 * s], PAL[2]);
+    // la cabeza apoyada, los ojos cerrados y las orejas
+    P(c, poli(x - 30 * s, y - 26 * s, 17 * s, 14 * s, 8, 0), PAL[1]);
+    P(c, [x - 44 * s, y - 34 * s, x - 42 * s, y - 50 * s - oreja, x - 34 * s, y - 38 * s], PAL[1]);
+    P(c, [x - 26 * s, y - 38 * s, x - 18 * s, y - 52 * s, x - 16 * s, y - 34 * s], PAL[2]);
+    L(c, x - 38 * s, y - 26 * s, x - 33 * s, y - 25 * s, "#111111", 1.5 * s);
+    L(c, x - 27 * s, y - 26 * s, x - 22 * s, y - 25 * s, "#111111", 1.5 * s);
   }
   // el arcón de la casa: madera roja con herrajes, la tapa con el cierre dorado y Othala (abierto: la tapa parada)
   function arconCasaV(c, x, y, t, o) {
@@ -584,6 +618,7 @@
     escritorioRunico: { f: escritorioRunico, fv: escritorioRunicoV, vol: true, alto: 280, choque: null, grupo: "interiores" },
     hogarPiedra: { f: hogarPiedra, fv: hogarPiedraV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     camaPieles: { f: camaPieles, fv: camaPielesV, vol: true, alto: 250, choque: null, grupo: "interiores" },
+    gatoCasa: { f: gatoCasa, figura: true, alto: 60, choque: null, grupo: "interiores" },
     arconCasa: { f: arconCasa, fv: arconCasaV, vol: true, alto: 150, choque: null, grupo: "interiores" },
     forjaAsa: { f: forjaAsa, fv: forjaAsaV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     yunque: { f: yunque, fv: yunqueV, vol: true, alto: 160, choque: null, grupo: "interiores" },
@@ -593,6 +628,7 @@
     telar: { f: telar, fv: telarV, vol: true, alto: 310, choque: null, grupo: "interiores" },
     mesaBanco: { f: mesaBanco, alto: 220, choque: null, grupo: "interiores", vol: true },
   });
+  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { gatoCasa: { pal: 1 } });
   ASSETS.vela = vela;
   ASSETS.runaViva = runaViva;
 })();
