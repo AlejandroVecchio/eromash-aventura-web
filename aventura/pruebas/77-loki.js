@@ -17,6 +17,15 @@
       igual(LOKI.cuantas(), 1, "el regalo es una sola vez:");
       MINIJ.cerrar();
     } },
+    { nombre: "loki: la pista del hilo de las Nornas teje un hilo y con todas se gana", fn: async (A, { igual, si }) => {
+      JUEGO.empezar(9, true);
+      LOKI.dar(9, true);
+      MINIJ.empezar("hilo", { semilla: 8 });
+      const S = MINIJ.estado();
+      for (let i = 0; i < S.sol.length; i++) MINIJ.pista();
+      si(S.gano > 0, "ganado con las pistas");
+      MINIJ.cerrar();
+    } },
     { nombre: "loki: las pistas de parejas, plegaria y verso; sin piedras no hay pista", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       LOKI.alAbrirJuego(); // el regalo, antes de contar
