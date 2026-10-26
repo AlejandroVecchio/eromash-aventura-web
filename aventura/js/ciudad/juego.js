@@ -219,7 +219,7 @@ window.EIKHOLT = (function () {
   // ---------- lo que se puede hacer cerca ----------
   function cercano() {
     if (J.modo !== "juego" || !activo) return null;
-    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo())) return null; // un juego en pantalla
+    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo()) || (window.PATITOS25 && PATITOS25.activo())) return null; // un juego en pantalla
     const e = ero();
     let mejor = null,
       dm = Infinity;
@@ -297,6 +297,12 @@ window.EIKHOLT = (function () {
     // la cuentacuentos junto al fogón de los forasteros (CUENTOS25)
     const cu = window.CUENTOS25 && CUENTOS25.cercano(plano, e, st, A, MUNDO25.gente());
     if (cu && !rc && !ta && !es) (mejor = cu), (dm = cu.d);
+    // acompañar la ronda de noche de la Guardia (RONDA25)
+    const rn = window.RONDA25 && RONDA25.cercano(plano, e, st, A, MUNDO25.gente());
+    if (rn && !rc && !ta && !es) (mejor = rn), (dm = rn.d);
+    // las piedras al agua desde el muelle (PATITOS25)
+    const pt = window.PATITOS25 && PATITOS25.cercano(plano, e, st, A);
+    if (pt && pt.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = pt), (dm = pt.d);
     // la pulseada con los parroquianos del Hongo (PULSO25)
     const pu = window.PULSO25 && PULSO25.cercano(plano, e, st, A, MUNDO25.gente());
     if (pu && pu.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = pu), (dm = pu.d);
@@ -488,7 +494,7 @@ window.EIKHOLT = (function () {
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     jug.pelea = false;
-    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo());
+    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo()) && !(window.PATITOS25 && PATITOS25.activo());
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -732,6 +738,8 @@ window.EIKHOLT = (function () {
     if (window.LADRON25 && J.modo === "juego") LADRON25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     if (window.TIRO25) TIRO25.actualizar(dt, st, A);
     if (window.PULSO25) PULSO25.actualizar(dt, st, A);
+    if (window.PATITOS25) PATITOS25.actualizar(dt, st, A);
+    if (window.RONDA25) RONDA25.actualizar(dt, plano, st, A, ero());
     if (window.GALLINAS25 && J.modo === "juego") GALLINAS25.actualizar(dt, plano, st, A, ero());
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
@@ -768,6 +776,7 @@ window.EIKHOLT = (function () {
     climaCiudad(c, cw, ch, dt);
     if (window.TIRO25) TIRO25.dibujar(c, cw, ch, tiempo);
     if (window.PULSO25) PULSO25.dibujar(c, cw, ch, tiempo);
+    if (window.PATITOS25) PATITOS25.dibujar(c, cw, ch, tiempo);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
   const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !p.farol && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);

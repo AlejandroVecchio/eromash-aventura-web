@@ -43,6 +43,8 @@ I18N.textos({
   "pb.ek_pulso_d": { es: "De noche, con un parroquiano en la puerta del Hongo Dorado", en: "At night, with a regular at the Golden Mushroom's door" },
   "pb.ek_cuentos": { es: "Los cuentos del fuego", en: "Fireside stories" },
   "pb.ek_cuentos_d": { es: "De noche, junto a la cuentacuentos de los forasteros", en: "At night, by the strangers' storyteller" },
+  "pb.ek_patitos": { es: "Piedras al agua", en: "Skipping stones" },
+  "pb.ek_patitos_d": { es: "De tarde, en el muelle del río", en: "In the afternoon, at the river dock" },
   "pb.ek_tiro": { es: "El tiro de hachas", en: "Axe throwing" },
   "pb.ek_tiro_d": { es: "Frente a una diana del campo de la Guardia", en: "In front of a target at the Guard's yard" },
   "pb.ek_ladron": { es: "El ratero del mercado", en: "The market thief" },

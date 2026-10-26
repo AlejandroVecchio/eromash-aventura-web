@@ -136,6 +136,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mundo.js**: la ciudad viva (módulo MUNDO25)
 - **muralla.js**: la muralla doble de Eikholt en volumen (módulo MURALLA25)
 - **oficios.js**: lo de los oficios que va en volumen (módulo OFICIOS25)
+- **patitos.js**: las piedras al agua desde el muelle (módulo PATITOS25)
 - **perdidos.js**: lo perdido en Eikholt (módulo PERDIDOS25)
 - **plano.js**: el plano de la capital en 2.5D (módulo PLANO25)
   - el río · los lugares con nombre y lo que reservan · las calles · la empalizada, las atalayas y las piedras de la cúpula · el Roble y la plaza · los edificios con nombre (las casas especiales, cada una con su ficha) · el noroeste: Sanación, sus hierbas, la hospedería y la cordelería · el noreste: la Guardia, su campo de entrenamiento, los forasteros y el corral de caravanas · las casas de la gente · lo que llena la tierra entre los barrios: huertas cercadas, galpones con heno y montecitos · árboles sueltos entre las casas · el río: los dos puentes, el muelle y los botes · lo que cuenta algo: detalles con historia y cofres escondidos (revisión 7)
@@ -147,6 +148,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **recorrer.js**: recorrer la capital con Eromash (módulo RECORRER25)
   - los barrios: el más cercano dentro de su radio pone su nombre al entrar · quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio · la tarjeta de lo que se mira (HTML: se lee mejor y se adapta a la pantalla) · cada cuadro · la gente reacciona a Eromash · los animales, el humo, las chispas y las hojas · dibujar · la silueta de Eromash detrás de las cosas
 - **roble.js**: las raíces del Roble de Eikholt (módulo RAIZ25)
+- **ronda.js**: acompañar la ronda de noche de la Guardia (módulo RONDA25)
 - **sombras.js**: las sombras de la capital (módulo SOMBRAS25)
   - las sombras horneadas en el piso
 - **tafl.js**: el hnefatafl de la plaza (módulo TAFL25)

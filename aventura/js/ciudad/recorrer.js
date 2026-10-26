@@ -987,6 +987,6 @@ window.RECORRER25 = (function () {
     a.mimo = 2;
     if (a.tipo === "perro") a.sigue = 25;
   }
-  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, gallinas: () => animales.filter((a) => a.tipo === "gallina"), tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, decir: (p, texto) => ((globos.length = 0), globos.push({ p, texto, t: 0 })), gallinas: () => animales.filter((a) => a.tipo === "gallina"), tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
   return api;
 })();
