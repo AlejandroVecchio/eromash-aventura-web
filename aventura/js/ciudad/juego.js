@@ -585,5 +585,5 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, aBosque, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
 })();

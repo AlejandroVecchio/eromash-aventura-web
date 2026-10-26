@@ -270,6 +270,7 @@
     ANIMA.gesto("grito", 0, { col: "#FFD98A" });
     if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
+    J.retrasar(3.4, adondeIr);
     etapaVista = H.etapa();
     etapaDesde = J.t;
   }
@@ -280,6 +281,7 @@
     if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) {
       HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
       if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
+      J.retrasar(1.4, adondeIr);
     }
     etapaVista = e;
     etapaDesde = J.t;
@@ -287,6 +289,36 @@
   function textoObjetivo(ob) {
     return tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
   }
+  // adónde ir ahora: el objetivo, el lugar conocido más cercano a donde está, los metros y hacia qué lado
+  function lugarCerca(p) {
+    let mejor = null,
+      dm = Infinity;
+    for (const k in W.LUGARES) {
+      const L = W.LUGARES[k],
+        d = Math.hypot(L.p[0] - p[0], L.p[1] - p[1]) - L.r;
+      if (d < dm && tav("lugar_" + k) !== "av.lugar_" + k) {
+        dm = d;
+        mejor = k;
+      }
+    }
+    if (!mejor || dm > 60 * W.M) return t("mj.en_el_bosque");
+    return dm <= 0 ? tav("lugar_" + mejor) : t("mj.cerca_de", [tav("lugar_" + mejor)]);
+  }
+  let adondeT = -9;
+  function adondeIr() {
+    const o = H.objetivo();
+    if (!o || LIENZO || J.t - adondeT < 2) return; // varios objetivos seguidos: un solo cartel
+    adondeT = J.t;
+    const p = dondeObjetivo(),
+      txt = textoObjetivo(o);
+    if (!p) return HUD.aviso(t("mj.ahora", [txt]), "#73D5DB", t("mj.ir_titulo"));
+    const d = dist(jug, p);
+    if (d < 12 * W.M) return HUD.aviso(t("mj.ir_aqui", [txt]), "#73D5DB", t("mj.ir_titulo"));
+    const a = Math.atan2(p[1] - jug.y, p[0] - jug.x),
+      k = ((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8;
+    HUD.aviso(t("mj.ir_a", [txt, lugarCerca(p), Math.round(d / 43), t("mj.dir_" + k)]), "#73D5DB", t("mj.ir_titulo"));
+  }
+  J.adondeIr = adondeIr;
   // si pasan cuatro minutos sin avanzar, un recordatorio de qué hacer y por dónde
   function pistaSiHaceFalta() {
     if (J.modo !== "juego" || J.dentro || jug.pelea || J.t - etapaDesde < 240 || J.t - pistaDada < 240) return;
@@ -298,8 +330,7 @@
   // lo que la gente tiene para decir: «!» dorado sobre a quien manda el objetivo, «…» sobre quien tiene algo nuevo
   const oidos = () => (H.E.extra.oidos = H.E.extra.oidos || {});
   function senalDe(n) {
-    const o = H.objetivo();
-    if (o && o.donde === n.id) return "!";
+    if (H.abiertos().some((o) => o.donde === n.id)) return "!";
     const k = H.dialogoDe(n.id);
     return k && !oidos()[k] ? "…" : null;
   }
@@ -476,6 +507,7 @@
       // la cuadrilla sale por el camino despejado
       trabajadores.forEach((tr) => (tr.destino = [P.carro[0] + tr.i * 40, P.carro[1] + 60]));
     }
+    if (id === "eydis_inicio") J.retrasar(0.6, () => HUD.aviso(t("mj.croquis_abrir", [CONTROLES.glifo("mapa"), CONTROLES.glifo("diario")]), "#73D5DB", t("mj.ir_titulo")));
     if (id === "orm_puente") return repararPuente();
     if (id === "salida_norte") {
       jug.x = P.puente[0];
@@ -1344,12 +1376,31 @@
     }
   }
   // la columna de luz sobre el objetivo y la flecha en el borde si está fuera de pantalla
-  function dondeObjetivo() {
-    const o = H.objetivo();
+  // con varios objetivos abiertos (los de un mismo par) marca el más cercano; dentro de Eikholt, el ancla de la ciudad
+  // que corresponde a ese punto del bosque (pasada otra vez al bosque, que es donde el motor ve a Eromash)
+  function destinoDe(o) {
     if (!o || !o.donde) return null;
-    if (npcs[o.donde]) return [npcs[o.donde].x, npcs[o.donde].y];
-    if (o.donde === "ciervo") return ciervo.derrotado ? null : [ciervo.x, ciervo.y];
-    return P[o.donde] || null;
+    let p = null;
+    if (npcs[o.donde]) p = [npcs[o.donde].x, npcs[o.donde].y];
+    else if (o.donde === "ciervo") p = ciervo.derrotado ? null : [ciervo.x, ciervo.y];
+    else p = P[o.donde] || null;
+    if (p && window.EIKHOLT && EIKHOLT.activo() && EIKHOLT.aBosque) {
+      const an = EIKHOLT.anclas()[o.donde];
+      p = EIKHOLT.aBosque(...(an || EIKHOLT.lugarDe(p[0], p[1])));
+    }
+    return p;
+  }
+  function dondeObjetivo() {
+    let mejor = null,
+      dm = Infinity;
+    for (const o of H.abiertos()) {
+      const p = destinoDe(o);
+      if (p && dist(jug, p) < dm) {
+        dm = dist(jug, p);
+        mejor = p;
+      }
+    }
+    return mejor;
   }
   // rgb/col: el color del haz y de la flecha (rúnico para la misión, dorado para la marca propia del mapa)
   function dibujarHaz(p, x0, y0, x1, y1, rgb = "115,213,219", col = DIB.RUNICO) {
@@ -1993,11 +2044,13 @@
     else if (mis) {
       const objs = [];
       const txt = (ob) => tav(ob.texto, ob.cuenta ? [Math.min(H.cuenta(ob.cuenta[0]), ob.cuenta[1]), ob.cuenta[1]] : undefined);
+      // los cumplidos y los abiertos ahora (con un par, varios a la vez, cada uno con sus metros)
+      const ab = H.abiertos();
       for (const ob of mis.objetivos) {
         if (tiene(ob.hecho)) objs.push({ texto: txt(ob), estado: "hecho" });
-        else {
-          objs.push({ texto: txt(ob), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
-          break;
+        else if (ab.includes(ob)) {
+          const q = destinoDe(ob);
+          objs.push({ texto: txt(ob), estado: "actual", metros: q ? Math.max(1, dist(jug, q) / 43) : null });
         }
       }
       lista.push({ rotulo: t("ui.mision", [H.etapa()]), nombre: tav("mision_" + m), objetivos: objs });
@@ -2132,7 +2185,13 @@
     ]);
   }
   // el diario se lee en la pestaña Diario de la mochila (inventario.js)
+  // EL-01: el croquis de Eydis está en el diario y en el mapa; abrir cualquiera de los dos lo cuenta como leído
+  function leerCroquis() {
+    if (en("EL-01") && tiene("el01_acepto") && !tiene("croquis_leido")) H.marcar("croquis_leido");
+  }
+  J.leerCroquis = leerCroquis;
   function htmlDiario() {
+    leerCroquis();
     const lista = H.E.diario.length ? H.E.diario.map((k) => `<p>${tav(k)}</p>`).join("") : `<p>${t("ui.diario_vacio")}</p>`;
     let extra = "";
     const pr = H.E.extra.prologo;
@@ -2182,8 +2241,9 @@
       else if (CONTROLES.recien("diario")) diario();
     }
     if (J.dentro && (J.modo === "juego" || J.modo === "dialogo")) {
-      // adentro de una casa el bosque queda en pausa
+      // adentro de una casa el bosque queda en pausa (la Lente igual se recarga: en Eikholt se usa en la mesa y el patio)
       J.t += dt;
+      lenteEspera = Math.max(0, lenteEspera - dt);
       H.E.tiempo += dt;
       J.timers.forEach((tm) => (tm.t -= dt));
       J.timers.filter((tm) => tm.t <= 0).forEach((tm) => tm.fn());

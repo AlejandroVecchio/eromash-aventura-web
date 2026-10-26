@@ -303,6 +303,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - registrar, empezar, terminar · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo
 - **mj-anillos.js**: minijuego: la cerradura de anillos (MINIJ «anillos»)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
+- **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
+  - de dónde sale cada tipo · los de cada misión
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
@@ -496,6 +498,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
+- **opcionales.js**: Textos de los objetivos opcionales de cada misión principal (motor/opcionales.js): prefijo oq.
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
