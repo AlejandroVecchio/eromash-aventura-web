@@ -425,6 +425,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - colores de Eldervald
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
+  - los puentes
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
   - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · un mapa de cero (AGREGADOS.lienzo: un proyecto nuevo del editor) · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)

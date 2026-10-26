@@ -1,7 +1,9 @@
 // ---------- cómo se pintan los caminos (módulo SENDAS) ----------
 // Cada camino es { p: [[x, y], …], w, tipo, borde, fundir }:
 //   tipo: "tierra" (tierra pisada con huellas de carro), "adoquin" (piedras redondeadas sobre un cordón gris) o
-//         "ladrillo" (ladrillos rojos a soga entre dos cordones de piedra)
+//         "ladrillo" (ladrillos rojos a soga entre dos cordones de piedra), o un puente (PUENTES: tablas, piedra,
+//         colgante, troncos, rúnico), que se traza y se tuerce igual y cruza el agua y la quebrada; un tramo de un
+//         camino también puede ser puente, y cada punta se une al camino que llega con el material de ese camino
 //   borde: con qué se funde a los costados: "pasto", "musgo", "agua" (barro mojado y charquitos), "tierra" (piedras
 //          sueltas y tierra que se come el borde) o "" (corte limpio)
 //   fundir: las puntas se deshacen de a poco en vez de cortar redondo (para que se junte con el pasto o con el agua).
@@ -11,7 +13,9 @@
 window.SENDAS = (function () {
   "use strict";
   const { P, E, poli } = DIB;
-  const TIPOS = ["tierra", "adoquin", "ladrillo"],
+  const PUENTES = ["puente_tablas", "puente_piedra", "puente_cuerdas", "puente_troncos", "puente_runico"],
+    esPuente = (tp) => PUENTES.includes(tp);
+  const TIPOS = ["tierra", "adoquin", "ladrillo"].concat(PUENTES),
     BORDES = ["", "pasto", "musgo", "agua", "tierra"];
   // un número fijo entre 0 y 1 para cada (a, b, k)
   function hash(a, b, k) {
@@ -130,7 +134,7 @@ window.SENDAS = (function () {
       w = cm.w || 110,
       tipo = cm.tipo || "tierra",
       L = largo(p);
-    if (p.length < 2 || L < 1) return;
+    if (p.length < 2 || L < 1 || esPuente(tipo)) return; // los puentes se pintan encima, con pintarPuentes
     let minx = Infinity,
       miny = Infinity,
       maxx = -Infinity,
@@ -422,6 +426,279 @@ window.SENDAS = (function () {
       const orden = capa === "losa" || capa === "detalle" ? lista.slice().reverse() : lista;
       orden.forEach((cm) => pintar(c, cm, cm.sem || 0, x0, y0, x1, y1, capa, lista));
     });
+    pintarPuentes(c, lista, x0, y0, x1, y1);
   }
-  return { TIPOS, BORDES, CAPAS, pintar, pintarTodos, largo };
+
+  // ---------- los puentes ----------
+  // Un puente es un camino (o un tramo de camino) de tipo puente_*: se traza y se tuerce como cualquier camino. Va
+  // pintado en el piso (gira con él), encima de los caminos y del agua: el tablero, las barandas con su altura, la
+  // sombra que deja sobre el agua y, en cada punta, el arranque de piedra y una rampa del material del camino que
+  // llega (tierra, adoquín o ladrillo; tierra si no llega ninguno). eldervald.js despeja el agua y la quebrada debajo.
+  // los tramos de puente de una lista de caminos: { p, w, tipo, cm, puntas: [tipo del camino de cada punta] }
+  function puentesDe(lista) {
+    const out = [];
+    lista.forEach((cm) => {
+      if (!cm.p || cm.p.length < 2) return;
+      const tr = cm.tramos,
+        tipoDe = (k) => (tr && tr[k]) || cm.tipo || "tierra";
+      let ini = 0;
+      for (let k = 1; k <= cm.p.length - 1; k++) {
+        if (k < cm.p.length - 1 && tipoDe(k) === tipoDe(ini)) continue;
+        const tp = tipoDe(ini);
+        if (esPuente(tp)) {
+          // lo que llega a cada punta: el tramo de al lado de este mismo camino, o el camino que pasa por ahí
+          const vecino = (j, pt) => (j >= 0 && j < cm.p.length - 1 && !esPuente(tipoDe(j)) ? tipoDe(j) : llega(lista, cm, pt));
+          out.push({ p: cm.p.slice(ini, k + 1), w: cm.w || 110, tipo: tp, cm, puntas: [vecino(ini - 1, cm.p[ini]), vecino(k, cm.p[k])] });
+        }
+        ini = k;
+      }
+    });
+    return out;
+  }
+  // el tipo del camino (no puente) que pasa por el punto pt, o null
+  function llega(lista, cm, pt) {
+    let mejor = null,
+      dm = Infinity;
+    lista.forEach((o) => {
+      if (o === cm || !o.p || o.p.length < 2) return;
+      for (let i = 1; i < o.p.length; i++) {
+        const tp = (o.tramos && o.tramos[i - 1]) || o.tipo || "tierra";
+        if (esPuente(tp)) continue;
+        const d = distLinea(pt[0], pt[1], [o.p[i - 1], o.p[i]]);
+        if (d < (o.w || 110) / 2 + 60 && d < dm) (dm = d), (mejor = tp);
+      }
+    });
+    return mejor;
+  }
+  // el punto a la distancia d de la línea p, con la dirección suavizada en las vueltas (así el tablero no se pliega
+  // en las esquinas)
+  function enLinea(p, d) {
+    const [x, y, dx, dy] = enLinea0(p, d),
+      L = largo(p),
+      m = 26,
+      [ax, ay] = enLinea0(p, Math.max(0, d - m)),
+      [bx, by] = enLinea0(p, Math.min(L, d + m)),
+      l = Math.hypot(bx - ax, by - ay);
+    return l > 1 ? [x, y, (bx - ax) / l, (by - ay) / l] : [x, y, dx, dy];
+  }
+  function enLinea0(p, d) {
+    let a = 0;
+    for (let i = 1; i < p.length; i++) {
+      const [ax, ay] = p[i - 1],
+        [bx, by] = p[i],
+        l = Math.hypot(bx - ax, by - ay);
+      if (!l) continue;
+      if (a + l >= d || i === p.length - 1) {
+        const u = Math.max(0, Math.min(1, (d - a) / l));
+        return [ax + (bx - ax) * u, ay + (by - ay) * u, (bx - ax) / l, (by - ay) / l];
+      }
+      a += l;
+    }
+    return [p[0][0], p[0][1], 1, 0];
+  }
+  // cómo es cada puente: medio ancho (respecto del camino), color de tablero, de baranda y de los arranques
+  const ESTILO = {
+    puente_tablas: { k: 0.62, alto: 16, baranda: "#C8B48C", poste: "#553A22", estribo: ["#56524C", "#77736C"] },
+    puente_piedra: { k: 0.7, alto: 12, baranda: "#9A968E", poste: "#6E6A62", estribo: ["#5E5A54", "#86827A"] },
+    puente_cuerdas: { k: 0.42, alto: 20, baranda: "#B8A47C", poste: "#4E3A26", estribo: ["#4E4A44", "#6E6A62"] },
+    puente_troncos: { k: 0.58, alto: 13, baranda: "#5A3E26", poste: "#3E2A18", estribo: ["#56524C", "#77736C"] },
+    puente_runico: { k: 0.66, alto: 12, baranda: "#5C5E64", poste: "#3E4046", estribo: ["#3E4046", "#5C5E64"] },
+  };
+  const RUNICO = "#73D5DB";
+  // solo: pinta los puentes de ese camino nada más (el que se está trazando en el editor), con la lista para las puntas
+  function pintarPuentes(c, lista, x0, y0, x1, y1, solo) {
+    const l = solo && !lista.includes(solo) ? lista.concat([solo]) : lista;
+    puentesDe(l).forEach((pu, n) => (!solo || pu.cm === solo) && pintarPuente(c, pu, x0, y0, x1, y1, (pu.cm.sem || 0) * 31 + n));
+  }
+  function pintarPuente(c, pu, x0, y0, x1, y1, sem) {
+    const p = pu.p,
+      L = largo(p),
+      es = ESTILO[pu.tipo],
+      a = anchoPuente(pu),
+      r = (k, i) => hash(sem, i, k);
+    if (L < 4) return;
+    let minx = Infinity,
+      miny = Infinity,
+      maxx = -Infinity,
+      maxy = -Infinity;
+    p.forEach(([x, y]) => ((minx = Math.min(minx, x)), (miny = Math.min(miny, y)), (maxx = Math.max(maxx, x)), (maxy = Math.max(maxy, y))));
+    const mg = a + 220;
+    if (maxx + mg < x0 || minx - mg > x1 || maxy + mg < y0 || miny - mg > y1) return;
+    // el cuadrilátero del tablero entre d0 y d1, de -a1 a a2 a lo ancho, subido h
+    // (de a pedazos cortos, así sigue las curvas)
+    const quad = (d0, d1, a1, a2, col, h = 0) => {
+      const n = Math.max(1, Math.ceil((d1 - d0) / 18)),
+        izq = [],
+        der = [];
+      for (let i = 0; i <= n; i++) {
+        const [x, y, dx, dy] = enLinea(p, d0 + ((d1 - d0) * i) / n);
+        izq.push(x - dy * a1, y + dx * a1 - h);
+        der.unshift(x + dy * a2, y - dx * a2 - h);
+      }
+      P(c, izq.concat(der), col);
+    };
+    // una línea paralela al tablero (baranda, cuerda) a la distancia «lado» del medio y subida h(d)
+    const paralela = (lado, h, col, g) => {
+      c.beginPath();
+      for (let d = 0; d <= L + 0.1; d += Math.max(8, L / 60)) {
+        const [x, y, dx, dy] = enLinea(p, Math.min(d, L)),
+          q = [x - dy * lado, y + dx * lado - h(Math.min(d, L))];
+        d ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]);
+      }
+      c.strokeStyle = col;
+      c.lineWidth = g;
+      c.lineJoin = "round";
+      c.lineCap = "round";
+      c.stroke();
+    };
+    const poste = (d, lado, alto, col, g = 7) => {
+      const [x, y, dx, dy] = enLinea(p, d),
+        px = x - dy * lado,
+        py = y + dx * lado;
+      E(c, px + 2, py + 2, g * 0.8, g * 0.4, "rgba(0,0,0,0.3)");
+      P(c, [px - g / 2, py, px - g / 2, py - alto, px + g / 2, py - alto, px + g / 2, py], col);
+      P(c, [px, py, px, py - alto, px + g / 2, py - alto, px + g / 2, py], "rgba(255,255,255,0.12)");
+    };
+    // la sombra que deja sobre el agua (más abajo y más ancha: el puente está alto)
+    quad(0, L, a + 10, a + 10, "rgba(0,0,0,0.28)", -16);
+    // las rampas de cada punta, del material del camino que llega, y los arranques de piedra
+    [0, 1].forEach((k) => rampa(c, p, L, k, a, pu.puntas[k] || "tierra", es, sem + k * 7));
+    const bar = (lado, h, col, g) => paralela(lado, () => h, col, g);
+    if (pu.tipo === "puente_tablas") {
+      quad(0, L, a + 4, a + 4, "#3E3022");
+      const n = Math.max(2, Math.round(L / 13));
+      for (let i = 0; i < n; i++) quad((i * L) / n, ((i + 1) * L) / n - 2, a, a, ["#8A6A40", "#B08A58", "#C8A070", "#9A7448"][Math.floor(r(1, i) * 4)]);
+      [-1, 1].forEach((ld) => {
+        for (let d = 0; d <= L; d += L / Math.max(1, Math.round(L / 90))) poste(d, ld * (a - 2), es.alto + 6, es.poste);
+        bar(ld * (a - 2), es.alto, es.baranda, 3);
+      });
+    } else if (pu.tipo === "puente_piedra") {
+      quad(0, L, a + 6, a + 6, "#4A4640");
+      quad(0, L, a, a, "#77736C");
+      quad(0, L, a * 0.35, a * 0.35, "#827D74");
+      for (let d = 26; d < L; d += 26) quad(d, d + 2, a, a, "#5E5A54");
+      // los parapetos: la cara de afuera y el lomo
+      [-1, 1].forEach((ld) => {
+        const lo = ld < 0 ? [a + 4, -a + 10] : [-a + 10, a + 4];
+        quad(0, L, lo[0], lo[1], "#56524C", 0);
+        quad(0, L, lo[0], lo[1], "#9A968E", es.alto);
+        for (let d = 30; d < L; d += 30) quad(d, d + 2, lo[0], lo[1], "#77736C", es.alto);
+      });
+      [0, L].forEach((d) => [-1, 1].forEach((ld) => poste(d, ld * (a - 3), es.alto + 10, "#86827A", 14)));
+    } else if (pu.tipo === "puente_cuerdas") {
+      // colgante: tablas con huecos que bajan en el medio, cuerdas de mano y postes altos solo en las puntas
+      const cae = (d) => Math.sin((d / L) * Math.PI) * Math.min(26, L * 0.05);
+      const n = Math.max(2, Math.round(L / 16));
+      for (let i = 0; i < n; i++) {
+        const d0 = (i * L) / n,
+          d1 = d0 + L / n - 6;
+        if (r(2, i) < 0.06) continue; // una tabla que falta
+        quad(d0, d1, a * (0.9 + r(3, i) * 0.1), a * (0.9 + r(4, i) * 0.1), ["#5E4A36", "#76604A", "#6A5440"][Math.floor(r(5, i) * 3)], -cae(d0 + 3));
+      }
+      [-1, 1].forEach((ld) => {
+        paralela(ld * a, (d) => -cae(d) + 2, "#8A7A5A", 2);
+        for (let d = 18; d < L - 10; d += 22) {
+          const [x, y, dx, dy] = enLinea(p, d),
+            px = x - dy * ld * a,
+            py = y + dx * ld * a;
+          L_(c, px, py + cae(d) - 2, px, py + cae(d) - es.alto - 4 + cae(d) * 0.4, "#8A7A5A", 1.2);
+        }
+        paralela(ld * a, (d) => es.alto + 6 - cae(d) * 0.6, es.baranda, 2.5);
+        [0, L].forEach((d) => poste(d, ld * a, es.alto + 18, es.poste, 9));
+      });
+    } else if (pu.tipo === "puente_troncos") {
+      // troncos a lo largo, con su corteza, y una baranda de troncos finos
+      const n = 5;
+      for (let i = 0; i < n; i++) {
+        const w0 = -a + (2 * a * i) / n,
+          w1 = w0 + (2 * a) / n - 1;
+        quad(0, L, -w0, w1, i % 2 ? "#6E4E30" : "#8A6440");
+        quad(0, L, -(w0 + 3), w0 + 6, "rgba(255,255,255,0.08)");
+      }
+      [0, L].forEach((d) => {
+        const [x, y, dx, dy] = enLinea(p, d);
+        for (let i = 0; i < n; i++) {
+          const w = -a + (2 * a * (i + 0.5)) / n;
+          E(c, x - dy * w, y + dx * w, a / n, a / n * 0.8, "#B08A58");
+          E(c, x - dy * w, y + dx * w, a / n * 0.45, a / n * 0.35, "#8A6A40");
+        }
+      });
+      [-1, 1].forEach((ld) => {
+        for (let d = 0; d <= L; d += L / Math.max(1, Math.round(L / 70))) poste(d, ld * (a + 2), es.alto + 4, es.poste, 8);
+        bar(ld * (a + 2), es.alto, es.baranda, 5);
+      });
+    } else if (pu.tipo === "puente_runico") {
+      quad(0, L, a + 6, a + 6, "#2A2C30");
+      quad(0, L, a, a, "#3E4046");
+      for (let d = 34; d < L; d += 34) quad(d, d + 2, a, a, "#2E3034");
+      // las runas del medio, una por losa
+      for (let d = 17, i = 0; d < L - 8; d += 34, i++) {
+        const [x, y, dx, dy] = enLinea(p, d),
+          g = Math.floor(r(6, i) * 3),
+          tr = [[[-6, -8], [-6, 8], [-6, -2], [4, -8]], [[0, -8], [0, 8], [0, -8], [6, -2]], [[-5, -8], [5, 8], [5, -8], [-5, 8]]][g];
+        c.save();
+        c.translate(x, y);
+        c.transform(dx, dy, -dy, dx, 0, 0);
+        for (let k = 0; k < tr.length; k += 2) L_(c, tr[k][1], tr[k][0], tr[k + 1][1], tr[k + 1][0], RUNICO, 2.2);
+        c.restore();
+      }
+      [-1, 1].forEach((ld) => {
+        const lo = ld < 0 ? [a + 4, -a + 8] : [-a + 8, a + 4];
+        quad(0, L, lo[0], lo[1], "#2E3034", 0);
+        quad(0, L, lo[0], lo[1], "#5C5E64", es.alto);
+        paralela(ld * (a - 2), () => es.alto + 1, RUNICO, 1.5);
+      });
+      [0, L].forEach((d) => [-1, 1].forEach((ld) => {
+        poste(d, ld * (a - 2), es.alto + 14, "#4A4C52", 14);
+        const [x, y, dx, dy] = enLinea(p, d);
+        E(c, x - dy * ld * (a - 2), y + dx * ld * (a - 2) - es.alto - 14, 5, 3, RUNICO);
+      }));
+    }
+  }
+  function L_(c, ax, ay, bx, by, col, g) {
+    c.beginPath();
+    c.moveTo(ax, ay);
+    c.lineTo(bx, by);
+    c.strokeStyle = col;
+    c.lineWidth = g;
+    c.lineCap = "round";
+    c.stroke();
+  }
+  // la rampa de una punta (k = 0 el principio, 1 el final): sale del puente hacia afuera y se angosta hasta el ancho
+  // del camino que llega, del material de ese camino; los dos arranques de piedra a los costados
+  function rampa(c, p, L, k, a, tipo, es, sem) {
+    const [x, y, dx0, dy0] = enLinea(p, k ? L : 0),
+      dx = k ? dx0 : -dx0,
+      dy = k ? dy0 : -dy0,
+      lar = 70,
+      b = a * 0.9,
+      fx = x + dx * lar,
+      fy = y + dy * lar,
+      r = (i) => hash(sem, i, 3);
+    const cuerpo = [x - dy * (a + 6), y + dx * (a + 6), fx - dy * b, fy + dx * b, fx + dy * b, fy - dx * b, x + dy * (a + 6), y - dx * (a + 6)];
+    const base = { tierra: ["#4A3C28", "#6B5638"], adoquin: ["#4A4640", "#5E5A54"], ladrillo: ["#5A4A3E", "#7A3E2A"] }[tipo] || ["#4A3C28", "#6B5638"];
+    P(c, cuerpo.map((v, i) => v + (i % 2 ? 4 : 0)), base[0]);
+    P(c, cuerpo, base[1]);
+    // lo de arriba: huellas, adoquines o ladrillos que siguen la rampa
+    for (let i = 0; i < 26; i++) {
+      const u = r(i * 2) * lar,
+        w = (r(i * 2 + 1) * 2 - 1) * (a + 2 - (u / lar) * (a + 2 - b)) * 0.85,
+        sx = x + dx * u - dy * w,
+        sy = y + dy * u + dx * w;
+      if (tipo === "adoquin") P(c, poli(sx, sy, 8, 6, 6, r(i + 50) * 2), PIEDRAS[Math.floor(r(i + 60) * PIEDRAS.length)]);
+      else if (tipo === "ladrillo") ladrillo(c, sx, sy, dx, dy, 22, 10, LADRILLOS[Math.floor(r(i + 70) * LADRILLOS.length)]);
+      else if (i < 10) E(c, sx, sy, 6 + r(i + 80) * 6, 3, r(i + 90) < 0.5 ? "#5A4830" : "#7A6444");
+    }
+    // los arranques: dos piedras talladas en las esquinas del puente
+    [-1, 1].forEach((ld) => {
+      const sx = x - dy * ld * (a + 8),
+        sy = y + dx * ld * (a + 8);
+      E(c, sx + 3, sy + 4, 16, 7, "rgba(0,0,0,0.3)");
+      P(c, poli(sx, sy - 4, 15, 10, 6, r(ld + 100)), es.estribo[0]);
+      P(c, poli(sx + 2, sy - 8, 11, 7, 6, r(ld + 110)), es.estribo[1]);
+    });
+  }
+  // medio ancho del tablero de un puente (lo que se camina)
+  const anchoPuente = (pu) => Math.max(26, Math.min(150, pu.w * ESTILO[pu.tipo].k));
+  return { TIPOS, PUENTES, esPuente, puentesDe, anchoPuente, pintarPuentes, BORDES, CAPAS, pintar, pintarTodos, largo };
 })();
