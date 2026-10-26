@@ -50,6 +50,15 @@ window.CONTROLES = (function () {
     carril2: ["KeyS", "ArrowDown"],
     carril3: ["KeyD", "ArrowRight"],
     carril4: ["KeyW", "ArrowUp"],
+    // las teclas de los minijuegos de ritmo (tallar, el tambor…): cada marca pide una; salen en el orden de MINIJ.RITMO
+    ritmo1: ["KeyQ"],
+    ritmo2: ["KeyW"],
+    ritmo3: ["KeyE"],
+    ritmo4: ["KeyR"],
+    ritmo5: ["KeyA"],
+    ritmo6: ["KeyS"],
+    ritmo7: ["KeyD"],
+    ritmo8: ["KeyF"],
   };
   // botones estándar del mando (Gamepad API): 0 ✕/A · 1 ○/B · 2 □/X · 3 △/Y · 4 L1 · 5 R1 · 6 L2 · 7 R2 · 8 Select · 9 Start · 10 L3
 // · 11 R3 · 16 PS · 17 panel táctil
@@ -76,11 +85,19 @@ window.CONTROLES = (function () {
     carril2: [13],
     carril3: [15],
     carril4: [12],
+    ritmo1: [4],
+    ritmo2: [3],
+    ritmo3: [5],
+    ritmo4: [1],
+    ritmo5: [14],
+    ritmo6: [13],
+    ritmo7: [15],
+    ritmo8: [0],
   };
   // combinaciones del mando: L2 (el escudo) + □ △ ○ son las habilidades activas L2 + ✕ el frasco y L2 + R1 la poción elegida; mientras se aprietan juntos, esos
   // botones no hacen lo suyo
   const COMBOS = { hab1: [6, 2], hab2: [6, 3], hab3: [6, 1], frasco: [6, 0], pocion: [6, 5], agacharse: [6, 13] };
-  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○", frasco: "L2+✕", pocion: "L2+R1", agacharse: "L2+▼", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲" };
+  const GLIFOS_MANDO = { saltar: "✕", interactuar: "○", atacar: "□", lente: "△", esquivar: "L1", bloquear: "L2", correr: "L3", izquierda: "◀", abajo: "▼", arriba: "▲", derecha: "▶", diario: "Select", inventario: "Select", pausa: "Start", seguir: "✕", runa: "R1", cambiarRuna: "R3", mapa: "@ui.tecla.panel", camaraIzq: "RS", camaraDer: "RS", camara: "R3", hab1: "L2+□", hab2: "L2+△", hab3: "L2+○", frasco: "L2+✕", pocion: "L2+R1", agacharse: "L2+▼", carril1: "◀", carril2: "▼", carril3: "▶", carril4: "▲", ritmo1: "L1", ritmo2: "△", ritmo3: "R1", ritmo4: "○", ritmo5: "◀", ritmo6: "▼", ritmo7: "▶", ritmo8: "✕" };
   const GLIFOS_TECLADO = { saltar: "@ui.tecla.espacio", interactuar: "E", atacar: "@ui.tecla.clic", lente: "R", esquivar: "C", bloquear: "G", correr: "Shift", izquierda: "A", abajo: "S", arriba: "W", derecha: "D", diario: "J", inventario: "I", pausa: "Esc", seguir: "E", runa: "Q", cambiarRuna: "T", mapa: "M", misiones: "L", personaje: "U", talentos: "H", hab1: "1", hab2: "2", hab3: "3", frasco: "4", pocion: "5", agacharse: "X", ranura1: "1", ranura2: "2", ranura3: "3", ranura4: "4", ranura5: "5", ranura6: "6", camaraIzq: "Z", camaraDer: "X", camara: "V", acercar: "+", alejar: "−" };
 
   // ---------- teclas propias ----------
@@ -91,6 +108,7 @@ window.CONTROLES = (function () {
   const GRUPOS = {
     juego: ["arriba", "abajo", "izquierda", "derecha", "correr", "saltar", "atacar", "esquivar", "bloquear", "interactuar", "lente", "runa", "cambiarRuna", "mapa", "misiones", "diario", "inventario", "personaje"],
     forja: ["carril1", "carril2", "carril3", "carril4"],
+    ritmo: ["ritmo1", "ritmo2", "ritmo3", "ritmo4", "ritmo5", "ritmo6", "ritmo7", "ritmo8"],
   };
   const CLAVE_TECLAS = "eromash.aventura.teclas";
   const BASE = {};
@@ -99,7 +117,7 @@ window.CONTROLES = (function () {
   try {
     propias = JSON.parse(localStorage.getItem(CLAVE_TECLAS) || "{}") || {};
   } catch (e) {}
-  const grupoDe = (a) => (GRUPOS.forja.includes(a) ? "forja" : "juego");
+  const grupoDe = (a) => (GRUPOS.forja.includes(a) ? "forja" : GRUPOS.ritmo.includes(a) ? "ritmo" : "juego");
   function armarTeclas() {
     for (const a in BASE) {
       const mia = propias[a];

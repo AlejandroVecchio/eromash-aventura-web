@@ -6,6 +6,7 @@ I18N.textos({
   "mn.dejo": { es: "Lo dejaste", en: "You left it" },
   "mn.sin_tiempo": { es: "Se acabó el tiempo", en: "Time is up" },
   "mn.seguir": { es: "{0} para seguir", en: "{0} to continue" },
+  "mn.preparate": { es: "Preparate", en: "Get ready" },
   "mn.queda": { es: "{0} s", en: "{0} s" },
   "mn.probar": { es: "{0} · {1}", en: "{0} · {1}" },
   "mn.base": { es: "Normal", en: "Normal" },
