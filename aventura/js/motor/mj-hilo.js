@@ -101,12 +101,17 @@
       S.mano = -1;
       S.luz["h" + h] = 0.6;
       sonar(660 + h * 70, 0.25);
+      // el último hilo cierra el telar apenas llega a su piedra (con teclado no hay «soltar»)
+      revisar(S);
     }
     return true;
   }
+  function revisar(S) {
+    if (ganado(S) && !S.gano) (S.gano = 0.8), (S.luz.todo = 0.8), sonar(880, 0.4);
+  }
   function soltar(S) {
     S.mano = -1;
-    if (ganado(S) && !S.gano) (S.gano = 0.8), (S.luz.todo = 0.8), sonar(880, 0.4);
+    revisar(S);
   }
 
   MINIJ.registrar("hilo", {

@@ -37,6 +37,19 @@
         si(res && res.gano, v + " avisa");
       }
     } },
+    { nombre: "hilo: con teclado (sin soltar) el último hilo que llega a su piedra gana", fn: async (A, { si }) => {
+      JUEGO.empezar(9, true);
+      MINIJ.empezar("hilo", { semilla: 21 });
+      const S = MINIJ.estado(),
+        def = MINIJ.JUEGOS.hilo,
+        q = 600 / S.n;
+      S.sol.forEach((tr) => {
+        def.tocar(S, tr[0]);
+        tr.slice(1).forEach((cel) => def.arrastre(S, 860 - 300 + (cel % S.n) * q + q / 2, 480 - 300 + Math.floor(cel / S.n) * q + q / 2, "mueve"));
+      });
+      si(S.gano > 0, "ganado sin soltar");
+      MINIJ.cerrar();
+    } },
     { nombre: "hilo: no se pisa la piedra de otro, cruzar corta el otro hilo y volver acorta", fn: async (A, { igual, si }) => {
       MINIJ.empezar("hilo", { semilla: 4 });
       const S = MINIJ.estado(),
