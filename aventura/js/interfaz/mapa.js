@@ -726,7 +726,7 @@ window.MAPA = (function () {
       paseMini = 4; // cada cuatro cuadros alcanza
       if (ciudad) EIKHOLT.mini(document.getElementById("minimapa"), MINI);
       else dibujarMini();
-      const h = A.hora(),
+      const h = ciudad ? LUZ.hora(A.H.E.tiempo) : A.hora(), // en la ciudad el ambiente del bosque no corre
         txt = String(Math.floor(h)).padStart(2, "0") + ":" + String(Math.floor((h % 1) * 6) * 10).padStart(2, "0");
       const barrio = ciudad && EIKHOLT.barrio();
       const lug = document.getElementById("miniLugar"),
