@@ -75,18 +75,34 @@ Al pie del fresno las tres Nornas tejen el destino. Un telar en grilla con pares
 
 (próximamente)
 
-## Hachas al blanco
+## Hachas al blanco (`mj-hachas.js`)
 
-(próximamente)
+El campo de la Guardia de Eikholt: una diana de paja con el ojo de Odín en el centro. Cada tiro son dos golpes de usar (o atacar, o tocar): el primero fija la puntería de lado a lado (la marca va y viene) y el segundo la altura. El hacha sale girando y se clava. Anillos: ojo 10, rojo 6, claro 4, borde 2, afuera nada. Cinco tiros. Devuelve `{ gano, puntos, rival }`.
 
-## El rayo de luz rúnica
+- **Variantes**: `base` (hacen falta 26), `viento` (una ráfaga por tiro corre el hacha: hay que apuntar al costado; 24), `movil` (la diana cuelga de una soga y va y viene: hay que adelantarse; 22), `lejos` (la diana más chica; 22) y `duelo` (Hrafn, de la Guardia, tira después de cada hacha: hay que sumar más que él).
+- **Dónde está**: las dianas del campo de entrenamiento de la Guardia en Eikholt (`ciudad/juego.js`, `dianaCerca` en `cercano`).
+  - Cada partida pasa a la variante siguiente.
+  - Superar el récord (`E.extra.eikholt.hachas`) paga plata, y ganar da experiencia.
+  - `EIKHOLT.lanzarHachas()` lo abre sin caminar (pruebas).
 
-(próximamente)
+## El rayo de luz rúnica (`mj-rayo.js`)
+
+Una losa en grilla con una piedra que echa luz rúnica (Kenaz), piedras espejo talladas en diagonal y el sello (Othala) que hay que encender. Tocar un espejo lo da vuelta (de / a \). La luz rebota en cada espejo y se corta en las piedras ciegas y en las ataduras violeta. Con el teclado, las flechas mueven la marca y usar da vuelta el espejo.
+
+- **Variantes**: `base` (7 × 5, tres vueltas, dos señuelos), `ataduras` (casillas violeta que se tragan la luz y un espejo atado que no gira), `dos` (dos fuentes y dos sellos), `luna` (la luz pálida baja de arriba, con Sowilo) y `reloj` (8 × 6, 90 s). Más difíciles, en orden: `gemelas` (un par de piedras con Ehwaz: la luz entra en una y sale derecho por la de su color), `laberinto` (10 × 7, siete vueltas, dos espejos atados, muchos señuelos), `tres` (tres luces y tres sellos, con gemelas) y `abismo` (11 × 8, dos luces, dos pares de gemelas, ataduras y 150 s). Probar mecánicas las lista en ese orden.
+- **Siempre tiene solución**: se arma primero el camino de la luz (tramos rectos y una vuelta entre cada uno) y se ponen los espejos en sus vueltas; los demás son señuelos en lo que la luz no usa. Se revuelve y se asegura que no arranque resuelto.
+- **Dónde está**:
+  - **El rito de la luna** (`ritos.js`): de noche, tocar la piedra pide llevar la luz de la luna hasta ella (semilla por rito).
+  - **El sello del Santuario de las Raíces** en la misión principal EL-07 (`juego.js`): antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (`ataduras`, semilla fija). Dejarlo no hace el calco.
+  - `RITOS.tocar(r)` lo abre sin caminar (pruebas).
 
 ## Hnefatafl
 
 (próximamente)
 
-## El rastreo con la Lente
+## El rastreo con la Lente (`mj-rastreo.js`)
 
-(próximamente)
+El piso del bosque visto por la Lente: hojas, agujas, piedras y huellas. Solo dentro del círculo de la Lente se ven las huellas. Las de la bestia que se sigue forman un camino desde el borde y hay que marcarlas en orden; la siguiente late apenas con luz rúnica cuando la Lente anda cerca. Hay huellas de otros bichos que confunden. Marcar una que no es (o saltearse una del camino) enfría el rastro, y con demasiado frío se pierde. Con el puntero se arrastra la Lente y un toque sin arrastrar marca ahí; con el teclado o el mando, las flechas (o la palanca) mueven la Lente y usar marca lo que está en el centro. Devuelve `{ gano, frio }`.
+
+- **Variantes**: `base` (8 huellas), `senuelos` (más huellas ajenas y viejas de la misma bestia), `lluvia` (las huellas se borran: 45 s), `noche` (la Lente ve menos) y `largo` (13 huellas, 80 s). `op.bestia` elige la forma de la huella (lobo, jabalí, draugr, cuervo, fatuo, trol).
+- **Dónde está**: el último de los tres rastros de cada contrato de caza (`contratos.js`, `examinar`). Se lee con la Lente antes de llevar a la guarida; la variante sale del contrato (y de noche es `noche`). Dejarlo o perder no avanza y se puede volver a mirar. `examinar(id, i, true)` lo saltea (pruebas).

@@ -194,9 +194,14 @@ window.RITOS = (function () {
     if (tipo === "brasa" || tipo === "escarcha") return A.avisar(PODERES.tiene(tipo === "brasa" ? "kenaz" : "isa") ? "pr.pide_" + tipo : "pr.pide_" + tipo + "_sin");
     if (tipo === "luna") {
       if (A.noche() > 0.6) {
-        jug.interactuando = 0.7;
-        J.marcas.push({ tipo: "anillo", x: q.x, y: q.y, s: 2, col: "#DDE6F2", t: 0 });
-        return J.retrasar(0.6, () => despertar(r));
+        const luna = () => {
+          jug.interactuando = 0.7;
+          J.marcas.push({ tipo: "anillo", x: q.x, y: q.y, s: 2, col: "#DDE6F2", t: 0 });
+          J.retrasar(0.6, () => despertar(r));
+        };
+        // la luz de la luna se lleva hasta la piedra con espejos (MINIJ «rayo»)
+        if (!window.MINIJ || !MINIJ.JUEGOS.rayo) return luna();
+        return MINIJ.empezar("rayo", { variante: "luna", semilla: r.id * 31 + 7, quien: t("mn.rayo_luna_quien"), x: q.x, y: q.y, fin: (res) => (res.gano ? luna() : !res.dejo && A.avisar("mn.rayo_luna_mal", "#DDE6F2")) });
       }
       return A.avisar("pr.luna_dia");
     }
@@ -439,5 +444,6 @@ window.RITOS = (function () {
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   return {
     lista: () => ({ camino, ritos, st }),
+    tocar: (r) => tocar(r, r.piedras[0]),
   };
 })();
