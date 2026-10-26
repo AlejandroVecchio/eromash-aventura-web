@@ -86,9 +86,15 @@ Al pie del fresno las tres Nornas tejen el destino. Un telar en grilla con pares
 - **Siempre tiene solución**: se arma un camino que recorre todo el telar (movidas de «mordida» sobre un zigzag) y se corta en hilos de al menos tres casillas; la solución queda en `S.sol`.
 - **Dónde está**: la Poza de Urd (`vida.js`). La primera noche pide un telar `lleno` antes de mostrar la visión; después, una vez por noche, teje `nudos` o `reloj` y paga plata y experiencia (`st.pozaNoche`). `VIDA.mirarPoza(noche)` la abre sin caminar (pruebas).
 
-## Tallar la runa
+## Tallar la runa (`mj-tallar.js`)
 
-(próximamente)
+La piedra de Ása: un cincel recorre cada trazo de una runa del futhark y en cada trazo hay marcas de oro. Arranca con una cuenta atrás (`cuenta: 3`). Cada marca pide su tecla (`m.k`, de `MINIJ.RITMO`: A S D W Q E R F) y, cuando el cincel está a menos de 1,6 s, muestra la letra al costado del trazo y un aro que se cierra: el golpe va cuando el aro toca la marca. Con el puntero, tocar la piedra golpea con la letra que sea. Hay que golpear justo cuando el cincel pasa por cada marca: muy justo deja la marca en luz rúnica, cerca la deja en oro. Un golpe a destiempo, con otra tecla, o una marca que se pasa raja la piedra; con más grietas que las permitidas se parte, y una runa con menos de la mitad del oro acertado tampoco sirve. Devuelve `{ gano, precision, grietas }`.
+
+- **Variantes** (la dificultad sube sobre todo con `letras`, cuántas teclas usa, y un poco con la velocidad): `base` (A S D), `rapido` (4 letras, el cincel corre más), `dura` (5 letras, la ventana del golpe es más chica), `vetas` (6 letras y marcas violeta de las ataduras que no hay que golpear) y `palabra` (las 8 letras, dos runas seguidas). `op.runa` elige la runa (si está en el futhark de `JUEGOS_RUNAS`).
+- **Dónde está**: `engarces.js`.
+  - **Ása abre muescas** con `pedirAbrir`: común `base`, mágica `vetas`, rara `dura`. Con precisión de 85 % o más abre una muesca más (hasta el tope de la pieza); si la piedra se parte, abre una menos (nunca menos de una); dejarlo no cobra nada.
+  - **Unir tres tallas** en la pestaña Tallas (`pedirUnir`) talla el hueso nuevo con su runa; si se resquebraja, las tres siguen en la bolsa.
+- `abrir(it, extra)` y `unir(id)` siguen andando solos (sin minijuego) para las pruebas y otros sistemas.
 
 ## El tambor del skald
 
