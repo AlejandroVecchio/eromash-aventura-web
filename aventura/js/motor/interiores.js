@@ -576,6 +576,8 @@ window.INTERIORES = (function () {
   // la trampilla de un cuarto que arma otro sistema (la sala del Hongo Dorado): baja a su sótano de siempre y, al subir
   // la escalera, alSubir() lo vuelve a poner arriba
   function bajarDesde(p, alSubir) {
+    // la bodega del Hongo Dorado es un cuarto aparte, en volumen (motor/bodega.js)
+    if (p.tipo === "taberna" && window.BODEGA) return BODEGA.entrar(p, alSubir);
     const s0 = armarSotano(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(s0, { tipo: p.tipo, puerta: p, arriba: { alSubir }, ix: 380, iy: FONDO + 110, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;
@@ -1370,7 +1372,9 @@ window.INTERIORES = (function () {
   }
   // salir del cuarto directo a otro lugar (la escalera del sótano de la hospedería)
   function salirA(x, y) {
-    if (!dentro) return;
+    // también desde un cuarto que arma otro sistema (la bodega de Góinn): se le avisa que se va
+    if (!dentro && !(J.dentro && J.dentro.alSalir)) return;
+    if (J.dentro && J.dentro.alSalir) J.dentro.alSalir();
     dentro = null;
     J.dentro = null;
     jug.x = x;

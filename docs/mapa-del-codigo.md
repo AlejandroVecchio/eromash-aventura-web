@@ -233,6 +233,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
+- **bodega.js**: la bodega del Hongo Dorado por dentro (sistema BODEGA)
+  - la bodega · la gente: quien baja según la hora · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · la gente camina (rodea los muebles por sus esquinas) · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
   - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
 - **caceria.js**: la Cacería Salvaje (sistema CACERIA)
@@ -351,6 +353,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
   - el manantial rúnico · la piedra de Berkano tirada
   - assets: manantialRunico, piedraBerkano
+- **assets-bodega.js**: lo de adentro de la bodega del Hongo Dorado (assets armados con caras)
+  - La cuba de Ulf · El estante de los toneles · El colgadero · El aljibe · La escalera de la bodega · Las raíces de la pared vieja · La mesa de catar
+  - assets: cubaUlf, estanteToneles, colgadero, aljibe, escaleraBodega, raicesViejas, mesaCata
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casa.js**: la casa de Hrolf, la casa propia (assets de CASA)
@@ -462,6 +467,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **bandidos.js**: Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
+- **bodega.js**: textos de la bodega del Hongo Dorado por dentro (bd.) y de sus muebles (as.)
 - **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
 - **casa.js**: Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).

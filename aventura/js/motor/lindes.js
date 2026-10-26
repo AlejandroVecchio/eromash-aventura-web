@@ -315,7 +315,7 @@ window.LINDES = (function () {
       dm = Infinity;
     for (const q of RECTAS)
       for (const [cx, cy] of [[q[0] - 60, q[1] - 60], [q[2] + 60, q[1] - 60], [q[0] - 60, q[3] + 60], [q[2] + 60, q[3] + 60]]) {
-        if (!libre(cx, cy, 30, n) || !despejado(n.x, n.y, cx, cy, n)) continue;
+        if (Math.hypot(cx - n.x, cy - n.y) < 20 || !libre(cx, cy, 30, n) || !despejado(n.x, n.y, cx, cy, n)) continue;
         const d = Math.hypot(cx - n.x, cy - n.y) + Math.hypot(tx - cx, ty - cy) * (despejado(cx, cy, tx, ty, n) ? 1 : 1.6);
         if (d < dm) (dm = d), (mejor = { x: cx, y: cy });
       }
@@ -334,7 +334,7 @@ window.LINDES = (function () {
     const T = n.via || fin,
       dx = T.x - n.x,
       dy = T.y - n.y,
-      d = Math.hypot(dx, dy);
+      d = Math.max(1, Math.hypot(dx, dy));
     let mx = (dx / d) * Math.min(d, v * dt),
       my = (dy / d) * Math.min(d, v * dt);
     if (Math.hypot(ero.x - n.x - (dx / d) * 40, ero.y - n.y - (dy / d) * 40) < 70) return (n.camina = false);
@@ -363,7 +363,7 @@ window.LINDES = (function () {
     if (ir(n, e, dt)) {
       if (!n.llego) (n.llego = true), alLlegar && alLlegar(e);
       n.espera -= dt;
-      if (n.espera <= 0) (n.ronda++), (n.llego = false), (n.espera = e === "copista" ? 9 + Math.random() * 5 : 3.5 + Math.random() * 2);
+      if (n.espera <= 0) (n.ronda++), (n.llego = false), (n.espera = ronda[n.ronda % ronda.length] === "copista" ? 9 + Math.random() * 5 : 3.5 + Math.random() * 2);
       return e;
     }
     return null;
