@@ -25,13 +25,15 @@ window.INTERIORES = (function () {
   // siempre el mismo. De día está en lo suyo y contesta según cómo vive (in.vecino_<variante>_N); de 22 a 6 duerme.
   const VECINAS = ["vecina", "vecina2"],
     VECINOS = [["vecina", "vecino"], ["vecina", "vecina2"], ["trabajador3", "vecino"], ["hg_cazador"], ["vecina2", "trabajador"]];
+  // doce nombres de mujer (vec_0..5 y vec_12..17) y doce de hombre (vec_6..11 y vec_18..23)
+  const nombreVec = (mujer, k) => "vec_" + (k < 6 ? (mujer ? 0 : 6) + k : (mujer ? 12 : 18) + k - 6);
   function vecinoDe(sem, vi) {
     const r = DIB.azar(Math.round(sem * 1000) + 313),
       fichas = VECINOS[vi],
       ficha = fichas[Math.floor(r() * fichas.length)],
       mujer = VECINAS.includes(ficha),
       h = LUZ.hora(A.H.E.tiempo);
-    return { ficha, nombre: "vec_" + ((mujer ? 0 : 6) + Math.floor(r() * 6)), noche: h >= 22 || h < 6 };
+    return { ficha, nombre: nombreVec(mujer, Math.floor(r() * 12)), noche: h >= 22 || h < 6 };
   }
   const charlasVecino = {};
   function hablarVecino(vec, vi) {
@@ -58,14 +60,14 @@ window.INTERIORES = (function () {
     if (!c0 || !String(c0.base || "").startsWith("casa_")) return null;
     const vec = vecinoDe(c0.sem || 0.01, (+String(c0.base).slice(5) || 0) % 5),
       r = DIB.azar(Math.round((c0.sem || 0.01) * 1000) + 977),
-      mujer = +vec.nombre.slice(4) < 6,
+      mujer = VECINAS.includes(vec.ficha),
       fichas = mujer ? ["vecino", "trabajador", "trabajador3"] : ["vecina", "vecina2"],
-      otra = (+vec.nombre.slice(4) % 6 + 1 + Math.floor(r() * 5)) % 6;
+      otra = Math.floor(r() * 12);
     return {
       vec,
       dorm: pl.cuartos.findIndex((cu) => cu.clase === "dormitorio"),
       dia: pl.cuartos.findIndex((cu, i) => i > 0 && DE_DIA.includes(cu.clase)),
-      pareja: { ficha: fichas[Math.floor(r() * fichas.length)], nombre: "vec_" + ((mujer ? 6 : 0) + otra) },
+      pareja: { ficha: fichas[Math.floor(r() * fichas.length)], nombre: nombreVec(!mujer, otra) },
     };
   }
   // ---------- cómo es cada cuarto ----------
@@ -1654,5 +1656,5 @@ window.INTERIORES = (function () {
     puertas.push(p);
     return p;
   }
-  return { puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
+  return { nombreVecino: (sem, v) => vecinoDe(sem, v % 5).nombre, puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();

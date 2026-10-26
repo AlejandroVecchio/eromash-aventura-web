@@ -227,6 +227,14 @@ window.EIKHOLT = (function () {
       if (p.nombrado) mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + p.id), fn: () => hablarNombrado(p) };
       else mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_ek_" + p.rol), fn: () => hablarVecino(p) };
     }
+    // las casas de los vecinos que tienen el farol encendido junto a la puerta: «Entrar · La casa de …»
+    if (window.INTERIORES && plano.casasQueSeEntran)
+      for (const c of plano.casasQueSeEntran) {
+        const d = Math.hypot(c.x - e.x, c.y - e.y);
+        if (d > 1.6 * M || d >= dm) continue;
+        dm = d;
+        mejor = { texto: t("in.accion_entrar", [t("in.casa_de", [t("av.nombre_" + INTERIORES.nombreVecino(c.sem, c.v))])]), fn: () => entrarCasa(c), x: c.x, y: c.y };
+      }
     const am = RECORRER25.aMano();
     if (am && am.d < dm + 0.5 * M) {
       dm = am.d;
@@ -237,6 +245,15 @@ window.EIKHOLT = (function () {
     return mejor;
   }
 
+  // entrar a la casa de un vecino: la arma INTERIORES como cualquier casa del bosque, con su semilla; al salir la ciudad
+  // vuelve a poner a Eromash delante de esa puerta (st.volverA)
+  function entrarCasa(c) {
+    st.volverA = [c.x, c.y];
+    const [fx, fy] = aBosque(c.x, c.y);
+    jug.x = fx;
+    jug.y = fy;
+    INTERIORES.entrar({ tipo: "casa", cosa: { id: "casaEikholt", x: fx, y: fy - 70, o: { sem: c.sem, v: c.v } }, clave: "ek_" + c.nombre });
+  }
   // ---------- Eromash camina ----------
   const VEL = [0, 150, 260, 430],
     VEL_ESQ = 720;
@@ -435,7 +452,8 @@ window.EIKHOLT = (function () {
       }
       RECORRER25.cargar(st.hallado);
       let p;
-      if (desde && desde.guardado) p = [st.x, st.y];
+      if (desde && desde.rapido && st.volverA) (p = st.volverA), (st.volverA = null);
+      else if (desde && desde.guardado) p = [st.x, st.y];
       else if (desde && desde.puerta && plano.anclas["puerta_" + desde.puerta]) {
         // del lado de adentro de la puerta, un poco más adentro que el portón
         const q = plano.anclas["puerta_" + desde.puerta],
@@ -629,5 +647,5 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { mini: (cv, px) => activo && plano && window.MAPA25 && MAPA25.mini(cv, px, datosMapa()), barrio: () => (window.RECORRER25 && RECORRER25.zona()) || null, abrirMapa, activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  return { mini: (cv, px) => activo && plano && window.MAPA25 && MAPA25.mini(cv, px, datosMapa()), barrio: () => (window.RECORRER25 && RECORRER25.zona()) || null, abrirMapa, activo: () => activo && J.dentro === sistemaCiudad, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
 })();
