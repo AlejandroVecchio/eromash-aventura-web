@@ -58,7 +58,7 @@ I18N.textos({
   "av.mision_EL-07": { es: "Alguien me espera", en: "Someone is waiting for me" },
   "av.objetivo_metros": { es: "{0} m", en: "{0} m" },
   "av.obj_el01_1": { es: "Hablá con Eydis en su puesto", en: "Talk to Eydis at her outpost" },
-  "av.obj_el01_2": { es: "Abrí el diario y mirá el croquis de rutas", en: "Open the journal and check the route sketch" },
+  "av.obj_el01_2": { es: "Mirá el croquis de rutas en el mapa o en el diario", en: "Check the route sketch on the map or in the journal" },
   "av.obj_el01_3": { es: "Inspeccioná el carro volcado en la senda del Refugio", en: "Inspect the overturned cart on the path to the Shelter" },
   "av.obj_el01_4": { es: "Encontrá a Orm dentro del círculo protector", en: "Find Orm inside the protective circle" },
   "av.obj_el02_1": { es: "Despejá la salida del Refugio", en: "Clear the Shelter's way out" },

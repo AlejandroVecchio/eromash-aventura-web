@@ -129,7 +129,7 @@ window.RPG = (function () {
       SONIDO.tocar("mision", { vol: 0.75, tono: 1.12, var: 0 });
       SONIDO.runa(jug.x, jug.y);
     }
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.absorber({ col: "#FFD98A", col2: "#FFE7A8", forma: "chispa" });
     if (window.VIDA) VIDA.evento("nivel", jug.x, jug.y);
     const lineas = [t("rp.sube_vida", [6]), t("rp.sube_dano", [3])];
     alSubirFns.forEach((f) => (lineas.push(...(f(st.nivel) || []))));

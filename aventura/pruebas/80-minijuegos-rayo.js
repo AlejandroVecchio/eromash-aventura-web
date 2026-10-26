@@ -9,14 +9,33 @@
       .forEach((c) => MINIJ.JUEGOS.rayo.tocar(S, idx(S, c)));
   }
   (window.PRUEBAS = window.PRUEBAS || []).push(
+    { nombre: "rayo: la luz entra en una gemela y sale derecho por la otra", fn: async (A, { igual, si }) => {
+      JUEGO.empezar(9, true);
+      MINIJ.empezar("rayo", { variante: "gemelas", semilla: 4 });
+      const S = MINIJ.estado();
+      S.celda = {};
+      const f = { tipo: "fuente", x: 0, y: 1, d: 0 },
+        a = { tipo: "gemela", x: 2, y: 1, otra: { x: 5, y: 4 }, par: 0 },
+        b = { tipo: "gemela", x: 5, y: 4, otra: { x: 2, y: 1 }, par: 0 },
+        s = { tipo: "sello", x: 7, y: 4 },
+        e = { tipo: "espejo", x: 6, y: 0, forma: "/" };
+      [f, a, b, s, e].forEach((c) => (S.celda[idx(S, c)] = c));
+      S.fuentes = [f];
+      S.sellos = [s];
+      MINIJ.JUEGOS.rayo.tocar(S, idx(S, e)); // un espejo cualquiera: vuelve a trazar la luz
+      si(s.lit, "la luz salta de (2,1) a (5,4) y llega al sello en (7,4)");
+      igual(S.rayos[0].tramo.filter((p) => p[3]).length, 1, "un salto en el trazo:");
+      MINIJ.cerrar();
+    } },
     { nombre: "rayo: cada variante arranca sin resolver y se resuelve dando vuelta los espejos del camino", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
-      for (const v of ["base", "ataduras", "dos", "luna", "reloj"]) {
+      for (const v of ["base", "ataduras", "dos", "luna", "reloj", "gemelas", "laberinto", "tres", "abismo"]) {
         for (const semilla of [1, 2, 3]) {
           let res = null;
           si(MINIJ.empezar("rayo", { variante: v, semilla, fin: (r) => (res = r) }), "empieza " + v);
           const S = MINIJ.estado();
-          igual(S.sellos.length, v === "dos" ? 2 : 1, v + " sellos:");
+          igual(S.sellos.length, { dos: 2, abismo: 2, tres: 3 }[v] || 1, v + " sellos:");
+          if (S.v.portales) igual(Object.values(S.celda).filter((c) => c.tipo === "gemela").length, S.v.portales * 2 * S.sellos.length, v + " gemelas:");
           si(!S.sellos.every((s) => s.lit), v + " no arranca resuelto");
           if (v === "luna") si(S.fuentes[0].y === 0 && S.fuentes[0].d === 3, "la luna baja de arriba");
           if (v === "ataduras") si(Object.values(S.celda).some((c) => c.tipo === "atadura") && Object.values(S.celda).some((c) => c.fijo), "ataduras y un espejo atado");

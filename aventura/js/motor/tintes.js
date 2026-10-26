@@ -72,7 +72,7 @@ window.TINTES = (function () {
     poner(id);
     HUD.aviso(t("ti.tenido", [t("ti.c_" + id)]), L.agua === "#2A2828" ? "#E0B2B2" : L.agua);
     if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 0.9 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("sacudirse", 0, { col: L.agua === "#2A2828" ? "#E0B2B2" : L.agua });
     return true;
   }
 

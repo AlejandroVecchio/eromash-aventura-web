@@ -356,6 +356,7 @@ window.HONGO = (function () {
     const falta = (((7 - h + 24) % 24) / 24) * LUZ.DIA;
     H.E.tiempo += falta;
     HUD.aviso(t("in.dormiste_noche"), "#E0B2B2");
+    if (window.ANIMA) J.retrasar(1.3, () => ANIMA.gesto("desperezarse")); // se despierta estirándose
     H.guardar();
   }
   function calentarse() {

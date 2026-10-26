@@ -3,7 +3,9 @@
 // encender. Tocar un espejo lo da vuelta (de / a \); la luz rebota en cada espejo y se corta en las piedras ciegas y en
 // las ataduras violeta. Con el teclado, las flechas mueven la marca y usar da vuelta el espejo. Variantes: base,
 // ataduras (casillas violeta que se tragan la luz y espejos atados que no giran), dos sellos (dos fuentes y dos sellos),
-// la luna (la luz pálida baja de arriba, para los ritos de la luna) y contra el tiempo. Siempre tiene solución: se arma
+// la luna (la luz pálida baja de arriba, para los ritos de la luna) y contra el tiempo; y más difíciles: las gemelas
+// (piedras con Ehwaz: la luz entra en una y sale derecho por la otra), el laberinto, tres luces y el abismo, que junta
+// todo contra el tiempo. Siempre tiene solución: se arma
 // el camino de la luz primero y se ponen los espejos en sus vueltas; los demás son señuelos. Lo usan el rito de la luna
 // (ritos.js) y el sello del Santuario de las Raíces en la misión EL-07 (juego.js).
 (function () {
@@ -14,6 +16,7 @@
   const DIR = [[1, 0], [0, -1], [-1, 0], [0, 1]]; // este, norte, oeste, sur (y para abajo en pantalla)
   // la vuelta de cada espejo: "/" este↔norte, oeste↔sur; "\" este↔sur, oeste↔norte
   const REBOTA = { "/": [1, 0, 3, 2], "\\": [3, 2, 1, 0] };
+  const PARES = ["#FFD98A", "#FF8D71", "#7BC86C", "#E0B2B2"]; // el color de cada par de gemelas (y tantos rombitos como su número)
 
   const tam = (S) => Math.min(100, Math.floor(Math.min(1000 / S.v.c, 640 / S.v.r)));
   const x0 = (S) => CX - (S.v.c * tam(S)) / 2;
@@ -30,7 +33,9 @@
       else (x = 0), (y = Math.floor(S.rnd() * S.v.r)), (d = 0);
       const fuente = { x, y, d },
         celdas = [[x, y]],
-        espejos = [];
+        espejos = [],
+        gemelas = [];
+      let quedan = S.v.portales || 0;
       const ocupa = new Set(usadas);
       ocupa.add(idx(S, x, y));
       let ok = true;
@@ -48,6 +53,22 @@
         }
         if (!ok) break;
         if (v === S.v.giros) break; // la última casilla es el sello
+        // en vez de un espejo, un par de gemelas: la luz salta a otra casilla libre y sigue derecho
+        if (quedan > 0 && S.rnd() < 0.5) {
+          const libres = [];
+          for (let yy = 0; yy < S.v.r; yy++)
+            for (let xx = 0; xx < S.v.c; xx++) if (!ocupa.has(idx(S, xx, yy)) && Math.abs(xx - x) + Math.abs(yy - y) > 2) libres.push([xx, yy]);
+          if (libres.length) {
+            const [bx, by] = libres[Math.floor(S.rnd() * libres.length)];
+            gemelas.push({ a: { x, y }, b: { x: bx, y: by } });
+            ocupa.add(idx(S, bx, by));
+            celdas.push([bx, by]);
+            x = bx;
+            y = by;
+            quedan--;
+            continue;
+          }
+        }
         // una vuelta: el espejo que lleva de d a la nueva dirección
         const nd = (d + (S.rnd() < 0.5 ? 1 : 3)) % 4,
           forma = REBOTA["/"][d] === nd ? "/" : "\\";
@@ -56,8 +77,8 @@
       }
       if (!ok || celdas.length < 4) continue;
       const [sx, sy] = celdas[celdas.length - 1];
-      if (espejos.some((e) => e.x === sx && e.y === sy)) continue;
-      return { fuente, sello: { x: sx, y: sy }, espejos, celdas };
+      if (espejos.some((e) => e.x === sx && e.y === sy) || quedan > 0) continue;
+      return { fuente, sello: { x: sx, y: sy }, espejos, gemelas, celdas };
     }
     return null;
   }
@@ -73,6 +94,7 @@
       if (k > 0 && c) {
         if (c.tipo === "espejo") d = REBOTA[c.forma][d];
         else if (c.tipo === "sello") return { tramo, sello: c };
+        else if (c.tipo === "gemela") (x = c.otra.x), (y = c.otra.y), tramo.push([x, y, d, 1]);
         else if (c.tipo === "ciega" || c.tipo === "atadura" || c.tipo === "fuente") return { tramo, corte: c };
       }
       const clave = x + "," + y + "," + d;
@@ -93,11 +115,16 @@
 
   MINIJ.registrar("rayo", {
     variantes: {
+      // de la más fácil a la más difícil
       base: { c: 7, r: 5, giros: 3, senuelos: 2 },
       ataduras: { c: 7, r: 5, giros: 4, senuelos: 3, ataduras: 4, fijos: 1 },
       dos: { c: 8, r: 6, giros: 3, senuelos: 2, dos: true },
       luna: { c: 7, r: 5, giros: 4, senuelos: 3, luna: true },
       reloj: { c: 8, r: 6, giros: 5, senuelos: 4, ataduras: 3, tiempo: 90 },
+      gemelas: { c: 8, r: 6, giros: 5, senuelos: 4, portales: 1, ataduras: 2 },
+      laberinto: { c: 10, r: 7, giros: 7, senuelos: 8, ataduras: 5, fijos: 2 },
+      tres: { c: 10, r: 7, giros: 4, senuelos: 6, ataduras: 3, n: 3, portales: 1 },
+      abismo: { c: 11, r: 8, giros: 7, senuelos: 10, ataduras: 6, fijos: 1, portales: 2, n: 2, tiempo: 150 },
     },
     pie: "mn.rayo_pie",
     armar(S) {
@@ -105,9 +132,10 @@
         S.celda = {};
         S.fuentes = [];
         S.sellos = [];
+        S.pares = 0;
         const usadas = new Set(),
           caminos = [];
-        const n = S.v.dos ? 2 : 1;
+        const n = S.v.n || (S.v.dos ? 2 : 1);
         let ok = true;
         for (let k = 0; k < n && ok; k++) {
           const cm = camino(S, usadas, S.v.luna);
@@ -125,6 +153,11 @@
           const s = { tipo: "sello", x: cm.sello.x, y: cm.sello.y, n: k };
           S.celda[idx(S, s.x, s.y)] = s;
           S.sellos.push(s);
+          cm.gemelas.forEach((g) => {
+            const par = S.pares++;
+            S.celda[idx(S, g.a.x, g.a.y)] = { tipo: "gemela", x: g.a.x, y: g.a.y, otra: g.b, par };
+            S.celda[idx(S, g.b.x, g.b.y)] = { tipo: "gemela", x: g.b.x, y: g.b.y, otra: g.a, par };
+          });
           cm.espejos.forEach((e, j) => (S.celda[idx(S, e.x, e.y)] = { tipo: "espejo", x: e.x, y: e.y, forma: e.forma, bien: e.forma, fijo: j < (S.v.fijos || 0) }));
         });
         // señuelos, piedras ciegas y ataduras en lo que la luz no usa
@@ -193,8 +226,9 @@
       for (let y = 0; y < S.v.r; y++)
         for (let x = 0; x < S.v.c; x++) D.P([X + x * q + 2, Y + y * q + 2, X + (x + 1) * q - 2, Y + y * q + 2, X + (x + 1) * q - 2, Y + (y + 1) * q - 2, X + x * q + 2, Y + (y + 1) * q - 2], (x + y) % 2 ? "#1E1816" : "#221A18");
       // la luz (debajo de las piedras): un trazo ancho tenue y uno fino brillante
+      // (en una gemela el trazo se corta y sigue desde la otra)
       (S.rayos || []).forEach((r) => {
-        const pts = r.tramo.map(([x, y]) => centro(x, y));
+        const pts = r.tramo.map(([x, y, , salto]) => centro(x, y).concat(salto ? [1] : []));
         if (r.sello) pts.push(centro(r.sello.x, r.sello.y));
         else if (r.corte) pts.push(centro(r.corte.x, r.corte.y));
         else if (r.fuera) pts.push(centro(r.fuera[0], r.fuera[1]));
@@ -205,7 +239,7 @@
             c.lineCap = "round";
             c.lineJoin = "round";
             c.beginPath();
-            pts.forEach(([px, py], k) => (k ? c.lineTo(px, py) : c.moveTo(px, py)));
+            pts.forEach(([px, py, salto], k) => (k && !salto ? c.lineTo(px, py) : c.moveTo(px, py)));
             c.stroke();
           }),
         );
@@ -223,6 +257,12 @@
           D.rombo(px, py, m * 0.75, p.lit ? "#F2ECEC" : "#5E130D");
           D.runa("othala", px, py, q * 0.18, p.lit ? "#2E8A90" : "#9C2315", 0.24);
           if (p.lit) D.halo(px, py, q * 0.7, col, 0.45);
+        } else if (p.tipo === "gemela") {
+          // las gemelas: piedra con Ehwaz y un rombo del color de su par
+          const pc = PARES[p.par % PARES.length];
+          D.piedra(px - m, py - m, m * 2, m * 2, "#6E6A66", "#3A3634");
+          FUTHARK.dibujar(c, "ehwaz", px, py + q * 0.15, q * 0.3, pc, 3);
+          for (let k = 0; k <= p.par; k++) D.rombo(px + m * 0.8 - k * 13, py - m * 0.8, 6, pc);
         } else if (p.tipo === "ciega") D.piedra(px - m, py - m, m * 2, m * 2, "#4A4442", "#2A2220");
         else if (p.tipo === "atadura") {
           DIB.alfa(c, 0.5, () => D.rombo(px, py, m, "#9A6BD8"));

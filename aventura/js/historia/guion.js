@@ -8,6 +8,9 @@ window.HISTORIA = (function () {
   // Las siete misiones en 23 etapas (EL-0X-N, documento «Eldervald — misiones secundarias y etapas», 23/10/2026):
   // cada objetivo dice a qué etapa pertenece; cuenta: [qué se cuenta, cuántos hacen falta] (lo lleva etapas.js).
   // Los tres encargos de preparación: Lif (EL-02-2), Svanhild y Ása (EL-03-2) y Orm (EL-06-2).
+  // par: los objetivos seguidos con el mismo par se hacen en cualquier orden (están todos abiertos a la vez); suelto:
+  // queda abierto desde que empieza la misión, sin esperar a los de antes (los lobos de la cabecera, mientras se arma
+  // el paso). H.abiertos() los da todos; H.objetivo() sigue dando el primero.
   const MISIONES = [
     { id: "EL-01", objetivos: [
       { etapa: 1, texto: "obj_el01_1", hecho: "el01_acepto", donde: "eydis" },
@@ -17,8 +20,8 @@ window.HISTORIA = (function () {
     ] },
     { id: "EL-02", objetivos: [
       { etapa: 1, texto: "obj_el02_1", hecho: "errantes_despejados", donde: "errantes" },
-      { etapa: 2, texto: "obj_el02_musgo", hecho: "musgo_juntado", donde: "musgo", cuenta: ["musgo", 4] },
-      { etapa: 2, texto: "obj_el02_cuero", hecho: "cuero_juntado", donde: "lobos_refugio", cuenta: ["cuero", 2] },
+      { etapa: 2, texto: "obj_el02_musgo", hecho: "musgo_juntado", donde: "musgo", cuenta: ["musgo", 4], par: "lif" },
+      { etapa: 2, texto: "obj_el02_cuero", hecho: "cuero_juntado", donde: "lobos_refugio", cuenta: ["cuero", 2], par: "lif" },
       { etapa: 2, texto: "obj_el02_lif", hecho: "bror_entablillado", donde: "trab_refugio_trabajador" },
       { etapa: 3, texto: "obj_el02_2", hecho: "piedra_puesta", donde: "piedra_caida" },
       { etapa: 3, texto: "obj_el02_3", hecho: "runa_refugio", donde: "runa_refugio" },
@@ -26,8 +29,8 @@ window.HISTORIA = (function () {
     ] },
     { id: "EL-03", objetivos: [
       { etapa: 1, texto: "obj_el03_1", hecho: "fragmento_entregado", donde: "svanhild" },
-      { etapa: 2, texto: "obj_el03_residuos", hecho: "residuos_juntados", donde: "errantes_norte", cuenta: ["residuo", 3] },
-      { etapa: 2, texto: "obj_el03_aro", hecho: "aro_ajustado", donde: "herreria_puerta" },
+      { etapa: 2, texto: "obj_el03_residuos", hecho: "residuos_juntados", donde: "errantes_norte", cuenta: ["residuo", 3], par: "aro" },
+      { etapa: 2, texto: "obj_el03_aro", hecho: "aro_ajustado", donde: "herreria_puerta", par: "aro" },
       { etapa: 3, texto: "obj_el03_2", hecho: "fragmento_examinado", donde: "mesa" },
       { etapa: 3, texto: "obj_el03_3", hecho: "huella_patio", donde: "losa" },
       { etapa: 3, texto: "obj_el03_4", hecho: "lente", donde: "svanhild" },
@@ -52,7 +55,7 @@ window.HISTORIA = (function () {
       { etapa: 1, texto: "obj_el06_1", hecho: "vuelta_paso", donde: "pedestal" },
       { etapa: 1, texto: "obj_el06_2", hecho: "nucleo_puesto", donde: "pedestal" },
       { etapa: 1, texto: "obj_el06_3", hecho: "runa_paso", donde: "pedestal" },
-      { etapa: 2, texto: "obj_el06_lobos", hecho: "lobos_cabecera", donde: "cabecera", cuenta: ["lobo", 5] },
+      { etapa: 2, texto: "obj_el06_lobos", hecho: "lobos_cabecera", donde: "cabecera", cuenta: ["lobo", 5], suelto: true },
       { etapa: 3, texto: "obj_el06_4", hecho: "puente_reparado", donde: "orm" },
     ] },
     { id: "EL-07", objetivos: [
@@ -120,18 +123,44 @@ window.HISTORIA = (function () {
   const idMision = () => (MISIONES[E.mision] ? MISIONES[E.mision].id : "fin");
   const tiene = (b) => E.banderas[b] === true;
   const en = (id) => idMision() === id;
-  function objetivo() {
+  // los objetivos del tramo de ahora: el primero sin hacer y los de su mismo par que lo siguen
+  function activos() {
     const m = mision();
-    if (!m) return null;
-    return m.objetivos.find((o) => !tiene(o.hecho)) || null;
+    if (!m) return [];
+    const i = m.objetivos.findIndex((o) => !tiene(o.hecho));
+    if (i < 0) return [];
+    const o0 = m.objetivos[i],
+      r = [o0];
+    if (!o0.par) return r;
+    for (let k = i + 1; k < m.objetivos.length; k++) {
+      const o = m.objetivos[k];
+      if (o.par !== o0.par) break;
+      if (!tiene(o.hecho)) r.push(o);
+    }
+    return r;
+  }
+  // los sueltos: abiertos desde que empieza la misión aunque haya otros antes (sin ser del mismo tramo)
+  function sueltos() {
+    const m = mision();
+    return m ? m.objetivos.filter((o) => o.suelto && !tiene(o.hecho)) : [];
+  }
+  function abiertos() {
+    const r = activos();
+    for (const o of sueltos()) if (!r.includes(o)) r.push(o);
+    return r;
+  }
+  const activo = (hecho) => abiertos().some((o) => o.hecho === hecho);
+  function objetivo() {
+    const r = activos();
+    return r[0] || sueltos()[0] || null;
   }
   // lo que se va juntando para un encargo (musgo, cuero, residuos, lobos alejados)
   const cuenta = (k) => (E.extra.cuentas && E.extra.cuentas[k]) || 0;
   function sumar(k, n = 1) {
     E.extra.cuentas = E.extra.cuentas || {};
     E.extra.cuentas[k] = cuenta(k) + n;
-    const o = objetivo();
-    if (o && o.cuenta && o.cuenta[0] === k && cuenta(k) >= o.cuenta[1]) marcar(o.hecho);
+    const o = abiertos().find((x) => x.cuenta && x.cuenta[0] === k);
+    if (o && cuenta(k) >= o.cuenta[1]) marcar(o.hecho);
     else {
       avisar("cambio");
       guardar();
@@ -190,13 +219,13 @@ window.HISTORIA = (function () {
         if (m === "EL-01") return "orm_encuentro";
         if (m === "EL-02") {
           if (h === "errantes_despejados") return "orm_errantes";
-          if (h === "musgo_juntado" || h === "cuero_juntado" || h === "bror_entablillado") return "orm_lif";
+          if (activo("musgo_juntado") || activo("cuero_juntado") || h === "bror_entablillado") return "orm_lif";
           if (h === "piedra_puesta" || h === "runa_refugio") return "orm_piedra";
           return "orm_fragmento";
         }
         if (m === "EL-03") return "orm_eikholt";
         if (m === "EL-04" || m === "EL-05") return "orm_paso";
-        if (m === "EL-06") return h === "puente_reparado" ? "orm_puente" : h === "lobos_cabecera" ? "orm_lobos" : "orm_paso";
+        if (m === "EL-06") return h === "puente_reparado" ? "orm_puente" : activo("lobos_cabecera") ? "orm_lobos" : "orm_paso";
         return m === "fin" ? "orm_quilla" : "orm_despues";
       case "svanhild":
         if (m === "EL-03") {
@@ -308,7 +337,7 @@ window.HISTORIA = (function () {
 
   return {
     MISIONES, DIALOGOS, REAPARECER, E,
-    mision, idMision, objetivo, tiene, en, completa, cuenta, sumar, etapa, marcar, anotar, descubrir, dialogoDe, lugarDe,
+    mision, idMision, objetivo, abiertos, activo, tiene, en, completa, cuenta, sumar, etapa, marcar, anotar, descubrir, dialogoDe, lugarDe,
     guardar, cargar, nueva, resumen, reciente,
     oir: (f) => oyentes.push(f),
     avisar,
