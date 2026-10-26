@@ -294,6 +294,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - al generar: las legendarias traen su poder · qué poderes valen ahora · el golpe de un poder (pasa por los modDano y avisa con alPegar, marcado para no encadenarse) · la pestaña Poderes · el sistema
 - **libros.js**: los libros de Eldervald (sistema LIBROS, modo "libro")
   - dónde: atriles a un costado de los caminos · leer · la ventana del lector · lo que llevan los líderes · el sistema
+- **loki.js**: las piedras de Loki (sistema LOKI): pistas para los minijuegos
+  - el dibujo: la piedra (ícono, botón) · la Bolsa
 - **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
@@ -497,6 +499,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **libros.js**: Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
+- **loki.js**: Textos de las piedras de Loki (motor/loki.js): el botón de pista de los minijuegos, la Bolsa y los avisos. Prefijo lk.
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **minijuegos.js**: Textos del motor de los minijuegos (motor/minijuegos.js) y de la cerradura de anillos (motor/mj-anillos.js): prefijo mn.
