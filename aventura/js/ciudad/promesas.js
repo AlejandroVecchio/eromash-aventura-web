@@ -39,6 +39,7 @@ window.PROMESAS25 = (function () {
     if (pj.plata < PRECIO) return HUD.aviso(t("ek.pr_sin_plata"), "#C8402D");
     pj.plata -= PRECIO;
     st.promesa = { deseo, hasta: hastaManana(A.H.E.tiempo) };
+    st.promesas = (st.promesas || 0) + 1;
     if (window.RPG) RPG.recalcular();
     if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.35 });
     if (window.ANIMA) ANIMA.gesto("asiente");

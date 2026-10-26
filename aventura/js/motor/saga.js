@@ -34,6 +34,12 @@ window.SAGA = (function () {
     ["libros", "mundo", "ansuz", "#F2ECEC", "LIBROS", () => [cuenta(LIBROS.estado().leidos), LIBROS.IDS.length]],
     ["santuarios", "mundo", "algiz", "#C8402D", "SANTUARIOS", () => [cuenta(SANTUARIOS.estado().vistos), largo(SANTUARIOS.LISTA)]],
     ["elementos", "mundo", "thurisaz", "#B8A8F0", "ELEMENTOS", () => [(ELEMENTOS.estado().roble ? 1 : 0) + (ELEMENTOS.estado().fuente ? 1 : 0) + Math.min(6, cuenta(ELEMENTOS.estado().vistas)), 8]],
+    // la vida de Eikholt: recados del tablón, casas visitadas, las escondidas, la voz en el Ting, una cinta de promesa y
+    // una apuesta en el hnefatafl (todo en E.extra.eikholt)
+    ["eikholt", "mundo", "othala", "#FFD98A", "EIKHOLT", () => {
+      const s = EIKHOLT.estado() || {};
+      return [Math.min(9, (s.recados || {}).hechos || 0) + Math.min(5, (s.casasVistas || []).length) + ((s.escondidas || {}).ganadas ? 1 : 0) + ((s.ting || {}).ultimo ? 1 : 0) + (s.promesas ? 1 : 0) + (s.tafl ? 1 : 0), 18];
+    }],
     ["casa", "mundo", "othala", "#9C2315", "CASA", () => [(CASA.estado().tuya ? 1 : 0) + cuenta(CASA.estado().hechas), 1 + largo(CASA.MEJORAS)]],
   ];
   const HITOS = [25, 50, 75, 100];
