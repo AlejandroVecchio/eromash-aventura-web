@@ -302,6 +302,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
+- **mazmorras.js**: el estilo de cada mazmorra: piso, paredes, lo que hay en las salas y lo que pasa adentro (MAZMORRAS)
+  - la forma: salas que pierden esquinas y se abren en bultos · lo que hay en cada sala y lo que pasa · lo que pasa mientras Eromash está adentro · dibujar: piso y paredes · el aire: goteo, polvo, murciélagos, escarcha, esporas y brasas
 - **minijuegos.js**: el motor de los minijuegos (MINIJ, modo "minij")
   - registrar, empezar, terminar · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo
 - **mj-anillos.js**: minijuego: la cerradura de anillos (MINIJ «anillos»)
@@ -403,6 +405,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-materiales.js**: las vetas del bosque: de donde sale el material de la forja (assets de MATERIALES)
   - la veta de hierro de pantano · el nódulo de ámbar · la vena rúnica
   - assets: vetaHierro, vetaAmbar, vetaRunica
+- **assets-mazmorras.js**: lo de adentro de las mazmorras según su estilo: piedras, estalagmitas, estalactitas, cristales y más
+  - El montón de piedras · La estalagmita · La estalactita · El cristal de la cueva · Los hongos de luz · El entibado de la mina · La vagoneta · La columna de hielo · Las raíces nudosas · La fuente rúnica
+  - assets: montonPiedras, estalagmita, estalactita, cristalCueva, hongosLuz, entibado, vagoneta, columnaHielo, raicesNudosas, fuenteRunica
 - **assets-norte.js**: el corredor del norte: Paso del Guardián y Antigua tala (se suma a ASSETS)
   - assets: pilarAntiguo, lonaCuadrilla, tornoVigas, tablaPuente, pilaTablones, andamio, posteCruzaron, casetaPuentero, toconMarcado, muroRaices, granTocon, cabanaLenadores
 - **assets-pesca.js**: la pesca (assets de PESCA)

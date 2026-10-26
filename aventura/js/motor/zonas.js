@@ -24,8 +24,10 @@ window.ZONAS = (function () {
   const MIEMBROS = { draugr: ["draugr", "draugr", "errante"], muertos: ["errante", "errante", "fatuo"], fatuos: ["fatuo", "fatuo", "errante"], lobos: ["lobo", "lobo", "lobo"], cuervos: ["cuervo", "cuervo", "cuervo", "cuervo"], trol: ["jabali", "draugr"], jabalies: ["jabali", "jabali", "jabali"] };
   const LIDER = { draugr: "draugr", muertos: "draugr", fatuos: "fatuo", lobos: "lobo", cuervos: "cuervo", trol: "trol", jabalies: "jabali" };
   const COSAS = ["volcan", "cueva", "campamento", "ruinas", "bosque", "cofre"];
+  // el estilo de cada mazmorra (piso, paredes, lo que hay y lo que pasa: motor/mazmorras.js)
+  const ESTILOS = ["cripta", "cueva", "mina", "hielo", "raices", "brasas"];
   const r3 = (v) => Math.round(v * 1000) / 1000;
-  // op = { salas, jefe ("dreki" | "campeon" | null), familia, oscuras (0..1), nombre }
+  // op = { salas, jefe ("dreki" | "campeon" | null), familia, oscuras (0..1), nombre, estilo }
   function generarMazmorra(op, sem) {
     op = op || {};
     const r = DIB.azar(Math.round((sem || 0) * 100000) + 9001);
@@ -77,7 +79,7 @@ window.ZONAS = (function () {
     }
     const otras = salas.map((s, i) => i).filter((i) => salas[i].tipo !== "jefe");
     if (otras.length > 3) unir(otras[1 + Math.floor(r() * (otras.length - 1))], otras[Math.floor(r() * otras.length)]);
-    return { tipo: "mazmorra", nombre: op.nombre || t("zn.nombre_mazmorra"), sem: r3(sem || 0), ancho: GW, alto: GH, salas, pasillos, familia: FAMILIAS.includes(op.familia) ? op.familia : FAMILIAS[Math.floor(r() * 3)], jefe, pal: Math.floor(r() * 3) };
+    return { tipo: "mazmorra", nombre: op.nombre || t("zn.nombre_mazmorra"), sem: r3(sem || 0), ancho: GW, alto: GH, salas, pasillos, familia: FAMILIAS.includes(op.familia) ? op.familia : FAMILIAS[Math.floor(r() * 3)], jefe, pal: Math.floor(r() * 3), estilo: ESTILOS.includes(op.estilo) ? op.estilo : ESTILOS[Math.floor(r() * ESTILOS.length)] };
   }
   // una mancha de tierra: polígono de n puntos con borde quebrado
   function mancha(r, cx, cy, rx, ry, n) {
@@ -165,17 +167,26 @@ window.ZONAS = (function () {
     ["muertos", /muerto|esqueleto|zombi|undead|skeleton/],
     ["draugr", /draugr/],
   ];
+  const EST_DE = [
+    ["hielo", /hielo|helad|escarcha|nieve|congel|ice|frozen|frost|snow/],
+    ["brasas", /lava|fuego|volc|brasa|magma|ardiente|fire|ember|molten/],
+    ["mina", /\bmina|minero|vagoneta|\bmine\b|miner/],
+    ["raices", /ra[ií]z|ra[ií]ces|hongo|seta|musgo|root|mushroom|fung/],
+    ["cueva", /cueva|caverna|gruta|estalact|estalagm|cave|cavern|grotto|stalact|stalagm/],
+    ["cripta", /cripta|tumba|catacumba|t[uú]mulo|crypt|tomb|barrow/],
+  ];
+  const estDe = (s) => (EST_DE.find(([, re]) => re.test(s)) || [])[0];
   function leerPedido(txt) {
     const s0 = " " + String(txt || "").toLowerCase() + " ";
     const hayTierra = /isla|island|tierra|continente|land|zona|costa|mar\b|sea/.test(s0);
-    const hayMaz = /mazmorra|cripta|calabozo|dungeon|crypt|catacumba/.test(s0);
+    const hayMaz = /mazmorra|cripta|calabozo|dungeon|crypt|catacumba|\bmina\b|\bmine\b|caverna|gruta|madriguera|estalact|grotto|cavern/.test(s0);
     const jefeDe = (s) => (/drag[oó]n|dragon|dreki|wyrm|sierpe/.test(s) ? "dreki" : /jefe|boss|campe[oó]n|se[nñ]or/.test(s) ? "campeon" : undefined);
     const famDe = (s) => (FAM_DE.find(([, re]) => re.test(s)) || [])[0];
     const m0 = s0.match(/[«"“]([^»"”]{2,60})[»"”]/);
     const nombre = m0 ? txt.match(/[«"“]([^»"”]{2,60})[»"”]/)[1] : undefined;
     if (hayMaz && !hayTierra) {
       const ms = s0.match(/(\d+|dos|tres|cuatro|cinco|seis|siete|ocho|two|three|four|five|six|seven|eight)\s+(salas|cuartos|habitaciones|rooms|c[aá]maras)/);
-      return { tipo: "mazmorra", salas: ms ? num(ms[1]) : undefined, jefe: jefeDe(s0) || null, familia: famDe(s0), oscuras: /oscur|dark|negr/.test(s0) ? 0.7 : undefined, nombre };
+      return { tipo: "mazmorra", salas: ms ? num(ms[1]) : undefined, jefe: jefeDe(s0) || null, familia: famDe(s0), oscuras: /oscur|dark|negr/.test(s0) ? 0.7 : undefined, nombre, estilo: estDe(s0) };
     }
     const mi = s0.match(/(\d+|dos|tres|cuatro|cinco|seis|siete|ocho|two|three|four|five|six|seven|eight)\s+(islas|islands|islotes)/);
     const islas = mi ? num(mi[1]) : /islas|islands|islotes/.test(s0) ? 4 : /\buna isla\b|\ban island\b/.test(s0) ? 1 : 0;
@@ -194,7 +205,7 @@ window.ZONAS = (function () {
       if (maz) {
         let cueva = [...rasgos].reverse().find((r) => r.cosa === "cueva");
         if (!cueva) rasgos.push((cueva = { cosa: "cueva", donde: donde || (islas ? "isla" : "tierra") }));
-        cueva.mazmorra = { jefe: jefeDe(fr) || jefeDe(s0) || "campeon", familia: famDe(fr) || (jefeDe(fr) === "dreki" ? "fatuos" : undefined), oscuras: /oscur|dark/.test(fr) ? 0.7 : undefined };
+        cueva.mazmorra = { jefe: jefeDe(fr) || jefeDe(s0) || "campeon", familia: famDe(fr) || (jefeDe(fr) === "dreki" ? "fatuos" : undefined), oscuras: /oscur|dark/.test(fr) ? 0.7 : undefined, estilo: estDe(fr) || "cueva" };
       }
     });
     return { tipo: "tierra", islas, grande, rasgos, nombre };
@@ -232,9 +243,12 @@ window.ZONAS = (function () {
       d.base = true;
       z[id] = d;
     };
-    pon("cripta", lugar("tumulo", 520, -260), { familia: "draugr", jefe: "campeon", salas: 8 }, 0.211);
-    pon("mina", lugar("skarnholt", -640, 380), { familia: "trol", jefe: "campeon", salas: 9, oscuras: 0.6 }, 0.533);
-    pon("hondonada", lugar("torre", 600, 520), { familia: "fatuos", jefe: "dreki", salas: 10, oscuras: 0.5 }, 0.871);
+    pon("cripta", lugar("tumulo", 520, -260), { familia: "draugr", jefe: "campeon", salas: 8, estilo: "cripta" }, 0.211);
+    pon("mina", lugar("skarnholt", -640, 380), { familia: "trol", jefe: "campeon", salas: 9, oscuras: 0.6, estilo: "mina" }, 0.533);
+    pon("hondonada", lugar("torre", 600, 520), { familia: "fatuos", jefe: "dreki", salas: 10, oscuras: 0.5, estilo: "brasas" }, 0.871);
+    pon("gruta", lugar("brunvik", 560, -420), { familia: "muertos", jefe: "campeon", salas: 9, oscuras: 0.45, estilo: "cueva" }, 0.347);
+    pon("pozo", lugar("paso_norte", -620, -360), { familia: "draugr", jefe: "campeon", salas: 8, oscuras: 0.3, estilo: "hielo" }, 0.619);
+    pon("madriguera", lugar("santuario", 640, 420), { familia: "jabalies", jefe: "campeon", salas: 9, oscuras: 0.55, estilo: "raices" }, 0.742);
     return z;
   }
 
@@ -281,6 +295,9 @@ window.ZONAS = (function () {
     });
     Z.g = g;
     Z.sala = sala;
+    const MZ = window.MAZMORRAS,
+      estilo = MZ ? MZ.estiloDe(d) : "cripta";
+    if (MZ) MZ.deformar(Z, r);
     const X = (cx) => Z.x0 + cx * C,
       Y = (cy) => Z.y0 + cy * C;
     const libreCelda = (x, y) => g[y * d.ancho + x] > 0;
@@ -293,16 +310,17 @@ window.ZONAS = (function () {
       }
       // las antorchas de la pared de arriba (las salas oscuras no tienen: braseros apagados)
       s.antorchas = [];
-      if (s.tipo !== "oscura" && s.tipo !== "jefe") for (let x = s.x + 1; x < s.x + s.w - 1; x += 3) if (!libreCelda(x, s.y - 1)) s.antorchas.push(x);
+      if (s.tipo !== "oscura" && s.tipo !== "jefe" && (estilo === "cripta" || estilo === "mina" || s.tipo === "entrada")) for (let x = s.x + 1; x < s.x + s.w - 1; x += 3) if (!libreCelda(x, s.y - 1)) s.antorchas.push(x);
       const fuego = (fx, fy, k2) => Z.fuegos.push({ x: fx, y: fy, k: Z.id + "_f" + k2, sala: si });
       if (s.tipo === "oscura") {
         fuego(X(s.x) + 160, Y(s.y) + 200, si + "a");
         fuego(X(s.x + s.w) - 160, Y(s.y + s.h) - 120, si + "b");
       }
       if (s.tipo === "jefe") [[X(s.x) + 200, Y(s.y) + 240], [X(s.x + s.w) - 200, Y(s.y) + 240], [X(s.x) + 200, Y(s.y + s.h) - 140], [X(s.x + s.w) - 200, Y(s.y + s.h) - 140]].forEach(([fx, fy], i) => fuego(fx, fy, si + "j" + i));
-      // los pilares de las salas grandes
+      // los pilares de las salas grandes (en cada estilo, lo suyo: pilar, estalagmita, columna de hielo, raíces)
+      const PILAR = { cripta: "pilarCripta", mina: "pilarCripta", cueva: "estalagmita", hielo: "columnaHielo", raices: "raicesNudosas", brasas: "estalagmita" }[estilo];
       if (s.w >= 6 && s.h >= 5 && s.tipo !== "entrada")
-        [[0.3, 0.38], [0.7, 0.38], [0.3, 0.75], [0.7, 0.75]].forEach(([u, v], i) => (s.tipo === "jefe" || i < 2) && Z.obst.push({ id: "pilarCripta", x: X(s.x + s.w * u), y: Y(s.y + s.h * v), r: 60, runa: ["eihwaz", "hagalaz", "naudiz", "isa"][i] }));
+        [[0.3, 0.38], [0.7, 0.38], [0.3, 0.75], [0.7, 0.75]].forEach(([u, v], i) => (s.tipo === "jefe" || i < 2) && Z.obst.push({ id: PILAR, x: X(s.x + s.w * u), y: Y(s.y + s.h * v), r: 60, runa: ["eihwaz", "hagalaz", "naudiz", "isa"][i], o: { estilo, sem: si * 4 + i, alto: 300 } }));
       if (s.tipo === "tesoro") Z.cofres.push({ x: cx, y: cy, k: Z.id + "_c" + si, rico: true, cerrojo: si % 2 ? "losas:atadas" : "ligados" });
       // la gente de cada sala: un grupo con su líder (más grande en las salas grandes)
       if (s.tipo === "sala" || s.tipo === "oscura" || s.tipo === "tesoro") {
@@ -320,6 +338,8 @@ window.ZONAS = (function () {
       }
       if (s.tipo === "jefe" && d.jefe) armarJefe(Z, s, cx, cy);
     });
+    // lo de cada estilo: piedras, cristales, lava, derrumbes, paredes agrietadas, la fuente
+    if (MZ) MZ.decorar(Z);
   }
   function armarJefe(Z, s, cx, cy) {
     const d = Z.d,
@@ -538,6 +558,10 @@ window.ZONAS = (function () {
           col = PISO[tipo] || ["#24201E", "#201C1A"],
           X = Z.x0 + cx * C,
           Y = Z.y0 + cy * C;
+        if (window.MAZMORRAS && Z.estilo) {
+          MAZMORRAS.piso(c, Z, cx, cy, X, Y, tipo, v);
+          continue;
+        }
         DIB.R(c, X, Y, C + 1, C + 1, col[0]);
         // cuatro lajas por celda, cada una con su tono y una juntura
         for (let k = 0; k < 4; k++) {
@@ -549,6 +573,7 @@ window.ZONAS = (function () {
           if (h0 < 0.06 && tipo !== "jefe") DIB.alfa(c, 0.5, () => DIB.E(c, lx + 50, ly + 60, 26, 9, "#3E4A2E"));
         }
       }
+    if (window.MAZMORRAS && Z.estilo) MAZMORRAS.sobrePiso(c, Z, x0, y0, x1, y1);
     // el círculo rúnico de la sala del jefe
     if (Z.jefe) {
       const j = Z.jefe,
@@ -594,6 +619,12 @@ window.ZONAS = (function () {
           f: (c2) => {
             const c = c2 || c0,
               h0 = hash(cx, cy);
+            if (window.MAZMORRAS && Z.estilo) {
+              MAZMORRAS.pared(c, Z, cx, cy, X, Y, cara, g(cx, cy - 1) > 0);
+              const si = Z.sala[(cy + 1) * d.ancho + cx];
+              if (cara && si >= 0 && d.salas[si].antorchas && d.salas[si].antorchas.includes(cx)) ASSETS.dibujar(c, "antorchaPared", X + C / 2, Y + C - 30, J.t, { encendida: true, s: 1.1 });
+              return;
+            }
             DIB.R(c, X - 1, Y - H, C + 2, C + 1, h0 < 0.5 ? "#161211" : "#141010");
             // el canto de arriba de la pared que tapa la sala (se lee dónde termina)
             if (g(cx, cy - 1) > 0) DIB.R(c, X - 1, Y - H, C + 2, 7, "#2A2420");
@@ -681,6 +712,7 @@ window.ZONAS = (function () {
       const m = ASSETS.medidas(q.id, o);
       q._cosa = { id: q.id, x: q.x, y: q.y, o, alto: m.alto, choque: { r: q.r || 30 } };
     }
+    q._cosa.o = o;
     return { x: q.x, y: q.y, cosa: q._cosa };
   }
   function objetosTierra(lista, c, Z, visible) {
@@ -696,6 +728,7 @@ window.ZONAS = (function () {
       jug = A.jug;
       W = A.W;
       CB = A.CB;
+      if (window.MAZMORRAS) MAZMORRAS.iniciar(api);
       const todas = Object.assign(base(), (window.AGREGADOS && AGREGADOS.zonas) || {});
       let k = 0;
       Object.keys(todas).forEach((id) => {
@@ -709,6 +742,8 @@ window.ZONAS = (function () {
     alEmpezar(extra) {
       extra.zonas = Object.assign({ cofres: {}, jefes: {}, fuegos: {} }, extra.zonas || {});
       st = extra.zonas;
+      // las paredes rotas y las fuentes usadas (antes de reiniciar: los cofres de los huecos se suman acá)
+      if (window.MAZMORRAS) MAZMORRAS.alEmpezar(armadas, st);
       armadas.forEach((Z) => {
         Z.enemigos.forEach((e) => {
           CB.reiniciar(e);
@@ -722,12 +757,14 @@ window.ZONAS = (function () {
       const qz = (location.search.match(/[?&]zona=([\w-]+)/) || [])[1];
       if (qz && zonaDe(qz) && !sistema.probada) (sistema.probada = true), setTimeout(() => entrar(zonaDe(qz)), 400);
     },
-    actualizar() {
+    actualizar(dt) {
       aqui = dentroDe(jug.x, jug.y);
       if (!aqui) return;
       if (aqui.d.tipo === "mazmorra") {
         J.oscuro = 2.4;
-        J.ambZona = { tono: [16, 9, 7], osc: 0.84, niebla: 0, o: 0 };
+        const am = (window.MAZMORRAS && MAZMORRAS.AMB[aqui.estilo]) || { tono: [16, 9, 7], osc: 0.84 };
+        J.ambZona = { tono: am.tono, osc: am.osc, niebla: 0, o: 0 };
+        if (window.MAZMORRAS && aqui.estilo) MAZMORRAS.actualizar(aqui, dt);
       } else J.ambZona = { sombra: 0 };
       actualizarJefe(aqui);
       // el jefe enciende sus braseros cuando empieza la pelea
@@ -748,6 +785,7 @@ window.ZONAS = (function () {
       if (Z.barca && cerca(Z.barca.x, Z.barca.y - 60, 260)) dar(20, t("zn.accion_volver_barca"), () => salir(Z), Z.barca.x, Z.barca.y - 120);
       for (const f of Z.fuegos) if (!st.fuegos[f.k] && cerca(f.x, f.y, 140)) dar(30, t("zn.accion_encender"), () => encender(f), f.x, f.y - 110);
       for (const cf of Z.cofres) if (!st.cofres[cf.k] && cerca(cf.x, cf.y, 130)) dar(25, t("zn.accion_cofre"), () => abrir(cf), cf.x, cf.y - 80);
+      if (window.MAZMORRAS && Z.estilo) MAZMORRAS.cercanos(Z, dar);
       if (Z.cosas)
         for (const c0 of Z.cosas) {
           if (c0.tipo !== "cueva" || !cerca(c0.x, c0.y + 60, 220)) continue;
@@ -773,12 +811,21 @@ window.ZONAS = (function () {
         x1 = v.x + 1800,
         y0 = v.y - 1200,
         y1 = v.y + 1200;
-      if (Z.d.tipo === "mazmorra") objetosMazmorra(lista, c, Z, x0, y0, x1, y1);
+      if (Z.d.tipo === "mazmorra") {
+        objetosMazmorra(lista, c, Z, x0, y0, x1, y1);
+        if (window.MAZMORRAS && Z.estilo) MAZMORRAS.objetos(lista, c, Z, visible);
+      }
       else objetosTierra(lista, c, Z, visible);
-      Z.obst.forEach((o) => visible(o.x, o.y) && lista.push(comoCosa(o, { s: o.s || 1, runa: o.runa, tipo: o.tipo, luz: o.cosa && !!o.cosa.a })));
+      Z.obst.forEach((o) => visible(o.x, o.y) && lista.push(comoCosa(o, Object.assign({ s: o.s || 1, runa: o.runa, tipo: o.tipo, luz: o.cosa && !!o.cosa.a }, o.o, o.fuente ? { usada: MAZMORRAS.usada(o) } : null))));
       Z.fuegos.forEach((f) => visible(f.x, f.y) && lista.push({ x: f.x, y: f.y, f: () => ASSETS.dibujar(c, "brasero", f.x, f.y, J.t, { s: 1.2, encendido: !!st.fuegos[f.k] }) }));
       Z.cofres.forEach((cf) => visible(cf.x, cf.y) && lista.push({ x: cf.x, y: cf.y, f: () => ASSETS.dibujar(c, "cofreRunico", cf.x, cf.y, J.t, { s: 1.3, abierto: !!st.cofres[cf.k] }) }));
       if (Z.cosas) Z.cosas.forEach((c0) => c0.tipo === "muelle" && visible(c0.x, c0.y) && lista.push({ x: c0.x, pie: c0.y + 70, y: c0.y + 70, f: () => ASSETS.dibujar(c, "muelle", c0.x, c0.y + 70, J.t, { s: 0.8 }) }));
+    },
+    aire(c, x0, y0, x1, y1) {
+      if (aqui && aqui.estilo && window.MAZMORRAS) MAZMORRAS.aire(c, aqui, x0, y0, x1, y1);
+    },
+    sobreLuz(c, x0, y0, x1, y1) {
+      if (aqui && aqui.estilo && window.MAZMORRAS) MAZMORRAS.sobreLuz(c, aqui, x0, y0, x1, y1);
     },
     luces(dar) {
       const Z = aqui;
@@ -788,6 +835,7 @@ window.ZONAS = (function () {
         dar({ x: jug.x, y: jug.y - 30, r: 360, col: "#FFD98A", f: 0.55 });
         Z.d.salas.forEach((s) => (s.antorchas || []).forEach((cx) => dar({ x: Z.x0 + cx * C + C / 2, y: Z.y0 + s.y * C - 60, r: 520, col: "#FF8D71", f: 0.85 + Math.sin(J.t * 9 + cx) * 0.06 })));
         if (Z.escalera) dar({ x: Z.escalera.x, y: Z.escalera.y - 60, r: 420, col: "#FFD98A", f: 0.7 });
+        if (window.MAZMORRAS && Z.estilo) MAZMORRAS.luces(Z, dar);
       } else Z.obst.forEach((o) => o.id === "volcan" && dar({ x: o.x, y: o.y - 600 * (o.s || 1), r: 1400, col: "#FF8D71", f: 0.7 }));
       Z.fuegos.forEach((f) => st.fuegos[f.k] && dar({ x: f.x, y: f.y - 60, r: 560, col: "#FF8D71", f: 0.9 + Math.sin(J.t * 8 + f.x) * 0.06 }));
       Z.cofres.forEach((cf) => !st.cofres[cf.k] && dar({ x: cf.x, y: cf.y - 30, r: 220, col: "#73D5DB", f: 0.7 }));
@@ -815,6 +863,7 @@ window.ZONAS = (function () {
     armarPedido,
     FAMILIAS,
     COSAS,
+    ESTILOS,
     enPoli,
     entradas,
     pasosDe,
