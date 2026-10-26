@@ -394,6 +394,15 @@ window.EIKHOLT = (function () {
     for (let i = 0; i < veces; i++)
       [196, 392, 466, 587, 784].forEach((f, k) => SONIDO.tono("sine", f, f * 0.995, 3.4 - k * 0.4, [0.09, 0.07, 0.04, 0.035, 0.02][k] * g, { ambiente: true, retraso: i * 2.2 }));
   }
+  // la música del Hongo Dorado: re menor pentatónico (re, fa, sol, la, do, re) y tres frases de ocho tiempos (0 = silencio)
+  const ESCALA = [293.7, 349.2, 392, 440, 523.3, 587.3],
+    FRASES_HONGO = [
+      [1, 3, 4, 0, 4, 5, 4, 3],
+      [2, 3, 1, 0, 1, 2, 3, 0],
+      [4, 5, 6, 5, 4, 3, 2, 1],
+    ];
+  let musicaT = 0,
+    frase = 0;
   function sonidosCiudad(dt, er) {
     if (!window.SONIDO || !SONIDO.listo || !SONIDO.listo()) return;
     const h = window.LUZ ? LUZ.hora(A.H.E.tiempo) : 12,
@@ -428,6 +437,20 @@ window.EIKHOLT = (function () {
       mercadoT = 2 + Math.random() * 4;
       const p = plano.puestos[Math.floor(Math.random() * plano.puestos.length)];
       SONIDO.tocar(Math.random() < 0.55 ? "plata" : "tela", Object.assign({ vol: 0.16, var: 0.15 }, S2(p.x, p.y)));
+    }
+    // de 17 a 2, la música del Hongo Dorado se oye desde la calle, apagada por las paredes: la lira de Sølve sobre un
+    // bordón grave y el tambor de mano marcando el pulso (tres frases que se repiten)
+    const hg = plano.anclas.hongo_puerta;
+    if (hg && (h >= 17 || h < 2) && (musicaT -= dt) <= 0) {
+      musicaT = 3.6;
+      const d = Math.hypot(hg[0] - er.x, hg[1] - er.y);
+      if (d < 2600) {
+        const o = Object.assign({ filtro: 1500 }, S2(hg[0], hg[1])),
+          fr = FRASES_HONGO[frase++ % FRASES_HONGO.length];
+        SONIDO.tono("sine", 146.8, 146.8, 3.5, 0.03, o);
+        fr.forEach((n, k) => n && SONIDO.tono("triangle", ESCALA[n - 1], ESCALA[n - 1] * 0.995, 0.42, 0.035, Object.assign({ retraso: k * 0.45 }, o)));
+        for (let k = 0; k < 8; k += 2) SONIDO.tono("sine", 95, 55, 0.18, 0.06, Object.assign({ retraso: k * 0.45 }, o));
+      }
     }
     // la campana de la Asamblea
     const hi = Math.floor(h);
