@@ -460,9 +460,11 @@ window.EIKHOLT = (function () {
       jug.x = fx;
       jug.y = fy;
       jugUlt = [fx, fy];
-      if (H.descubrir) H.descubrir("eikholt");
+      // el cartel dorado (CARTEL): «Capital descubierta» con el estandarte la primera vez, el chico al volver
+      if (window.CARTEL) CARTEL.entra("eikholt");
+      else if (H.descubrir) H.descubrir("eikholt");
       ubicarHistoria();
-      if (!desde || !desde.rapido) HUD.aviso(t("ek.nombre"), "#FFD98A");
+      if (!window.CARTEL && (!desde || !desde.rapido)) HUD.aviso(t("ek.nombre"), "#FFD98A");
       setTimeout(() => {
         HUD.fundido(false);
         J.modo = "juego";
@@ -489,6 +491,7 @@ window.EIKHOLT = (function () {
     }
     setTimeout(() => {
       activo = false;
+      if (window.CARTEL) CARTEL.sale("eikholt");
       st.dentro = false;
       J.dentro = null;
       const C = W.CIUDAD;

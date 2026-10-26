@@ -454,7 +454,11 @@ window.ZONAS = (function () {
   function entrar(Z) {
     if (!Z.llegada) return;
     A.teletransportar(Z.llegada.x, Z.llegada.y);
-    setTimeout(() => HUD.aviso(Z.d.nombre, "lugar", t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
+    // el cartel dorado con su nombre (una tierra: «Tierra nueva»; una mazmorra: «Lugar descubierto») y la pista abajo
+    if (window.CARTEL) {
+      CARTEL.llegar("zona:" + Z.id, { nombre: Z.d.nombre, tipo: Z.d.tipo === "mazmorra" ? "lugar" : "tierra" });
+      setTimeout(() => HUD.aviso(t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
+    } else setTimeout(() => HUD.aviso(Z.d.nombre, "lugar", t(Z.d.tipo === "mazmorra" ? "zn.entraste_mazmorra" : "zn.entraste_tierra")), 700);
   }
   // a dónde vuelve: a su entrada del bosque o a la cueva de la tierra de la que sale
   function salir(Z) {
@@ -811,6 +815,7 @@ window.ZONAS = (function () {
     // las que vienen con el juego (el editor las muestra y deja retocarlas guardando una copia con el mismo id)
     bases: (w) => ((W = W || w), base()),
     aqui: () => aqui,
+    estado: () => st,
     zonas: () => armadas,
     entrar: (id) => zonaDe(id) && entrar(zonaDe(id)),
     ir: (x, y) => A.teletransportar(x, y),

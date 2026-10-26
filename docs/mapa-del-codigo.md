@@ -82,6 +82,7 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | La barra de abajo: qué puede ir (habilidades, objetos, herramientas, conocimientos), sus teclas y cómo se llena | `interfaz/barra.js` (`COSAS`, `ORDEN`); se acomoda en la pestaña Barra de `interfaz/inventario.js` |
 | Las hierbas de Thora (curan) | `motor/poderes.js` (`darHierbas`, `comerHierbas`) |
 | Las piedras de Berkano (vida de reserva), los manantiales rúnicos, el brebaje, la talla de Ása | `motor/berkano.js` (`BERKANO`); dibujo en `mundo/assets-berkano.js`; textos `bk.` en `textos/berkano.js` |
+| El cartel dorado al llegar a un lugar (tierra nueva, lugar, capital con su estandarte, regreso): tiempos, tamaños y colores | `interfaz/cartel.js` (`CONFIG`, `paisajeEldervald`, `estandarte`, `INSIGNIAS`); cuándo sale: `CARTEL.entra`/`sale` en `zonas` de `motor/juego.js`, en `ciudad/juego.js`, `motor/regiones.js` y `motor/zonas.js`; `?cartel=tierra` lo repite |
 | Mochila, equipo, bolsa y diario | `interfaz/inventario.js` |
 | Mapa grande, minimapa y su leyenda | `interfaz/mapa.js` (`CAT_DE`, `CATS`, `MUESTRA`); las miniaturas en `interfaz/iconos.js` |
 | Opciones | `interfaz/opciones.js` (`filas`) |
@@ -185,6 +186,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 - **barra.js**: la barra de abajo (sistema BARRA)
   - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
+- **cartel.js**: el cartel de lugar (CARTEL): el cartel dorado que anuncia un lugar, una tierra nueva o la capital al llegar
+  - parámetros (los mismos de cartel_lugar.gd; tamaños a 1080 de alto, tiempos en segundos) · ayudas · el lienzo · estado · tiempos · disposición · dibujo · paisaje / estandarte en un solo trazo · dibujos de cada región y capital · la fila y cuándo sale cada uno
 - **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
@@ -193,10 +196,14 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - las piezas de verdad, las mismas de la arena · los íconos (los de la aventura, dibujados con el mismo estilo plano que los assets) · el contenido de cada pestaña · la ventana
 - **mago.js**: el mago de Eromash (módulo MAGO)
   - el mago (coordenadas del dibujo del vikingo: 40..440 x 90..570, centro en 240,330)
+- **mapa-mazmorra.js**: el mapa de las mazmorras (sistema MAPA_MAZMORRA)
+  - lo visto de cada mazmorra · el lienzo del mapa (se pinta de a una celda, solo cuando cambia) · lo que se dibuja encima: salida, braseros, cofres, el jefe, las criaturas despiertas · el minimapa (lo pide MAPA.dibujarMini; true si estaba en una mazmorra) · el mapa grande (la tecla del mapa adentro de una mazmorra) · el sistema
 - **mapa.js**: el mapa de Eldervald (sistema MAPA)
   - las miniaturas · el mapa grande: zoom, arrastre y la marca propia · el minimapa
 - **opciones.js**: opciones (módulo OPCIONES)
   - teclas propias
+- **probar.js**: el menú para probar las mecánicas (sistema PROBAR)
+  - lo que se da · ir a un lugar · las entradas · los menús · el sistema
 - **prologo.js**: el prólogo del mago (módulo PROLOGO)
   - el nombre pasado a runas · la cabaña (igual que la ilustración) · el escritorio · el pergamino: lo que escribe el mago, en runas (al revés para quien mira: de frente al mago) · la pluma que escribe sola · lo que hay en el escritorio · la escena desde arriba: el escritorio visto en planta, con el pergamino en el medio · el cuadro: elige la escena y la cámara · las preguntas
 
@@ -266,8 +273,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
 - **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
   - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
-- **holmr.js**: la hólmganga: duelos en la piel (sistema HOLMR)
-  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo · el sistema
+- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
 - **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
   - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
@@ -423,9 +430,10 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
-  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
+  - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · un mapa de cero (AGREGADOS.lienzo: un proyecto nuevo del editor) · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)
 - **luz.js**: luz, sombra y niebla de Eldervald (módulo LUZ)
+- **mapas.js**: un mapa de cero hecho en el editor de mapas (map-generator): ?mapa=<id> juega js/mundo/mapas/<id>.js
 - **texturas.js**: las texturas hechas en el editor (TEXTURAS)
   - recetas: cada forma se dibuja nueve veces corrida un cuadro, así el borde de un lado sigue en el otro · imágenes: a los colores del juego, posterizadas y espejadas en cuatro para que no tengan costura · el lienzo de cada textura (se arma una vez por receta o imagen) · los dos assets de cada textura · registrar
 
@@ -492,6 +500,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
+- **probar.js**: Textos del menú para probar las mecánicas (interfaz/probar.js): prefijo pb.
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.

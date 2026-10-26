@@ -90,6 +90,8 @@ window.FRASCO = (function () {
     A.menu(`<h2>${t("fr.titulo")}</h2><div class="sub">${t("fr.sub", [st.cargas, st.max, Math.round(CURA * (1 + FUERZA * st.fuerza) * 100)])}</div>`, [
       { texto: t("fr.cargas", [st.max, TOPE_CARGAS]), sub: MEJORA_CARGA[nC] ? costoTexto(MEJORA_CARGA[nC]) : t("fr.tope"), fn: () => (mejorar("cargas"), menuThora()) },
       { texto: t("fr.fuerza", [nF, TOPE_FUERZA]), sub: MEJORA_FUERZA[nF] ? costoTexto(MEJORA_FUERZA[nF]) : t("fr.tope"), fn: () => (mejorar("fuerza"), menuThora()) },
+      // su mesa de las piedras de Berkano: las carga, prepara el brebaje y vende piedras (berkano.js)
+      ...(window.BERKANO ? [{ texto: t("bk.thora_titulo"), sub: t("bk.preparar") + " · " + t("bk.comprar"), fn: BERKANO.thora }] : []),
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
     ]);
   }
@@ -135,6 +137,7 @@ window.FRASCO = (function () {
             n.mira = VIKINGO.vista(jug.x - n.x, jug.y - n.y, n.mira);
             jug.hp = jug.hpMax;
             llenar(null);
+            if (window.BERKANO) BERKANO.cargarTodas();
             return A.dialogoLibre([["thora", "pj.thora_cura"], ["thora", "fr.thora_frasco"]], menuThora);
           }
           return antes(n);

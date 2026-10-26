@@ -58,6 +58,7 @@ window.IMPORTADOS = (function () {
     c.restore();
   }
   const sistema = {
+    enLienzo: true, // también corre en un mapa de cero (ver juego.js)
     iniciar(api) {
       A = api;
       J = A.J;

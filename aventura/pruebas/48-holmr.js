@@ -1,16 +1,39 @@
-// Pruebas de la hólmganga (motor/holmr.js).
+// Pruebas de la hólmganga en primera persona (motor/holmr.js).
 // (en un bloque: las pruebas comparten la página)
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
-  const pelea = async (A) => {
+  const enJuego = async (A) => {
+    for (let i = 0; i < 40 && A.J.modo !== "juego"; i++) await esperar(50);
+  };
+  // espera a que el aviso de ahora pida respuesta
+  const ventana = async (d) => {
+    for (let i = 0; i < 80 && !d.fin && !(d.mov && d.mov.fase === "ventana"); i++) await esperar(25);
+    return d.mov;
+  };
+  // contesta bien: en el momento justo, lo que pide
+  const contestar = (m, k = 0.8) => {
+    m.t = m.ventana * k;
+    if (m.pide === "machacar") for (let i = 0; i < m.n; i++) HOLMR.responder("atacar");
+    else if (m.pide === "clic") HOLMR.responder("clic", m.x, m.y);
+    else HOLMR.responder(m.pide);
+  };
+  const arrancar = async () => {
     HOLMR.empezar();
     const d = HOLMR.duelo();
-    d.t = 2.95;
-    await esperar(150);
+    d.t = 3.45;
+    await esperar(80);
+    return d;
+  };
+  const ganar = async (d) => {
+    for (let i = 0; i < 80 && !d.fin; i++) {
+      const m = await ventana(d);
+      if (m && m.fase === "ventana") contestar(m);
+      await esperar(20);
+    }
     return d;
   };
   (window.PRUEBAS = window.PRUEBAS || []).push(
-    { nombre: "hólmganga: la piel junto al camino del Puesto a Eikholt, con Hallbera y el duelo que arranca con cuenta", fn: async (A, { igual, si }) => {
+    { nombre: "hólmganga: la piel junto al camino, Hallbera y el duelo en primera persona con su cuenta", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       for (let i = 0; i < 40 && A.J.modo !== "juego"; i++) await esperar(50);
       A.enemigos.forEach((e) => (e.activo = false));
@@ -21,10 +44,7 @@
       const pu = W.LUGARES.puesto.p,
         ci = W.CIUDAD.c;
       si(W.distLinea(C[0], C[1], [pu, ci]) < Math.hypot(ci[0] - pu[0], ci[1] - pu[1]) * 0.4, "entre el Puesto y Eikholt");
-      // la piel está despejada: se puede andar por toda
-      [[-300, -200], [300, 200], [-300, 200], [300, -200], [0, 0]].forEach(([dx, dy]) => si(W.libre(C[0] + dx, C[1] + dy, 16), "libre en " + [dx, dy]));
       igual(HOLMR.sistema.marcasMapa()[0].tipo, "holmr", "en el mapa:");
-      // Hallbera ofrece batirse con Ketil
       const h = HOLMR.hallbera();
       A.jug.x = h.x - 60;
       A.jug.y = h.y;
@@ -32,102 +52,141 @@
       HOLMR.sistema.cercanos((dd, txt, fn) => of.push([txt, fn]));
       igual(of[0] && of[0][0], I18N.t("hm.hablar"), "hablar:");
       igual(HOLMR.siguiente().nombre, I18N.t("hm.k0"), "el primero es Ketil:");
+      const n0 = A.enemigos.length;
       si(HOLMR.empezar(), "empieza");
       const d = HOLMR.duelo();
+      igual(A.J.modo, "holmr", "su propio modo (el bosque en pausa):");
+      const lz = document.getElementById("holmrLienzo");
+      si(lz && lz.style.display === "block", "en su lienzo, en primera persona");
+      igual(A.enemigos.length, n0, "no suelta un enemigo en el bosque:");
       igual(d.fase, "cuenta", "con cuenta:");
-      si(Math.abs(A.jug.x - (C[0] - 200)) < 1 && A.jug.hp === A.jug.hpMax, "a la piel y curado");
-      igual(HOLMR.sistema.modDano(50, d.e, {}), 0, "en la cuenta no pega:");
-      d.t = 2.95;
-      await esperar(150);
+      si(A.jug.hp === A.jug.hpMax, "curado");
+      d.t = 3.45;
+      await esperar(80);
       igual(d.fase, "pelea", "pelea:");
-      si(A.J.jefeHud && A.J.jefeHud.nombre === I18N.t("hm.k0"), "barra de jefe");
-      si(A.enemigos.includes(d.e) && d.e.patron.length === 3, "con su rotación fija");
+      igual(d.mov.tipo, "hachazo", "Ketil abre con el hachazo:");
     } },
-    { nombre: "hólmganga: los escudos frenan a la guardia, se parten en tres golpes y abierto pega entero", fn: async (A, { igual, si }) => {
-      const d = HOLMR.duelo(),
-        e = d.e;
-      e.estado = "persigue";
-      e.aviso = null;
-      e.aturdido = 0;
-      igual(HOLMR.sistema.modDano(40, e, {}), 10, "a la guardia, un cuarto:");
-      HOLMR.sistema.modDano(40, e, {});
-      igual(d.escudos, 3, "dos golpes, todavía entero:");
-      HOLMR.sistema.modDano(40, e, {});
-      igual(d.escudos, 2, "al tercero, partido:");
-      si(e.aturdido > 0, "tambalea al partirse");
-      e.aturdido = 0;
-      e.estado = "espera";
-      igual(HOLMR.sistema.modDano(40, e, {}), 40, "recuperándose, entero:");
-      e.estado = "persigue";
-      // nunca lo mata un golpe
-      igual(HOLMR.sistema.modDano(e.vida + 500, e, { d: {} }) < e.vida, true, "no muere en la piel:");
-      // sin escudos, el remate lo empuja fuerte
-      d.escudos = 0;
-      HOLMR.sistema.alPegar(e, 10, { d: { empuje: 1.4 } });
-      si(Math.hypot(e.vx, e.vy) > 600, "lo empuja");
-      e.vx = e.vy = 0;
-      // a Eromash nunca lo bajan del 12 %: se rinde
-      A.jug.hp = A.jug.hpMax * 0.2;
-      const r = HOLMR.sistema.modRecibido(A.jug.hpMax * 0.3);
-      si(A.jug.hp - r >= Math.ceil(A.jug.hpMax * HOLMR.RINDE) - 0.01, "se rinde antes de caer");
+    { nombre: "hólmganga: cada ataque pide su respuesta, el aro decide justo, bien o muy pronto, y la tecla equivocada falla", fn: async (A, { igual, si }) => {
+      const d = HOLMR.duelo();
+      let m = await ventana(d);
+      igual(m.pide, "bloquear", "al hachazo, bloquear:");
+      contestar(m, 0.8);
+      igual(m.res, "justo", "con el aro sobre el círculo:");
+      igual(d.golpesEsc, 1, "el contraataque pega en el escudo:");
+      // abierto: clic en el blanco, pero fuera de él no vale
+      m = await ventana(d);
+      igual(m.pide, "clic", "abierto, clic acá:");
+      m.t = m.ventana * 0.5;
+      HOLMR.responder("clic", m.x + 300, m.y);
+      igual(m.res, "lejos", "fuera del blanco:");
+      igual(d.fallos, 1, "el golpe entra:");
+      m = await ventana(d);
+      igual(m.pide, "esquivar", "a la estocada, esquivar:");
+      m.t = m.ventana * 0.1;
+      HOLMR.responder("esquivar");
+      igual(m.res, "apurado", "antes de tiempo:");
+      m = await ventana(d);
+      igual(m.pide, "clic", "abierto otra vez:");
+      m.t = m.ventana * 0.5;
+      HOLMR.responder("clic", m.x, m.y);
+      igual(m.res, "bien", "en el blanco y a tiempo:");
+      igual(d.escudos, 1, "dos golpes parten un escudo:");
+      m = await ventana(d);
+      igual(m.pide, "saltar", "a la barrida, saltar:");
+      m.t = m.ventana * 0.5;
+      HOLMR.responder("bloquear");
+      igual(m.res, "otra", "la que no es:");
+      igual(d.fallos, 3, "tres errores:");
+      si(d.fin && !d.fin.gano, "Ketil perdona tres: se rinde");
       const p0 = HOLMR.estado().perdidos;
-      A.jug.hp -= r;
-      await esperar(120);
+      HOLMR.cerrar();
       igual(HOLMR.duelo(), null, "terminó:");
+      igual(A.J.modo, "juego", "vuelve al bosque:");
       igual(HOLMR.estado().perdidos, p0 + 1, "perdido:");
-      si(!A.enemigos.includes(e) && !A.J.jefeHud, "el kempa se va y la barra también");
       si(A.jug.hp >= A.jug.hpMax * 0.4 - 1, "Hallbera lo venda");
     } },
-    { nombre: "hólmganga: se gana sacándolo de la piel o haciéndolo rendirse, y se pierde al pisar fuera sin saltar", fn: async (A, { igual, si }) => {
-      const C = HOLMR.centro(),
-        st = HOLMR.estado();
-      // pisar fuera saltando no cuenta; sin saltar, pierde
-      let d = await pelea(A);
-      A.jug.x = C[0] - HOLMR.HX - 30;
-      A.jug.salto = 0.3;
-      await esperar(40);
-      si(HOLMR.duelo() === d, "saltando sigue");
-      A.jug.salto = 0;
-      A.jug.x = C[0] - HOLMR.HX - 30;
-      await esperar(120);
-      igual(HOLMR.duelo(), null, "pisó fuera:");
-      // sacarlo de la piel
-      A.jug.x = C[0];
-      const pl = PODERES.pj().plata;
-      d = await pelea(A);
-      d.e.propio = true; // que no se mueva solo
-      d.e.x = C[0] + HOLMR.HX + 60;
-      await esperar(120);
+    { nombre: "hólmganga: sin escudos ni aguante, el remate lo saca de la piel; tarde también falla", fn: async (A, { igual, si }) => {
+      const st = HOLMR.estado(),
+        pl = PODERES.pj().plata;
+      let d = await arrancar();
+      // no contestar a tiempo
+      const m = await ventana(d);
+      m.t = m.ventana - 0.001;
+      await esperar(80);
+      igual(m.res, "tarde", "tarde:");
+      d = await ganar(d);
+      si(d.fin && d.fin.gano, "ganó");
+      igual(d.escudos + d.toques, 0, "sin escudos ni aguante:");
+      igual(d.mov.tipo, "remate", "con el remate:");
+      HOLMR.cerrar();
       igual(st.vencidos, 1, "venció a Ketil:");
       si(PODERES.pj().plata >= pl + HOLMR.KEMPUR[0].plata, "pagó");
-      // rendirse
-      d = await pelea(A);
-      igual(d.nombre, I18N.t("hm.k1"), "ahora Thorgerd:");
-      d.e.vida = d.e.d.vida * 0.1;
-      await esperar(120);
-      igual(st.vencidos, 2, "se rindió:");
+      // Björn traba escudos: hay que machacar atacar
+      st.vencidos = 2;
+      d = await arrancar();
+      let tr = null;
+      for (let i = 0; i < 10 && !tr; i++) {
+        const mm = await ventana(d);
+        if (mm.tipo === "traba") tr = mm;
+        else contestar(mm);
+        await esperar(20);
+      }
+      si(tr && tr.pide === "machacar" && tr.n === 6, "la traba pide seis golpes");
+      HOLMR.responder("atacar");
+      igual(tr.hechos, 1, "cuenta cada golpe:");
+      for (let i = 0; i < 5; i++) HOLMR.responder("atacar");
+      igual(tr.res, "justo", "empujó:");
+      HOLMR.terminar(false, "lejos");
+      igual(A.J.modo, "juego", "salir lo cierra:");
     } },
-    { nombre: "hólmganga: el quinto da el título, después un retador por día y todo se guarda", fn: async (A, { igual, si }) => {
+    { nombre: "hólmganga: los rápidos encadenan, el quinto da el título, un retador por día y todo se guarda", fn: async (A, { igual, si }) => {
       const st = HOLMR.estado();
+      st.vencidos = 3;
+      let d = await arrancar();
+      const m = await ventana(d);
+      si(d.cola.length === 1 && m.tipo !== "abierto", "Ásgerd encadena dos ataques");
+      igual(d.ficha.fallos, 2, "perdona dos:");
+      HOLMR.terminar(false, "lejos");
       st.vencidos = 4;
       const m0 = A.J.mulDano;
-      const d = await pelea(A);
+      d = await arrancar();
       igual(d.nombre, I18N.t("hm.k4"), "Úlfhild:");
-      d.e.vida = 1;
-      await esperar(150);
+      await ganar(d);
+      HOLMR.cerrar();
       si(st.campeon, "campeón");
       si(A.J.mulDano > m0 * 1.04, "+5 % de daño");
       const r = HOLMR.siguiente();
-      si(r && r.retador, "viene un retador");
-      await pelea(A);
-      HOLMR.duelo().e.vida = 1;
-      await esperar(150);
+      si(r && r.retador && r.ficha.fallos === 2 && r.ficha.ventana < HOLMR.KEMPUR[(r.ficha.pal + 2) % 5].ventana, "viene un retador más rápido");
+      d = await arrancar();
+      await ganar(d);
+      HOLMR.cerrar();
       igual(HOLMR.siguiente(), null, "uno por día:");
       si(HOLMR.sistema.celdasBolsa().length === 1 && HOLMR.sistema.diario().includes(I18N.t("hm.diario_t")), "en la Bolsa y el diario");
       A.H.guardar(9);
       JUEGO.empezar(9, false);
       await esperar(200);
       si(HOLMR.estado().campeon && HOLMR.estado().vencidos === 5, "quedó guardado");
+    } },
+    { nombre: "hólmganga: al terminar, un clic en el cartel del final vuelve al bosque y el juego sigue andando", fn: async (A, { igual, si }) => {
+      await enJuego(A);
+      const errores = [],
+        oir = (e) => errores.push(e.message);
+      window.addEventListener("error", oir);
+      Object.assign(HOLMR.estado(), { vencidos: 0, retadorDia: -1 });
+      A.enemigos.forEach((e) => (e.activo = false));
+      const d = await arrancar();
+      d.fin = { gano: false, porque: "rinde", t: 2 };
+      const lz = document.getElementById("holmrLienzo"),
+        r = lz.getBoundingClientRect();
+      lz.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, button: 0 }));
+      await esperar(120);
+      igual(HOLMR.duelo(), null, "terminó:");
+      igual(A.J.modo, "juego", "vuelve al bosque:");
+      const t0 = A.J.t;
+      await esperar(200);
+      window.removeEventListener("error", oir);
+      igual(errores.join(" | "), "", "sin errores:");
+      si(A.J.t > t0, "el bosque no quedó congelado");
     } },
   );
 }

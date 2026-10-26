@@ -1,6 +1,6 @@
 // ---------- regiones con nombre (sistema REGIONES) ----------
 // Las regiones se dibujan en el editor (herramienta Región) y viven en AGREGADOS.regiones: { u, nombre: { es, en },
-// p: [[x, y], ...] }. Al entrar a una, su nombre aparece arriba como cuando se llega a un lugar. Si una región está
+// p: [[x, y], ...] }. Al entrar a una, su nombre sale en el cartel dorado de lugar (CARTEL), como cuando se llega a un lugar. Si una región está
 // dentro de otra, gana la que se dibujó después (la más chica, casi siempre).
 window.REGIONES = (function () {
   "use strict";
@@ -25,6 +25,7 @@ window.REGIONES = (function () {
     return r;
   }
   const sistema = {
+    enLienzo: true, // también corre en un mapa de cero (ver juego.js)
     iniciar(api) {
       A = api;
       jug = A.jug;
@@ -40,8 +41,12 @@ window.REGIONES = (function () {
       const r = en(jug.x, jug.y),
         k = r ? r.u : null;
       if (k === actual) return;
+      if (actual != null && window.CARTEL) CARTEL.sale("region:" + actual);
       actual = k;
-      if (r && nombreDe(r)) HUD.aviso(nombreDe(r), "lugar", "");
+      if (r && nombreDe(r)) {
+        if (window.CARTEL) CARTEL.entra("region:" + k, { nombre: nombreDe(r) });
+        else HUD.aviso(nombreDe(r), "lugar", "");
+      }
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
