@@ -208,6 +208,7 @@ window.PROBAR = (function () {
                   enCiudad(null, null, () => { const [x, y] = ASAMBLEA25.atril(EIKHOLT.plano()); const e = EIKHOLT.ero(); (e.x = x), (e.y = y + 100); });
                 },
               },
+              { id: "ek_escondidas", si: hay("ESCONDIDAS25"), fn: () => (hora(10), enCiudad(null, null, () => { const k = MUNDO25.gente().find((q) => q.id === "tyra"); const e = EIKHOLT.ero(); if (k) (e.x = k.x + 60), (e.y = k.y + 40); })) },
               { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

@@ -273,6 +273,9 @@ window.EIKHOLT = (function () {
     // la asamblea del Ting (ASAMBLEA25): cerca de Bergljot, escuchar el asunto del día y dar la voz
     const ta = window.ASAMBLEA25 && ASAMBLEA25.cercano(plano, e, st, A);
     if (ta && !rc) mejor = ta;
+    // las escondidas con los chicos (ESCONDIDAS25): invitarlos o, jugando, encontrar al que está a mano
+    const es = window.ESCONDIDAS25 && ESCONDIDAS25.cercano(plano, e, st, A, MUNDO25.gente(), MUNDO25.libre);
+    if (es && !rc) mejor = es;
     return mejor;
   }
 
@@ -660,6 +663,7 @@ window.EIKHOLT = (function () {
     RECORRER25.callados = J.modo !== "juego";
     RECORRER25.actualizar(dt, tiempo, h, cam, null);
     if (window.ASAMBLEA25) ASAMBLEA25.actualizar(plano, MUNDO25.gente(), A);
+    if (window.ESCONDIDAS25 && J.modo === "juego") ESCONDIDAS25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();

@@ -294,9 +294,10 @@ window.RECORRER25 = (function () {
         dy = ero.y - p.y,
         d = Math.hypot(dx, dy);
       p.miraA = null;
-      // los chicos se esconden: corren lejos y después espían desde donde quedaron
-      if (CHICOS[p.id]) {
-        if (d < 380 && !p.huye) {
+      // los chicos se esconden si él llega corriendo: corren lejos y después espían desde donde quedaron (caminando
+      // despacio se dejan alcanzar, y se los puede invitar a las escondidas: ESCONDIDAS25)
+      if (CHICOS[p.id] && !p.escondido) {
+        if (d < 380 && !p.huye && ero.anda === 2) {
           p.huye = 1.6;
           p.vxAntes = p.vx;
           p.vyAntes = p.vy;

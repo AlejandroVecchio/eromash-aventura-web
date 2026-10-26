@@ -33,6 +33,8 @@ I18N.textos({
   "pb.ek_tablon_d": { es: "El tablón de la plaza", en: "The square's notice board" },
   "pb.ek_ting": { es: "La asamblea del Ting", en: "The Ting assembly" },
   "pb.ek_ting_d": { es: "El próximo día de asamblea, a las 12, junto a Bergljot", en: "The next assembly day, at noon, next to Bergljot" },
+  "pb.ek_escondidas": { es: "Escondidas con los chicos", en: "Hide-and-seek with the kids" },
+  "pb.ek_escondidas_d": { es: "A las 10, al lado de Tyra", en: "At 10:00, next to Tyra" },
   "pb.ek_ronda": { es: "La ronda de noche", en: "The night watch" },
   "pb.ek_ronda_d": { es: "A las 23, junto a las antorchas", en: "At 23:00, next to the torches" },
   "pb.g_zonas": { es: "Mazmorras", en: "Dungeons" },
