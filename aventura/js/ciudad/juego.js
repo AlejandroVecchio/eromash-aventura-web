@@ -205,7 +205,8 @@ window.EIKHOLT = (function () {
     const n = LINEAS_ROL[p.rol] || 4;
     const k = (p.id + p.x).length;
     charlas[p.id] = charlas[p.id] == null ? k : charlas[p.id] + 1;
-    A.dialogoLibre([["ek_" + p.rol, "ek.dice_" + p.rol + "_" + (charlas[p.id] % n)]]);
+    const fama = charlas[p.id] % 3 === 1 && window.FAMA25 && FAMA25.frase(charlas[p.id]);
+    A.dialogoLibre([["ek_" + p.rol, fama || "ek.dice_" + p.rol + "_" + (charlas[p.id] % n)]]);
   }
   function hablarNombrado(p) {
     mirarA(p);

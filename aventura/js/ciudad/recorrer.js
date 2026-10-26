@@ -56,6 +56,9 @@ window.RECORRER25 = (function () {
   const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5 };
   function frase(id, n, rol) {
     n = Math.abs(Math.floor(n)) || 0;
+    // una de cada tres veces, los que no tienen nombre comentan lo que Eromash hizo afuera (FAMA25)
+    const fama = rol && /^(vecino|vecina|vendedor|guardia|viajero|borracho)$/.test(rol) && n % 3 === 0 && window.FAMA25 && FAMA25.frase(n / 3);
+    if (fama) return tr(fama);
     if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));
     const pre = FRASES_GENERICAS[id];
     if (pre === null) return null;
