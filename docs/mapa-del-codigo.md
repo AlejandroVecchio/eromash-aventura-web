@@ -141,6 +141,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **roble.js**: las raíces del Roble de Eikholt (módulo RAIZ25)
 - **sombras.js**: las sombras de la capital (módulo SOMBRAS25)
   - las sombras horneadas en el piso
+- **tafl.js**: el hnefatafl de la plaza (módulo TAFL25)
 - **ting.js**: las piedras del Ting en volumen (módulo TING25)
 - **vista.js**: cómo se ve la capital (módulo VISTA25)
   - el piso · el piso entero en un lienzo que se corre · la cámara · el claro de Eromash: las copas que lo tapan se vuelven transparentes alrededor de él

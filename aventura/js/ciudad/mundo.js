@@ -247,6 +247,13 @@ window.MUNDO25 = (function () {
           y = plano.ting[1] + 120 + Math.sin(a) * r * 0.8;
         if (libre(x, y, 22)) poner({ id: vecino(i % 6 ? null : "guardia"), x, y, vx: 0, vy: 0, s: 1, horas: [11, 13], asamblea: true });
       }
+    // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
+    const tf = plano.cosas.find((o) => o.id === "hnefatafl");
+    if (tf)
+      for (const s of [1, -1]) {
+        const w = s * 112;
+        poner({ id: vecino(s > 0 ? "vecino" : "vecina"), x: tf.x - w * Math.sin(tf.ry), y: tf.y + w * Math.cos(tf.ry), vx: 0, vy: 0, s: 1, horas: [10, 18], tafl: [tf.x, tf.y] });
+      }
     // cada puesto del mercado tiene su puestero de día, parado a un costado del mostrador (del lado que esté libre):
     // pregona lo suyo cuando Eromash pasa cerca (RECORRER25) y no se va con la lluvia, que tiene el toldo
     for (const q of plano.puestos || []) {

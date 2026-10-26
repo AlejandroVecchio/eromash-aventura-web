@@ -279,6 +279,9 @@ window.EIKHOLT = (function () {
     // las cintas de promesa del Roble (PROMESAS25)
     const pm = window.PROMESAS25 && PROMESAS25.cercano(plano, e, st, A);
     if (pm && pm.d < dm + 0.3 * M && !rc && !ta && !es) mejor = pm;
+    // la mesa de hnefatafl: apostar o mirar la partida (TAFL25)
+    const tf = window.TAFL25 && TAFL25.cercano(plano, e, st, A, MUNDO25.gente());
+    if (tf && !rc && !ta && !es) mejor = tf;
     // los asientos del Ting: sentarse a esperar hasta otra hora (ESPERAR25)
     const sp = window.ESPERAR25 && ESPERAR25.cercano(plano, e, A);
     if (sp && sp.d < dm && !rc && !ta && !es && !pm) mejor = sp;

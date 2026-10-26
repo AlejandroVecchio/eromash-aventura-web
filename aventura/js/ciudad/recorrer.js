@@ -315,6 +315,16 @@ window.RECORRER25 = (function () {
         if (!p.huye && d < 1100 && !p.vx && !p.vy) p.miraA = [dx, dy];
         continue;
       }
+      // los del hnefatafl miran el tablero y comentan la partida si él anda cerca
+      if (p.tafl) {
+        p.miraA = [p.tafl[0] - p.x, p.tafl[1] - p.y];
+        if (d < 480 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+          globos.push({ p, texto: tr("ek.tafl_dice_" + (Math.floor(t * 0.23 + p.x) % 6 + 6) % 6), t: 0 });
+          p.pregon = t + 20;
+          enfriaGlobo = 5;
+        }
+        continue;
+      }
       // Gudrun: tararea junto al pozo y se calla cuando él está cerca
       if (p.canta) p.callada = d < 520;
       // los que están quietos lo miran pasar; Håkon lo mira desde todo el campo
