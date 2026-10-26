@@ -188,6 +188,7 @@ window.PLANO25 = (function () {
       anclas = {},
       casasQueSeEntran = [], // { nombre, x, y (delante de la puerta, unidades), sem, v }
       edificiosQueSeEntran = [], // la hospedería y el cuartel: { tipo, x, y (delante de la puerta), sem }
+      puestos = [], // los del Mercado de los Toldos: { n, vende, x, y (delante del mostrador, unidades) }
       casasCerradas = []; // las demás: { nombre, x, y, sem } (se golpean)
     // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
     const curiosidades = [];
@@ -458,6 +459,8 @@ window.PLANO25 = (function () {
         const ry = Math.atan2(-Math.cos(a2) * mira, Math.sin(a2) * mira);
         const puesto = PUESTOS25.crear(nt + 3);
         cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa: puesto, nombre: "puesto" + nt });
+        const fr = puesto.D / 2 + 110;
+        puestos.push({ n: nt, vende: puesto.vende, x: x * M - fr * Math.sin(ry), y: z * M + fr * Math.cos(ry) });
         choques.push({ poli: puesto.huella(x * M, z * M, ry) });
         nt++;
       }
@@ -1170,7 +1173,7 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, puestos, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

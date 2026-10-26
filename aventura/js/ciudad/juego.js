@@ -243,6 +243,14 @@ window.EIKHOLT = (function () {
         dm = d;
         mejor = { texto: t("in.accion_entrar", [t("in.nombre_" + c.tipo)]), fn: () => entrarEdificio(c), x: c.x, y: c.y };
       }
+    // los puestos del Mercado de los Toldos: mirar o comprar (MERCADO25)
+    if (window.MERCADO25 && plano.puestos)
+      for (const c of plano.puestos) {
+        const d = Math.hypot(c.x - e.x, c.y - e.y);
+        if (d > 1.4 * M || d >= dm) continue;
+        dm = d;
+        mejor = { texto: t(MERCADO25.vende(c.vende) ? "ek.mc_accion_comprar" : "ek.mc_accion_mirar", [t("ek.mc_puesto_" + c.vende)]), fn: () => MERCADO25.abrir(c, A, st), x: c.x, y: c.y };
+      }
     // las demás puertas se golpean: contesta alguien de adentro (o nadie)
     if (plano.casasCerradas)
       for (const c of plano.casasCerradas) {

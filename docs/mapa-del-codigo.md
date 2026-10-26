@@ -123,6 +123,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - el color de cada hora
 - **mapa.js**: el mapa propio de Eikholt (MAPA25): el minimapa de la ciudad y el mapa grande con la M
   - la base: se pinta una sola vez · lo de encima: lugares, gente, la marca y Eromash · el minimapa · el mapa grande
+- **mercado.js**: el Mercado de los Toldos en el juego (módulo MERCADO25)
 - **mundo.js**: la ciudad viva (módulo MUNDO25)
 - **muralla.js**: la muralla doble de Eikholt en volumen (módulo MURALLA25)
 - **oficios.js**: lo de los oficios que va en volumen (módulo OFICIOS25)
