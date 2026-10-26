@@ -315,6 +315,13 @@ window.RECORRER25 = (function () {
         if (!p.huye && d < 1100 && !p.vx && !p.vy) p.miraA = [dx, dy];
         continue;
       }
+      // los guardias de las puertas saludan al que pasa (de día y de noche distinto), uno por vez y cada tanto
+      if (p.porton && d < 420 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+        const noche = h >= 21 || h < 6;
+        globos.push({ p, texto: tr("ek.saludo_" + (noche ? "noche_" : "dia_") + (Math.floor(t + p.x) % 4 + 4) % 4), t: 0 });
+        for (const q of gente) if (q.porton === p.porton) q.pregon = t + 45;
+        enfriaGlobo = 3;
+      }
       // los del hnefatafl miran el tablero y comentan la partida si él anda cerca
       if (p.tafl) {
         p.miraA = [p.tafl[0] - p.x, p.tafl[1] - p.y];

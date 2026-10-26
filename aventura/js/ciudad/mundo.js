@@ -247,6 +247,20 @@ window.MUNDO25 = (function () {
           y = plano.ting[1] + 120 + Math.sin(a) * r * 0.8;
         if (libre(x, y, 22)) poner({ id: vecino(i % 6 ? null : "guardia"), x, y, vx: 0, vy: 0, s: 1, horas: [11, 13], asamblea: true });
       }
+    // dos guardias en cada puerta de la empalizada, uno a cada lado del paso, del lado de adentro: saludan a Eromash
+    // cuando entra o sale (recorrer.js, `p.porton`)
+    for (const k of ["sur", "norte", "este", "oeste"]) {
+      const a0 = plano.anclas["puerta_" + k];
+      if (!a0) continue;
+      const r = Math.hypot(a0[0], a0[1]) || 1,
+        ux = a0[0] / r,
+        uy = a0[1] / r;
+      for (const s of [1, -1]) {
+        const x = a0[0] - ux * 260 - uy * s * 200,
+          y = a0[1] - uy * 260 + ux * s * 200;
+        if (libre(x, y, 20)) poner({ id: vecino("guardia"), x, y, vx: 0, vy: 0, s: 1, porton: k });
+      }
+    }
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
     const tf = plano.cosas.find((o) => o.id === "hnefatafl");
     if (tf)
