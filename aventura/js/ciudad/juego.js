@@ -199,7 +199,7 @@ window.EIKHOLT = (function () {
       [bx, by] = V(p.x, p.y);
     jug.mira = VIKINGO.vista(bx - ax, by - ay, jug.mira);
   }
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5, cuentista: 3 };
   const charlas = {};
   function hablarVecino(p) {
     mirarA(p);
@@ -219,6 +219,7 @@ window.EIKHOLT = (function () {
   // ---------- lo que se puede hacer cerca ----------
   function cercano() {
     if (J.modo !== "juego" || !activo) return null;
+    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo())) return null; // un juego en pantalla
     const e = ero();
     let mejor = null,
       dm = Infinity;
@@ -293,6 +294,15 @@ window.EIKHOLT = (function () {
     // las dianas del campo de la Guardia: tirar cinco hachas (TIRO25)
     const tr = window.TIRO25 && TIRO25.cercano(plano, e, st, A);
     if (tr && tr.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = tr), (dm = tr.d);
+    // la cuentacuentos junto al fogón de los forasteros (CUENTOS25)
+    const cu = window.CUENTOS25 && CUENTOS25.cercano(plano, e, st, A, MUNDO25.gente());
+    if (cu && !rc && !ta && !es) (mejor = cu), (dm = cu.d);
+    // la pulseada con los parroquianos del Hongo (PULSO25)
+    const pu = window.PULSO25 && PULSO25.cercano(plano, e, st, A, MUNDO25.gente());
+    if (pu && pu.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = pu), (dm = pu.d);
+    // los canteros de la huerta de hierbas que están a punto hoy (HUERTA25)
+    const hu = window.HUERTA25 && HUERTA25.cercano(plano, e, st, A);
+    if (hu && hu.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = hu), (dm = hu.d);
     // el perro del corral y los gatos mansos: acariciarlos (RECORRER25.animalCerca)
     const an = RECORRER25.animalCerca(1.4 * M);
     if (an && an.d < dm && !rc && !ta && !es)
@@ -478,7 +488,7 @@ window.EIKHOLT = (function () {
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     jug.pelea = false;
-    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo());
+    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo());
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -721,6 +731,8 @@ window.EIKHOLT = (function () {
     if (window.PROMESAS25) PROMESAS25.actualizar(st);
     if (window.LADRON25 && J.modo === "juego") LADRON25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     if (window.TIRO25) TIRO25.actualizar(dt, st, A);
+    if (window.PULSO25) PULSO25.actualizar(dt, st, A);
+    if (window.GALLINAS25 && J.modo === "juego") GALLINAS25.actualizar(dt, plano, st, A, ero());
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();
@@ -752,8 +764,10 @@ window.EIKHOLT = (function () {
     MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), historia);
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (window.PERDIDOS25) PERDIDOS25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
+    if (window.HUERTA25) HUERTA25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
     climaCiudad(c, cw, ch, dt);
     if (window.TIRO25) TIRO25.dibujar(c, cw, ch, tiempo);
+    if (window.PULSO25) PULSO25.dibujar(c, cw, ch, tiempo);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
   const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !p.farol && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
@@ -806,6 +820,7 @@ window.EIKHOLT = (function () {
     marca: st && st.marca,
     casas: plano.casasQueSeEntran,
     vistas: (st && st.casasVistas) || [],
+    puntos: window.GALLINAS25 ? GALLINAS25.sueltas() : [],
   });
   // «Hoy en Eikholt»: lo que pasa hoy en la ciudad, para el pie del mapa (asamblea, ratero, lo perdido, el recado
   // tomado, la cinta atada y los viejos del hnefatafl)
@@ -822,6 +837,9 @@ window.EIKHOLT = (function () {
     if (st.recados && st.recados.activo && window.RECADOS25) l.push(t("ek.hoy_recado", [t("ek.rc_cosa_" + (st.recados.i % RECADOS25.LISTA.length))]));
     const pr = window.PROMESAS25 && PROMESAS25.activa();
     if (pr) l.push(t("ek.hoy_promesa", [t("ek.pr_" + pr.deseo)]));
+    if (window.CUENTOS25 && h < 24) l.push(t("ek.hoy_cuento", [t("ek.cu_" + CUENTOS25.deHoy(A) + "_titulo")]));
+    if (window.GALLINAS25 && d % 3 === 1 && h >= 9 && h < 17 && !(st.gallinas && st.gallinas.dia === d && st.gallinas.hecho)) l.push(t("ek.hoy_gallinas"));
+    if (window.HUERTA25 && HUERTA25.listos(plano, st, A).length) l.push(t("ek.hoy_huerta"));
     if (window.TAFL25 && h < 18 && !(st.tafl && st.tafl.dia === d)) l.push(t("ek.hoy_tafl"));
     return l.length ? `<div class="sub mapa-hoy"><b>${t("ek.hoy_titulo")}</b> · ${l.join(" · ")}</div>` : "";
   }

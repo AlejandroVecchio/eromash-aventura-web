@@ -218,6 +218,17 @@ window.PROBAR = (function () {
                 },
               },
               { id: "ek_tiro", si: hay("TIRO25"), fn: () => (hora(10), enCiudad(null, null, () => { const o = EIKHOLT.plano().cosas.find((q) => q.id === "dianaTiro"); const e = EIKHOLT.ero(); if (o) (e.x = o.x - 120), (e.y = o.y + 40); })) },
+              { id: "ek_huerta", si: hay("HUERTA25"), fn: () => (hora(10), enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.huerta) s.huerta.hechos = []; const L = EIKHOLT.plano().lugares.hierbas; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 700); })) },
+              {
+                id: "ek_gallinas",
+                si: hay("GALLINAS25"),
+                fn: () => {
+                  for (let k = 0; k < 3 && !(hora(10), Math.floor(((A.H.E.tiempo / LUZ.DIA) * 24 + 3) / 24) % 3 === 1); k++) A.H.E.tiempo += LUZ.DIA;
+                  enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.gallinas) s.gallinas.hecho = false; const L = EIKHOLT.plano().lugares.corral; const e = EIKHOLT.ero(); (e.x = L[0] - 1500), (e.y = L[1] + 300); });
+                },
+              },
+              { id: "ek_pulso", si: hay("PULSO25"), fn: () => (hora(22.5), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.borracho); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 70), (e.y = g.y + 30); })) },
+              { id: "ek_cuentos", si: hay("CUENTOS25"), fn: () => (hora(20), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.cuentos); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 80), (e.y = g.y + 40); })) },
               { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

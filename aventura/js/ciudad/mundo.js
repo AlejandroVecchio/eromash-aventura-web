@@ -275,6 +275,11 @@ window.MUNDO25 = (function () {
       const [x, y] = buscarLibre(L.pozo[0] - 260, L.pozo[1] + 180);
       poner({ id: vecino("vecina"), x, y, vx: 0, vy: 0, s: 1, horas: [8, 19], perdio: true });
     }
+    // la cuentacuentos de paso junto al fogón de los forasteros (CUENTOS25), de 19 a 24
+    if (L.forasteros) {
+      const [x, y] = buscarLibre(L.forasteros[0] + 150, L.forasteros[1] + 170);
+      poner({ id: vecino("cuentista"), x, y, vx: 0, vy: 0, s: 1, horas: [19, 24], cuentos: true });
+    }
     // el ratero del mercado (LADRON25): solo se ve mientras huye
     poner({ id: vecino("ladron"), x: 0, y: 0, vx: 0, vy: 0, s: 1, ladron: true });
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)

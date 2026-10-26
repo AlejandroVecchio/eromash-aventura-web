@@ -116,12 +116,15 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **asamblea.js**: la asamblea del Ting (módulo ASAMBLEA25)
 - **casas.js**: las casas de la capital (módulo CASAS25)
   - proyección · lo que lleva cada pared, vista de frente (s de 0 a len, t = 0 el piso, hacia arriba negativo) · el cuerpo de la casa · lo que se arrima a la casa · el dibujo entero
+- **cuentos.js**: los cuentos junto al fuego de los forasteros (módulo CUENTOS25)
 - **cuervos.js**: los cuervos de Odín en la ofrenda del Roble (módulo CUERVOS25)
 - **enseres.js**: lo chico de la ciudad en volumen (módulo ENSERES25)
   - la huerta: canteros bajos con sus plantas, el cerco de mimbre; va en el piso · los carros: la carreta con lona, el carro de caravana (más grande) y el carro abierto de la cuadrilla · la leñera: la pila de leños partidos con las puntas a la vista y su techito de un agua · la forja de Ása: el cobertizo abierto con la fragua, la chimenea, el yunque y las herramientas · la chimenea de la herrería: alta, de piedra, angostándose, con la boca encendida · el tablón: dos postes, el tablero con papeles de los dos lados y su alero · la mesa con sus dos bancos · el estante: armas apoyadas, o manojos de hierbas colgados (el secadero) · el tendedero: dos postes, la soga y la ropa colgada · el ahumadero: casita baja de tablas con techo a dos aguas y humo · la lona de la cuadrilla: una carpa en caballete · leños: el tronco caído (asiento) y la pila de troncos del aserradero · un fardo de heno atado · la diana del campo de tiro: el caballete y el disco de paja con sus anillos · la campana de la plaza: el pórtico de dos postes con su techito y la campana colgada · la cama de pieles del patio de Sanación: un catre bajo con las pieles · el estandarte de la cornamenta: el asta y la tela verde con el Ciervo, a lo ancho (u) · el poste del Hongo Dorado: el poste, el brazo y el cartel con el hongo dorado, y su farol · el farol de poste: el poste, el brazo a lo largo (u) y la caja colgada con la luz · una roca: un prisma bajo y desparejo, gris con musgo arriba · el muñeco de práctica: el poste, los brazos de palo a lo ancho, el cuerpo de paja y el escudo al frente · lo que cuenta algo de la ciudad (revisión 7)
 - **escondidas.js**: las escondidas con los chicos de Eikholt (módulo ESCONDIDAS25)
 - **esperar.js**: sentarse a esperar en el Ting (módulo ESPERAR25)
 - **fama.js**: lo que se cuenta de Eromash en Eikholt (módulo FAMA25)
+- **gallinas.js**: las gallinas escapadas del corral (módulo GALLINAS25)
+- **huerta.js**: la huerta de hierbas de la Casa de Sanación (módulo HUERTA25)
 - **juego.js**: Eikholt en el juego (sistema EIKHOLT)
   - el plano y el bosque · la gente · lo que se puede hacer cerca · Eromash camina · la cámara: sigue a Eromash, Z / X giran, acercar y alejar (o la rueda) · armar la ciudad (la primera vez que se entra) · entrar y salir · el cuadro · el mapa propio (ciudad/mapa.js): la M abre el de la ciudad y desde ahí se pasa al del bosque · el sistema (en el bosque: detecta cuando Eromash llega a la ciudad)
 - **ladron.js**: el ladrón del mercado (módulo LADRON25)
@@ -139,6 +142,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **porton.js**: las puertas de la empalizada (módulo PORTON25)
 - **promesas.js**: las cintas de promesa del Roble (módulo PROMESAS25)
 - **puestos.js**: los puestos del Mercado de los Toldos (módulo PUESTOS25)
+- **pulso.js**: la pulseada con los parroquianos del Hongo Dorado (módulo PULSO25)
 - **recados.js**: los recados del tablón de la plaza (módulo RECADOS25)
 - **recorrer.js**: recorrer la capital con Eromash (módulo RECORRER25)
   - los barrios: el más cercano dentro de su radio pone su nombre al entrar · quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio · la tarjeta de lo que se mira (HTML: se lee mejor y se adapta a la pantalla) · cada cuadro · la gente reacciona a Eromash · los animales, el humo, las chispas y las hojas · dibujar · la silueta de Eromash detrás de las cosas

@@ -98,7 +98,7 @@ window.TIRO25 = (function () {
     if (!juego) return;
     const R = Math.min(cw, ch) * 0.26,
       cx = cw / 2,
-      cy = ch * 0.46;
+      cy = ch * 0.42;
     c.save();
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.fillStyle = "rgba(17,17,17,0.45)";

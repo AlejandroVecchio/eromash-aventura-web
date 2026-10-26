@@ -179,6 +179,20 @@ window.MAPA25 = (() => {
         c.arc(px, py, u * 0.2, 0, Math.PI * 2);
         c.fill();
       }
+    // lo que un juego del día pide encontrar (las gallinas sueltas): rombos dorados chicos
+    for (const q of op.puntos || []) {
+      const [px, py] = aqui(q[0], q[1]),
+        s = u * 0.3;
+      c.fillStyle = "#111111";
+      c.fillRect(px - s * 0.9, py - s * 0.9, s * 1.8, s * 1.8);
+      c.fillStyle = "#FFD98A";
+      c.beginPath();
+      c.moveTo(px, py - s);
+      c.lineTo(px + s, py);
+      c.lineTo(px, py + s);
+      c.lineTo(px - s, py);
+      c.fill();
+    }
     if (marca) {
       const [px, py] = aqui(marca[0], marca[1]);
       c.save();

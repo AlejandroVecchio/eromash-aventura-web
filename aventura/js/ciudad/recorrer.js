@@ -53,7 +53,7 @@ window.RECORRER25 = (function () {
   // ---------- quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio ----------
   const FRASES_GENERICAS = { guardia: "ek.dice_guardia_", trabajador: "ek.dice_vecino_", trabajador2: "ek.dice_vecina_", trabajador3: "ek.dice_viajero_", herido: "ek.dice_vecina_", svanhild: null, eydis: null, orm: null };
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5, cuentista: 3 };
   function frase(id, n, rol) {
     n = Math.abs(Math.floor(n)) || 0;
     // una de cada tres veces, los que no tienen nombre comentan lo que Eromash hizo afuera (FAMA25)
@@ -378,9 +378,10 @@ window.RECORRER25 = (function () {
           a.vy = (dy / d) * 260;
         } else if (Math.random() < dt * 0.8) {
           // picotean y dan pasitos cerca de su gallinero
+          // (las escapadas de GALLINAS25 no vuelven solas: hay que arrearlas)
           const ax = a.cx - a.x,
             ay = a.cy - a.y,
-            vuelta = Math.hypot(ax, ay) > 450;
+            vuelta = !a.escapada && Math.hypot(ax, ay) > 450;
           a.vx = vuelta ? ax * 0.3 : (Math.random() - 0.5) * 90;
           a.vy = vuelta ? ay * 0.3 : (Math.random() - 0.5) * 90;
         } else if (Math.random() < dt) a.vx = a.vy = 0;
@@ -986,6 +987,6 @@ window.RECORRER25 = (function () {
     a.mimo = 2;
     if (a.tipo === "perro") a.sigue = 25;
   }
-  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, gallinas: () => animales.filter((a) => a.tipo === "gallina"), tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
   return api;
 })();

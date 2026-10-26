@@ -59,7 +59,7 @@ I18N.textos({
   "sg.e_elementos": { es: "Los elementos", en: "The elements" },
   "sg.e_elementos_d": { es: "Thurisaz en el Roble del Trueno, Laguz en su fuente y las seis reacciones.", en: "Thurisaz at the Thunder Oak, Laguz at its spring and the six reactions." },
   "sg.e_eikholt": { es: "La vida de Eikholt", en: "Life in Eikholt" },
-  "sg.e_eikholt_d": { es: "Recados del tablón, casas de vecinos, las escondidas, el Ting, las cintas, el hnefatafl, el ratero, lo perdido y el tiro de hachas.", en: "Board errands, neighbors' houses, hide-and-seek, the Ting, the ribbons, hnefatafl, the thief, lost things and axe throwing." },
+  "sg.e_eikholt_d": { es: "Recados del tablón, casas de vecinos, las escondidas, el Ting, las cintas, el hnefatafl, el ratero, lo perdido, el tiro de hachas y los ocho cuentos del fuego.", en: "Board errands, neighbors' houses, hide-and-seek, the Ting, the ribbons, hnefatafl, the thief, lost things, axe throwing and the eight fireside stories." },
   "sg.e_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },
   "sg.e_casa_d": { es: "Se vende junto al camino del Puesto: comprala y mejorala.", en: "For sale by the Outpost road: buy it and improve it." },
 });
