@@ -669,6 +669,7 @@ window.INTERIORES = (function () {
       A.H.E.tiempo += falta;
       HUD.aviso(t("in.dormiste_noche"), "#E0B2B2");
     } else HUD.aviso(t("in.dormiste"), "#E0B2B2");
+    if (window.ANIMA) J.retrasar(1.1, () => ANIMA.gesto("desperezarse")); // se despierta estirándose
     A.H.guardar();
   }
   function calentarse() {

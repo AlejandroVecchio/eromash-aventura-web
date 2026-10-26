@@ -38,15 +38,34 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 ## Las variaciones de los juegos de runas (`juegos-runas.js`)
 
-(próximamente)
+Parejas, la plegaria (Simón) y el verso escondido (Mastermind) siguen en su propio lienzo (`JUEGOS_RUNAS`), pero ahora
+aceptan `variante` en `JUEGOS_RUNAS.empezar(tipo, { variante })`. Las reglas viven en `JUEGOS_RUNAS.VARIANTES`:
+
+| Juego | Variante | Reglas |
+| --- | --- | --- |
+| parejas | `vistazo` | Se ven todas 2,4 s al empezar (sin poder tocar), 12 vueltas |
+| parejas | `maldita` | Cada tres fallos dos piedras tapadas de runas distintas se cambian (destello violeta), 18 vueltas |
+| simon | `reves` | La plegaria se repite del final al principio, 7 para ganar |
+| simon | `rapido` | 10 para ganar y se muestra 40 % más rápido |
+| mente | `repetidas` | El verso puede repetir runas (la respuesta cuenta cada runa una sola vez) |
+| mente | `largo` | Cinco runas y nueve intentos (las filas se aprietan solas) |
+
+**Dónde se usan**: cada hörgr tiene su rito (`SANTUARIOS.RITO`): Thor la plegaria ligera, Odín el verso con ecos, Tyr
+el verso largo, Freyja parejas de un vistazo, Frigg parejas maldita, Njörd la plegaria al revés y Ullr la plegaria de
+siempre. Ganarlo da la bendición fuerte sin ofrendar plata; perderlo no cuesta nada y se puede volver a probar mientras
+el dios no haya bendecido ese día. Probar mecánicas → Juegos lista cada variante.
 
 ## Las losas deslizantes
 
 (próximamente)
 
-## El hilo de las Nornas
+## El hilo de las Nornas (`mj-hilo.js`)
 
-(próximamente)
+Al pie del fresno las tres Nornas tejen el destino. Un telar en grilla con pares de piedras rúnicas: hay que unir cada piedra con su gemela con un hilo que va de casilla vecina en vecina, sin que dos hilos se crucen. Se arrastra desde una piedra (o se agarra con la tecla de usar y se mueve con las flechas); cruzar un hilo lo corta, volver sobre el propio lo acorta.
+
+- **Variantes**: `base` (5 × 5, cuatro hilos), `seis` (6 × 6, cinco), `lleno` (además hay que cubrir todo el telar), `nudos` (tres nudos de oro por los que algún hilo tiene que pasar) y `reloj` (7 × 7 sin huecos, 150 s).
+- **Siempre tiene solución**: se arma un camino que recorre todo el telar (movidas de «mordida» sobre un zigzag) y se corta en hilos de al menos tres casillas; la solución queda en `S.sol`.
+- **Dónde está**: la Poza de Urd (`vida.js`). La primera noche pide un telar `lleno` antes de mostrar la visión; después, una vez por noche, teje `nudos` o `reloj` y paga plata y experiencia (`st.pozaNoche`). `VIDA.mirarPoza(noche)` la abre sin caminar (pruebas).
 
 ## Tallar la runa
 
@@ -56,13 +75,26 @@ Perder no cuesta nada: el cofre sigue cerrado y se puede volver a intentar.
 
 (próximamente)
 
-## Hachas al blanco
+## Hachas al blanco (`mj-hachas.js`)
 
-(próximamente)
+El campo de la Guardia de Eikholt: una diana de paja con el ojo de Odín en el centro. Cada tiro son dos golpes de usar (o atacar, o tocar): el primero fija la puntería de lado a lado (la marca va y viene) y el segundo la altura. El hacha sale girando y se clava. Anillos: ojo 10, rojo 6, claro 4, borde 2, afuera nada. Cinco tiros. Devuelve `{ gano, puntos, rival }`.
 
-## El rayo de luz rúnica
+- **Variantes**: `base` (hacen falta 26), `viento` (una ráfaga por tiro corre el hacha: hay que apuntar al costado; 24), `movil` (la diana cuelga de una soga y va y viene: hay que adelantarse; 22), `lejos` (la diana más chica; 22) y `duelo` (Hrafn, de la Guardia, tira después de cada hacha: hay que sumar más que él).
+- **Dónde está**: las dianas del campo de entrenamiento de la Guardia en Eikholt (`ciudad/juego.js`, `dianaCerca` en `cercano`).
+  - Cada partida pasa a la variante siguiente.
+  - Superar el récord (`E.extra.eikholt.hachas`) paga plata, y ganar da experiencia.
+  - `EIKHOLT.lanzarHachas()` lo abre sin caminar (pruebas).
 
-(próximamente)
+## El rayo de luz rúnica (`mj-rayo.js`)
+
+Una losa en grilla con una piedra que echa luz rúnica (Kenaz), piedras espejo talladas en diagonal y el sello (Othala) que hay que encender. Tocar un espejo lo da vuelta (de / a \). La luz rebota en cada espejo y se corta en las piedras ciegas y en las ataduras violeta. Con el teclado, las flechas mueven la marca y usar da vuelta el espejo.
+
+- **Variantes**: `base` (7 × 5, tres vueltas, dos señuelos), `ataduras` (casillas violeta que se tragan la luz y un espejo atado que no gira), `dos` (dos fuentes y dos sellos), `luna` (la luz pálida baja de arriba, con Sowilo) y `reloj` (8 × 6, 90 s). Más difíciles, en orden: `gemelas` (un par de piedras con Ehwaz: la luz entra en una y sale derecho por la de su color), `laberinto` (10 × 7, siete vueltas, dos espejos atados, muchos señuelos), `tres` (tres luces y tres sellos, con gemelas) y `abismo` (11 × 8, dos luces, dos pares de gemelas, ataduras y 150 s). Probar mecánicas las lista en ese orden.
+- **Siempre tiene solución**: se arma primero el camino de la luz (tramos rectos y una vuelta entre cada uno) y se ponen los espejos en sus vueltas; los demás son señuelos en lo que la luz no usa. Se revuelve y se asegura que no arranque resuelto.
+- **Dónde está**:
+  - **El rito de la luna** (`ritos.js`): de noche, tocar la piedra pide llevar la luz de la luna hasta ella (semilla por rito).
+  - **El sello del Santuario de las Raíces** en la misión principal EL-07 (`juego.js`): antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (`ataduras`, semilla fija). Dejarlo no hace el calco.
+  - `RITOS.tocar(r)` lo abre sin caminar (pruebas).
 
 ## Hnefatafl
 

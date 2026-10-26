@@ -121,7 +121,7 @@ window.CASA = (function () {
     mostrarAfuera();
     HUD.aviso(t("hg.comprada"), "lugar", t("hg.comprada_t"));
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.6 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("grito", 0, { col: "#FFD98A" });
     if (window.VIDA) VIDA.evento("lugar", casa.x, casa.y);
     return true;
   }
