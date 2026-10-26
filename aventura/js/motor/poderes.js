@@ -154,10 +154,13 @@ window.PODERES = (function () {
     // uno de cada tres cofres trae hierbas de Thora (se llevan hasta cinco, se comen desde la barra de abajo)
     const hierbas = pj.hierbas < MAX_HIERBAS && Math.random() < 0.35;
     if (hierbas) darHierbas(1);
+    // uno de cada cuatro trae una piedra de Loki (las pistas de los minijuegos)
+    const loki = window.LOKI && Math.random() < 0.25 && LOKI.dar(1, true);
     const partes = [nombre];
     if (b.plata) partes.push(t("sx.botin_plata", [b.plata]));
     if (b.vida) partes.push(t("sx.botin_vida"));
     if (hierbas) partes.push(t("bar.botin_hierbas"));
+    if (loki) partes.push(t("lk.botin"));
     HUD.aviso(partes.join(" · "), "#FFD98A");
     if (window.ANIMA) ANIMA.gesto("botin");
   }

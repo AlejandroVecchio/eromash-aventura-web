@@ -215,6 +215,7 @@ window.PROBAR = (function () {
       lista: () => [
         { id: "plata", queda: true, si: hay("PODERES"), fn: () => (PODERES.darPlata(1000), HUD.aviso(t("pb.listo"), "#FFD98A")) },
         { id: "materiales", queda: true, si: true, fn: () => (darTodo(), HUD.aviso(t("pb.listo"), "#7BC86C")) },
+        { id: "loki", queda: true, si: hay("LOKI"), fn: () => (LOKI.dar(5, true), HUD.aviso(t("pb.listo"), "#7BC86C")) },
         { id: "niveles", queda: true, si: hay("RPG"), fn: () => niveles(5) },
         { id: "curar", queda: true, si: true, fn: () => ((jug.hp = jug.hpMax), (jug.sta = jug.staMax), HUD.aviso(t("pb.listo"), "#7BC86C")) },
         { id: "noche", queda: true, si: true, fn: () => hora(23) },
