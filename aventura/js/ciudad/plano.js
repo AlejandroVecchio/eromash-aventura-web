@@ -1174,6 +1174,11 @@ window.PLANO25 = (function () {
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
     lugares.mercado = U(polar(-PI * 0.75, 31.5)); // el Mercado de los Toldos, en el anillo de adentro (para el mapa)
+    // la mesa de hnefatafl y las cintas de promesa del Roble, para el mapa (TAFL25 y PROMESAS25)
+    for (const [k, id] of [["hnefatafl", "hnefatafl"], ["cintas", "cintasPromesa"]]) {
+      const o = cosas.find((q) => q.id === id);
+      if (o) lugares[k] = [o.x, o.y];
+    }
     return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, puestos, lugares, puertas: PUERTAS, plaza: 50.5 * M, rOficios: (a) => rOficios(a) * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };

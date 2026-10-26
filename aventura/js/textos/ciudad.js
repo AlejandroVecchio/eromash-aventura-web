@@ -48,6 +48,8 @@ I18N.textos({
   "ci.m_corral": { es: "El corral de caravanas", en: "The caravan corral" },
   "ci.m_huertas": { es: "Las huertas", en: "The vegetable gardens" },
   "ci.m_hongo": { es: "El Hongo Dorado", en: "The Golden Mushroom" },
+  "ci.m_hnefatafl": { es: "La mesa de hnefatafl", en: "The hnefatafl table" },
+  "ci.m_cintas": { es: "Las cintas de promesa", en: "The promise ribbons" },
   "ci.m_mercado": { es: "El Mercado de los Toldos", en: "The Awning Market" },
   "ci.m_tablero": { es: "El tablero de sendas", en: "The trail board" },
   "ci.m_casa_guardia": { es: "La casa de guardia", en: "The guardhouse" },

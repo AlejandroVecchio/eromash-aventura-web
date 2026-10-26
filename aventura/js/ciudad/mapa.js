@@ -16,7 +16,7 @@ window.MAPA25 = (() => {
   const ICONO = {
     ting: "santuario", pozo: "manantial", campana: "torre", tablon: "contrato", lindes: "casa", carpinteria: "aserradero", herreria: "yunque",
     cordeleria: "puesto", curtiembre: "puesto", sanacion: "sanacion", hierbas: "manzano", hospederia: "casa", guardia: "torre", entrenamiento: "instructor",
-    forasteros: "caravana", corral: "caravana", huertas: "manzano", hongo: "taberna", tablero: "contrato", casa_guardia: "torre", mercado: "puesto",
+    forasteros: "caravana", corral: "caravana", huertas: "manzano", hongo: "taberna", tablero: "contrato", casa_guardia: "torre", mercado: "puesto", hnefatafl: "tafl", cintas: "cintas",
   };
   // los lugares que se ven también en el minimapa (los grandes)
   const MINI = { herreria: 1, sanacion: 1, hongo: 1, ting: 1, lindes: 1, guardia: 1, forasteros: 1, hospederia: 1, mercado: 1 };

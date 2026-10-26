@@ -32,6 +32,8 @@ I18N.textos({
   "cat.ic_yunque": { es: "Herrería (Eikholt)", en: "Smithy (Eikholt)" },
   "cat.ic_taberna": { es: "Taberna (Eikholt)", en: "Tavern (Eikholt)" },
   "cat.ic_sanacion": { es: "Casa de Sanación (Eikholt)", en: "House of Healing (Eikholt)" },
+  "cat.ic_tafl": { es: "Mesa de hnefatafl (Eikholt)", en: "Hnefatafl table (Eikholt)" },
+  "cat.ic_cintas": { es: "Cintas de promesa (Eikholt)", en: "Promise ribbons (Eikholt)" },
   "cat.ic_puerta": { es: "Puerta de la ciudad", en: "City gate" },
   "av.nombre_piedraCamino": { es: "Piedra del camino", en: "Waystone" },
 
