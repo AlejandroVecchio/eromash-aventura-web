@@ -237,6 +237,16 @@ window.MUNDO25 = (function () {
     ];
     for (const [id, c0, dx, dy, horas, o] of VECINOS) if (c0) gente.push(Object.assign({ id, x: c0[0] + dx, y: c0[1] + dy, vx: 0, vy: 0, s: 1, horas, nombrado: true }, o || {}));
     for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
+    // cada puesto del mercado tiene su puestero de día, parado a un costado del mostrador (del lado que esté libre):
+    // pregona lo suyo cuando Eromash pasa cerca (RECORRER25) y no se va con la lluvia, que tiene el toldo
+    for (const q of plano.puestos || []) {
+      const ux = Math.cos(q.ry),
+        uy = Math.sin(q.ry),
+        bx = q.x + Math.sin(q.ry) * 80,
+        by = q.y - Math.cos(q.ry) * 80;
+      const lado = [1, -1].map((s) => [bx + ux * s * (q.W / 2 + 50), by + uy * s * (q.W / 2 + 50)]).find(([x, y]) => libre(x, y, 25));
+      if (lado) poner({ id: vecino("vendedor"), x: lado[0], y: lado[1], vx: 0, vy: 0, s: 1, horas: [7, 19], puesto: q.vende });
+    }
     // lo que alumbra de noche (LUCES25) y las sombras de lo que está parado (SOMBRAS25)
     LUCES25.armar(plano);
     SOMBRAS25.iniciar(plano);

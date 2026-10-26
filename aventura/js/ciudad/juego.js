@@ -688,7 +688,7 @@ window.EIKHOLT = (function () {
     climaCiudad(c, cw, ch, dt);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
-  const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
+  const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
   // el mismo clima del día que el bosque (VIDA.climaAhora): la lluvia cae inclinada sobre la ciudad y la oscurece un
   // poco, la bruma del alba la blanquea. Calidad baja: nada; media: menos gotas.
   let lluvia = 0,

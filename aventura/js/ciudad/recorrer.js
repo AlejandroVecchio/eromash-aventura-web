@@ -319,6 +319,13 @@ window.RECORRER25 = (function () {
       // los que están quietos lo miran pasar; Håkon lo mira desde todo el campo
       const radio = p.id === "hakon" ? 1600 : 520;
       if (d < radio && !p.vx && !p.vy) p.miraA = [dx, dy];
+      // los puesteros pregonan lo suyo cuando él pasa cerca, aunque vaya caminando (cada uno cada tanto)
+      if (p.puesto && d < 560 && d > 120 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+        globos.push({ p, texto: tr("ek.pregon_" + p.puesto + "_" + (Math.floor(t * 0.31 + p.x) & 3)), t: 0 });
+        p.pregon = t + 30;
+        enfriaGlobo = 4;
+        continue;
+      }
       // a veces dicen algo si se queda al lado (una frase a la vez en toda la ciudad)
       if (d < 230 && enfriaGlobo <= 0 && !ero.anda && !globos.length && !api.callados) {
         const s = frase(p.id, Math.floor(t * 0.37 + p.x), p.rol);

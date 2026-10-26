@@ -188,7 +188,7 @@ window.PLANO25 = (function () {
       anclas = {},
       casasQueSeEntran = [], // { nombre, x, y (delante de la puerta, unidades), sem, v }
       edificiosQueSeEntran = [], // la hospedería y el cuartel: { tipo, x, y (delante de la puerta), sem }
-      puestos = [], // los del Mercado de los Toldos: { n, vende, x, y (delante del mostrador, unidades) }
+      puestos = [], // los del Mercado de los Toldos: { n, vende, x, y (delante del mostrador, unidades), ry, W (el ancho del puesto) }
       casasCerradas = []; // las demás: { nombre, x, y, sem } (se golpean)
     // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
     const curiosidades = [];
@@ -460,7 +460,7 @@ window.PLANO25 = (function () {
         const puesto = PUESTOS25.crear(nt + 3);
         cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa: puesto, nombre: "puesto" + nt });
         const fr = puesto.D / 2 + 110;
-        puestos.push({ n: nt, vende: puesto.vende, x: x * M - fr * Math.sin(ry), y: z * M + fr * Math.cos(ry) });
+        puestos.push({ n: nt, vende: puesto.vende, x: x * M - fr * Math.sin(ry), y: z * M + fr * Math.cos(ry), ry, W: puesto.W });
         choques.push({ poli: puesto.huella(x * M, z * M, ry) });
         nt++;
       }
