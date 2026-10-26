@@ -55,9 +55,28 @@ el verso largo, Freyja parejas de un vistazo, Frigg parejas maldita, Njörd la p
 siempre. Ganarlo da la bendición fuerte sin ofrendar plata; perderlo no cuesta nada y se puede volver a probar mientras
 el dios no haya bendecido ese día. Probar mecánicas → Juegos lista cada variante.
 
-## Las losas deslizantes
+## Las losas deslizantes (`mj-losas.js`)
 
-(próximamente)
+Una tabla de piedra tallada (marco con guarda, rombos, nudos de oro y una runa grande en luz rúnica) partida en losas
+con un hueco; a la izquierda se ve la tabla entera. Las flechas corren hacia el hueco la losa de ese lado; con el
+puntero se toca cualquier losa de la fila o la columna del hueco y se corre toda la tira. Cada losa lleva su número
+chico (celeste cuando está en su lugar). Se arma resuelta y se desordena caminando el hueco, así siempre se puede.
+
+**Pista de Loki** (`pista(S)`): corre de a una las próximas losas del camino a la tabla rearmada, tres en la de 3 × 3 y
+ocho en la de 4 × 4. El camino sale de una búsqueda A* (rápida en la de 3 × 3); si no lo encuentra a tiempo, se deshace
+el rastro del hueco (`anotar`: cada paso desde la tabla armada, con las vueltas cortadas), que siempre la rearma. Si
+nadie tocó la tabla, la pista siguiente sigue el mismo plan.
+
+| Variante | Reglas | Dónde |
+| --- | --- | --- |
+| `base` | 3 × 3 | uno de cada cuatro arcones del leñador (`id % 4 === 3`) |
+| `cuatro` | 4 × 4 | — |
+| `atadas` | 4 × 4, dos losas del medio atadas en violeta (no se mueven, hay que rodearlas) | la mitad de los cofres de las salas del tesoro de las mazmorras |
+| `reloj` | 3 × 3, 60 s | — |
+| `gran` | 4 × 4 atada, 210 s | — |
+
+Los cofres que cierran con otro minijuego que no sea los anillos dicen `"tipo:variante"` en su cerrojo
+(`"losas:atadas"`); el cartel de arriba sale de `mn.<tipo>_cerrado`.
 
 ## El hilo de las Nornas (`mj-hilo.js`)
 
