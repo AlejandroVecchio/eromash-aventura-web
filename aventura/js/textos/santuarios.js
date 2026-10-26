@@ -53,4 +53,7 @@ I18N.textos({
   "sn.b_frigg": { es: "Como un manto tejido sobre los hombros.", en: "Like a woven cloak across your shoulders." },
   "sn.b_njord": { es: "El viento te empuja la espalda.", en: "The wind pushes at your back." },
   "sn.b_ullr": { es: "Aliento de cazador: no te cansás.", en: "A hunter's breath: you don't tire." },
+  "sn.rito": { es: "Hacer su rito", en: "Perform its rite" },
+  "sn.rito_d": { es: "{0}{1}. Ganalo y la bendición sale fuerte sin ofrendar.", en: "{0}{1}. Win it and the blessing comes strong with no offering." },
+  "sn.rito_perdio": { es: "{0} no quedó conforme. Podés volver a probar o rezar igual.", en: "{0} was not pleased. You can try again or pray anyway." },
 });

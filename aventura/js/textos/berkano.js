@@ -2,6 +2,7 @@
 I18N.textos({
   "as.manantialRunico": { es: "Un manantial rúnico", en: "A runic spring" },
   "as.piedraBerkano": { es: "Una piedra de Berkano", en: "A Berkano stone" },
+  "as.piedraBerkanoSurge": { es: "La piedra de Berkano que surge", en: "The rising Berkano stone" },
   "bk.piedra": { es: "Piedra de Berkano", en: "Berkano stone" },
   "bk.piedras": { es: "Piedras de Berkano", en: "Berkano stones" },
   "bk.tomar_piedra": { es: "Juntar la piedra de Berkano", en: "Pick up the Berkano stone" },

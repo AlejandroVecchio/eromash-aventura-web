@@ -182,7 +182,7 @@ window.COCINA = (function () {
     if (window.RPG) RPG.recalcular();
     jug.hp = jug.hpMax;
     HUD.aviso(t(k > 1 ? "co.a_punto" : k < 1 ? "co.desparejo" : "co.bien", [t("co.p_" + id)]), PLATOS[id].col);
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("alivio");
   }
   function cerrar() {
     asador = null;

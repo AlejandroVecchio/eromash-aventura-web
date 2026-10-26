@@ -1394,6 +1394,33 @@ window.ELDERVALD = (function () {
 
   // los canales son agua (no se cruzan): se marcan acá, ya con lo que el editor movió
   COSAS.forEach((o) => o.id === "canal" && o.o.x2 !== undefined && pintarLinea([[o.x, o.y], [o.o.x2, o.o.y2]], 80, 1));
+  // los puentes trazados (caminos o tramos de tipo puente_*, mundo/caminos.js): por encima del agua y de la quebrada
+  // se camina, de una rampa a la otra
+  SENDAS.puentesDe(CAMINOS).forEach((pu) => {
+    const r = SENDAS.anchoPuente(pu) - 4,
+      p = pu.p;
+    for (let i = 1; i < p.length; i++) {
+      const [ax, ay] = p[i - 1],
+        [bx, by] = p[i],
+        l = Math.hypot(bx - ax, by - ay) || 1,
+        // se estira 60 de cada punta para llegar a tierra firme
+        ex = ((bx - ax) / l) * (i === 1 ? 60 : 0),
+        ey = ((by - ay) / l) * (i === 1 ? 60 : 0),
+        fx = ((bx - ax) / l) * (i === p.length - 1 ? 60 : 0),
+        fy = ((by - ay) / l) * (i === p.length - 1 ? 60 : 0),
+        A = [ax - ex, ay - ey],
+        B = [bx + fx, by + fy];
+      const gx0 = Math.max(0, Math.floor((Math.min(A[0], B[0]) - r) / CELDA)),
+        gx1 = Math.min(GW - 1, Math.ceil((Math.max(A[0], B[0]) + r) / CELDA)),
+        gy0 = Math.max(0, Math.floor((Math.min(A[1], B[1]) - r) / CELDA)),
+        gy1 = Math.min(GH - 1, Math.ceil((Math.max(A[1], B[1]) + r) / CELDA));
+      for (let gy = gy0; gy <= gy1; gy++)
+        for (let gx = gx0; gx <= gx1; gx++) {
+          const k = gy * GW + gx;
+          if ((suelo[k] === 1 || suelo[k] === 2) && distSeg((gx + 0.5) * CELDA, (gy + 0.5) * CELDA, A[0], A[1], B[0], B[1]) <= r) suelo[k] = 0;
+        }
+    }
+  });
 
   // ---------- grilla espacial para dibujar y chocar solo lo cercano ----------
   const BALDE = 512,

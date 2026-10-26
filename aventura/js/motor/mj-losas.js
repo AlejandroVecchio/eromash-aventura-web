@@ -32,9 +32,20 @@
       S.pos[hueco] = S.pos[c];
       if (mostrar) S.anim[S.pos[hueco]] = { dx: col(S, c) - col(S, hueco), dy: fila(S, c) - fila(S, hueco) };
       S.pos[c] = -1;
+      anotar(S, hueco);
       hueco = c;
     }
     return true;
+  }
+  // el rastro del hueco desde la tabla rearmada: cada paso guarda la celda que hay que tocar para deshacerlo, y si la
+  // tabla vuelve a quedar como ya estuvo, se corta la vuelta. Deshacerlo de atrás para adelante siempre la rearma (la
+  // pista de Loki lo usa cuando la búsqueda no encuentra el camino a tiempo)
+  function anotar(S, antes) {
+    if (!S.hist) return;
+    const k = S.pos.join(","),
+      j = S.hist.lastIndexOf(k);
+    if (j >= 0) (S.hist.length = j + 1), (S.tocas.length = j);
+    else S.hist.push(k), S.tocas.push(antes);
   }
   // las celdas que se pueden atar sin dejar ninguna encerrada: del medio, en diagonal entre sí
   function elegirAtadas(S, k) {
@@ -43,6 +54,80 @@
     const m = n >> 1,
       diag = S.rnd() < 0.5 ? [(m - 1) * n + (m - 1), m * n + m] : [(m - 1) * n + m, m * n + (m - 1)];
     return diag.slice(0, k);
+  }
+
+  // el camino a la tabla rearmada, de a una losa por vez (para la pista de Loki): A* con la distancia de cada losa a
+  // su lugar, apurado por `w` para que salga en un instante; null si no lo encuentra a tiempo (entonces la pista
+  // deshace el rastro del hueco, `anotar`)
+  function buscar(S, w, tope) {
+    const n = lado(S),
+      N = n * n,
+      // cuántos pasos hay de cada celda a cada otra rodeando las atadas (la distancia en línea recta engaña con ellas)
+      pasosDe = (S.pasosDe =
+        S.pasosDe ||
+        Array.from({ length: N }, (_, a) => {
+          const d = new Array(N).fill(99),
+            cola = [a];
+          d[a] = 0;
+          while (cola.length) {
+            const q = cola.shift();
+            [q - n, q + n, col(S, q) > 0 ? q - 1 : -1, col(S, q) < n - 1 ? q + 1 : -1].forEach((c) => c >= 0 && c < N && !S.atadas.includes(c) && d[c] > d[q] + 1 && ((d[c] = d[q] + 1), cola.push(c)));
+          }
+          return d;
+        })),
+      lejos = (pos) => pos.reduce((d, p, i) => (p < 0 || S.atadas.includes(i) ? d : d + pasosDe[p][i]), 0),
+      clave = (pos) => pos.join(","),
+      heap = [],
+      sube = (o) => {
+        heap.push(o);
+        for (let i = heap.length - 1; i > 0; ) {
+          const pa = (i - 1) >> 1;
+          if (heap[pa].f <= heap[i].f) break;
+          [heap[pa], heap[i]] = [heap[i], heap[pa]];
+          i = pa;
+        }
+      },
+      saca = () => {
+        const top = heap[0],
+          ult = heap.pop();
+        if (heap.length) {
+          heap[0] = ult;
+          for (let i = 0; ; ) {
+            const a = 2 * i + 1,
+              b = a + 1;
+            let m = i;
+            if (a < heap.length && heap[a].f < heap[m].f) m = a;
+            if (b < heap.length && heap[b].f < heap[m].f) m = b;
+            if (m === i) break;
+            [heap[m], heap[i]] = [heap[i], heap[m]];
+            i = m;
+          }
+        }
+        return top;
+      };
+    const visto = new Map([[clave(S.pos), null]]);
+    sube({ pos: S.pos.slice(), g: 0, f: lejos(S.pos) * w });
+    for (let k = 0; heap.length && k < tope; k++) {
+      const o = saca();
+      if (o.pos.every((p, i) => p === i || (p < 0 && i === N - 1))) {
+        // de atrás para adelante: la celda que se tocó en cada paso
+        const pasos = [];
+        for (let ck = clave(o.pos); visto.get(ck); ck = visto.get(ck).de) pasos.unshift(visto.get(ck).toca);
+        return pasos;
+      }
+      const h = o.pos.indexOf(-1);
+      [h - n, h + n, col(S, h) > 0 ? h - 1 : -1, col(S, h) < n - 1 ? h + 1 : -1].forEach((c) => {
+        if (c < 0 || c >= N || S.atadas.includes(c)) return;
+        const pos = o.pos.slice();
+        pos[h] = pos[c];
+        pos[c] = -1;
+        const ck = clave(pos);
+        if (visto.has(ck)) return;
+        visto.set(ck, { de: clave(o.pos), toca: c });
+        sube({ pos, g: o.g + 1, f: o.g + 1 + lejos(pos) * w });
+      });
+    }
+    return null;
   }
 
   MINIJ.registrar("losas", {
@@ -61,6 +146,8 @@
       S.pos = Array.from({ length: n * n }, (_, i) => (i === n * n - 1 ? -1 : i));
       S.atadas = elegirAtadas(S, S.v.atadas);
       S.anim = {};
+      S.hist = [S.pos.join(",")];
+      S.tocas = [];
       // desordenar: el hueco camina al azar (sin volver sobre sus pasos) por las celdas libres
       let antes = -1;
       for (let k = 0; k < n * n * 18 || resuelto(S); k++) {
@@ -90,6 +177,11 @@
         a.dy *= f;
         if (Math.abs(a.dx) + Math.abs(a.dy) < 0.01) delete S.anim[k];
       });
+      if (S.cola && S.cola.length && (S.colaT -= dt) <= 0) {
+        S.colaT = 0.18;
+        this.tocar(S, S.cola.shift());
+        if (!S.cola.length && S.plan) S.plan.k = S.pos.join(","); // dónde sigue el plan
+      }
       if (S.gano && (S.gano -= dt) <= 0) MINIJ.terminar({ gano: true, movs: S.movs });
     },
     tocar(S, i) {
@@ -106,6 +198,24 @@
         u = Math.floor((x - (CX - TAM / 2)) / q),
         v = Math.floor((y - (CY - TAM / 2)) / q);
       return u >= 0 && v >= 0 && u < n && v < n ? v * n + u : null;
+    },
+    // la pista de Loki: corre las próximas losas del camino a la tabla rearmada (tres, u ocho en la de 4 × 4)
+    pista(S) {
+      if (S.gano || (S.cola && S.cola.length)) return false;
+      // sigue el plan de la pista anterior si nadie tocó la tabla; si no, el más corto entre la búsqueda y deshacer el rastro
+      const k = S.pos.join(",");
+      let pasos = S.plan && S.plan.k === k ? S.plan.pasos : null;
+      if (!pasos) {
+        const atras = S.tocas.slice().reverse(),
+          b = lado(S) === 3 || atras.length <= 40 ? buscar(S, 1.6, 20000) : null;
+        pasos = b && b.length < atras.length ? b : atras;
+      }
+      if (!pasos.length) return false;
+      const cuantas = lado(S) === 3 ? 3 : 8; // en la de 4 × 4 el camino es largo: la piedra rinde más
+      S.cola = pasos.slice(0, cuantas); // las corre paso() de a una, para que se vea
+      S.plan = { pasos: pasos.slice(cuantas), k: null };
+      S.colaT = 0;
+      return true;
     },
     res: (S) => t("mn.losas_res", [S.movs]),
     dibujar(S, D) {

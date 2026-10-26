@@ -154,16 +154,18 @@ window.FORJA = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "forjaLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     // tocar un carril (el celular a futuro, y el mouse ahora)
     lienzo.addEventListener("pointerdown", (e) => {
       if (!S) return;
       if (S.fase === "fin") return terminarResultado();
+      // el dibujo va centrado y sin estirar (como en dibujar): el toque se pasa igual
       const r = lienzo.getBoundingClientRect(),
-        x = ((e.clientX - r.left) / r.width) * 1600,
-        y = ((e.clientY - r.top) / r.height) * 900;
+        k = Math.min(r.width / 1600, r.height / 900),
+        x = (e.clientX - r.left - (r.width - 1600 * k) / 2) / k,
+        y = (e.clientY - r.top - (r.height - 900 * k) / 2) / k;
       const L = geom();
       if (S.ahora > S.p.temple - 1 && S.ahora < S.p.temple + 0.6) return pulsar("temple");
       for (let l = 0; l < 4; l++) if (Math.abs(x - L.x(l)) < L.ancho / 2 && y > 200) return pulsar(l, true);

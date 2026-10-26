@@ -66,6 +66,22 @@
       igual(SECRETOS.cerrojo({ tipo: "arconLenador", id: 3 }), "losas:base", "arcón:");
       igual(SECRETOS.cerrojo({ tipo: "arconLenador", id: 1 }), "base", "el otro sigue con anillos:");
       si(MINIJ.lista().some((q) => q.tipo === "losas" && q.variante === "gran"), "Probar mecánicas la lista");
+    } },
+    { nombre: "losas: la pista de Loki corre losas hacia la tabla y alcanza para rearmarla", fn: async (A, { si }) => {
+      JUEGO.empezar(9, true);
+      const def = MINIJ.JUEGOS.losas;
+      for (const v of ["base", "cuatro", "atadas", "gran"]) {
+        MINIJ.empezar("losas", { variante: v, semilla: 13 });
+        const S = MINIJ.estado(),
+          t0 = performance.now();
+        let n = 0;
+        while (!S.gano && n++ < 200) {
+          if (!def.pista(S)) break;
+          while (S.cola.length) def.paso.call(def, S, 0.2);
+        }
+        si(S.gano > 0, v + " rearmada con pistas (" + n + " pistas, " + Math.round(performance.now() - t0) + " ms)");
+        MINIJ.cerrar();
+      }
     } }
   );
 }
