@@ -276,6 +276,9 @@ window.EIKHOLT = (function () {
     // las escondidas con los chicos (ESCONDIDAS25): invitarlos o, jugando, encontrar al que está a mano
     const es = window.ESCONDIDAS25 && ESCONDIDAS25.cercano(plano, e, st, A, MUNDO25.gente(), MUNDO25.libre);
     if (es && !rc) mejor = es;
+    // las cintas de promesa del Roble (PROMESAS25)
+    const pm = window.PROMESAS25 && PROMESAS25.cercano(plano, e, st, A);
+    if (pm && pm.d < dm + 0.3 * M && !rc && !ta && !es) mejor = pm;
     return mejor;
   }
 
@@ -664,6 +667,7 @@ window.EIKHOLT = (function () {
     RECORRER25.actualizar(dt, tiempo, h, cam, null);
     if (window.ASAMBLEA25) ASAMBLEA25.actualizar(plano, MUNDO25.gente(), A);
     if (window.ESCONDIDAS25 && J.modo === "juego") ESCONDIDAS25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
+    if (window.PROMESAS25) PROMESAS25.actualizar(st);
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();
@@ -788,6 +792,7 @@ window.EIKHOLT = (function () {
         activo = false;
         volver = true;
       }
+      if (st && window.PROMESAS25) PROMESAS25.actualizar(st);
       if (activo || !st || J.modo !== "juego" || salida > 0) return;
       if (!dentroElipse(jug.x, jug.y, 0.985)) {
         volver = false;
