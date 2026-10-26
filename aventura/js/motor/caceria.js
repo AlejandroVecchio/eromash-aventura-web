@@ -170,7 +170,7 @@ window.CACERIA = (function () {
       }
       HUD.aviso(t("cz.vencida"), "lugar", t("cz.vencida_t"));
       if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.6, tono: 0.8 });
-      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.ANIMA) ANIMA.gesto("grito");
       if (window.VIDA) VIDA.evento("lider", c.x, c.y);
     } else if (como === "sobrevivida") {
       st.sobrevividas++;

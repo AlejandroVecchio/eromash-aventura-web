@@ -1,0 +1,22 @@
+// Textos del rastreo con la Lente (motor/mj-rastreo.js) y del último rastro de los contratos que lo pide (motor/contratos.js): prefijo mn.rastreo
+I18N.textos({
+  "mn.rastreo": { es: "El rastreo con la Lente", en: "Tracking with the Lens" },
+  "mn.rastreo_pie": { es: "Arrastrá la Lente y tocá cada huella en orden · flechas y {0} · {1}: dejar", en: "Drag the Lens and tap each track in order · arrows and {0} · {1}: quit" },
+  "mn.rastreo_cuenta": { es: "Huellas leídas: {0} / {1}", en: "Tracks read: {0} / {1}" },
+  "mn.rastreo_frio": { es: "El rastro se enfría", en: "The trail goes cold" },
+  "mn.rastreo_res": { es: "{0} de {1} huellas · {2} errores", en: "{0} of {1} tracks · {2} mistakes" },
+  "mn.rastreo_bestia_lobo": { es: "Huellas de lobo", en: "Wolf tracks" },
+  "mn.rastreo_bestia_jabali": { es: "Huellas de jabalí", en: "Boar tracks" },
+  "mn.rastreo_bestia_draugr": { es: "Pasos de draugr", en: "Draugr steps" },
+  "mn.rastreo_bestia_cuervo": { es: "Patas de cuervo", en: "Raven prints" },
+  "mn.rastreo_bestia_fatuo": { es: "Gotas de luz fatua", en: "Drops of will-o'-wisp light" },
+  "mn.rastreo_bestia_trol": { es: "Pisadas de trol", en: "Troll footprints" },
+  "mn.rastreo_bestia_liebre": { es: "Huellas de liebre", en: "Hare tracks" },
+  "mn.rastreo_bestia_ciervo": { es: "Huellas de ciervo", en: "Deer tracks" },
+  "mn.rastreo_v_senuelos": { es: "Señuelos: huellas ajenas y viejas", en: "Decoys: other tracks and old ones" },
+  "mn.rastreo_v_lluvia": { es: "Lluvia: las huellas se borran", en: "Rain: the tracks are washing away" },
+  "mn.rastreo_v_noche": { es: "De noche: la Lente ve menos", en: "At night: the Lens sees less" },
+  "mn.rastreo_v_largo": { es: "El rastro largo", en: "The long trail" },
+  "ct.rastreo_quien": { es: "El último rastro lleva a la guarida", en: "The last trail leads to the lair" },
+  "ct.rastreo_mal": { es: "El rastro se enfrió. Mirá de nuevo con calma", en: "The trail went cold. Look again, calmly" },
+});

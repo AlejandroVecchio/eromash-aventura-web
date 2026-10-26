@@ -147,7 +147,7 @@ window.PESCA = (function () {
       SONIDO.tocar("caida", { vol: 0.5, tono: 1.1, x: pesca.x, y: pesca.y });
       SONIDO.tocar(P.unico || nuevo ? "mision" : "plata", { vol: 0.5 });
     }
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("tesoro", 0, { col: "#73D5DB" });
     if (P.unico) {
       st.urridi = true;
       PODERES.soltar(jug.x, jug.y, "plata", 250, true);

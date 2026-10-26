@@ -110,9 +110,23 @@ window.CONTRATOS = (function () {
     HUD.aviso(t("ct." + id), "lugar", t("ct.tomado"));
     return true;
   }
-  function examinar(id, i) {
+  // el último rastro se lee con la Lente (MINIJ «rastreo»): las huellas de la bestia en orden; de noche la Lente ve menos
+  const RASTREOS = ["base", "senuelos", "lluvia", "senuelos", "largo", "largo"];
+  function examinar(id, i, leido) {
     const s = st.c[id];
     if (!s || s.fase !== "rastros" || s.rastros !== i) return;
+    if (i === 2 && !leido && window.MINIJ && MINIJ.JUEGOS.rastreo) {
+      const k = def(id),
+        r = lugares[id].rastros[i];
+      return MINIJ.empezar("rastreo", {
+        variante: A.noche() > 0.5 ? "noche" : RASTREOS[LISTA.indexOf(k)] || "base",
+        bestia: k.tipo,
+        quien: t("ct.rastreo_quien"),
+        x: r[0],
+        y: r[1],
+        fin: (res) => (res.gano ? examinar(id, i, true) : !res.dejo && HUD.aviso(t("ct.rastreo_mal"), "#E0B2B2")),
+      });
+    }
     s.rastros++;
     A.dialogoLibre([["eromash", "ct." + id + "_r" + (i + 1)]]);
     if (window.ANIMA) ANIMA.gesto("duda");

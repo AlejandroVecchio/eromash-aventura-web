@@ -107,21 +107,36 @@ window.FURIA = (function () {
     return true;
   }
   function saltar() {
-    // hacia la criatura más cercana en la dirección en que mira, si no, derecho adelante
-    const dx0 = jug.dir[0],
-      dy0 = jug.dir[1];
+    // con mouse, adonde apunta el cursor (sobre la criatura que tenga cerca, si hay); con mando, hacia la criatura más
+    // cercana en la dirección en que mira, si no, derecho adelante
+    const m = A.dirCursor() != null ? A.mouse() : null,
+      dx0 = m ? m.x - jug.x : jug.dir[0],
+      dy0 = m ? m.y - jug.y : jug.dir[1],
+      l0 = Math.hypot(dx0, dy0) || 1;
     let mejor = null,
       dm = SALTO_LARGO + 60;
     for (const e of vivas()) {
       const dx = e.x - jug.x,
         dy = e.y - jug.y,
         l = Math.hypot(dx, dy);
-      if (l > dm || l < 20 || (dx * dx0 + dy * dy0) / l < 0.35) continue;
-      dm = l;
+      if (l > SALTO_LARGO + 60 || l < 20) continue;
+      if (m) {
+        const dc = Math.hypot(e.x - m.x, e.y - m.y);
+        if (dc > 110 || dc > dm) continue;
+        dm = dc;
+      } else {
+        if (l > dm || (dx * dx0 + dy * dy0) / l / l0 < 0.35) continue;
+        dm = l;
+      }
       mejor = e;
     }
     let x1, y1;
-    if (mejor) {
+    if (m && !mejor) {
+      const lejos = Math.min(SALTO_LARGO, l0);
+      x1 = jug.x + (dx0 / l0) * lejos;
+      y1 = jug.y + (dy0 / l0) * lejos;
+      jug.dir = [dx0 / l0, dy0 / l0];
+    } else if (mejor) {
       const l = Math.hypot(mejor.x - jug.x, mejor.y - jug.y);
       x1 = mejor.x - ((mejor.x - jug.x) / l) * 50;
       y1 = mejor.y - ((mejor.y - jug.y) / l) * 30;
@@ -159,9 +174,11 @@ window.FURIA = (function () {
     if (window.SONIDO) SONIDO.tocar(n ? "golpeFuerte" : "caida", { vol: 0.7 });
   }
   function soltarBandada() {
+    // los cuervos van primero a las criaturas más cerca del cursor (con mando, a las más cerca de Eromash)
+    const m = A.dirCursor() != null ? A.mouse() : jug;
     const cerca = vivas()
       .filter((e) => Math.hypot(e.x - jug.x, e.y - jug.y) < 440 && !A.W.hayMuro(jug.x, jug.y, e.x, e.y))
-      .sort((a, b) => Math.hypot(a.x - jug.x, a.y - jug.y) - Math.hypot(b.x - jug.x, b.y - jug.y));
+      .sort((a, b) => Math.hypot(a.x - m.x, a.y - m.y) - Math.hypot(b.x - m.x, b.y - m.y));
     if (!cerca.length) {
       HUD.aviso(t("fu.nadie"));
       return false;

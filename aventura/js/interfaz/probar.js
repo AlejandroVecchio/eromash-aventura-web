@@ -132,6 +132,12 @@ window.PROBAR = (function () {
       id: "juegos",
       lista: () => [
         ...["parejas", "simon", "mente"].map((tipo) => ({ id: tipo, si: hay("JUEGOS_RUNAS"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo)) })),
+        // sus variantes (las que piden los hörgar)
+        ...(hay("JUEGOS_RUNAS") ? ["parejas", "simon", "mente"] : []).flatMap((tipo) =>
+          Object.keys(JUEGOS_RUNAS.VARIANTES[tipo])
+            .filter((v) => v !== "base")
+            .map((v) => ({ id: tipo + "_" + v, si: true, texto: t("pb." + tipo) + " · " + t("jr.v_" + tipo + "_" + v), sub: t("pb.jr_v_d"), fn: () => (limpiar(), JUEGOS_RUNAS.empezar(tipo, { variante: v })) }))
+        ),
         {
           id: "holmr",
           si: hay("HOLMR") && !!HOLMR.centro(),
@@ -146,6 +152,20 @@ window.PROBAR = (function () {
           },
         },
       ],
+    },
+    {
+      // los minijuegos de MINIJ, cada uno con sus variantes (se listan solos al registrarse)
+      id: "minijuegos",
+      lista: () =>
+        hay("MINIJ")
+          ? MINIJ.lista().map(({ tipo, variante }) => ({
+              id: "mj_" + tipo + "_" + variante,
+              si: true,
+              texto: t("mn.probar", [t("mn." + tipo), variante === "base" ? t("mn.base") : t("mn." + tipo + "_v_" + variante)]),
+              sub: t("pb.mj_d"),
+              fn: () => (limpiar(), MINIJ.empezar(tipo, { variante })),
+            }))
+          : [],
     },
     {
       id: "pelea",
@@ -217,7 +237,6 @@ window.PROBAR = (function () {
                   enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.ladron) s.ladron.dia = -1; const L = EIKHOLT.plano().lugares.mercado; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 300); });
                 },
               },
-              { id: "ek_tiro", si: hay("TIRO25"), fn: () => (hora(10), enCiudad(null, null, () => { const o = EIKHOLT.plano().cosas.find((q) => q.id === "dianaTiro"); const e = EIKHOLT.ero(); if (o) (e.x = o.x - 120), (e.y = o.y + 40); })) },
               { id: "ek_huerta", si: hay("HUERTA25"), fn: () => (hora(10), enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.huerta) s.huerta.hechos = []; const L = EIKHOLT.plano().lugares.hierbas; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 700); })) },
               {
                 id: "ek_gallinas",
@@ -253,6 +272,19 @@ window.PROBAR = (function () {
           : [],
     },
     {
+      // los gestos de Eromash (personajes/animacion.js), los de uso y los de reserva, y absorber con varias energías
+      id: "gestos",
+      lista: () => [
+        ...(window.ANIMA ? ANIMA.GESTOS : []).map((g) => ({ id: "gesto", texto: t("pb.ge_" + g), si: true, fn: () => (A.cerrarMenu(), J.retrasar(0.3, () => ANIMA.gesto(g, 0, g === "tesoro" ? { col: "#F5A524" } : {}))) })),
+        ...[
+          ["runico", "#73D5DB", "#C8F2F4", "rombo"],
+          ["oro", "#FFD98A", "#FFE7A8", "chispa"],
+          ["vida", "#7BC86C", "#F2ECEC", "cuadro"],
+          ["violeta", "#9A6BD8", "#E0B2B2", "chispa"],
+        ].map(([id, col, col2, forma]) => ({ id: "absorber", texto: t("pb.ab_" + id), si: hay("ANIMA"), fn: () => (A.cerrarMenu(), J.retrasar(0.3, () => ANIMA.absorber({ col, col2, forma }))) })),
+      ],
+    },
+    {
       id: "ayudas",
       lista: () => [
         { id: "plata", queda: true, si: hay("PODERES"), fn: () => (PODERES.darPlata(1000), HUD.aviso(t("pb.listo"), "#FFD98A")) },
@@ -285,7 +317,7 @@ window.PROBAR = (function () {
       .filter((e) => e.si)
       .map((e) => ({
         texto: e.texto || (e.fam ? t("pb.grupo", [t("pb.f_" + e.fam)]) : t("pb." + e.id)),
-        sub: t("pb." + e.id + "_d"),
+        sub: e.sub || t("pb." + e.id + "_d"),
         // las ayudas (queda) siguen en el menú; lo demás lo cierra y abre lo suyo
         fn: () => (e.fn(), e.queda && grupo(gr)),
       }));

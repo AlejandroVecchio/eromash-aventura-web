@@ -1,0 +1,22 @@
+// Textos del hilo de las Nornas (motor/mj-hilo.js) y de la Poza de Urd que lo pide (motor/vida.js): prefijo mn.hilo
+I18N.textos({
+  "mn.hilo": { es: "El hilo de las Nornas", en: "The thread of the Norns" },
+  "mn.hilo_pie": { es: "Arrastrá desde una piedra hasta su gemela · flechas: mover · {0}: agarrar o soltar · {1}: dejar", en: "Drag from a stone to its twin · arrows: move · {0}: grab or let go · {1}: quit" },
+  "mn.hilo_nornas": { es: "Al pie del fresno tejen", en: "At the ash's foot they weave" },
+  "mn.hilo_urd": { es: "Urd, lo que fue", en: "Urd, what was" },
+  "mn.hilo_verdandi": { es: "Verdandi, lo que es", en: "Verdandi, what is" },
+  "mn.hilo_skuld": { es: "Skuld, lo que será", en: "Skuld, what shall be" },
+  "mn.hilo_cuenta": { es: "Hilos unidos: {0} / {1}", en: "Threads joined: {0} / {1}" },
+  "mn.hilo_lleno": { es: "Telar cubierto: {0} / {1}", en: "Loom covered: {0} / {1}" },
+  "mn.hilo_res": { es: "Tejiste el destino en {0} pasos", en: "You wove fate in {0} steps" },
+  "mn.hilo_v_seis": { es: "Telar de seis", en: "Loom of six" },
+  "mn.hilo_v_lleno": { es: "Sin huecos: cubrí todo el telar", en: "No gaps: cover the whole loom" },
+  "mn.hilo_v_nudos": { es: "Nudos de oro: algún hilo tiene que pasar por ellos", en: "Golden knots: some thread must pass through them" },
+  "mn.hilo_v_reloj": { es: "Antes de que pase la noche", en: "Before the night passes" },
+  "vd.poza_tejer": { es: "Urd te pide que tejas antes de mostrarte nada", en: "Urd asks you to weave before she shows you anything" },
+  "vd.poza_tejer_noche": { es: "Tejer con las Nornas", en: "Weave with the Norns" },
+  "vd.poza_tejido": { es: "Las Nornas aceptan tu tejido", en: "The Norns accept your weaving" },
+  "vd.poza_tejido_sub": { es: "{0} de plata · experiencia", en: "{0} silver · experience" },
+  "vd.poza_ya_noche": { es: "Las Nornas ya tejieron con vos esta noche", en: "The Norns already wove with you tonight" },
+  "vd.poza_falla": { es: "El hilo se enreda. La poza espera", en: "The thread tangles. The pool waits" },
+});

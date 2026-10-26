@@ -220,7 +220,7 @@ window.EIKHOLT = (function () {
   // ---------- lo que se puede hacer cerca ----------
   function cercano() {
     if (J.modo !== "juego" || !activo) return null;
-    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo()) || (window.PATITOS25 && PATITOS25.activo()) || (window.BLOT25 && BLOT25.activo())) return null; // un juego en pantalla
+    if ((window.PULSO25 && PULSO25.activo()) || (window.PATITOS25 && PATITOS25.activo()) || (window.BLOT25 && BLOT25.activo())) return null; // un juego en pantalla
     const e = ero();
     let mejor = null,
       dm = Infinity;
@@ -264,6 +264,11 @@ window.EIKHOLT = (function () {
         dm = d;
         mejor = { texto: t("ek.golpear"), fn: () => golpear(c), x: c.x, y: c.y };
       }
+    const dn = dianaCerca();
+    if (dn && dn.d < dm) {
+      dm = dn.d;
+      mejor = dn;
+    }
     const am = RECORRER25.aMano();
     if (am && am.d < dm + 0.5 * M) {
       dm = am.d;
@@ -292,9 +297,6 @@ window.EIKHOLT = (function () {
     // lo perdido de hoy: hablar con la dueña, levantarlo del piso y devolverlo (PERDIDOS25)
     const pd = window.PERDIDOS25 && PERDIDOS25.cercano(plano, e, st, A, MUNDO25.gente());
     if (pd && !rc && !ta && !es) (mejor = pd), (dm = pd.d);
-    // las dianas del campo de la Guardia: tirar cinco hachas (TIRO25)
-    const tr = window.TIRO25 && TIRO25.cercano(plano, e, st, A);
-    if (tr && tr.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = tr), (dm = tr.d);
     // la cuentacuentos junto al fogón de los forasteros (CUENTOS25)
     const cu = window.CUENTOS25 && CUENTOS25.cercano(plano, e, st, A, MUNDO25.gente());
     if (cu && !rc && !ta && !es) (mejor = cu), (dm = cu.d);
@@ -361,6 +363,36 @@ window.EIKHOLT = (function () {
       n = noche ? "ek.puerta_noche_" + ((c.sem + k) % 4) : "ek.puerta_" + ((c.sem * 7 + k) % 10);
     setTimeout(() => A.dialogoLibre([["eromash", n]]), 600);
   }
+  // ---------- la diana del campo de la Guardia: hachas al blanco (MINIJ «hachas») ----------
+  // cada partida pasa a la variante siguiente; superar el récord paga; ganar el duelo con Hrafn lo deja de rival
+  function dianaCerca() {
+    if (!window.MINIJ || !MINIJ.JUEGOS.hachas || !plano) return null;
+    const e = ero();
+    let d = Infinity;
+    for (const q of plano.cosas) if (q.id === "dianaTiro") d = Math.min(d, Math.hypot(q.x - e.x, q.y - e.y));
+    if (d > 7 * M) return null;
+    return { texto: t("ek.hachas_accion"), d: Math.max(0, d - 3 * M), fn: () => lanzarHachas() };
+  }
+  function lanzarHachas() {
+    const h = (st.hachas = st.hachas || { veces: 0, record: 0 });
+    const VAR = ["base", "viento", "movil", "lejos", "duelo"];
+    MINIJ.empezar("hachas", {
+      variante: VAR[h.veces % VAR.length],
+      quien: t("ek.hachas_quien"),
+      fin: (r) => {
+        if (r.dejo) return;
+        h.veces++;
+        if (r.puntos > h.record) {
+          const plata = 10 + Math.max(0, r.puntos - Math.max(20, h.record));
+          h.record = r.puntos;
+          if (window.PODERES && PODERES.darPlata) PODERES.darPlata(plata);
+          HUD.aviso(t("ek.hachas_record", [r.puntos]), "lugar", t("ek.hachas_record_sub", [plata]));
+        } else HUD.aviso(t(r.gano ? "ek.hachas_bien" : "ek.hachas_mal"), r.gano ? "#FFD98A" : "#E0B2B2");
+        if (r.gano && window.RPG) RPG.dar(60, jug.x, jug.y);
+      },
+    });
+  }
+
   // ---------- Eromash camina ----------
   const VEL = [0, 150, 260, 430],
     VEL_ESQ = 720;
@@ -501,7 +533,7 @@ window.EIKHOLT = (function () {
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     jug.pelea = false;
-    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo()) && !(window.PATITOS25 && PATITOS25.activo()) && !(window.BLOT25 && BLOT25.activo());
+    const libre = J.modo === "juego" && !(window.PULSO25 && PULSO25.activo()) && !(window.PATITOS25 && PATITOS25.activo()) && !(window.BLOT25 && BLOT25.activo());
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -743,7 +775,6 @@ window.EIKHOLT = (function () {
     if (window.ESCONDIDAS25 && J.modo === "juego") ESCONDIDAS25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     if (window.PROMESAS25) PROMESAS25.actualizar(st);
     if (window.LADRON25 && J.modo === "juego") LADRON25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
-    if (window.TIRO25) TIRO25.actualizar(dt, st, A);
     if (window.PULSO25) PULSO25.actualizar(dt, st, A);
     if (window.PATITOS25) PATITOS25.actualizar(dt, st, A);
     if (window.BLOT25) BLOT25.actualizar(dt, st, A, ero());
@@ -783,7 +814,6 @@ window.EIKHOLT = (function () {
     if (window.HUERTA25) HUERTA25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
     if (window.CARGA25) CARGA25.dibujar(c, cam, cw, ch, ero());
     climaCiudad(c, cw, ch, dt);
-    if (window.TIRO25) TIRO25.dibujar(c, cw, ch, tiempo);
     if (window.PULSO25) PULSO25.dibujar(c, cw, ch, tiempo);
     if (window.PATITOS25) PATITOS25.dibujar(c, cw, ch, tiempo);
   }
@@ -923,5 +953,5 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { mini: (cv, px) => activo && plano && window.MAPA25 && MAPA25.mini(cv, px, datosMapa()), barrio: () => (window.RECORRER25 && RECORRER25.zona()) || null, abrirMapa, activo: () => activo && J.dentro === sistemaCiudad, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  return { mini: (cv, px) => activo && plano && window.MAPA25 && MAPA25.mini(cv, px, datosMapa()), barrio: () => (window.RECORRER25 && RECORRER25.zona()) || null, abrirMapa, activo: () => activo && J.dentro === sistemaCiudad, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, aBosque, estado: () => st, jug: () => jug, cercano: () => activo && cercano(), lanzarHachas };
 })();

@@ -16,7 +16,7 @@
       si(!CONTRATOS.tomar("cerda"), "de a uno por vez");
       const L = CONTRATOS.lugares().grisvarg;
       for (let i = 0; i < 3; i++) {
-        CONTRATOS.examinar("grisvarg", i);
+        CONTRATOS.examinar("grisvarg", i, true); // el último pide el rastreo con la Lente, que tiene su prueba (82)
         A.cerrarMenu && A.cerrarMenu();
         JUEGO.J.modo = "juego";
       }

@@ -307,6 +307,7 @@ window.MAPA = (function () {
   function abrir() {
     // adentro de una mazmorra, su propio mapa (interfaz/mapa-mazmorra.js)
     if (window.MAPA_MAZMORRA && MAPA_MAZMORRA.abrir()) return;
+    if (J.leerCroquis) J.leerCroquis(); // el croquis de Eydis (EL-01)
     vistaMapa.z = vistaMapa.z || 1;
     vistaMapa.cx = jug.x;
     vistaMapa.cy = jug.y;
@@ -446,10 +447,10 @@ window.MAPA = (function () {
       c.fillStyle = "#F2ECEC";
       c.fillText(n, x, y);
     });
-    // el objetivo y Eromash
-    const o = A.H.objetivo();
-    const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
-    if (p) {
+    // los objetivos abiertos (con un par, varios) y Eromash
+    for (const o of A.H.abiertos()) {
+      const p = o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
+      if (!p) continue;
       const [px, py] = aLienzo(cv, p[0], p[1]);
       c.strokeStyle = "#73D5DB";
       c.lineWidth = 2;
@@ -640,8 +641,7 @@ window.MAPA = (function () {
         zonaTesoro(c, px, py, z.r * k);
       });
     // el objetivo (rúnico) y la marca propia (dorada): anillo si se ve, flecha en el borde si no
-    const o = A.H.objetivo();
-    const p = o && o.donde ? A.P[o.donde] || (A.npcs[o.donde] && [A.npcs[o.donde].x, A.npcs[o.donde].y]) : null;
+    const p = A.dondeObjetivo(); // el más cercano de los abiertos (dentro de Eikholt, su lugar en la ciudad)
     const senal = (q, col) => {
       if (!q) return;
       if (dentro(q[0], q[1])) {
