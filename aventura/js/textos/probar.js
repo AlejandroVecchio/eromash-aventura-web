@@ -15,6 +15,7 @@ I18N.textos({
   "pb.g_juegos_d": { es: "Memoria, Simón, Mastermind y la hólmganga", en: "Memory, Simon, Mastermind and the holmgang" },
   "pb.g_minijuegos": { es: "Minijuegos", en: "Minigames" },
   "pb.g_minijuegos_d": { es: "Cerraduras, losas, hilos, tambores y los demás, con cada variante", en: "Locks, tiles, threads, drums and the rest, with each variant" },
+  "pb.jr_v_d": { es: "La variante que pide un hörgr", en: "The variant a hörgr asks for" },
   "pb.mj_d": { es: "Se juega en su lienzo; al terminar vuelve acá", en: "Plays on its own canvas; comes back here when done" },
   "pb.g_pelea": { es: "Pelea", en: "Combat" },
   "pb.g_pelea_d": { es: "Muñeco, grupos de criaturas, jefes y la Cacería", en: "Dummy, creature packs, bosses and the Hunt" },

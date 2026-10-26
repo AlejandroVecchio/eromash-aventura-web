@@ -3,7 +3,8 @@
 // asset `horgr`) al costado de los caminos de Eldervald, uno por dios. Con E se pide la bendición del dios: dura unos
 // minutos y se lleva una sola por vez (pedir otra la reemplaza). Ofrendando plata la bendición sale más fuerte. Cada
 // hörgr bendice una vez por día. El primero que se encuentra de cada dios da experiencia; encontrar los siete da el
-// favor de los Æsir: las bendiciones duran más y Eromash queda con un poco más de daño y vida para siempre.
+// favor de los Æsir: las bendiciones duran más y Eromash queda con un poco más de daño y vida para siempre. Cada dios
+// tiene además su rito (`RITO`): un juego de runas con su variante que, ganado, da la bendición fuerte sin pagar.
 //   Thor más daño · Odín más experiencia y poder rúnico · Tyr más críticos · Freyja más vida y se cura más rápido
 //   Frigg más armadura · Njörd más velocidad · Ullr más estamina y ataques más rápidos
 // Estado en E.extra.santuarios = { vistos: { dios: 1 }, dia: { dios: n }, bend: { dios, t, fuerte } | null }. Textos `sn.`.
@@ -27,6 +28,16 @@ window.SANTUARIOS = (function () {
     ullr: { p: [345, 236], s: (s, k) => ((s.estamina += 25 * k), (s.velAtq *= 1 + 0.08 * k)) },
   };
   const IDS = Object.keys(LISTA);
+  // el rito de cada dios: un juego de runas con su variante (ganarlo da la bendición fuerte sin ofrendar plata)
+  const RITO = {
+    thor: ["simon", "rapido"],
+    odin: ["mente", "repetidas"],
+    tyr: ["mente", "largo"],
+    freyja: ["parejas", "vistazo"],
+    frigg: ["parejas", "maldita"],
+    njord: ["simon", "reves"],
+    ullr: ["simon", "base"],
+  };
   const base = () => ({ vistos: {}, dia: {}, bend: null });
   let st = base();
   const horgar = {}; // dios → la cosa del mundo
@@ -37,9 +48,9 @@ window.SANTUARIOS = (function () {
   const yaHoy = (id) => st.dia[id] === dia();
 
   // ---------- pedir ----------
-  function bendecir(id, ofrendar) {
+  function bendecir(id, ofrendar, gratis) {
     if (yaHoy(id)) return HUD.aviso(t("sn.ya_hoy", [t("sn.d_" + id)]), "#E0B2B2"), false;
-    if (ofrendar) {
+    if (ofrendar && !gratis) {
       const pj = PODERES.pj();
       if (pj.plata < OFRENDA) return HUD.aviso(t("sn.sin_plata", [OFRENDA]), "#C8402D"), false;
       pj.plata -= OFRENDA;
@@ -69,6 +80,22 @@ window.SANTUARIOS = (function () {
     } else HUD.aviso(t("sn.hallado", [t("sn.d_" + id), n, IDS.length]), ASSETS.DIOSES[id].col);
     return true;
   }
+  // jugar el rito: si gana, la bendición fuerte; si pierde, puede volver a probar o rezar igual
+  function rito(id) {
+    if (yaHoy(id)) return HUD.aviso(t("sn.ya_hoy", [t("sn.d_" + id)]), "#E0B2B2"), false;
+    const [tipo, variante] = RITO[id],
+      h = horgar[id];
+    return JUEGOS_RUNAS.empezar(tipo, {
+      variante,
+      quien: t("sn.titulo_" + id),
+      x: h && h.x,
+      y: h && h.y,
+      fin: (res) => {
+        if (res.gano) bendecir(id, true, true);
+        else if (!res.dejo) HUD.aviso(t("sn.rito_perdio", [t("sn.d_" + id)]), "#E0B2B2");
+      },
+    });
+  }
   function menu(id) {
     hallar(id);
     const b = st.bend,
@@ -77,8 +104,9 @@ window.SANTUARIOS = (function () {
     A.menu(`<h2>${t("sn.titulo_" + id)}</h2><div class="sub">${t("sn.sub_" + id)}</div>`, [
       { texto: t("sn.pedir"), sub: sub + (b && b.dios !== id ? " · " + t("sn.reemplaza", [t("sn.d_" + b.dios)]) : ""), fn: () => (bendecir(id, false), A.cerrarMenu()) },
       { texto: t("sn.ofrendar", [OFRENDA]), sub: hoy ? sub : t("sn.ofrendar_d"), fn: () => (bendecir(id, true), A.cerrarMenu()) },
+      window.JUEGOS_RUNAS && { texto: t("sn.rito"), sub: hoy ? sub : t("sn.rito_d", [t("jr." + RITO[id][0]), RITO[id][1] === "base" ? "" : " · " + t("jr.v_" + RITO[id][0] + "_" + RITO[id][1])]), fn: () => (A.cerrarMenu(), rito(id)) },
       { texto: t("ui.cerrar"), fn: A.cerrarMenu },
-    ]);
+    ].filter(Boolean));
   }
 
   // ---------- ubicar ----------
@@ -174,5 +202,5 @@ window.SANTUARIOS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, bendecir, hallar, menu, horgar: () => horgar, aesir, LISTA, DURA, DURA_AESIR, OFRENDA, FUERTE };
+  return { sistema, estado: () => st, bendecir, hallar, menu, rito, RITO, horgar: () => horgar, aesir, LISTA, DURA, DURA_AESIR, OFRENDA, FUERTE };
 })();

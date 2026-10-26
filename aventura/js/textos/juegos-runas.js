@@ -21,4 +21,13 @@ I18N.textos({
   "jr.res_simon": { es: "{1} runas repetidas", en: "{1} runes repeated" },
   "jr.res_mente": { es: "{2} intentos", en: "{2} tries" },
   "jr.seguir": { es: "{0} para seguir", en: "{0} to continue" },
+  // las variantes (motor/juegos-runas.js VARIANTES)
+  "jr.v_parejas_vistazo": { es: "De un vistazo: se ven todas al empezar", en: "At a glance: all shown at the start" },
+  "jr.v_parejas_maldita": { es: "Maldita: cada tres fallos dos piedras se cambian", en: "Cursed: every three misses two stones swap" },
+  "jr.v_simon_reves": { es: "Al revés: repetila del final al principio", en: "Backwards: repeat it from last to first" },
+  "jr.v_simon_rapido": { es: "Ligera: más larga y más rápida", en: "Swift: longer and faster" },
+  "jr.v_mente_repetidas": { es: "Con ecos: el verso puede repetir runas", en: "With echoes: the verse may repeat runes" },
+  "jr.v_mente_largo": { es: "Verso largo: cinco runas", en: "Long verse: five runes" },
+  "jr.simon_vos_reves": { es: "Ahora vos, al revés", en: "Your turn, backwards" },
+  "jr.base": { es: "La de siempre", en: "Classic" },
 });
