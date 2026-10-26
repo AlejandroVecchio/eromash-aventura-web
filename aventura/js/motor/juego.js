@@ -687,6 +687,11 @@
       SONIDO.latido();
     }
   }
+  // dónde cae un punto del mundo en la pantalla, en píxeles de la página (para lo que se dibuja encima del juego)
+  J.aPantalla = (x, y) => {
+    const [vx, vy] = VOL.vista(x, y, J.cam.x, J.cam.y, J.giro || 0);
+    return [(((vx - J.cam.x) * esc + cw / 2) * innerWidth) / (cw || 1), (((vy - J.cam.y) * esc + ch / 2) * innerHeight) / (ch || 1)];
+  };
   function polvareda(x, y, n) {
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });

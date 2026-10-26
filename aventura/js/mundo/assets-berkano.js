@@ -75,8 +75,8 @@
     if (o.tomada) return;
     const s = o.s || 1,
       late = 0.6 + Math.sin(t * 3 + x * 0.02) * 0.4,
-      fl = Math.sin(t * 2) * 3 * s;
-    E(c, x, y + 2, 22 * s, 7 * s, "rgba(0,0,0,0.35)");
+      fl = o.aire ? 0 : Math.sin(t * 2) * 3 * s; // o.aire: va por el aire (sin sombra ni vaivén; la pone quien la mueve)
+    if (!o.aire) E(c, x, y + 2, 22 * s, 7 * s, "rgba(0,0,0,0.35)");
     if (nivel() !== "baja") halo(c, x, y - 18 * s - fl, 46 * s, RUNICO, 0.45 * late);
     const cy = y - 16 * s - fl;
     P(c, [x - 15 * s, cy + 9 * s, x - 17 * s, cy - 4 * s, x - 8 * s, cy - 14 * s, x + 9 * s, cy - 13 * s, x + 16 * s, cy - 2 * s, x + 13 * s, cy + 10 * s], "#6E6A64");

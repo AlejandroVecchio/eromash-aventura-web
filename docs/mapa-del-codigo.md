@@ -228,7 +228,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
-  - las piedras · salvarse: la piedra que surge · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+  - las piedras · salvarse: cuatro maneras de que Berkano te devuelva · la del HUD (MediEvil 2): una capa encima del juego, en píxeles de la página · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
