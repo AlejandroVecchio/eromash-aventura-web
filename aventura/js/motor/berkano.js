@@ -44,34 +44,85 @@ window.BERKANO = (function () {
     for (let i = 0; i < st.p.length; i++) st.p[i] = 1;
   }
   // la vida llegó a 0: se rompe la piedra más cargada y Eromash vuelve con esa vida (la llama juego.js antes de morir)
+  // ---------- salvarse: la piedra que surge ----------
+  // Como la botella de vida del MediEvil 2, sin pausar nada: al caer queda con 1 de vida e intocable, una piedra con
+  // Berkano sale del piso al lado de Eromash, crece, se raja con luz y estalla; la vida llega con el estallido y vuela
+  // en motas hasta él. El juego sigue corriendo todo el tiempo (sin cámara lenta).
+  const SURGE = { boca: 0.12, sube: 0.62, raja: 0.9 }; // tiempos: se abre el piso, termina de salir, estalla
+  let surge = null; // { t, x, y, vida, dada }
   function salvar() {
-    if (!st || !st.p.length) return false;
+    if (!st || !st.p.length || surge) return !!surge;
     let i = 0;
     st.p.forEach((p, k) => p > st.p[i] && (i = k));
     if (st.p[i] < 0.05) return false;
     const vida = Math.max(1, Math.round(st.p[i] * cura()));
     st.p[i] = 0;
-    jug.hp = Math.min(jug.hpMax, vida);
-    jug.inv = 1.5;
-    jug.vuelve = 1.5;
-    J.camLenta = 0.5;
-    J.sacudir(0.5);
-    J.marcas.push({ tipo: "anillo", x: jug.x, y: jug.y, s: 1.6, col: RUNICO, t: 0 });
-    const n = window.CALIDAD && CALIDAD.nivel === "baja" ? 6 : 18;
+    jug.hp = 1;
+    jug.inv = SURGE.raja + 1.2;
+    // al costado de Eromash, del lado al que no mira, para no taparlo
+    // (de costado en pantalla también con la cámara girada: VOL.ejeMundo pasa de la vista al mundo y al revés)
+    const V = window.VOL && VOL.ejeMundo ? VOL.ejeMundo : (e) => e,
+      g = window.VOL ? VOL.cam.g : 0,
+      mira = jug.dir ? V({ x: jug.dir[0], y: jug.dir[1] }, -g) : { x: 1 },
+      d = V({ x: (mira.x > 0 ? -1 : 1) * 62, y: 8 });
+    surge = { t: 0, x: jug.x + d.x, y: jug.y + d.y, vida, dada: false };
+    J.sacudir(0.25);
+    J.marcas.push({ tipo: "anillo", x: surge.x, y: surge.y, s: 0.9, col: RUNICO, t: 0 });
+    if (window.ANIMA) ANIMA.gesto("susto");
+    if (window.SONIDO) {
+      SONIDO.tocar("crujido", { vol: 0.6, tono: 0.6, x: surge.x, y: surge.y });
+      SONIDO.tono("triangle", 160, 420, SURGE.raja, 0.05, { filtro: 1800 });
+    }
+    return true;
+  }
+  function estallar() {
+    const s = surge,
+      baja = window.CALIDAD && CALIDAD.nivel === "baja";
+    s.dada = true;
+    jug.hp = Math.min(jug.hpMax, Math.max(jug.hp, s.vida));
+    jug.vuelve = 0.6;
+    J.sacudir(0.55);
+    J.marcas.push({ tipo: "anillo", x: s.x, y: s.y, s: 1.8, col: RUNICO, t: 0 });
+    J.marcas.push({ tipo: "anillo", x: jug.x, y: jug.y, s: 1.2, col: "#C8F2F4", t: 0 });
+    // los pedazos de piedra que saltan
+    const n = baja ? 8 : 24;
     for (let k = 0; k < n; k++) {
-      const a = (k / n) * Math.PI * 2;
-      J.fx.push({ x: jug.x, y: jug.y - 40, vx: Math.cos(a) * 220, vy: Math.sin(a) * 120 - 120, t: 0.5 + Math.random() * 0.3, c: k % 3 ? RUNICO : "#C8F2F4", s: 3 + Math.random() * 3, g: 0.3 });
+      const a = Math.random() * Math.PI * 2,
+        v = 160 + Math.random() * 220;
+      J.fx.push({ x: s.x, y: s.y - 40 - Math.random() * 60, vx: Math.cos(a) * v, vy: -120 - Math.random() * 260, t: 0.5 + Math.random() * 0.4, c: k % 3 ? "#77736C" : "#9A968E", s: 4 + Math.random() * 5, g: 1 });
+    }
+    // la vida en motas que vuelan hasta Eromash y llegan cuando se apagan
+    const m = baja ? 6 : 20;
+    for (let k = 0; k < m; k++) {
+      const vida = 0.35 + Math.random() * 0.25,
+        sx = s.x + (Math.random() - 0.5) * 40,
+        sy = s.y - 30 - Math.random() * 80;
+      J.fx.push({ x: sx, y: sy, vx: (jug.x - sx) / vida, vy: (jug.y - 50 - sy) / vida, t: vida, c: k % 3 ? RUNICO : "#C8F2F4", s: 3 + Math.random() * 3, g: 0 });
     }
     if (window.VIDA) VIDA.evento("sanar", jug.x, jug.y);
     if (window.SONIDO) {
+      SONIDO.tocar("golpeFuerte", { vol: 0.5, tono: 0.7, x: s.x, y: s.y });
       SONIDO.tocar("runa", { vol: 0.7 });
       SONIDO.tono("triangle", 392, 784, 0.7, 0.06, { filtro: 2800 });
     }
-    if (window.ANIMA) J.retrasar(0.4, () => ANIMA.gesto("feliz"));
-    A.numero(jug.x, jug.y - 90, vida, RUNICO);
+    if (window.ANIMA) ANIMA.gesto("feliz");
+    A.numero(jug.x, jug.y - 90, s.vida, RUNICO);
     const quedan = cargadas();
     HUD.aviso(quedan || st.p.some((p) => p >= 0.05) ? t("bk.salvado") + " · " + t("bk.salvado_sub", [quedan]) : t("bk.ultima"), RUNICO);
-    return true;
+  }
+  function avanzarSurge(dt) {
+    if (!surge) return;
+    surge.t += dt;
+    if (!surge.dada) jug.hp = Math.max(1, jug.hp); // el fuego o el veneno del piso no lo bajan mientras sale
+    if (!surge.dada && surge.t >= SURGE.raja) estallar();
+    if (surge.dada && surge.t >= SURGE.raja + 0.3) surge = null;
+  }
+  // cómo va la piedra: cuánto salió, cuánto se rajó y cuánto brilla
+  function poseSurge(s) {
+    const tt = s.t,
+      sube = Math.max(0, Math.min(1, (tt - SURGE.boca) / (SURGE.sube - SURGE.boca))),
+      k = 1 - Math.pow(1 - sube, 3);
+    return { k, grieta: Math.max(0, (tt - SURGE.sube) / (SURGE.raja - SURGE.sube)), luz: 0.3 + 0.7 * Math.min(1, tt / SURGE.raja) };
   }
 
   // ---------- los manantiales ----------
@@ -250,10 +301,25 @@ window.BERKANO = (function () {
       st = extra.berkano;
       piedras.forEach((q) => (q.cosa.o.tomada = !!st.tomadas[q.k]));
       bebiendo = tomando = false;
+      surge = null;
     },
     actualizar(dt) {
       if (!st || J.modo !== "juego") return;
+      avanzarSurge(dt);
       manantiales(dt);
+    },
+    objetos(lista, visible, c) {
+      if (!surge || !visible(surge.x, surge.y)) return;
+      const s = surge;
+      if (!s.dada) lista.push({ x: s.x, y: s.y, f: () => ASSETS.dibujar(c, "piedraBerkanoSurge", s.x, s.y, J.t, poseSurge(s)) });
+      // el destello del estallido
+      else if (!(window.CALIDAD && CALIDAD.nivel === "baja")) {
+        const k = (s.t - SURGE.raja) / 0.3;
+        lista.push({ x: s.x, y: s.y, f: () => DIB.halo(c, s.x, s.y - 60, 90 + 120 * k, "#C8F2F4", 0.9 * (1 - k)) });
+      }
+    },
+    luces(dar) {
+      if (surge && !surge.dada) dar({ x: surge.x, y: surge.y - 50, r: 160 + 120 * poseSurge(surge).luz, col: RUNICO, f: 0.8 });
     },
     cercanos(dar) {
       if (!st || J.dentro) return;

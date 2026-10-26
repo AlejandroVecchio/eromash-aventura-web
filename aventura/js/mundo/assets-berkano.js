@@ -84,9 +84,63 @@
     alfa(c, 0.6 + 0.4 * late, () => FUTHARK.dibujar(c, "berkano", x, cy + 8 * s, 18 * s, RUNICO, 2.6 * s));
   }
 
+  // ---------- la piedra que surge al salvarse ----------
+  // Como la botella de vida del MediEvil 2: cuando Eromash cae, una piedra parada con Berkano sale del piso, crece,
+  // tiembla con las grietas encendidas y estalla (motor/berkano.js). o.k (0..1) cuánto salió, o.grieta (0..1) cuánto
+  // se rajó, o.luz (0..1) cuánto brilla. Figura: es una piedra parada, igual de cualquier lado.
+  function piedraBerkanoSurge(c, x, y, t, o) {
+    const k = o.k == null ? 1 : o.k,
+      gr = o.grieta || 0,
+      lz = o.luz == null ? 0.6 : o.luz,
+      s = (o.s || 1) * (0.55 + 0.45 * k),
+      H = 118 * s,
+      tiembla = gr > 0 ? Math.sin(t * 90) * 2.5 * gr : 0;
+    // el piso que se abre: la boca oscura, la luz de abajo y los terrones
+    E(c, x, y + 2, 40 * s + 8, 13 * s + 3, "rgba(17,17,17,0.45)");
+    E(c, x, y + 1, 30 * s, 9 * s, mezcla("#2A2624", "#3E7C80", lz * 0.7));
+    if (nivel() !== "baja") halo(c, x, y - H * 0.45 * k, 90 * s, RUNICO, (0.25 + 0.5 * lz) * k);
+    c.save();
+    c.beginPath();
+    c.rect(x - 200, y - 400, 400, 400 + 1); // solo lo que ya salió del piso
+    c.clip();
+    const b = y + (1 - k) * H, // la base de la piedra, hundida mientras sale
+      X = x + tiembla;
+    const w = 28 * s;
+    // la cara de sombra (izquierda) y la de luz (derecha), con la punta inclinada
+    P(c, [X - w, b, X - w * 1.1, b - H * 0.55, X - w * 0.7, b - H * 0.92, X - w * 0.1, b - H, X, b - H, X, b], PIEDRA[0]);
+    P(c, [X, b, X, b - H, X + w * 0.55, b - H * 0.96, X + w * 1.05, b - H * 0.62, X + w, b], PIEDRA[1]);
+    P(c, [X - w * 0.1, b - H, X + w * 0.55, b - H * 0.96, X + w * 0.2, b - H * 0.9, X - w * 0.4, b - H * 0.93], PIEDRA[2]);
+    // Berkano tallada, más clara cuanto más carga
+    alfa(c, 0.55 + 0.45 * lz, () => FUTHARK.dibujar(c, "berkano", X + w * 0.1, b - H * 0.3, 40 * s, mezcla("#4E8E92", "#C8F2F4", lz), 4 * s));
+    // las grietas que se encienden antes de estallar
+    if (gr > 0) {
+      c.strokeStyle = mezcla(RUNICO, "#F2ECEC", gr);
+      c.lineWidth = 2.4 * s;
+      c.lineCap = "round";
+      const g = [
+        [-0.7, 0.85, -0.2, 0.6, -0.5, 0.35],
+        [0.8, 0.7, 0.3, 0.5, 0.6, 0.2],
+        [-0.3, 0.15, 0.2, 0.35, -0.1, 0.55],
+        [0.5, 0.9, 0.1, 0.75],
+      ];
+      g.forEach((l, i) => {
+        if (gr < i * 0.2) return;
+        c.beginPath();
+        for (let j = 0; j < l.length; j += 2) {
+          const px = X + l[j] * w,
+            py = b - l[j + 1] * H;
+          j ? c.lineTo(px, py) : c.moveTo(px, py);
+        }
+        c.stroke();
+      });
+    }
+    c.restore();
+  }
+
   Object.assign(ASSETS.LISTA, {
     manantialRunico: { f: manantialRunico, vol: true, alto: 140, choque: { r: 54 }, grupo: "vida", luz: true },
     piedraBerkano: { f: piedraBerkano, figura: true, alto: 40, choque: null, grupo: "vida", luz: true },
+    piedraBerkanoSurge: { f: piedraBerkanoSurge, figura: true, alto: 120, choque: null, grupo: "vida", luz: true },
   });
-  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { manantialRunico: { luz: 1 } });
+  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { manantialRunico: { luz: 1 }, piedraBerkanoSurge: { k: 1, grieta: 0.6, luz: 0.8 } });
 })();

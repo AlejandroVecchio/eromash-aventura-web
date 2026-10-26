@@ -228,7 +228,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
-  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+  - las piedras · salvarse: la piedra que surge · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
@@ -343,8 +343,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-bandidos.js**: el campamento de los Sin Linde (assets de BANDIDOS)
   - assets: tiendaSinLinde, estacaSinLinde, botinSinLinde
 - **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
-  - el manantial rúnico · la piedra de Berkano tirada
-  - assets: manantialRunico, piedraBerkano
+  - el manantial rúnico · la piedra de Berkano tirada · la piedra que surge al salvarse
+  - assets: manantialRunico, piedraBerkano, piedraBerkanoSurge
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casa.js**: la casa de Hrolf, la casa propia (assets de CASA)
