@@ -4,7 +4,7 @@
 // los forasteros al nordeste, las huertas al este, el Hongo Dorado al sudeste, el río por el este y el sur), pensado en
 // metros y llevado al mundo del juego con M unidades por metro: a esta escala la empalizada queda a 9000 unidades del
 // Roble y cruzar la ciudad corriendo lleva casi un minuto. El norte es -y y el este +x, como en el bosque.
-// PLANO25.armar() → { M, R_MURO, cosas, calles, rio, choques, anclas, casasQueSeEntran, lugares, puertas }
+// PLANO25.armar() → { M, R_MURO, cosas, calles, rio, choques, anclas, casasQueSeEntran, edificiosQueSeEntran, lugares, puertas }
 window.PLANO25 = (function () {
   "use strict";
   const PI = Math.PI,
@@ -187,6 +187,7 @@ window.PLANO25 = (function () {
       choques = [], // { poli: [[x, y]…] } | { circulo: [x, y, r] }
       anclas = {},
       casasQueSeEntran = [], // { nombre, x, y (delante de la puerta, unidades), sem, v }
+      edificiosQueSeEntran = [], // la hospedería y el cuartel: { tipo, x, y (delante de la puerta), sem }
       casasCerradas = []; // las demás: { nombre, x, y, sem } (se golpean)
     // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
     const curiosidades = [];
@@ -499,6 +500,11 @@ window.PLANO25 = (function () {
       cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa, nombre });
       especiales.push({ x, z, mx: casa.W / M / 2 + 3.5, mz: casa.D / M / 2 + 3.5, ang: ry });
       for (const h of casa.huella(x * M, z * M, ry)) choques.push({ poli: h });
+      // los que arma oficios.js por dentro (INTERIORES.CUARTOS): se entran por su puerta
+      if (nombre === "hospederia" || nombre === "cuartel") {
+        const [px, pz] = aMundoE(x, z, ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1.2);
+        edificiosQueSeEntran.push({ tipo: nombre, x: px * M, y: pz * M, sem: (sem % 997) / 997 });
+      }
       return casa;
     };
     const AZUL_GRIS = ["#2C3440", "#3A4654", "#52606E"];
@@ -1164,7 +1170,7 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

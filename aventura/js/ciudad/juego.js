@@ -235,6 +235,14 @@ window.EIKHOLT = (function () {
         dm = d;
         mejor = { texto: t("in.accion_entrar", [t("in.casa_de", [t("av.nombre_" + INTERIORES.nombreVecino(c.sem, c.v))])]), fn: () => entrarCasa(c), x: c.x, y: c.y };
       }
+    // la hospedería y el cuartel de la Guardia (los arma oficios.js por dentro)
+    if (window.INTERIORES && plano.edificiosQueSeEntran)
+      for (const c of plano.edificiosQueSeEntran) {
+        const d = Math.hypot(c.x - e.x, c.y - e.y);
+        if (d > 1.8 * M || d >= dm || !INTERIORES.CUARTOS[c.tipo]) continue;
+        dm = d;
+        mejor = { texto: t("in.accion_entrar", [t("in.nombre_" + c.tipo)]), fn: () => entrarEdificio(c), x: c.x, y: c.y };
+      }
     // las demás puertas se golpean: contesta alguien de adentro (o nadie)
     if (plano.casasCerradas)
       for (const c of plano.casasCerradas) {
@@ -263,6 +271,13 @@ window.EIKHOLT = (function () {
     jug.x = fx;
     jug.y = fy;
     INTERIORES.entrar({ tipo: "casa", cosa: { id: "casaEikholt", x: fx, y: fy - 70, o: { sem: c.sem, v: c.v } }, clave: "ek_" + c.nombre });
+  }
+  function entrarEdificio(c) {
+    st.volverA = [c.x, c.y];
+    const [fx, fy] = aBosque(c.x, c.y);
+    jug.x = fx;
+    jug.y = fy;
+    INTERIORES.entrar({ tipo: c.tipo, cosa: { id: "ek_" + c.tipo, x: fx, y: fy - 70, o: { sem: c.sem } }, clave: "ek_" + c.tipo });
   }
   // golpear una puerta cerrada: tres golpes y la respuesta que le toca a esa casa (cambia de día a la noche)
   const golpes = {};

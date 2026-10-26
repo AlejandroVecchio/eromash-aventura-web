@@ -306,8 +306,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
-- **oficios.js**: los talleres de Eikholt por dentro (sistema OFICIOS)
-  - los cuartos
+- **oficios.js**: los talleres y los edificios de Eikholt por dentro (sistema OFICIOS)
+  - los cuartos · la hospedería de los caminantes · el cuartel de la Guardia del Roble
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)

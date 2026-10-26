@@ -102,7 +102,8 @@ window.INTERIORES = (function () {
     let pared = "cabana",
       ventana = 1150,
       estandarte = null,
-      repisa = false;
+      repisa = false,
+      insignia = String(clave).startsWith("ek_"); // en Eikholt el estandarte lleva la cornamenta de la capital
     if (tipo === "lindes") {
       // el estudio de Svanhild: el escritorio rúnico en el medio, como la mesa del mago
       mueble("escritorioRunico", 800, 800, { s: 1.1, carta: true }, 330, "in.accion_escritorio", examinar("in.lindes_escritorio"));
@@ -142,6 +143,7 @@ window.INTERIORES = (function () {
       if (r.ventana != null) ventana = r.ventana;
       if (r.estandarte != null) estandarte = r.estandarte;
       if (r.repisa != null) repisa = r.repisa;
+      if (r.insignia) insignia = true;
     } else {
       // las casas de la gente: cinco maneras de vivir, y no todas tienen arcón
       const conArcon = editor || Math.floor(sem * 7) % 3 === 0,
@@ -225,7 +227,7 @@ window.INTERIORES = (function () {
         m.push(al);
       } else if (escondida) m.push({ id: "alfombra", x: tx - 190, y: ty + 8, o: { s: 0.5, movida: true }, r: 0, piso: true, quieto: true });
     }
-    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa, vecino: vec && vec.nombre };
+    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa, insignia, vecino: vec && vec.nombre };
     return aplicarCambios(res, tipo === "casa" ? "casa_" + (v % 5) : tipo, clave);
   }
 
@@ -1235,14 +1237,15 @@ window.INTERIORES = (function () {
       DIB.R(c, vx - 92, vy - 4, 184, 8, "#5E130D");
       d.luzVentana = noche ? null : { x: vx, y: vy + 60, r: 420, col: "#C8E0F0" };
     }
-    // estandarte rojo de cola de golondrina con la E
+    // estandarte rojo de cola de golondrina con la E (en Eikholt, con la cornamenta: d.insignia)
     if (d.estandarte) {
       const ex = d.estandarte,
         sw = Math.sin(tt * 0.7) * 4;
       plancha(c, [ex - 90, 150, ex + 90, 150, ex + 90, 520 + sw, ex, 470 + sw, ex - 90, 520 + sw], "#9C2315");
       plancha(c, [ex - 90, 150, ex - 50, 150, ex - 50, 500 + sw, ex - 90, 520 + sw], "#5E130D");
       DIB.R(c, ex - 104, 140, 208, 16, "#C9A45A");
-      if (d.tipo === "taberna") {
+      if (d.insignia) DIB.insignia(c, (x2, y2) => [ex + x2 * 150, 215 + y2 * 150], "#F2ECEC");
+      else if (d.tipo === "taberna") {
         plancha(c, [ex - 50, 330, ex, 250, ex + 50, 330], "#FFD98A");
         DIB.R(c, ex - 10, 330, 20, 60, "#F2ECEC");
       } else {
@@ -1657,5 +1660,5 @@ window.INTERIORES = (function () {
     puertas.push(p);
     return p;
   }
-  return { nombreVecino: (sem, v) => vecinoDe(sem, v % 5).nombre, puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
+  return { dormirAqui: () => dormir(), nombreVecino: (sem, v) => vecinoDe(sem, v % 5).nombre, puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();

@@ -212,14 +212,14 @@ window.MUNDO25 = (function () {
       ["ivar", plano.anclas.hongo_puerta, -200, 160, [17, 2]],
       ["solve", plano.anclas.hongo_puerta, 160, 220, [19, 2], { habla: true }],
       ["ragna", L.camas_hongos, 0, 140, [7, 19]],
-      ["folke", L.paseo_sogas, 0, 200, [7, 19]],
+      ["folke", L.paseo_sogas, 0, 200, [7, 12]], // a la tarde tuerce adentro (motor/oficios.js)
       ["grim", L.corral, -300, 380, [0, 24]],
       ["sigrun", plano.anclas.sanacion, 120, 120, [8, 21]],
       ["bergljot", plano.ting, 260, 260, [9, 16]],
       ["torvald", plano.anclas.svanhild_casa, 200, 260, [8, 18]],
       ["kolbrun", [L.ting[0] + 1700, L.ting[1] - 400], 0, 0, [8, 18]],
       ["maren", [0, 0], 1150, 400, [10, 17]],
-      ["sten", plano.anclas.carpinteria, 140, 160, [7, 18]],
+      ["sten", plano.anclas.carpinteria, 140, 160, [7, 12]], // a la tarde, en su banco
       ["ketil", plano.anclas.puerta_sur, 260, -260, [0, 24]],
       ["ingrid", L.forasteros, 300, 300, [7, 22]],
       ["tyra", [0, 0], 2300, 900, [8, 19], { vx: 110 }],
