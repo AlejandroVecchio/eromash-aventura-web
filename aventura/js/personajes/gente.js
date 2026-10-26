@@ -546,10 +546,26 @@ window.GENTE = (function () {
     c.translate(x, y);
     c.scale(s * (o.espejo ? -1 : 1), s);
     sombra(c, 0, 0, 22 * f.ancho, 6, 0.4);
+    // o.antorcha: lleva una antorcha en la otra mano (la ronda de noche); de espaldas queda detrás del cuerpo
+    const vi = o.vista || "S",
+      atras = o.antorcha && (vi === "N" || vi === "NE");
+    if (atras) antorcha(c, f, t, 18 * f.ancho);
     if (f.sentado) sentado(c, f, t);
     else if (PROPIOS[id]) PROPIOS[id](c, t, o);
-    else VISTAS[o.vista || "S"](c, f, t, o);
+    else VISTAS[vi](c, f, t, o);
+    if (o.antorcha && !atras) antorcha(c, f, t, vi === "E" ? 4 : -19 * f.ancho);
     c.restore();
+  }
+  function antorcha(c, f, t, x) {
+    const a = f.alto,
+      fl = Math.sin(t * 13 + x) * 1.5,
+      y0 = -34 * a,
+      y1 = -86 * a;
+    L(c, x, y0, x + 2, y1, "#6B4A2C", 3);
+    R(c, x - 2, y1 - 2, 8, 5, "#3A2A1A");
+    P(c, [x - 4, y1 - 2, x + 1 + fl, y1 - 22, x + 7, y1 - 2], "#C8402D");
+    P(c, [x - 2, y1 - 2, x + 1 + fl * 0.7, y1 - 16, x + 5, y1 - 2], "#FF8D71");
+    P(c, [x, y1 - 2, x + 1 + fl * 0.4, y1 - 10, x + 3, y1 - 2], "#FFD98A");
   }
   return { LISTA, FICHAS, PROPIOS, VISTAS, dibujar, vistaDe, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
 })();

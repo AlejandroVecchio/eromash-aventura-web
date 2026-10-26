@@ -9,7 +9,7 @@
 // Calidad gráfica: alta = todo · media = sin rayos del Roble ni reflejos, bruma más liviana · baja = solo el color de
 // la hora (plano, sin degradé) y la capa de LUZ en su versión plana.
 //   LUCES25.armar(plano)
-//   LUCES25.dePantalla(cam, cw, ch, h, t, ero) → luces en la pantalla para LUZ.dibujar
+//   LUCES25.dePantalla(cam, cw, ch, h, t, ero, mas) → luces en la pantalla para LUZ.dibujar (mas: las que se mueven)
 //   LUCES25.antes(c, cam, cw, ch, h, t, noche)   (después de dibujar el mundo, antes de la noche)
 //   LUCES25.despues(c, cam, cw, ch, h, t, noche, enVista)   (después de la capa de oscuridad)
 window.LUCES25 = (function () {
@@ -127,7 +127,7 @@ window.LUCES25 = (function () {
     return f;
   }
 
-  function dePantalla(cam, cw, ch, h, t, ero) {
+  function dePantalla(cam, cw, ch, h, t, ero, mas) {
     const V = VISTA25.proyector(cam);
     const enVista = [];
     const poner = (l, f) => {
@@ -159,6 +159,8 @@ window.LUCES25 = (function () {
       }
     // el candil de Eromash: apenas un círculo tibio a su alrededor, para no perderlo en la noche
     if (ero) poner({ x: ero.x, y: ero.y, r: 300, col: ORO }, 0.42);
+    // las que se mueven (las antorchas de la ronda): { x, y, r, col, f }
+    if (mas) for (const l of mas) poner(l, l.f);
     return enVista;
   }
 

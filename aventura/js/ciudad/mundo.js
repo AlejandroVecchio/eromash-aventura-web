@@ -189,6 +189,15 @@ window.MUNDO25 = (function () {
       const a = (i / 4) * Math.PI * 2;
       poner({ id: vecino("guardia"), x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
     }
+    // de noche, dos parejas de la Guardia hacen la vuelta del anillo de los oficios con antorchas, una para cada lado
+    // (la luz la pone LUCES25 con luces(): las antorchas que se ven)
+    if (plano.rOficios)
+      for (let i = 0; i < 4; i++) {
+        const a = Math.floor(i / 2) * Math.PI + 0.4 + (i % 2) * 0.03,
+          dir = i < 2 ? 1 : -1,
+          r = plano.rOficios(a);
+        poner({ id: vecino("guardia"), x: Math.cos(a) * r, y: Math.sin(a) * r, vx: 1, vy: 0, s: 1, horas: [21, 5], ronda: "oficios", dir, antorcha: true });
+      }
     for (const [k, n, rad, rol] of RONDAS) {
       const c0 = L[k];
       if (!c0) continue;
@@ -241,6 +250,16 @@ window.MUNDO25 = (function () {
     for (const p of gente) {
       p.visible = (!p.horas || aHora(h, p.horas)) && !(oculto && oculto(p));
       if (!p.vx && !p.vy) continue;
+      if (p.ronda === "oficios") {
+        // la ronda de noche sigue el anillo de los oficios, a paso de guardia
+        const a = Math.atan2(p.y, p.x) + (p.dir * 55 * dt) / Math.hypot(p.x, p.y),
+          r = plano.rOficios(a);
+        p.vx = (Math.cos(a) * r - p.x) / Math.max(dt, 1e-3);
+        p.vy = (Math.sin(a) * r - p.y) / Math.max(dt, 1e-3);
+        p.x = Math.cos(a) * r;
+        p.y = Math.sin(a) * r;
+        continue;
+      }
       if (p.ronda) {
         // la ronda sigue la vuelta de la plaza
         const a = Math.atan2(p.y, p.x) + (50 / 3000) * dt;
@@ -291,7 +310,7 @@ window.MUNDO25 = (function () {
     const todos = mas ? gente.concat(mas) : gente;
     const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : todos)
       .filter((p) => p.visible !== false && enPantalla(p))
-      .map((p) => ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
+      .map((p) => ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), antorcha: p.antorcha, camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
     extra.push(...RECORRER25.extra(cam, tt));
     ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
     // la luz según la hora (LUCES25): sombras que caen según el sol, el color de cada hora, la bruma de lo lejano y de
@@ -302,7 +321,9 @@ window.MUNDO25 = (function () {
     c.setTransform(1, 0, 0, 1, 0, 0);
     LUCES25.antes(c, cam, cw, ch, h, tt, n);
     if (n > 0.01) {
-      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero);
+      // las antorchas de la ronda de noche alumbran por donde pasan
+      const antorchas = gente.filter((p) => p.antorcha && p.visible !== false).map((p) => ({ x: p.x, y: p.y, r: 360, col: "#FF8D71", f: 0.7 + 0.08 * Math.sin(tt * 11 + p.x) }));
+      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero, antorchas);
       LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n, osc: Math.min(0.82, 0.06 + n * 0.74) }, tt);
       LUCES25.despues(c, cam, cw, ch, h, tt, n, enVista);
     }
