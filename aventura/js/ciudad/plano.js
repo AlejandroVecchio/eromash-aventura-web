@@ -1173,6 +1173,7 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
+    lugares.mercado = U(polar(-PI * 0.75, 31.5)); // el Mercado de los Toldos, en el anillo de adentro (para el mapa)
     return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, puestos, lugares, puertas: PUERTAS, plaza: 50.5 * M, rOficios: (a) => rOficios(a) * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };

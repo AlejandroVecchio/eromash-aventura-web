@@ -48,6 +48,7 @@ I18N.textos({
   "ci.m_corral": { es: "El corral de caravanas", en: "The caravan corral" },
   "ci.m_huertas": { es: "Las huertas", en: "The vegetable gardens" },
   "ci.m_hongo": { es: "El Hongo Dorado", en: "The Golden Mushroom" },
+  "ci.m_mercado": { es: "El Mercado de los Toldos", en: "The Awning Market" },
   "ci.m_tablero": { es: "El tablero de sendas", en: "The trail board" },
   "ci.m_casa_guardia": { es: "La casa de guardia", en: "The guardhouse" },
   "ci.m_puerta_norte": { es: "Puerta del Norte", en: "North Gate" },

@@ -19,7 +19,7 @@ I18N.textos({
   "in.nombre_carpinteria": { es: "Carpintería de Sten", en: "Sten's carpentry" },
   "in.nombre_curtiembre": { es: "La curtiembre", en: "The tannery" },
   "in.nombre_cordeleria": { es: "Cordelería de Folke", en: "Folke's ropewalk" },
-  "in.nombre_hospederia": { es: "La hospedería de los caminantes", en: "The travelers' hostel" },
+  "in.nombre_hospederia": { es: "La hospedería de los caminantes", en: "The travelers' inn" },
   "in.nombre_cuartel": { es: "El cuartel de la Guardia", en: "The Guard barracks" },
   "in.nombre_sanacion": { es: "Casa de Sanación", en: "House of Healing" },
   "in.nombre_taberna": { es: "El Hongo Dorado", en: "The Golden Mushroom" },

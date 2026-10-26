@@ -58,7 +58,7 @@ I18N.textos({
   "of.hosp_mesa": { es: "Alguien dejó un juego de tafl a medias. Las fichas blancas van perdiendo.", en: "Someone left a game of tafl half played. The white pieces are losing." },
   "of.hosp_mesa2": { es: "Migas, una jarra vacía y un mapa de caminos dibujado con el dedo en la cerveza seca.", en: "Crumbs, an empty jug and a road map drawn with a finger in dried ale." },
   "of.hosp_barriles": { es: "Cerveza para los de paso. La buena, la hidromiel, está en el Hongo Dorado.", en: "Ale for travelers. The good stuff, the mead, is at the Golden Mushroom." },
-  "of.ragnfrid_0": { es: "Bienvenido a la hospedería. Acá para todo el que viene por los caminos, y todo el que viene trae noticias.", en: "Welcome to the hostel. Everyone who comes by the roads stops here, and everyone brings news." },
+  "of.ragnfrid_0": { es: "Bienvenido a la hospedería. Acá para todo el que viene por los caminos, y todo el que viene trae noticias.", en: "Welcome to the inn. Everyone who comes by the roads stops here, and everyone brings news." },
   "of.ragnfrid_1": { es: "Desde que cerraron el Paso, las camas sobran. Ojalá alguien lo abra pronto.", en: "Since the Pass closed, the beds stand empty. I hope someone opens it soon." },
   "of.ragnfrid_2": { es: "Ulf vende hidromiel, yo vendo sueño. Los dos sabemos cuál pide más la gente.", en: "Ulf sells mead, I sell sleep. We both know which one people ask for more." },
   "of.ragnfrid_3": { es: "Si querés dormir, la cama del fondo es tuya por cuatro de plata. Hasta la mañana, con pan.", en: "If you want to sleep, the bed in the back is yours for four silver. Until morning, bread included." },
