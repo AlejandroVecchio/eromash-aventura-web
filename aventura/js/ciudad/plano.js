@@ -186,7 +186,8 @@ window.PLANO25 = (function () {
     const cosas = [], // { tipo: "casa" | "asset", x, y (unidades), ... }
       choques = [], // { poli: [[x, y]…] } | { circulo: [x, y, r] }
       anclas = {},
-      casasQueSeEntran = []; // { nombre, x, y (delante de la puerta, unidades), sem, v }
+      casasQueSeEntran = [], // { nombre, x, y (delante de la puerta, unidades), sem, v }
+      casasCerradas = []; // las demás: { nombre, x, y, sem } (se golpean)
     // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
     const curiosidades = [];
     const curiosidad = (clave, x, z, r = 3.5) => curiosidades.push({ clave, x: x * M, y: z * M, r: r * M });
@@ -890,6 +891,9 @@ window.PLANO25 = (function () {
       if (casa.ficha.entra && !casa.ficha.tapiada) {
         const [px, pz] = aMundo(cc.x, cc.z, cc.ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1.2);
         casasQueSeEntran.push({ nombre: "casa" + i, x: px * M, y: pz * M, sem: ((cc.sem % 997) + 0.5) / 997, v: cc.sem % 5 });
+      } else if (!casa.ficha.tapiada) {
+        const [px, pz] = aMundo(cc.x, cc.z, cc.ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1);
+        casasCerradas.push({ nombre: "casa" + i, x: px * M, y: pz * M, sem: Math.abs(cc.sem) % 97 });
       }
       if (casa.ficha.tapiada) curiosidad("tapiada", cc.x - (cc.fondo / 2 + 1.5) * Math.sin(cc.ry), cc.z + (cc.fondo / 2 + 1.5) * Math.cos(cc.ry), 4);
       for (const h of casa.huella(cc.x * M, cc.z * M, cc.ry)) choques.push({ poli: h });
@@ -1160,7 +1164,7 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

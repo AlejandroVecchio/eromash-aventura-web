@@ -148,6 +148,16 @@ window.MAPA25 = (() => {
       // de lejos solo los nombres de los grandes (si no se pisan); de cerca, o el señalado, todos
       if (todo && (MINI[k] || op.z >= 1.6 || k === senalado)) rotulo(c, t("ci.m_" + k), px, py + u * 1.2, u * 0.78, k === senalado);
     }
+    // las casas de vecinos que se entran: una casita chica en el mapa grande, tenue si ya se entró
+    if (todo && op.casas)
+      for (const cs of op.casas) {
+        const [px, py] = aqui(cs.x, cs.y);
+        if (px < -20 || py < -20 || px > c.canvas.width + 20 || py > c.canvas.height + 20) continue;
+        c.save();
+        c.globalAlpha = (op.vistas || []).includes(cs.nombre) ? 0.45 : 1;
+        ICONOS.dibujar(c, "casa", px, py, u * 0.55, {});
+        c.restore();
+      }
     // las cuatro puertas
     for (const k in plano.puertas) {
       const a = plano.puertas[k],

@@ -235,6 +235,14 @@ window.EIKHOLT = (function () {
         dm = d;
         mejor = { texto: t("in.accion_entrar", [t("in.casa_de", [t("av.nombre_" + INTERIORES.nombreVecino(c.sem, c.v))])]), fn: () => entrarCasa(c), x: c.x, y: c.y };
       }
+    // las demás puertas se golpean: contesta alguien de adentro (o nadie)
+    if (plano.casasCerradas)
+      for (const c of plano.casasCerradas) {
+        const d = Math.hypot(c.x - e.x, c.y - e.y);
+        if (d > 1.3 * M || d >= dm) continue;
+        dm = d;
+        mejor = { texto: t("ek.golpear"), fn: () => golpear(c), x: c.x, y: c.y };
+      }
     const am = RECORRER25.aMano();
     if (am && am.d < dm + 0.5 * M) {
       dm = am.d;
@@ -249,10 +257,22 @@ window.EIKHOLT = (function () {
   // vuelve a poner a Eromash delante de esa puerta (st.volverA)
   function entrarCasa(c) {
     st.volverA = [c.x, c.y];
+    st.casasVistas = st.casasVistas || [];
+    if (!st.casasVistas.includes(c.nombre)) st.casasVistas.push(c.nombre);
     const [fx, fy] = aBosque(c.x, c.y);
     jug.x = fx;
     jug.y = fy;
     INTERIORES.entrar({ tipo: "casa", cosa: { id: "casaEikholt", x: fx, y: fy - 70, o: { sem: c.sem, v: c.v } }, clave: "ek_" + c.nombre });
+  }
+  // golpear una puerta cerrada: tres golpes y la respuesta que le toca a esa casa (cambia de día a la noche)
+  const golpes = {};
+  function golpear(c) {
+    if (window.SONIDO) [0, 180, 360].forEach((ms) => setTimeout(() => SONIDO.tocar("puerta", { vol: 0.3, tono: 1.4 + Math.random() * 0.2 }), ms));
+    const h = window.LUZ ? LUZ.hora(A.H.E.tiempo) : 12,
+      noche = h >= 22 || h < 6,
+      k = (golpes[c.nombre] = (golpes[c.nombre] || 0) + 1),
+      n = noche ? "ek.puerta_noche_" + ((c.sem + k) % 4) : "ek.puerta_" + ((c.sem * 7 + k) % 10);
+    setTimeout(() => A.dialogoLibre([["eromash", n]]), 600);
   }
   // ---------- Eromash camina ----------
   const VEL = [0, 150, 260, 430],
@@ -587,6 +607,8 @@ window.EIKHOLT = (function () {
     dir: jug.dirMundo || [0, 1],
     gente: MUNDO25.gente(),
     marca: st && st.marca,
+    casas: plano.casasQueSeEntran,
+    vistas: (st && st.casasVistas) || [],
   });
   function abrirMapa() {
     if (!window.MAPA25) return window.MAPA && MAPA.abrir();
