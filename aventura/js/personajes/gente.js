@@ -137,6 +137,8 @@ window.GENTE = (function () {
     geir: { nombre: "geir", alto: 0.94, ancho: 0.9, piel: "#D8B090", pielSombra: "#B89070", pelo: "#C8803A", ropa: "#6A5A4A", ropaSombra: "#52463A", delantal: "#4A3020", delantalSombra: "#3A2418", pantalon: "#3A3026", botas: "#2A2018", cinto: "#5E4430" },
     // el guardia de la muralla que espera su punta de lanza en la herrería
     hr_guardia: { nombre: "hr_guardia", alto: 1.04, ancho: 1.1, piel: "#D0A080", pielSombra: "#AE8064", pelo: "#3A2A1E", barba: "#3A2A1E", ropa: "#5A5E5A", ropaSombra: "#464A46", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", insignia: true },
+    // Ketill, el copista de Svanhild: flaco, de mediana edad, barba rala, túnica parda con manchas de tinta en las mangas
+    ketill: { nombre: "ketill", alto: 0.98, ancho: 0.9, piel: "#D8B494", pielSombra: "#B89474", pelo: "#7A5634", barba: "#7A5634", ropa: "#6A5A48", ropaSombra: "#544636", pantalon: "#3E342A", botas: "#2A2018", cinto: "#3A2A1A", tinta: true },
     // Hlíf, la aprendiz de Thora: joven, trenza rubia, vestido de lana y delantal verde manchado de hierbas
     hlif: { nombre: "hlif", alto: 0.9, ancho: 0.88, piel: "#E8C8A8", pielSombra: "#C8A888", pelo: "#D8B060", ropa: "#8A7A60", ropaSombra: "#6E604A", falda: true, delantal: "#4E5C32", delantalSombra: "#3A4428", pantalon: "#5A4A38", botas: "#3A2A1E", cinto: "#5A4030", trenza: true },
     // El herido: el trabajador que no puede apoyar la pierna; se dibuja sentado con la venda.

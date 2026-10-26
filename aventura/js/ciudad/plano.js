@@ -573,6 +573,7 @@ window.PLANO25 = (function () {
       asset("farol", lx + 15, lz + 6, { s: 1.3 });
       anclas.svanhild_casa = U([lx + 4, lz]);
       anclas.losa = U([lx + 9, lz + 3]);
+      anclas.lindes_puerta = U(aMundoE(lx - 6, lz - 2, ry, cuerpo.puertaLocal[0] / M, cuerpo.puertaLocal[1] / M + 1.2)); // delante de su puerta
     }
     // el Hongo Dorado: la casa más grande, dos pisos, galería, buhardillas y el cartel, mirando a la plaza
     {

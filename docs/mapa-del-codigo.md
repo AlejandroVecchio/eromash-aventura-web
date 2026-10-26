@@ -295,6 +295,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - al generar: las legendarias traen su poder · qué poderes valen ahora · el golpe de un poder (pasa por los modDano y avisa con alPegar, marcado para no encadenarse) · la pestaña Poderes · el sistema
 - **libros.js**: los libros de Eldervald (sistema LIBROS, modo "libro")
   - dónde: atriles a un costado de los caminos · leer · la ventana del lector · lo que llevan los líderes · el sistema
+- **lindes.js**: la Casa de las Lindes por dentro (sistema LINDES)
+  - la casa · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
 - **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
   - quebrar · temblor (el remate) y trueno · el sistema
 - **materiales.js**: los materiales de la forja (sistema MATERIALES)
@@ -391,6 +393,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: asientoJotunn, menhirEscarcha, jotunnFigura
 - **assets-libros.js**: los libros de Eldervald (assets de LIBROS)
   - assets: atrilPiedra, libroCaido
+- **assets-lindes.js**: lo de adentro de la Casa de las Lindes (assets armados con caras)
+  - La mesa de los mapas · El estante de los rollos · Las piedras de linde · El atril del Libro de las Lindes · El hogar de las Lindes · La cama de alcoba · La mesa del copista
+  - assets: mesaMapas, estanteLindes, piedrasLinde, atrilLibro, hogarLindes, camaAlcoba, mesaCopista
 - **assets-materiales.js**: las vetas del bosque: de donde sale el material de la forja (assets de MATERIALES)
   - la veta de hierro de pantano · el nódulo de ámbar · la vena rúnica
   - assets: vetaHierro, vetaAmbar, vetaRunica
@@ -492,6 +497,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
 - **libros.js**: Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
+- **lindes.js**: textos de la Casa de las Lindes por dentro (ln.) y de sus muebles (as.)
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.

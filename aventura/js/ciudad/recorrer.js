@@ -55,6 +55,7 @@ window.RECORRER25 = (function () {
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
   const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
   function frase(id, n, rol) {
+    n = Math.abs(Math.floor(n)) || 0;
     if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));
     const pre = FRASES_GENERICAS[id];
     if (pre === null) return null;

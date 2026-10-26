@@ -49,6 +49,7 @@ window.EIKHOLT = (function () {
       mirador: m(-12, 16), roble: m(10, 16), ting: AN.ting, pozo: mas(L.pozo, 0, 2.5), campana: mas(L.campana, 0, 2.5),
       tablon_avisos: mas(L.tablon, 0, 2.5), camas_hongos: mas(L.camas_hongos, 0, 3),
       losa: AN.losa, mesa: mas(AN.svanhild_casa, 0, 4), svanhild_casa: AN.svanhild_casa, svanhild_patio: mas(AN.losa, 2, 3), herreria_puerta: AN.herreria,
+      lindes: AN.lindes_puerta,
       puerta_sur: AN.puerta_sur, puerta_norte: AN.puerta_norte, gran_tablero: m(14, 139), casa_guardia: m(-12, 139),
       herreria: AN.herreria, carpinteria: AN.carpinteria, cordeleria: AN.cordeleria, curtiembre: AN.curtiembre, sanacion: AN.sanacion,
       hongo_dorado: AN.hongo_puerta, guardia: AN.guardia, carreta_grim: mas(AN.corral, 0, 4), buey: mas(AN.corral, 3, 6),

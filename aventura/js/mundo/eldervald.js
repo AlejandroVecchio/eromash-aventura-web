@@ -576,7 +576,7 @@ window.ELDERVALD = (function () {
   // Casa de las Lindes (Svanhild), en el borde oeste de Eikholt
   (function () {
     const c = LUGARES.casa_lindes.p;
-    poner("casaLindes", mas(c, 0, -6));
+    poner("casaLindes", mas(c, 0, -6), {}, "lindes");
     const patio = mas(c, 7, 4);
     poner("losaPatio", patio, { luz: 0 }, "losa");
     const mesa = mas(c, -1, 4);
