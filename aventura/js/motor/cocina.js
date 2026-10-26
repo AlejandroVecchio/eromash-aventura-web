@@ -49,11 +49,14 @@ window.COCINA = (function () {
     Object.keys(pide)
       .map((k) => `${pide[k]} ${nombreIng(k)}${tiene(k) < pide[k] ? " ✗" : ""}`)
       .join(" · ");
+  // los fogones y braseros del mundo, juntados una vez (se rearma si el mundo suma cosas): no se recorre todo en cada cuadro
+  let fogones = null,
+    fogonesDe = -1;
   function fogataCerca() {
+    if (fogonesDe !== W.COSAS.length) (fogones = W.COSAS.filter((o) => o.id === "fogonOlla" || o.id === "brasero")), (fogonesDe = W.COSAS.length);
     let m = null,
       dm = RADIO;
-    for (const o of W.COSAS) {
-      if (o.id !== "fogonOlla" && o.id !== "brasero") continue;
+    for (const o of fogones) {
       if (o.o.apagado || (o.id === "brasero" && !o.o.encendido)) continue;
       const d = Math.hypot(o.x - jug.x, o.y - jug.y);
       if (d < dm) (dm = d), (m = o);

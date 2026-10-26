@@ -131,7 +131,8 @@ window.EXPLORA = (function () {
   const ANCHO = 420,
     ALTO = 44,
     CAMPO = Math.PI / 2; // de la punta al centro: 90°
-  let paseBr = 0;
+  let paseBr = 0,
+    banda = null; // el degradado de la banda de la brújula
   function brujula() {
     const el = document.getElementById("hudBrujula");
     const ver = J.modo === "juego" && !J.dentro && !J.jefeHud && !(A.ciervo && A.ciervo.activo) && (!window.OPCIONES || OPCIONES.v("brujula"));
@@ -158,12 +159,14 @@ window.EXPLORA = (function () {
       return { x: ANCHO / 2 + (r / CAMPO) * (ANCHO / 2), r };
     };
     // la banda: oscura en el medio y que se funde a los costados
-    const g = c.createLinearGradient(0, 0, ANCHO, 0);
-    g.addColorStop(0, "rgba(17,17,17,0)");
-    g.addColorStop(0.18, "rgba(17,17,17,0.78)");
-    g.addColorStop(0.82, "rgba(17,17,17,0.78)");
-    g.addColorStop(1, "rgba(17,17,17,0)");
-    c.fillStyle = g;
+    if (!banda) {
+      banda = c.createLinearGradient(0, 0, ANCHO, 0); // hecho una vez: el ancho de la brújula no cambia
+      banda.addColorStop(0, "rgba(17,17,17,0)");
+      banda.addColorStop(0.18, "rgba(17,17,17,0.78)");
+      banda.addColorStop(0.82, "rgba(17,17,17,0.78)");
+      banda.addColorStop(1, "rgba(17,17,17,0)");
+    }
+    c.fillStyle = banda;
     c.fillRect(0, 0, ANCHO, ALTO);
     // las rayas y los puntos cardinales (el norte es -y en el mundo)
     const CARD = t("ex.cardinales").split(",");

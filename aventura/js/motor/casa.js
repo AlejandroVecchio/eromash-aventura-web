@@ -28,8 +28,7 @@ window.CASA = (function () {
   const base = () => ({ tuya: false, hechas: {}, arcon: [], cosecha: -1, abrigo: 0 });
   const ABRIGO = 600; // segundos de «Bien abrigado» al dormir en la cama de pieles: +10 % de experiencia
   let st = base();
-  let casa = null, // { x, y, cosa, letrero, huerta, fogon, puerta }
-    lugar = null;
+  let casa = null; // { x, y, cosa, letrero, huerta, fogon, puerta }
   const hecha = (id) => !!st.hechas[id];
   const dia = () => Math.floor(A.H.E.tiempo / LUZ.DIA);
 

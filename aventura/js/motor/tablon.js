@@ -98,7 +98,7 @@ window.TABLON = (function () {
       if (!st.pedido) return null;
       const p = st.pedido,
         objetivos = [{ texto: t("mj.caza_pide", [p.n, t("cr." + p.tipo)]) + ` (${Math.min(p.hechas, p.n)}/${p.n})`, estado: listo() ? "hecho" : "actual" }];
-      if (listo()) objetivos.push({ texto: t("mj.caza_volver"), estado: "actual", metros: tablon ? Math.max(1, Math.hypot(tablon.x - jug.x, tablon.y - jug.y) / 43) : null });
+      if (listo()) objetivos.push({ texto: t("mj.caza_volver"), estado: "actual", metros: tablon ? Math.max(1, Math.hypot(tablon.x - jug.x, tablon.y - jug.y) / W.M) : null });
       return { secundaria: true, rotulo: t("mj.caza_rotulo"), nombre: t("mj.caza_titulo"), objetivos };
     },
     diario() {

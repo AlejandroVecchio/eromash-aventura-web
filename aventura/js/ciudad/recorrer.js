@@ -71,8 +71,7 @@ window.RECORRER25 = (function () {
     dibujarEro = op.dibujarEro || null;
     alCofre = op.alCofre || null;
     const L0 = plano.lugares,
-      A0 = plano.anclas,
-      M = plano.M;
+      A0 = plano.anclas;
     ero.x = op.inicio ? op.inicio[0] : 0;
     ero.y = op.inicio ? op.inicio[1] : 4000;
     ZONAS = [
@@ -821,24 +820,33 @@ window.RECORRER25 = (function () {
     c.fillText(cuenta(), cw - 16, ch - 16);
     c.textAlign = "left";
   }
-  // un globo de diálogo con el texto partido en renglones
+  // un globo de diálogo con el texto partido en renglones (cada texto se parte una vez y se guarda: medir palabra por
+  // palabra en cada cuadro es caro con varios globos a la vista)
+  const partidos = new Map();
   function globo(c, x, y, texto, a) {
     c.save();
     c.globalAlpha = Math.max(0, a);
     c.font = '500 13px "DM Sans", system-ui, sans-serif';
-    const max = 260,
-      pal = texto.split(" "),
-      lin = [];
-    let cur = "";
-    for (const w of pal) {
-      const n = cur ? cur + " " + w : w;
-      if (c.measureText(n).width > max && cur) {
-        lin.push(cur);
-        cur = w;
-      } else cur = n;
+    const max = 260;
+    let pt = partidos.get(texto);
+    if (!pt) {
+      const pal = texto.split(" "),
+        lin = [];
+      let cur = "";
+      for (const w of pal) {
+        const n = cur ? cur + " " + w : w;
+        if (c.measureText(n).width > max && cur) {
+          lin.push(cur);
+          cur = w;
+        } else cur = n;
+      }
+      if (cur) lin.push(cur);
+      pt = { lin, ancho: Math.min(max, Math.max(...lin.map((l) => c.measureText(l).width))) + 24 };
+      if (partidos.size > 200) partidos.clear();
+      if (!document.fonts || document.fonts.status === "loaded") partidos.set(texto, pt); // con la letra ya cargada
     }
-    if (cur) lin.push(cur);
-    const ancho = Math.min(max, Math.max(...lin.map((l) => c.measureText(l).width))) + 24,
+    const lin = pt.lin,
+      ancho = pt.ancho,
       alto = lin.length * 17 + 14;
     c.fillStyle = "rgba(242,236,236,0.95)";
     c.fillRect(x - ancho / 2, y - alto, ancho, alto);

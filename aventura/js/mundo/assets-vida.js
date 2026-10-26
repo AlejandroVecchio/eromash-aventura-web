@@ -5,7 +5,7 @@
 // Mismo estilo que el resto: caras planas, luz de arriba a la derecha, sombra elíptica, sin contornos.
 (function () {
   "use strict";
-  const { P, E, R, L, alfa, sombra, halo, RUNICO, RUNICO_CLARO, poli, azar, TAU } = DIB;
+  const { P, R, L, alfa, sombra, halo, RUNICO, RUNICO_CLARO, poli, azar, TAU } = DIB;
   const C = ASSETS.C;
   const F = FUTHARK;
   const ORO = "#FFD98A";

@@ -313,7 +313,7 @@ window.CONTRATOS = (function () {
       if (!id) return null;
       const s = st.c[id],
         L = lugares[id],
-        m = (p) => Math.max(1, Math.hypot(p[0] - jug.x, p[1] - jug.y) / 43);
+        m = (p) => Math.max(1, Math.hypot(p[0] - jug.x, p[1] - jug.y) / W.M);
       const objetivos = [];
       if (s.fase === "rastros") objetivos.push({ texto: t("ct.seg_rastros", [s.rastros, 3]), estado: "actual", metros: m(L.rastros[s.rastros]) });
       else objetivos.push({ texto: t("ct.seg_rastros", [3, 3]), estado: "hecho" });

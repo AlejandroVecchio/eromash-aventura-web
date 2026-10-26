@@ -22,12 +22,6 @@ window.MURALLA25 = (function () {
   const TRONCO = [C.madera, C.maderaLuz, C.maderaSombra];
   const VIEJO = [C.maderaVieja, C.madera, C.maderaSombra];
 
-  function utiles(pr) {
-    const pared = (au, aw, bu, bw, z0, z1, col) => P(c0.c, [...pr(au, aw, z0), ...pr(bu, bw, z0), ...pr(bu, bw, z1), ...pr(au, aw, z1)], col);
-    const c0 = {};
-    return { c0, pared };
-  }
-
   // una cara de troncos parados entre (au, aw) y (bu, bw), de z0 a z1; punta: los troncos terminan en punta
   function troncos(c, pr, au, aw, bu, bw, z0, z1, cols, lx, r, punta) {
     const l = Math.hypot(bu - au, bw - aw),

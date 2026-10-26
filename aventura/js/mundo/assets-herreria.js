@@ -6,8 +6,7 @@
 (function () {
   "use strict";
   const { P, E, R, L, alfa, azar } = DIB;
-  const MT = ["#2A0806", "#5E130D", "#7A1D14"],
-    MC = ["#3A1A10", "#5A2A16", "#7A3E20"],
+  const MC = ["#3A1A10", "#5A2A16", "#7A3E20"],
     PI = ["#3E3842", "#4E4852", "#6A646C"],
     PIO = ["#2E2A32", "#3E3A42", "#56525A"],
     HI = ["#2A2428", "#3A3438", "#6E6A6E"],

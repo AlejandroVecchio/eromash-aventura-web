@@ -115,6 +115,4 @@ I18N.textos({
   "ci.cerrar": { es: "Seguir", en: "Continue" },
   "ci.nueva": { es: "Curiosidad nueva", en: "New curiosity" },
   "ci.cofre_hallado": { es: "Encontraste un cofre escondido", en: "You found a hidden chest" },
-  "ci.recorrer": { es: "Caminá con WASD o el stick, Shift corre, E mira lo que brilla cerca.", en: "Walk with WASD or the stick, Shift to run, E to look at what glints nearby." },
-  "ci.canta": { es: "♪", en: "♪" },
 });

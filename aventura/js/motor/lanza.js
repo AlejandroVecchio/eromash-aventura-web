@@ -22,7 +22,6 @@ window.LANZA_ARMA = (function () {
     carga: 0.5,
     coste: 16,
   });
-  const esLanza = () => ARMAS.tipoActual() === "lanza";
 
   // la lanza arrojada: { x, y, dir, d, estado: "vuela" | "clavada" | "vuelve", t, ya, it }
   let tiro = null;

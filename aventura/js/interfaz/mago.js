@@ -59,28 +59,9 @@
     [185, 510],
     [125, 470],
   ];
-  const BARBA = [
-    [128, 430],
-    [376, 430],
-    [384, 480],
-    [340, 528],
-    [290, 520],
-    [252, 556],
-    [212, 520],
-    [164, 528],
-    [120, 480],
-  ];
   const HB = 150; // de dónde nace el sombrero (el borde de arriba de la E ya girada)
   const clamp = (v) => Math.max(0, Math.min(1, v));
   const seg = (t, a, b) => clamp((t - a) / (b - a));
-  const ease = (p) => 1 - Math.pow(1 - p, 3);
-  function rnd(seed) {
-    let a = seed;
-    return () => {
-      a = (a * 1664525 + 1013904223) % 4294967296;
-      return a / 4294967296;
-    };
-  }
   function P(c, pts, f, al) {
     if (al != null) c.globalAlpha = al;
     c.fillStyle = f;
@@ -839,6 +820,5 @@
     c.restore();
     c.restore();
   }
-  const DOMO = new Path2D("M60 205 C90 95 390 95 420 205 Z");
   window.MAGO = mago;
 })();

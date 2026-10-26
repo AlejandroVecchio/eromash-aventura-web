@@ -7,7 +7,7 @@
 // Caras planas, luz de arriba a la derecha, la mitad izquierda en sombra, sombra elíptica.
 (function () {
   "use strict";
-  const { P, E, L, sombra, alfa } = DIB;
+  const { P, sombra, alfa } = DIB;
   const GRANITO = "#7E7A76",
     GRANITO_S = "#5E5A56",
     GRANITO_L = "#9E9A96",

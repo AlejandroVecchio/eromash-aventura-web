@@ -95,7 +95,6 @@ I18N.textos({
   "sx.sellado_fuego": { es: "Un sello de fuego: los tres braseros tienen que arder.", en: "A fire seal: all three braziers must burn." },
   "sx.sellado_piedra": { es: "Sellado por una runa. Despertá la piedra del susurro más cercana.", en: "Sealed by a rune. Wake the nearest whispering stone." },
   "sx.sello_suelto": { es: "La luz corre por el suelo: un sello se suelta en algún lugar cercano.", en: "Light runs along the ground: a seal breaks somewhere close." },
-  "sx.cofre_abierto": { es: "Cofre · {0} de {1}", en: "Chest · {0} of {1}" },
   "sx.cofre_n": { es: "({0} de {1})", en: "({0} of {1})" },
   "sx.botin_plata": { es: "+{0} de plata", en: "+{0} silver" },
   "sx.botin_vida": { es: "vida", en: "health" },
@@ -194,7 +193,6 @@ I18N.textos({
   "mp.ley_hecho": { es: "Mostrar lo ya hecho", en: "Show what's done" },
   "mp.hecho": { es: "hecho", en: "done" },
   "mp.bosque": { es: "Bosque de Eldervald", en: "Eldervald forest" },
-  "mp.ayuda_marca": { es: "Acercá con la rueda, pellizcando o con + y −, y arrastrá para moverte. Tocá un lugar para marcarlo (una marca a la vez); tocala de nuevo para borrarla.", en: "Zoom with the wheel, a pinch or + and −, and drag to move around. Tap a spot to mark it (one mark at a time); tap it again to clear it." },
   "mp.viajar": { es: "Viajar", en: "Travel" },
   "mp.quitar_marca": { es: "Quitar la marca", en: "Clear mark" },
   "mp.marca_rotulo": { es: "Tu marca", en: "Your mark" },
@@ -202,5 +200,4 @@ I18N.textos({
   "mp.marca_ir": { es: "Seguí la flecha dorada", en: "Follow the golden arrow" },
   "mp.marca_llegaste": { es: "Llegaste a tu marca", en: "You reached your mark" },
   "mp.titulo": { es: "Mapa de Eldervald", en: "Map of Eldervald" },
-  "mp.leyenda": { es: "Lo oscuro todavía no lo caminaste. Cada lugar, estructura, piedra, altar, campamento y cofre que viste queda con su miniatura; lo que ya completaste queda más chico y gris. Las piedras despiertas, con la runa del camino, son puntos de viaje.", en: "The dark parts you haven't walked yet. Every place, structure, stone, altar, camp and chest you have seen keeps its icon; what you have already completed turns smaller and grey. Awake stones, marked with the road rune, are travel points." },
 });

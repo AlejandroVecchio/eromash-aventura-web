@@ -705,8 +705,7 @@
   // ======================================================================
   const T = C.T,
     TP = PIEDRA,
-    TAGUA = AGUA,
-    CLARA = ["#8A6A40", "#B08A58", "#C8A070"];
+    TAGUA = AGUA;
   // la rueda de agua dibujada en su plano (centro en cx, cy de la cara)
   function ruedaPlana(cc, cx, cy, rr, a0) {
     cc.strokeStyle = C.maderaSombra;

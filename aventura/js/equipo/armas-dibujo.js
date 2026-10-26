@@ -111,7 +111,7 @@ window.DIB_ARMAS = (function () {
   // mandobles: fam 0 largo y recto con acanaladura · 1 espadón ancho · 2 rúnico con la punta abierta · 3 de hueso
   // dentado · 4 flamígero (el filo ondulado)
   function mandoble(c, fam, tier) {
-    const [s, b, l] = METAL[tier];
+    const [s] = METAL[tier];
     // el agarre largo (para las dos manos) y el pomo
     mango(c, 62, 176, 11, tier, fam === 3);
     // la hoja

@@ -102,20 +102,28 @@ window.MAPA = (function () {
   }
   // la niebla de lo no explorado, a la escala del mapa grande: negra con agujeros suaves donde ya caminaste.
   // Se arma entera al cargar la partida y después solo se le abren los agujeros nuevos.
-  let niebla = null;
+  let niebla = null,
+    sello = null; // el agujero redondo, pintado una vez: destapar un lugar grande son cientos de celdas de golpe
   function agujero(x, y) {
     const n = niebla.getContext("2d"),
       k = niebla.width / W.ANCHO,
       r = CEL * k * 1.25,
       px = (x + 0.5) * CEL * k,
-      py = (y + 0.5) * CEL * k,
-      g = n.createRadialGradient(px, py, 0, px, py, r);
-    g.addColorStop(0, "rgba(0,0,0,1)");
-    g.addColorStop(0.55, "rgba(0,0,0,0.9)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
+      py = (y + 0.5) * CEL * k;
+    if (!sello) {
+      const lado = Math.ceil(r * 2);
+      sello = document.createElement("canvas");
+      sello.width = sello.height = lado;
+      const s = sello.getContext("2d"),
+        g = s.createRadialGradient(lado / 2, lado / 2, 0, lado / 2, lado / 2, r);
+      g.addColorStop(0, "rgba(0,0,0,1)");
+      g.addColorStop(0.55, "rgba(0,0,0,0.9)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      s.fillStyle = g;
+      s.fillRect(0, 0, lado, lado);
+    }
     n.globalCompositeOperation = "destination-out";
-    n.fillStyle = g;
-    n.fillRect(px - r, py - r, r * 2, r * 2);
+    n.drawImage(sello, px - r, py - r, r * 2, r * 2);
   }
   function armarNiebla() {
     niebla = document.createElement("canvas");
@@ -741,7 +749,7 @@ window.MAPA = (function () {
     seguimiento() {
       const m = marca();
       if (!m) return null;
-      return { secundaria: true, rotulo: t("mp.marca_rotulo"), nombre: t("mp.marca_nombre"), objetivos: [{ texto: t("mp.marca_ir"), estado: "actual", metros: Math.max(1, Math.hypot(m[0] - jug.x, m[1] - jug.y) / 43) }] };
+      return { secundaria: true, rotulo: t("mp.marca_rotulo"), nombre: t("mp.marca_nombre"), objetivos: [{ texto: t("mp.marca_ir"), estado: "actual", metros: Math.max(1, Math.hypot(m[0] - jug.x, m[1] - jug.y) / W.M) }] };
     },
     actualizar(dt) {
       if (!st) return;

@@ -18,7 +18,6 @@ I18N.textos({
   "inv.st_manzanas": { es: "Manzanas de Iðunn", en: "Iðunn's apples" },
   "inv.st_renombre": { es: "Renombre en Eikholt", en: "Renown in Eikholt" },
   "inv.st_proezas": { es: "Proezas", en: "Feats" },
-  "inv.vacio": { es: "Vacío", en: "Empty" },
   "inv.bolsa_vacia": { es: "Por ahora no llevás nada de nadie.", en: "For now you're not carrying anything for anyone." },
   "inv.runa_falta": { es: "Todavía no la encontraste. Está en uno de los altares de Eldervald.", en: "You haven't found it yet. It's on one of Eldervald's altars." },
   "inv.nivel": { es: "+{0}", en: "+{0}" },

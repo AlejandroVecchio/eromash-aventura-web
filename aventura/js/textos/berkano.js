@@ -2,7 +2,6 @@
 I18N.textos({
   "as.manantialRunico": { es: "Un manantial rúnico", en: "A runic spring" },
   "as.piedraBerkano": { es: "Una piedra de Berkano", en: "A Berkano stone" },
-  "bk.piedra": { es: "Piedra de Berkano", en: "Berkano stone" },
   "bk.piedras": { es: "Piedras de Berkano", en: "Berkano stones" },
   "bk.tomar_piedra": { es: "Juntar la piedra de Berkano", en: "Pick up the Berkano stone" },
   "bk.nueva": { es: "Piedra de Berkano", en: "Berkano stone" },
@@ -11,10 +10,7 @@ I18N.textos({
   "bk.salvado": { es: "Berkano te devuelve", en: "Berkano brings you back" },
   "bk.salvado_sub": { es: "Se rompió una piedra · quedan {0}", en: "A stone broke · {0} left" },
   "bk.ultima": { es: "Se rompió tu última piedra de Berkano", en: "Your last Berkano stone broke" },
-  "bk.manantial_usar": { es: "Beber del manantial rúnico", en: "Drink from the runic spring" },
   "bk.manantial_seco": { es: "El manantial está vacío. Se llena de nuevo al amanecer", en: "The spring is empty. It fills again at dawn" },
-  "bk.manantial_lleno": { es: "Ya estás entero y tus piedras brillan", en: "You are whole and your stones are shining" },
-  "bk.manantial_pelea": { es: "No hay tiempo para beber en plena pelea", en: "No time to drink in the middle of a fight" },
   "bk.manantial_listo": { es: "El manantial te llenó", en: "The spring filled you" },
   "bk.cargadas": { es: "Piedras cargadas", en: "Stones charged" },
   "bk.descubierto": { es: "Manantial rúnico", en: "Runic spring" },

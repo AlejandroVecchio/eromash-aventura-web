@@ -5,7 +5,7 @@
 window.COMBATE = (function () {
   "use strict";
   const M = 30; // un metro de combate: las distancias de pelea no crecen con el mapa
-  const { E, alfa, TAU } = DIB;
+  const { alfa, TAU } = DIB;
 
   // forma: abanico · circulo · franja (golpe al frente) · carga (embiste por la franja) · lejos (cae del cielo donde
   // estás parado; el que tira se queda a distancia). barra: altura de la barra de vida sobre la base.

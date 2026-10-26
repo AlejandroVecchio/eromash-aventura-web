@@ -5,7 +5,7 @@
 // bajó y no volvió a subir. Mismas medidas que los muebles del cuarto (pies en x, y; luz de arriba a la derecha).
 (function () {
   "use strict";
-  const { P, E, R, L, alfa, sombra, halo, poli, azar } = DIB;
+  const { P, E, R, L, alfa, sombra, halo, azar } = DIB;
   const F = FUTHARK;
   const MANA = "#4A78D0",
     MANA2 = "#A9C2F0",

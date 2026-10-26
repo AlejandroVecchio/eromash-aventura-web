@@ -192,7 +192,6 @@ window.PROBAR = (function () {
   ];
 
   // ---------- los menús ----------
-  const g = CONTROLES.glifo;
   // desdeTitulo: no hay partida andando (desde el título o con ?probar=1)
   function abrir(desdeTitulo) {
     // siempre en la partida de prueba: la de antes queda guardada

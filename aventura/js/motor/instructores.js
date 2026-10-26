@@ -335,7 +335,7 @@ window.INSTRUCTORES = (function () {
       if (!st.prueba) return null;
       const id = st.prueba.quien,
         M = MAESTROS[id];
-      return { secundaria: true, id: "instructor", rotulo: t("ie.rotulo"), nombre: t("ie.prueba_de", [t("av.nombre_" + id)]), objetivos: [{ texto: t("ie.prueba_" + M.prueba, [M.meta[st.prueba.n], M.seg]), estado: "actual", metros: muneco ? Math.max(1, Math.hypot(muneco.x - jug.x, muneco.y - jug.y) / 43) : null }] };
+      return { secundaria: true, id: "instructor", rotulo: t("ie.rotulo"), nombre: t("ie.prueba_de", [t("av.nombre_" + id)]), objetivos: [{ texto: t("ie.prueba_" + M.prueba, [M.meta[st.prueba.n], M.seg]), estado: "actual", metros: muneco ? Math.max(1, Math.hypot(muneco.x - jug.x, muneco.y - jug.y) / W.M) : null }] };
     },
     marcasBrujula() {
       return st.prueba && muneco ? [{ x: muneco.x, y: muneco.y, col: "#FFD98A" }] : [];

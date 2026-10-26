@@ -92,7 +92,6 @@ window.PLANO25 = (function () {
     return l;
   };
   const rOficios = (a) => 96 + 5 * Math.sin(3 * a + 0.7) + 3 * Math.sin(5 * a + 2);
-  const rBorde = (a) => 123 + 3.5 * Math.sin(4 * a + 1) + 2 * Math.sin(7 * a);
   const curva = (fr, a0, a1, n) => {
     const l = [];
     for (let i = 0; i <= n; i++) {

@@ -88,7 +88,54 @@ Todo el código está en `aventura/js/`. Cada archivo arranca con una línea que
 | Opciones | `interfaz/opciones.js` (`filas`) |
 | Teclas y botones del mando | `comun/controles.js` (`TECLAS`); siempre por acción, nunca la tecla suelta |
 | Cámara: acercar, adelantarse, temblor | `motor/juego.js`, sección `cámara` (`actualizarCamara`, `cambiarZoom`) y `VISTA` arriba de todo |
-| Cualquier texto que se ve | `textos/<tema>.js`, con `es` y `en` juntos; el prefijo de cada archivo está en su primera línea |
+| Cualquier texto que se ve | `textos/<tema>.js`, con `es` y `en` juntos; qué archivo tiene cada prefijo está al final de este mapa |
+
+### Rol, equipo y oficios
+
+| Qué | Dónde |
+|---|---|
+| Golpes de cada arma (hacha, dos manos, arco, lanza, martillo, bastón), escudo | `motor/armas.js` (`ARMAS.tipo`), `motor/arco.js`, `motor/lanza.js`, `motor/martillo.js`, `motor/baston.js`, `motor/escudo.js`; dibujo de las armas nuevas en `equipo/armas-dibujo.js` |
+| Furia, Rugido, Salto del lobo, Bandada; árbol de Oso, Lobo y Cuervo | `motor/furia.js` (`HAB`), `motor/arbol.js` (`ARBOL.sumar`) |
+| Sigilo, runas de los elementos y sus reacciones | `motor/sigilo.js`, `motor/elementos.js` |
+| La forja de Ása (juego de ritmo), materiales y vetas | `motor/forja.js`, `motor/materiales.js` (`MATERIALES`) |
+| Muescas, tallas y palabras rúnicas; conjuntos; poderes de las legendarias; arcón y filtro | `motor/engarces.js`, `motor/conjuntos.js`, `motor/legendarios.js`, `motor/arcon.js` |
+| Comercio, regateo, tintes del casco | `motor/comercio.js` (`modPrecio`), `motor/regateo.js`, `motor/tintes.js` |
+| Alquimia y el matraz, cocina, pesca, libros, frasco de Thora | `motor/alquimia.js`, `motor/matraz.js`, `motor/cocina.js`, `motor/pesca.js`, `motor/libros.js`, `motor/frasco.js` |
+| La hoja de Eromash y los topes de lo que suman los sistemas | `interfaz/hoja.js`, `RPG.aporte` y `RPG.TOPES` en `motor/rpg.js` |
+| Encargos, semijefes, renombre y proezas; la saga | `motor/secundarias.js`, `motor/saga.js` (`ENTRADAS`) |
+| Instructores y el muñeco | `motor/instructores.js` |
+
+### Lugares y peligros del bosque
+
+| Qué | Dónde |
+|---|---|
+| El Hongo Dorado, la herrería, la casa de Hrolf | `motor/hongo.js`, `motor/herreria.js`, `motor/casa.js`; muebles en `mundo/assets-hongo.js`, `mundo/assets-herreria.js` |
+| El este (aserradero, santuario), el norte, la senda del Refugio, el Claro | `motor/este.js`, `motor/norte.js`, `motor/senda.js`, `motor/claro.js` |
+| Hörgar de los dioses | `motor/santuarios.js` |
+| Mazmorras e islas, su mapa con niebla | `motor/zonas.js`, `interfaz/mapa-mazmorra.js` |
+| Bandidos, arañas, Hrímnir, la Cacería Salvaje, encuentros en el camino | `motor/bandidos.js`, `motor/aranas.js`, `motor/jotunn.js`, `motor/caceria.js`, `motor/encuentros.js` |
+| Contratos de caza y bestiario | `motor/contratos.js`, `motor/bestiario.js` |
+| Regiones con nombre y su cartel | `motor/regiones.js` |
+
+### Eikholt (la capital en 2.5D)
+
+| Qué | Dónde |
+|---|---|
+| Dónde está cada cosa de la ciudad (calles, casas, muralla, lugares) | `ciudad/plano.js` (`PLANO25`) |
+| Casas, puestos, muralla, portones, el Roble, el Ting y lo que hay en la calle | `ciudad/casas.js`, `ciudad/puestos.js`, `ciudad/muralla.js`, `ciudad/porton.js`, `ciudad/roble.js`, `ciudad/ting.js`, `ciudad/enseres.js` |
+| Cámara, sombras, luces de la noche | `ciudad/vista.js`, `ciudad/sombras.js`, `ciudad/luces.js` |
+| La gente, lo que dicen, curiosidades y cofres | `ciudad/mundo.js`, `ciudad/recorrer.js`, `ciudad/oficios.js` |
+| Entrar y salir desde el bosque, las anclas de la historia | `ciudad/juego.js` y `anclasBosque` en `motor/juego.js` |
+
+### Minijuegos y pruebas
+
+| Qué | Dónde |
+|---|---|
+| El motor común de los minijuegos y cada uno | `motor/minijuegos.js` (`MINIJ`) y `motor/mj-*.js`; guía en `docs/minijuegos.md` |
+| Parejas, Simón y Mastermind de los viajeros | `motor/juegos-runas.js` |
+| La hólmganga en primera persona | `motor/holmr.js` |
+| El menú «Probar mecánicas» | `interfaz/probar.js` (`GRUPOS`) |
+| Las pruebas automáticas | `aventura/pruebas/` (una por sistema), se corren con `node aventura/pruebas/correr.cjs [filtro]` |
 
 ## Cómo se arma un cuadro
 
@@ -103,15 +150,18 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 - Las luces se pintan con dos dibujos hechos una sola vez (`AGUJERO` y `brillo` en `mundo/luz.js`), no con un degradado nuevo por luz.
 - La silueta de Eromash redibuja solo lo que de verdad se cruza con él (`bordes` en `motor/juego.js` mide cada asset una vez).
 - El HUD escribe en la página solo cuando un valor cambió (`cambia` en `interfaz/hud.js`); los metros del rastreador se cambian en su lugar.
+- Los degradados que se repiten se arman una vez y se estiran con la transformación (los rayos de sol en `mundo/luz.js`, los del Roble en `ciudad/luces.js`, la banda de la brújula); el agujero de la niebla del mapa es un sello pintado una vez.
+- Lo que se busca en cada cuadro entre todas las cosas del mundo (los fogones de la cocina, las fogatas del sonido) se junta una vez en una lista.
+- Los globos de la gente de Eikholt parten su texto en renglones una sola vez.
 - Todo efecto caro mira `CALIDAD.nivel`.
 
 <!-- desde acá lo arma herramientas/mapa-del-codigo.cjs -->
 
 ## Todos los archivos
 
-Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.
+Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`), en `mundo/` los assets que dibuja y en `textos/` los prefijos de sus claves. Los de `motor/` van agrupados por tema.
 
-### js/ciudad/ · 
+### js/ciudad/ · Eikholt, la capital en 2.5D (muestra en ciudad.html y dentro del juego por el sistema EIKHOLT)
 
 - **casas.js**: las casas de la capital (módulo CASAS25)
   - proyección · lo que lleva cada pared, vista de frente (s de 0 a len, t = 0 el piso, hacia arriba negativo) · el cuerpo de la casa · lo que se arrima a la casa · el dibujo entero
@@ -207,128 +257,152 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/motor/ · el motor y los sistemas que se le enchufan
 
-- **alquimia.js**: hierbas y alquimia (sistema ALQUIMIA)
-  - dónde crece cada una · destilar y tomar · la ventana de la mesa (pestaña de la mochila, solo junto a la mesa) · la Bolsa: hierbas, pociones y aceites · íconos · el sistema
+#### El motor y el mundo
+
 - **alturas.js**: las alturas (sistema ALTURAS)
   - geometría · moverse · lo de abajo, oscuro y difuso
-- **aranas.js**: los nidos de arañas (sistema ARANAS)
-  - dónde: lo hondo del bosque · tela · sacos y crías · veneno y vendas · el sistema
-- **arbol.js**: el árbol de habilidades (sistema ARBOL, pestaña Habilidades de la mochila)
-  - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
-- **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
-  - en la mano · dibujo · el sistema
-- **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
-  - el filtro · el arcón · la pestaña · el sistema
-- **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
-  - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
-- **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
-  - la pestaña
-- **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)
-  - dónde: cerca de los caminos, lejos de los pueblos, de los grupos y entre ellas · la flecha de los arqueros: vuela en arco al final del aviso · el sistema
-- **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
-  - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
-- **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
-  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
-- **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
-  - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
-- **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
-  - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
-- **caceria.js**: la Cacería Salvaje (sistema CACERIA)
-  - cuándo · sonidos armados · la llegada · los jinetes que cruzan · el final · el cuerno · el sistema
-- **capital.js**: la vida de Eikholt (sistema CAPITAL)
-- **casa.js**: la casa propia (sistema CASA)
-  - dónde: junto al camino que sale del Puesto · comprar y mejorar · el arcón · la huerta · el cuarto · el sistema
-- **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
-- **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
-  - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
   - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
-- **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
-  - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
-- **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)
-  - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
-- **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
-  - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
-- **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
-  - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
-- **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
-  - aparecer · cada encuentro · el sistema
-- **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
-  - al generar una pieza (objetos.js): ¿sale con muescas? · lo que suma una pieza · encastrar, vaciar, unir · Ása abre muescas · la pestaña de la mochila · íconos · el sistema
-- **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
-  - recibir · el escudo en el brazo · el sistema
-- **este.js**: el este en el juego (sistema ESTE)
-- **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
 - **exploracion.js**: explorar Eldervald (sistema EXPLORA)
   - los secretos de cada lugar · notar lo escondido · la brújula
-- **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
-  - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
-- **frasco.js**: el frasco de Thora (sistema FRASCO)
-  - tomar · Thora · los íconos: el frasco con tantas marcas como cargas · el sistema
-- **furia.js**: la Furia y las habilidades activas (sistema FURIA)
-  - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
-- **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
-  - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
-- **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
-  - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
-- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
-  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
-- **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
-  - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
 - **hordas.js**: los grupos de criaturas del bosque (sistema HORDAS)
 - **importados.js**: la gente propia del editor (sistema IMPORTADOS)
-- **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
-  - dónde está cada uno · las lecciones · el muñeco · el sistema
 - **interiores.js**: los interiores (sistema INTERIORES)
   - cómo es cada cuarto · lo cambiado con el editor (pestaña Interiores) · los sótanos · las casas de varios cuartos (planos) · entrar y salir · lo que se hace adentro · caminar adentro · dibujar el cuarto · el cuarto girado (todo girable)
-- **jotunn.js**: Hrímnir, el jötunn de la escarcha (sistema JOTUNN)
-  - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el desafío: sin sus guardianes caídos, la patada · el sistema
 - **juego.js**: el motor de la aventura (módulo JUEGO)
   - estado · la gente · criaturas · utilidades · avisos · ubicar a la gente según la etapa · misiones: recompensas, avisos y pistas · interacciones de las misiones · lo que revela la Lente del Eco · diálogos · cinemáticas cortas · muerte y reaparición · Eromash · lo que se oye: pasos, el viento, los grillos, los cuervos y las fogatas cerca · con qué se puede interactuar ahora · zonas (Eldervald._zonas) · la gente camina y mira · cámara · dibujo · la luz · la silueta de Eromash detrás de las cosas · el claro de Eromash: lo que lo rodea se vuelve transparente · HUD de cada cuadro · menús · bucle · arranque
-- **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
-  - empezar y terminar · cada juego · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
-- **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
-  - en la mano · dibujo · el sistema
-- **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
-  - al generar: las legendarias traen su poder · qué poderes valen ahora · el golpe de un poder (pasa por los modDano y avisa con alPegar, marcado para no encadenarse) · la pestaña Poderes · el sistema
-- **libros.js**: los libros de Eldervald (sistema LIBROS, modo "libro")
-  - dónde: atriles a un costado de los caminos · leer · la ventana del lector · lo que llevan los líderes · el sistema
-- **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
-  - quebrar · temblor (el remate) y trueno · el sistema
-- **materiales.js**: los materiales de la forja (sistema MATERIALES)
-  - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
-- **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
-  - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
-- **norte.js**: el corredor del norte en el juego (sistema NORTE)
-- **pesca.js**: la pesca (sistema PESCA)
-  - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
   - la gente de Eikholt que no está en la historia · recompensas (las usan los secretos y los grupos) · las hierbas de Thora: el primer objeto que se usa desde la barra · lanzar runas · dibujo
-- **regateo.js**: el regateo (sistema REGATEO)
-  - el estado del día · abrir, pedir, parar · la ventana · el sistema
 - **regiones.js**: regiones con nombre (sistema REGIONES)
-- **ritos.js**: las piedras viejas (sistema RITOS)
-  - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
 - **rpg.js**: niveles, experiencia y estadísticas de Eromash (sistema RPG)
   - los topes (la pasada de balance) · el nivel de cada criatura · la experiencia · las estadísticas · el HUD: el nivel en el retrato y la barra de experiencia · el número de nivel sobre las criaturas
-- **saga.js**: la saga de Eromash (sistema SAGA, pestaña Saga de la mochila)
-  - los hitos · la pestaña · el sistema
-- **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
-  - pedir · ubicar · el sistema
-- **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
-  - armar el mundo de secretos · aplicar lo guardado · acciones
-- **secundarias.js**: encargos, semijefes, renombre y proezas (sistema SECUNDARIAS)
-  - semijefes · encargos · proezas · renombre
-- **senda.js**: la senda del Refugio (sistema SENDA)
-- **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
-  - el sistema
-- **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
-- **tintes.js**: los tintes del casco (sistema TINTES)
-  - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
   - partículas con estado · luces que dejan los eventos · clima del día · los lugares místicos · fauna chica · emisores con estado (brasas, humo, hojas, motas rúnicas…) · campos sin estado (dependen solo de la posición y el tiempo) · el fuego guía · fauna chica: liebres, pinzones, mariposas y bandadas · eventos que mandan los sistemas · capas de dibujo · el sistema
 - **zonas.js**: las zonas del generador: mazmorras oscuras y tierras con islas (sistema ZONAS)
   - los generadores (también los usa el editor) · leer un pedido escrito (sin IA) · las tres mazmorras que vienen con el juego · armar cada zona en su lugar fuera del mapa · entrar, salir y pasar · dibujar · el sistema
+
+#### Pelea, armas y habilidades
+
+- **arbol.js**: el árbol de habilidades (sistema ARBOL, pestaña Habilidades de la mochila)
+  - las cuentas · los dibujos: la cabeza de cada bestia y cada nodo · la pestaña · los efectos en la pelea
+- **arco.js**: el arco (sistema ARCO, tipo de arma "arco")
+  - en la mano · dibujo · el sistema
+- **armas.js**: los tipos de arma y sus golpes (sistema ARMAS)
+  - hachas · a dos manos · el hacha lanzada · el torbellino · el arma en la mano: cómo se lleva cada tipo · el sangrado · las grietas del hachazo · el sistema
+- **atributos.js**: los atributos de Eromash (sistema ATRIBUTOS)
+  - la pestaña
+- **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
+  - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
+- **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
+  - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
+- **escudo.js**: el escudo: bloquear, parar y empujar (sistema ESCUDO, acción `bloquear`)
+  - recibir · el escudo en el brazo · el sistema
+- **furia.js**: la Furia y las habilidades activas (sistema FURIA)
+  - las cuentas · usar · íconos de la barra · el sistema · los nodos del árbol
+- **holmr.js**: la hólmganga: duelos en la piel, en primera persona (sistema HOLMR)
+  - dónde: junto al camino del Puesto a Eikholt, en un claro · el duelo en primera persona · el dibujo (1600 × 900, en primera persona) · el sistema
+- **lanza.js**: la lanza (sistema LANZA_ARMA, tipo de arma "lanza")
+  - en la mano · dibujo · el sistema
+- **martillo.js**: el martillo (sistema MARTILLO, tipo de arma "martillo")
+  - quebrar · temblor (el remate) y trueno · el sistema
+- **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
+  - el sistema
+
+#### Equipo, botín y forja
+
+- **arcon.js**: el arcón del Puesto y el filtro del botín (sistema ARCON)
+  - el filtro · el arcón · la pestaña · el sistema
+- **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
+  - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
+- **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)
+  - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
+- **engarces.js**: muescas, tallas y palabras rúnicas (sistema ENGARCES)
+  - al generar una pieza (objetos.js): ¿sale con muescas? · lo que suma una pieza · encastrar, vaciar, unir · Ása abre muescas · la pestaña de la mochila · íconos · el sistema
+- **forja.js**: la forja al ritmo del yunque (sistema FORJA, modo "forja")
+  - qué base y cuánto cuesta · los menús · la partitura · el juego · el dibujo (1600 × 900, como los interiores) · el sistema
+- **legendarios.js**: los poderes de las legendarias (sistema LEGENDARIOS)
+  - al generar: las legendarias traen su poder · qué poderes valen ahora · el golpe de un poder (pasa por los modDano y avisa con alPegar, marcado para no encadenarse) · la pestaña Poderes · el sistema
+- **materiales.js**: los materiales de la forja (sistema MATERIALES)
+  - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
+- **tintes.js**: los tintes del casco (sistema TINTES)
+  - la pestaña · el sistema
+
+#### Oficios, comercio y curación
+
+- **alquimia.js**: hierbas y alquimia (sistema ALQUIMIA)
+  - dónde crece cada una · destilar y tomar · la ventana de la mesa (pestaña de la mochila, solo junto a la mesa) · la Bolsa: hierbas, pociones y aceites · íconos · el sistema
+- **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
+  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+- **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
+  - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
+- **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
+  - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
+- **frasco.js**: el frasco de Thora (sistema FRASCO)
+  - tomar · Thora · los íconos: el frasco con tantas marcas como cargas · el sistema
+- **libros.js**: los libros de Eldervald (sistema LIBROS, modo "libro")
+  - dónde: atriles a un costado de los caminos · leer · la ventana del lector · lo que llevan los líderes · el sistema
+- **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
+  - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
+- **pesca.js**: la pesca (sistema PESCA)
+  - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
+- **regateo.js**: el regateo (sistema REGATEO)
+  - el estado del día · abrir, pedir, parar · la ventana · el sistema
+
+#### Lugares con su sistema
+
+- **capital.js**: la vida de Eikholt (sistema CAPITAL)
+- **casa.js**: la casa propia (sistema CASA)
+  - dónde: junto al camino que sale del Puesto · comprar y mejorar · el arcón · la huerta · el cuarto · el sistema
+- **claro.js**: el Claro del Ciervo en el juego (sistema CLARO)
+- **este.js**: el este en el juego (sistema ESTE)
+- **goinn.js**: el sótano de la hospedería y Góinn (sistema GOINN)
+  - la pelea · la puerta, la cámara y los portales · lo que se ve en la cámara: los doce trofeos y lo que dejaron los custodios
+- **herreria.js**: la herrería de Ása por dentro (sistema HERRERIA)
+  - el taller · la gente · estado · entrar y salir · lo que se hace adentro · lo que hay a mano · Eromash camina · el trabajo · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la gente en la vista · dibujar
+- **hongo.js**: el Hongo Dorado por dentro (sistema HONGO)
+  - la sala · lo que choca · arriba · la gente · estado · entrar y salir · lo que se hace adentro · los cuartos de arriba · lo que hay a mano · Eromash camina · la vida de la sala · la cámara · el cuadro · el piso y las paredes (hechos una vez en lienzos) · la galería, los postes y la escalera · la gente en la vista · dibujar · un cuarto de arriba
+- **norte.js**: el corredor del norte en el juego (sistema NORTE)
+- **ritos.js**: las piedras viejas (sistema RITOS)
+  - armar · aplicar lo guardado · el rito cumplido · empezar cada rito · lectura de las piedras del camino
+- **santuarios.js**: los hörgar de los dioses y sus bendiciones (sistema SANTUARIOS)
+  - pedir · ubicar · el sistema
+- **secretos.js**: los secretos de Eldervald (sistema SECRETOS)
+  - armar el mundo de secretos · aplicar lo guardado · acciones
+- **senda.js**: la senda del Refugio (sistema SENDA)
+
+#### Peligros y cazas del bosque
+
+- **aranas.js**: los nidos de arañas (sistema ARANAS)
+  - dónde: lo hondo del bosque · tela · sacos y crías · veneno y vendas · el sistema
+- **bandidos.js**: los Sin Linde: guaridas de bandidos (sistema BANDIDOS)
+  - dónde: cerca de los caminos, lejos de los pueblos, de los grupos y entre ellas · la flecha de los arqueros: vuela en arco al final del aviso · el sistema
+- **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
+  - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
+- **caceria.js**: la Cacería Salvaje (sistema CACERIA)
+  - cuándo · sonidos armados · la llegada · los jinetes que cruzan · el final · el cuerno · el sistema
+- **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
+  - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
+- **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
+  - aparecer · cada encuentro · el sistema
+- **jotunn.js**: Hrímnir, el jötunn de la escarcha (sistema JOTUNN)
+  - dónde: un alto del norte, lejos de caminos y de todo · la pelea · el desafío: sin sus guardianes caídos, la patada · el sistema
+- **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
+
+#### Misiones, progreso y maestros
+
+- **etapas.js**: los encargos de preparación de las etapas (sistema ETAPAS)
+- **instructores.js**: los instructores y el muñeco de práctica (sistema INSTRUCTORES)
+  - dónde está cada uno · las lecciones · el muñeco · el sistema
+- **saga.js**: la saga de Eromash (sistema SAGA, pestaña Saga de la mochila)
+  - los hitos · la pestaña · el sistema
+- **secundarias.js**: encargos, semijefes, renombre y proezas (sistema SECUNDARIAS)
+  - semijefes · encargos · proezas · renombre
+
+#### Minijuegos
+
+- **juegos-runas.js**: los juegos de runas de los viajeros (JUEGOS_RUNAS, modo "runas")
+  - empezar y terminar · cada juego · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
+
 
 ### js/mundo/ · el bosque, sus objetos (assets), el piso, la luz y los caminos
 
@@ -442,70 +516,134 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/textos/ · todos los textos del juego en los dos idiomas
 
 - **alquimia.js**: Textos de las hierbas y la alquimia (motor/alquimia.js): prefijo aq.
+  - claves: `as.`, `aq.`
 - **aranas.js**: Textos de los nidos de arañas (motor/aranas.js, enemigos/aranas.js): prefijo ar. (y cr., bs., as., mt.seda, mp.ley_nidos).
+  - claves: `as.`, `mp.`, `cr.`, `mt.`, `ar.`, `bs.`
 - **arbol.js**: Textos del árbol de habilidades (motor/arbol.js): prefijo ab.
+  - claves: `ab.`
 - **arcon.js**: Textos del arcón del Puesto y del filtro del botín (motor/arcon.js): prefijo ac.
+  - claves: `as.`, `ac.`
 - **armas.js**: Textos de los tipos de arma y sus golpes (prefijo ar.), los dos idiomas.
+  - claves: `ar.`, `ob.`, `eb.`
 - **aventura.js**: Textos propios de la aventura web (interfaz, assets, gente, enemigos), en los dos idiomas.
+  - claves: `as.`, `cat.`, `cr.`
 - **bandidos.js**: Textos de los Sin Linde (motor/bandidos.js, enemigos/bandidos.js): prefijo bd. (y cr., bs., as., mp.ley_bandidos).
+  - claves: `as.`, `mp.`, `cr.`, `bd.`, `bs.`
 - **berkano.js**: textos de las piedras de Berkano y los manantiales rúnicos (motor/berkano.js, mundo/assets-berkano.js): prefijo bk.
+  - claves: `as.`, `bk.`, `bar.`, `mp.`
 - **bestiario.js**: Textos del bestiario (motor/bestiario.js): prefijo bs.
+  - claves: `bs.`
 - **caceria.js**: Textos de la Cacería Salvaje (motor/caceria.js, enemigos/caceria.js): prefijo cz. (y cr., bs., hd.unico_cazador).
+  - claves: `cr.`, `hd.`, `cz.`, `bs.`
 - **capital.js**: Textos de la capital rearmada (prefijo cap.), sus piezas nuevas (as.) y la gente de Eikholt (av.nombre_, pj.), los dos idiomas.
+  - claves: `as.`, `cap.`, `av.`, `pj.`, `sd.`
 - **casa.js**: Textos de la casa propia (motor/casa.js, mundo/assets-casa.js): prefijo hg. (y as., in.nombre_propia).
+  - claves: `as.`, `in.`, `hg.`
 - **ciudad.js**: Textos de la capital en 2.5D (prefijo ci.): el mapa aparte de Eikholt con la cámara que gira y su página de muestra.
+  - claves: `as.`, `ci.`
 - **claro.js**: Textos del Claro del Ciervo (prefijo cl., las piezas en as.), los dos idiomas.
+  - claves: `as.`, `cl.`, `av.`
 - **cocina.js**: Textos de la cocina en la fogata (motor/cocina.js): prefijo co.
+  - claves: `co.`
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
+  - claves: `cm.`, `as.`
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
+  - claves: `cj.`
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
+  - claves: `ct.`, `as.`
 - **eikholt.js**: Textos de Eikholt (prefijo ek.): el mapa aparte de la capital, sus lugares y lo que dice su gente.
   - la ciudad
+  - claves: `ek.`, `av.`
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
+  - claves: `as.`, `pj.`, `el.`
 - **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
+  - claves: `av.`, `ec.`
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
+  - claves: `en.`
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
+  - claves: `as.`, `av.`, `es.`
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
+  - claves: `av.`, `et.`
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
+  - claves: `fg.`
 - **frasco.js**: Textos del frasco de Thora (motor/frasco.js): prefijo fr.
+  - claves: `fr.`
 - **furia.js**: Textos de la Furia y las habilidades activas (motor/furia.js): prefijo fu. (los nombres de las habilidades van en
+  - claves: `fu.`, `ab.`
 - **goinn.js**: Textos del sótano de la hospedería, el ritual y la pelea con Góinn (prefijo gn.), los dos idiomas.
+  - claves: `in.`, `as.`, `gn.`
 - **herreria.js**: textos de la herrería de Ása por dentro (hr.) y de sus muebles (as.)
+  - claves: `hr.`, `av.`, `as.`
 - **historia.js**: Textos de la historia de Eldervald (guion, misiones, diario y lugares), en los dos idiomas.
+  - claves: `av.`
 - **hoja.js**: Textos de la hoja de Eromash y los topes del balance (interfaz/hoja.js, motor/rpg.js): prefijo hj.
+  - claves: `hj.`
 - **holmr.js**: Textos de la hólmganga (motor/holmr.js, enemigos/kempur.js, mundo/assets-holmr.js): prefijo hm. (y as., cr.kempa,
+  - claves: `as.`, `cr.`, `mp.`, `hm.`
 - **hongo.js**: Textos del Hongo Dorado por dentro (motor/hongo.js): la sala grande, la gente que la frecuenta, los forasteros de otras
   - arriba: la galería y los cuartos
+  - claves: `ho.`, `av.`, `as.`
 - **instructores.js**: Textos de los instructores y el muñeco de práctica (motor/instructores.js): prefijo ie. (los nombres en av.nombre_
+  - claves: `as.`, `av.`, `ie.`
 - **interfaz.js**: Textos de la interfaz de la aventura (prefijo ui.), los dos idiomas juntos.
+  - claves: `ui.`
 - **interiores.js**: Textos de los interiores de las casas (prefijo in.) y sus muebles, los dos idiomas.
+  - claves: `as.`, `in.`
 - **inventario.js**: Textos de la mochila (inventario, prefijo inv.) y de la barra de abajo del HUD (interfaz/barra.js, prefijo bar.), los dos idiomas.
+  - claves: `inv.`, `bar.`
 - **jotunn.js**: Textos de Hrímnir, el jötunn de la escarcha (motor/jotunn.js): prefijo jt. (y hd.unico_hrimnir, cr., bs., as., mp.ley_jotunn).
+  - claves: `as.`, `mp.`, `hd.`, `cr.`, `jt.`, `bs.`, `av.`
 - **juegos-runas.js**: Textos de los juegos de runas de los viajeros (motor/juegos-runas.js): prefijo jr.
+  - claves: `jr.`
 - **legendarios.js**: Textos de los poderes de las legendarias (motor/legendarios.js): prefijo lg.
+  - claves: `lg.`
 - **libros.js**: Textos de los libros de Eldervald (motor/libros.js, mundo/assets-libros.js): prefijo lb. (y as., mp.ley_libros).
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
+  - claves: `as.`, `mp.`, `lb.`
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
+  - claves: `mt.`, `as.`
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
+  - claves: `mj.`, `op.`, `ex.`
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
+  - claves: `as.`, `av.`, `nt.`
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
+  - claves: `ob.`
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
+  - claves: `as.`, `mp.`, `co.`, `pe.`
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
+  - claves: `as.`, `cat.`, `av.`, `pr.`
 - **probar.js**: Textos del menú para probar las mecánicas (interfaz/probar.js): prefijo pb.
+  - claves: `pb.`
 - **prologo.js**: Textos del prólogo del mago (prefijo pl.), los dos idiomas.
+  - claves: `pl.`
 - **regateo.js**: Textos del regateo (motor/regateo.js): prefijo rg.
+  - claves: `rg.`
 - **rpg.js**: Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
+  - claves: `rp.`, `at.`
 - **saga.js**: Textos de la saga de Eromash (motor/saga.js): prefijo sg.
+  - claves: `sg.`
 - **santuarios.js**: Textos de los hörgar de los dioses (motor/santuarios.js): prefijo sn. (y as.horgr, mp.ley_dioses)
+  - claves: `as.`, `mp.`, `sn.`
 - **secretos.js**: Textos de los secretos, las runas, los grupos de criaturas y el mapa (prefijos pj. sx. hd. mp.), los dos idiomas.
   - assets nuevos (catálogo) · gente de Eikholt · poderes y progreso · secretos · grupos de criaturas · mapa
+  - claves: `as.`, `cr.`, `cat.`, `ui.`, `av.`, `pj.`, `sx.`, `hd.`, `mp.`
 - **secundarias.js**: Textos de los encargos, los semijefes, el renombre y las proezas (prefijo sc.), los dos idiomas.
+  - claves: `av.`, `sc.`
 - **sigilo.js**: Textos del sigilo (motor/sigilo.js): prefijo sl.
+  - claves: `sl.`
 - **teclas.js**: Textos de las teclas propias (Opciones → Teclas, comun/controles.js e interfaz/opciones.js): prefijo tc.
+  - claves: `tc.`
 - **tintes.js**: Textos de los tintes del casco (motor/tintes.js): prefijo ti.
+  - claves: `as.`, `ti.`
 - **vida.js**: textos del bosque vivo (motor/vida.js y mundo/assets-vida.js): prefijo vd. y los nombres de sus assets
+  - claves: `vd.`, `as.`, `mp.`
 - **zonas.js**: Textos de las zonas del generador (prefijo zn.): mazmorras, tierras con islas, el dreki y sus assets, los dos idiomas.
+  - claves: `as.`, `cr.`, `zn.`, `np.`
+
+### Cada prefijo de texto y su archivo en js/textos/
+
+`ab.` arbol, furia · `ac.` arcon · `aq.` alquimia · `ar.` aranas, armas · `as.` alquimia, aranas, arcon, aventura, bandidos, berkano, capital, casa, ciudad, claro, comercio, contratos, elementos, este, goinn, herreria, holmr, hongo, instructores, interiores, jotunn, libros, materiales, norte, pesca, piedras, santuarios, secretos, tintes, vida, zonas · `at.` rpg · `av.` capital, claro, eikholt, encuentros, este, etapas, herreria, historia, hongo, instructores, jotunn, norte, piedras, secretos, secundarias · `bar.` berkano, inventario · `bd.` bandidos · `bk.` berkano · `bs.` aranas, bandidos, bestiario, caceria, jotunn · `cap.` capital · `cat.` aventura, piedras, secretos · `ci.` ciudad · `cj.` conjuntos · `cl.` claro · `cm.` comercio · `co.` cocina, pesca · `cr.` aranas, aventura, bandidos, caceria, holmr, jotunn, secretos, zonas · `ct.` contratos · `cz.` caceria · `eb.` armas · `ec.` encuentros · `ek.` eikholt · `el.` elementos · `en.` engarces · `es.` este · `et.` etapas · `ex.` mejoras · `fg.` forja · `fr.` frasco · `fu.` furia · `gn.` goinn · `hd.` caceria, jotunn, secretos · `hg.` casa · `hj.` hoja · `hm.` holmr · `ho.` hongo · `hr.` herreria · `ie.` instructores · `in.` casa, goinn, interiores · `inv.` inventario · `jr.` juegos-runas · `jt.` jotunn · `lb.` libros · `lg.` legendarios · `mj.` mejoras · `mp.` aranas, bandidos, berkano, holmr, jotunn, libros, pesca, santuarios, secretos, vida · `mt.` aranas, materiales · `np.` zonas · `nt.` norte · `ob.` armas, objetos · `op.` mejoras · `pb.` probar · `pe.` pesca · `pj.` capital, elementos, secretos · `pl.` prologo · `pr.` piedras · `rg.` regateo · `rp.` rpg · `sc.` secundarias · `sd.` capital · `sg.` saga · `sl.` sigilo · `sn.` santuarios · `sx.` secretos · `tc.` teclas · `ti.` tintes · `ui.` interfaz, secretos · `vd.` vida · `zn.` zonas
 
 <!-- hasta acá -->

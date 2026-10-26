@@ -8,7 +8,7 @@
 // CASAS25.crear(ficha, semilla) → casa · casa.dibujar(c, x, y, giro, k, t) · casa.huella(x, y) (choque en el mundo)
 window.CASAS25 = (function () {
   "use strict";
-  const { P, E, R, L, alfa, azar, sombra, halo } = DIB;
+  const { P, E, R, L, alfa, azar, sombra } = DIB;
   const C = ASSETS.C;
   const PZ = ASSETS.PIEZAS_CASA;
   const S = 1.7; // el tamaño de los detalles (troncos, ventanas, puertas): el mismo de las casas del bosque

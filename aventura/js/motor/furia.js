@@ -89,13 +89,11 @@ window.FURIA = (function () {
   }
   function rugir() {
     const R = HAB.rugido.v * (rango("rugido") >= 2 ? 1.2 : 1);
-    let n = 0;
     for (const e of vivas()) {
       if (Math.hypot(e.x - jug.x, (e.y - jug.y) * 1.25) > R) continue;
       e.aturdido = Math.max(e.aturdido || 0, e.lider || e.patron ? 0.8 : 1.4);
       e.rugidoHasta = J.t + RUGIDO_SEG;
       A.textoFlotante(e.x, e.y - 110, "!", "#C8402D");
-      n++;
     }
     rugidoT = RUGIDO_SEG;
     if (window.RPG) RPG.recalcular();

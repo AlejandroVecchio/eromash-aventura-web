@@ -13,7 +13,6 @@
     PI = ["#3E3842", "#4E4852", "#6A646C"],
     HI = ["#2A2428", "#3A3438", "#6E6A6E"],
     CO = ["#6A4416", "#B8862E", "#E8C070", "#FFD98A"], // el cobre dorado de la campana
-    ORO = "#FFD98A",
     ORO2 = "#FFE7A8",
     RUNA = "#73D5DB";
   const tonos = (col) => [VOL.mezcla(col, "#000000", 0.3), col, VOL.mezcla(col, "#FFFFFF", 0.18)];

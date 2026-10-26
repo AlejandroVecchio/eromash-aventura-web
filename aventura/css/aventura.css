@@ -149,15 +149,6 @@ body.juego { margin: 0; height: 100vh; background: #0B0B09; overflow: hidden; co
 .oculto { display: none !important; }
 
 /* runa elegida, poder rúnico y plata (arriba del panel del jugador) */
-#hudRuna { left: 16px; bottom: 112px; width: 280px; padding: 8px 12px 8px 8px; display: flex; gap: 10px; align-items: center; }
-#hudRuna canvas { width: 56px; height: 56px; flex: none; }
-#hudRuna .info { flex: 1; }
-#hudRuna .rotulo { color: var(--runico); }
-#hudRuna .barra.run { height: 8px; margin-top: 6px; }
-#hudRuna .barra.run i { background: linear-gradient(90deg, #2E5A66, var(--runico)); }
-#hudRuna .plata { margin-top: 6px; font-size: 12px; color: var(--rosa); }
-#hudRuna .plata b { color: var(--hueso); font-size: 14px; }
-#hudRuna .plata em { font-style: normal; color: var(--runico); margin-left: 6px; }
 /* menús largos y el mapa */
 .capa .caja { max-height: 88vh; overflow: auto; box-sizing: border-box; }
 .capa .caja.ancha { width: min(1060px, calc(100vw - 32px)); }

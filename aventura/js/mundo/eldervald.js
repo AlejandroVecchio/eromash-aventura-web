@@ -6,8 +6,7 @@
 // lugar; y responde dónde se puede caminar. El piso se pinta por trozos (chunks) y se guarda ya dibujado.
 window.ELDERVALD = (function () {
   "use strict";
-  const { P, E, R, L, alfa, poli, azar, TAU } = DIB;
-  const C = ASSETS.C;
+  const { P, E, R, poli, azar, TAU } = DIB;
 
   const U = 20; // unidades por píxel del mapa
   const M = U / 0.33; // unidades por metro del mapa (los desplazamientos de Godot, medidos en metros)

@@ -150,25 +150,37 @@ window.LUZ = (function () {
     if (h > 16) return "255,180,120"; // tarde
     return "255,217,138";
   }
+  // el degradado de un rayo, hecho una vez por color de 0 a 1 en x: cada rayo lo estira con la transformación y pone su
+  // fuerza con globalAlpha (así no se arman cuatro degradados nuevos en cada cuadro)
+  const degRayo = {};
   function rayos(c, cw, ch, x0, t, a, rgb = "255,217,138") {
     if (a <= 0.02) return;
+    let g = degRayo[rgb];
+    if (!g) {
+      g = degRayo[rgb] = c.createLinearGradient(0, 0, 1, 0);
+      g.addColorStop(0, `rgba(${rgb},0)`);
+      g.addColorStop(0.5, `rgba(${rgb},1)`);
+      g.addColorStop(1, `rgba(${rgb},0)`);
+    }
     c.globalCompositeOperation = "lighter";
+    c.fillStyle = g;
     for (let i = 0; i < 4; i++) {
       const base = (((i * 0.31 + 0.1) * cw - x0 * 0.08 + Math.sin(t * 0.07 + i) * 60) % (cw * 1.3)) - cw * 0.15;
       const ancho = cw * (0.05 + (i % 2) * 0.04);
-      const g = c.createLinearGradient(base, 0, base + ancho, 0);
       const al = a * (0.035 + 0.02 * Math.sin(t * 0.3 + i * 2));
-      g.addColorStop(0, `rgba(${rgb},0)`);
-      g.addColorStop(0.5, `rgba(${rgb},${Math.max(0, al)})`);
-      g.addColorStop(1, `rgba(${rgb},0)`);
-      c.fillStyle = g;
+      if (al <= 0) continue;
+      const ix = (ch * 0.45) / ancho; // lo que se corre la punta de abajo, en anchos de rayo
+      c.globalAlpha = Math.min(1, al);
+      c.setTransform(ancho, 0, 0, 1, base, 0);
       c.beginPath();
-      c.moveTo(base, 0);
-      c.lineTo(base + ancho, 0);
-      c.lineTo(base + ancho - ch * 0.45, ch);
-      c.lineTo(base - ch * 0.45, ch);
+      c.moveTo(0, 0);
+      c.lineTo(1, 0);
+      c.lineTo(1 - ix, ch);
+      c.lineTo(-ix, ch);
       c.fill();
     }
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.globalAlpha = 1;
     c.globalCompositeOperation = "source-over";
   }
   // niebla baja: bancos que flotan sobre el piso en el mundo (alta: siempre un poco, de noche más)

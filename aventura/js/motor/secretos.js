@@ -88,7 +88,6 @@ window.SECRETOS = (function () {
   // ---------- armar el mundo de secretos ----------
   function armar() {
     const L = W.LUGARES,
-      M = W.M,
       mas2 = W.mas;
     // Skarnholt: el salón quemado, el altar de Kenaz y los tres braseros que sellan el cofre del jarl
     {

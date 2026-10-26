@@ -14,7 +14,7 @@ window.VIDA = (function () {
   "use strict";
   let A, J, jug, W;
   const t = (k, v) => I18N.t(k, v);
-  const { E, R, L, alfa, poli, TAU, RUNICO, RUNICO_CLARO, VIOLETA } = DIB;
+  const { R, L, poli, TAU, RUNICO, RUNICO_CLARO, VIOLETA } = DIB;
   const nivel = () => (window.CALIDAD ? CALIDAD.nivel : "alta");
   const TOPE = { alta: 560, media: 240, baja: 70 };
   const BRASAS = ["#FFD98A", "#FF8D71", "#FFE7A8", "#C8402D"]; // las de la arena y la web

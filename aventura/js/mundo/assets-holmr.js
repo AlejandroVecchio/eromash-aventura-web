@@ -8,7 +8,7 @@
 // Caras planas, luz de arriba a la derecha, la mitad izquierda en sombra, sombra elíptica.
 (function () {
   "use strict";
-  const { P, E, R, L, sombra } = DIB;
+  const { P, R, L, sombra } = DIB;
   const xy = (x, y, s) => (a) => a.map((v, i) => (i % 2 ? y - v * s : x + v * s));
   const CUERO = "#8A6A48",
     CUERO_S = "#6E5236",

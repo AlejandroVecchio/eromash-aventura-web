@@ -12,7 +12,6 @@
 window.ARMAS = (function () {
   "use strict";
   let A, J, jug, W;
-  const t = (k, v) => I18N.t(k, v);
   const TIPOS = {};
   function tipo(id, def) {
     TIPOS[id] = def;

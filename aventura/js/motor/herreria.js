@@ -722,7 +722,6 @@ window.HERRERIA = (function () {
   }
 
   // ---------- dibujar ----------
-  let ctxAhora = null;
   function dibujar(c, cw, ch) {
     const dt = J.modo === "juego" || J.modo === "dialogo" ? dtUlt : 0;
     camaraPaso(dt || 1e-4, cw, ch);
@@ -731,7 +730,6 @@ window.HERRERIA = (function () {
     c.fillRect(0, 0, cw, ch);
     const g0 = VOL.cam.g;
     VOL.cam.g = cam.g;
-    ctxAhora = c;
     try {
       armarProyector(cw, ch);
       const s = cam.esc;

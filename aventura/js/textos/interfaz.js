@@ -2,7 +2,6 @@
 I18N.textos({
   "ui.vida": { es: "Vida", en: "Health" },
   "ui.estamina": { es: "Estamina", en: "Stamina" },
-  "ui.objetivo": { es: "Objetivo", en: "Objective" },
   "ui.tecla.espacio": { es: "Espacio", en: "Space" },
   "ui.tecla.clic": { es: "Clic", en: "Click" },
   "ui.controles": {

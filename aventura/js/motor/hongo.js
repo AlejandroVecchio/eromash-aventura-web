@@ -737,9 +737,7 @@ window.HONGO = (function () {
   }
 
   // el proyector de la sala con la cámara de ahora
-  let PR = null,
-    cwU = 1600,
-    chU = 900;
+  let PR = null;
   function armarProyector(cw, ch) {
     const co = Math.cos(cam.g),
       si = Math.sin(cam.g),
@@ -747,8 +745,6 @@ window.HONGO = (function () {
       ox = (cam.x * co - cam.y * si) * s,
       oy = (cam.x * si + cam.y * co) * VOL.K * s;
     PR = VOL.proyector(cw / 2 - ox, ch * 0.6 - oy + cam.z * s, cam.g, { s });
-    cwU = cw;
-    chU = ch;
     return PR;
   }
   // de qué lado queda cada pared: se ve (y se pinta su galería) si mira a la cámara

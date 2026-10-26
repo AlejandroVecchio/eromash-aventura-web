@@ -1980,7 +1980,7 @@
       for (const ob of mis.objetivos) {
         if (tiene(ob.hecho)) objs.push({ texto: txt(ob), estado: "hecho" });
         else {
-          objs.push({ texto: txt(ob), estado: "actual", metros: p ? Math.max(1, dist(jug, p) / 43) : null });
+          objs.push({ texto: txt(ob), estado: "actual", metros: p ? Math.max(1, metros(dist(jug, p))) : null });
           break;
         }
       }

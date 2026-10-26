@@ -205,7 +205,6 @@ window.ICONOS = (function () {
     // un nido de arañas (aranas.js): la araña de ocho patas con la marca roja
     nido(c, x, y, u, col) {
       for (let k = 0; k < 4; k++) {
-        const a = -0.9 + k * 0.6;
         linea(c, [x - 2 * u, y, x - 5 * u, y - 3 * u + k * 2 * u, x - 7 * u, y + 2 * u + k * 1.4 * u], col, 0.9 * u);
         linea(c, [x + 2 * u, y, x + 5 * u, y - 3 * u + k * 2 * u, x + 7 * u, y + 2 * u + k * 1.4 * u], col, 0.9 * u);
       }

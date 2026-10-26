@@ -9,7 +9,6 @@
   const { P, E, L, sombra, alfa } = DIB;
   const PIEL = "#8EA4B4",
     PIEL_S = "#6A8294",
-    PIEL_L = "#B4C8D8",
     HIELO = "#C8F2F4",
     HIELO_S = "#8CC8D4",
     PIEL_ROPA = "#6E5238",

@@ -178,6 +178,7 @@ window.LUCES25 = (function () {
     [24, [74, 120, 208], [40, 60, 120], 0.42, 0.36],
   ];
   const gradoCache = { clave: "", g: null };
+  let degRayo = null; // el degradado de los rayos del Roble, hecho una vez
   function grado(h) {
     let i = 0;
     while (i < GRADOS.length - 2 && GRADOS[i + 1][0] <= h) i++;
@@ -225,18 +226,31 @@ window.LUCES25 = (function () {
             y0 = ry - copa * 0.72,
             x1 = rx + u - copa * 0.22,
             y1 = ry + 60 * cam.esc;
-          const g = c.createLinearGradient(x0, y0, x1, y1);
-          g.addColorStop(0, "rgba(255,236,190,0)");
-          g.addColorStop(0.35, "rgba(255,236,190," + al + ")");
-          g.addColorStop(1, "rgba(255,236,190,0)");
-          c.fillStyle = g;
+          // el degradado va de (x0, y0) a (x1, y1): uno solo hecho una vez de 0 a 1 en x, puesto sobre ese eje con la
+          // transformación (u a lo largo del rayo, v de costado) y con su fuerza en globalAlpha
+          if (!degRayo) {
+            degRayo = c.createLinearGradient(0, 0, 1, 0);
+            degRayo.addColorStop(0, "rgba(255,236,190,0)");
+            degRayo.addColorStop(0.35, "rgba(255,236,190,1)");
+            degRayo.addColorStop(1, "rgba(255,236,190,0)");
+          }
+          const dx = x1 - x0,
+            dy = y1 - y0,
+            l2 = dx * dx + dy * dy,
+            l = Math.sqrt(l2),
+            loc = (px, py) => [((px - x0) * dx + (py - y0) * dy) / l2, ((px - x0) * -dy + (py - y0) * dx) / l];
+          c.save();
+          c.globalAlpha = Math.min(1, al);
+          c.transform(dx, dy, -dy / l, dx / l, x0, y0);
+          c.fillStyle = degRayo;
           c.beginPath();
-          c.moveTo(x0 - w0, y0);
-          c.lineTo(x0 + w0, y0);
-          c.lineTo(x1 + w0 * 1.8, y1);
-          c.lineTo(x1 - w0 * 1.8, y1);
+          c.moveTo(...loc(x0 - w0, y0));
+          c.lineTo(...loc(x0 + w0, y0));
+          c.lineTo(...loc(x1 + w0 * 1.8, y1));
+          c.lineTo(...loc(x1 - w0 * 1.8, y1));
           c.closePath();
           c.fill();
+          c.restore();
         }
         c.globalCompositeOperation = "source-over";
       }

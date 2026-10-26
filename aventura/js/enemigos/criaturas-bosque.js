@@ -10,7 +10,7 @@
 //  · Trol de musgo: piedra con liquen, brazos largos y un pino arrancado de garrote; golpea el piso.
 (function () {
   "use strict";
-  const { P, E, R, L, alfa, sombra, halo, TAU } = DIB;
+  const { P, E, R, L, alfa, sombra, halo } = DIB;
 
   // ---------- Draugr del túmulo ----------
   const PAL_DRAUGR = [

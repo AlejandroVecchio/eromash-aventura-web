@@ -130,7 +130,6 @@ window.HOLMR = (function () {
   // Apretar cuando el aro llega al círculo es «¡Justo!» (contraataque); antes de tiempo, otra tecla o tarde, el golpe
   // entra. Con los escudos partidos y sin aguante, el remate lo saca de la piel. Tantos golpes recibidos como su
   // `fallos` y Eromash se rinde.
-  const DEF = { hachazo: "bloquear", estocada: "esquivar", barrida: "saltar" };
   const PIDE = { hachazo: "bloquear", estocada: "esquivar", barrida: "saltar", abierto: "clic", traba: "machacar", remate: "machacar" };
   const BLANCOS = [[-58, -420], [36, -170], [0, -470], [-30, -260]]; // dónde puede quedar abierto (desde sus pies)
   const KX = 800,
