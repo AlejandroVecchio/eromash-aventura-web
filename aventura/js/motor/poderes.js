@@ -219,9 +219,8 @@ window.PODERES = (function () {
 
   // ---------- lanzar runas ----------
   function apuntar() {
-    const m = A.mouse();
-    if (m.usado && !CONTROLES.mando()) return Math.atan2((m.y - (jug.y - 30)) * 1.25, m.x - jug.x);
-    return Math.atan2(jug.dir[1] * 1.25, jug.dir[0]);
+    const c = A.dirCursor();
+    return c != null ? c : Math.atan2(jug.dir[1] * 1.25, jug.dir[0]);
   }
   const vivos = () => A.enemigos.filter((e) => e.activo && !e.muerto && Math.abs(e.x - jug.x) < 900 && Math.abs(e.y - jug.y) < 700);
   // lanza una runa (la de su casilla en la barra de abajo, o la elegida)

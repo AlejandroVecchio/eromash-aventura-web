@@ -622,11 +622,18 @@
   // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
   const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
   const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
-  // hacia dónde va un golpe: el mouse, o la palanca corrida hacia la criatura más cercana
+  // hacia dónde apunta el cursor, con el ángulo de los golpes (la y del piso ×1,25); null con mando, sin mouse o encima de Eromash
+  function dirCursor() {
+    if (!mouse.usado || CONTROLES.mando()) return null;
+    posMouse();
+    const dx = mouse.x - jug.x,
+      dy = (mouse.y - (jug.y - 30)) * 1.25;
+    return Math.hypot(dx, dy) < 10 ? null : Math.atan2(dy, dx);
+  }
+  // hacia dónde va un golpe: el cursor, o la palanca corrida hacia la criatura más cercana
   function dirGolpe() {
-    const dir = Math.atan2(jug.dir[1], jug.dir[0]);
-    if (mouse.usado && !CONTROLES.mando()) return Math.atan2(mouse.y - (jug.y - 30), mouse.x - jug.x);
-    return apuntar(dir);
+    const c = dirCursor();
+    return c != null ? c : apuntar(Math.atan2(jug.dir[1], jug.dir[0]));
   }
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
@@ -728,12 +735,21 @@
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 30, y: y - 2, vx: (Math.random() - 0.5) * 140, vy: -20 - Math.random() * 50, t: 0.35, c: "rgba(150,130,110,0.45)", s: 5 + Math.random() * 4, g: 0.2 });
   }
-  let mouse = { x: 0, y: 0, usado: false };
-  lienzo.addEventListener("pointermove", (e) => {
+  // el mouse se guarda en la pantalla y se pasa al mundo cuando se pide: si Eromash camina con el mouse quieto, el
+  // cursor sigue apuntando a lo que tiene debajo
+  let mouse = { x: 0, y: 0, usado: false, px: 0, py: 0 };
+  function posMouse() {
     const k = cw / innerWidth;
     // en la vista, y de ahí al mundo (la cámara puede estar girada)
-    [mouse.x, mouse.y] = VOL.mundo((e.clientX * k) / esc + J.cam.x - cw / 2 / esc, (e.clientY * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+    [mouse.x, mouse.y] = VOL.mundo((mouse.px * k) / esc + J.cam.x - cw / 2 / esc, (mouse.py * k) / esc + J.cam.y - ch / 2 / esc, J.cam.x, J.cam.y, J.giro || 0);
+    return mouse;
+  }
+  lienzo.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch") return; // el toque apunta con la palanca, como el mando
+    mouse.px = e.clientX;
+    mouse.py = e.clientY;
     mouse.usado = true;
+    posMouse();
   });
   function puedeMover() {
     return J.modo === "juego" && !jug.muerto && jug.interactuando <= 0;
@@ -812,7 +828,16 @@
       jug.staEspera = 0.6;
       jug.esq = 0.3;
       jug.inv = Math.max(jug.inv, 0.26);
-      jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
+      // con mouse, hacia el cursor; con mando o palanca, hacia donde se mueve (quieto, un paso atrás)
+      const c = dirCursor();
+      if (c != null) {
+        const ux = Math.cos(c),
+          uy = Math.sin(c) / 1.25,
+          l = Math.hypot(ux, uy);
+        jug.esqDir = [ux / l, uy / l];
+        jug.dir = jug.esqDir.slice();
+        jug.mira = VIKINGO.vista(ux, uy, jug.mira);
+      } else jug.esqDir = mov ? jug.dir.slice() : [-jug.dir[0], -jug.dir[1]];
       jug.atk = null;
       jug.carga = 0;
       polvareda(jug.x, jug.y, 5);
@@ -2357,7 +2382,8 @@
     usarLente,
     lente: () => ({ tiene: tieneLente(), espera: lenteEspera }),
     trabajadores: () => trabajadores,
-    mouse: () => mouse,
+    mouse: () => (mouse.usado ? posMouse() : mouse),
+    dirCursor,
     hora: () => amb.h,
     noche: () => amb.n,
     amb: () => amb,
