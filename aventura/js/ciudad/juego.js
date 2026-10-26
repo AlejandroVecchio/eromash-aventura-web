@@ -266,6 +266,9 @@ window.EIKHOLT = (function () {
     }
     const s0 = sondear();
     if (s0 && s0.d < dm + 0.3 * M) mejor = s0;
+    // el tablón de la plaza y el recado tomado (RECADOS25): ganan a todo lo demás cuando están a mano
+    const rc = window.RECADOS25 && RECADOS25.cercano(plano, e, st, A);
+    if (rc) mejor = rc;
     return mejor;
   }
 
