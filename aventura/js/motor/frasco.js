@@ -51,7 +51,7 @@ window.FRASCO = (function () {
     bebe = { t: 0, cura: curaDe(), dada: 0 };
     jug.lento = Math.max(jug.lento || 0, TRAGO);
     if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.3 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("alivio", 0.7);
     return true;
   }
   function llenar(donde) {

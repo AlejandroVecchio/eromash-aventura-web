@@ -113,6 +113,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/ciudad/ · 
 
+- **agregados.js**: lo que el editor de mapas cambió en Eikholt (AGREGADOS.eikholt), aplicado sobre PLANO25.armar
 - **casas.js**: las casas de la capital (módulo CASAS25)
   - proyección · lo que lleva cada pared, vista de frente (s de 0 a len, t = 0 el piso, hacia arriba negativo) · el cuerpo de la casa · lo que se arrima a la casa · el dibujo entero
 - **enseres.js**: lo chico de la ciudad en volumen (módulo ENSERES25)
@@ -228,7 +229,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **baston.js**: el bastón rúnico (sistema BASTON, tipo de arma "baston")
   - pegar con magia · chispas · el sello · paso de niebla y ola · en la mano · dibujo · el sistema
 - **berkano.js**: las piedras de Berkano y los manantiales rúnicos (sistema BERKANO)
-  - las piedras · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
+  - las piedras · salvarse: cuatro maneras de que Berkano te devuelva · la del HUD (MediEvil 2): una capa encima del juego, en píxeles de la página · los manantiales · juntar una piedra · el brebaje de Berkano (objeto de la barra de abajo) · Thora y Ása
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
@@ -303,7 +304,10 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - registrar, empezar, terminar · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo
 - **mj-anillos.js**: minijuego: la cerradura de anillos (MINIJ «anillos»)
 - **mj-hachas.js**: minijuego: hachas al blanco (MINIJ «hachas»)
+- **mj-hilo.js**: minijuego: el hilo de las Nornas (MINIJ «hilo»)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
+- **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
+  - de dónde sale cada tipo · los de cada misión
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
@@ -347,8 +351,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-bandidos.js**: el campamento de los Sin Linde (assets de BANDIDOS)
   - assets: tiendaSinLinde, estacaSinLinde, botinSinLinde
 - **assets-berkano.js**: las piedras de Berkano y los manantiales rúnicos (se suman a ASSETS)
-  - el manantial rúnico · la piedra de Berkano tirada
-  - assets: manantialRunico, piedraBerkano
+  - el manantial rúnico · la piedra de Berkano tirada · la piedra que surge al salvarse
+  - assets: manantialRunico, piedraBerkano, piedraBerkanoSurge
 - **assets-capital.js**: Eikholt según el compendio del 22/10/2026 (se suma a ASSETS)
   - assets: casaNordica, robleGigante, empalizadaDoble, murallaDoble, escaleraMuralla, piedraAncla, runaCupula, puertaNorte, estandarteCiervo, campana, tablonAvisos, carpinteria, curtiembre, munecoPaja, carreta, buey, cerca, muelle, camaHongos, casaGuardia
 - **assets-casa.js**: la casa de Hrolf, la casa propia (assets de CASA)
@@ -426,6 +430,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - colores de Eldervald
   - assets: pino, juncos, enebro, brezo, posteCruce, roble, abetoAnciano, robleAnciano, abedul, helechos, alfombraMusgo, barro, hongosRocio, roca, troncoCaido, pinoTalado, arbolQuebrado, farol, piedraLinde, puestoEydis, tableroRutas, empalizada, carroVolcado, menhirRefugio, runaRefugio, piedraCaida, cobertizoRefugio, casaEikholt, casaLindes, mesaSvanhild, losaPatio, robleEikholt, pozoEikholt, puestoMercado, puentePaso, pedestalPaso, nucleo, tablonMarcado, tocon, raizMarcada, menhirRastro, soporteAtadura, aserradero, puenteTablas, santuario, zarzas
 - **caminos.js**: cómo se pintan los caminos (módulo SENDAS)
+  - los puentes
 - **eldervald.js**: el Bosque de Eldervald (módulo ELDERVALD)
   - geografía (Datos.gd) · utilidades de geometría · dónde se puede caminar: una grilla de 20 unidades · los objetos del mundo · el bosque: generado, siempre igual (misma semilla) · orillas vivas, bordes de los claros y postes en los cruces · un mapa de cero (AGREGADOS.lienzo: un proyecto nuevo del editor) · lo que se agregó o se sacó en el editor (map-generator → js/mundo/agregados.js) · grilla espacial para dibujar y chocar solo lo cercano · choques · el piso, por trozos
 - **imagenes.js**: las imágenes propias del editor (módulo IMAGENES)
@@ -437,6 +442,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/personajes/ · Eromash y la gente
 
 - **animacion.js**: cómo se mueve Eromash (módulo ANIMA)
+  - los gestos · absorber energía
 - **gente.js**: la gente de Eldervald (módulo GENTE)
   - los espíritus, como en su hoja: la huldra y el nøkk
 - **viajeros.js**: los forasteros del Hongo Dorado (fichas y dibujos propios de GENTE)
@@ -493,9 +499,11 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
 - **minijuegos.js**: Textos del motor de los minijuegos (motor/minijuegos.js) y de la cerradura de anillos (motor/mj-anillos.js): prefijo mn.
 - **mj-hachas.js**: Textos de hachas al blanco (motor/mj-hachas.js) y de la diana de la Guardia que lo pide (ciudad/juego.js): prefijo mn.hachas y ek.hachas
+- **mj-hilo.js**: Textos del hilo de las Nornas (motor/mj-hilo.js) y de la Poza de Urd que lo pide (motor/vida.js): prefijo mn.hilo
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
+- **opcionales.js**: Textos de los objetivos opcionales de cada misión principal (motor/opcionales.js): prefijo oq.
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito

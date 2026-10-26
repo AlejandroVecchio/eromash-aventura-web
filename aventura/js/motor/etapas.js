@@ -26,10 +26,7 @@ window.ETAPAS = (function () {
     }
     grupos.push(g);
   }
-  const activo = (hecho) => {
-    const o = H.objetivo();
-    return !!o && o.hecho === hecho;
-  };
+  const activo = (hecho) => H.activo(hecho); // abierto ahora (los del mismo par van a la vez)
   // los que ya cayeron (según la cuenta guardada) no vuelven al cargar
   function acomodar() {
     for (const g of grupos) {
