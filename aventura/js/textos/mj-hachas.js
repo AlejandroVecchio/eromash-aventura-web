@@ -1,0 +1,23 @@
+// Textos de hachas al blanco (motor/mj-hachas.js) y de la diana de la Guardia que lo pide (ciudad/juego.js): prefijo mn.hachas y ek.hachas
+I18N.textos({
+  "mn.hachas": { es: "Hachas al blanco", en: "Axes at the target" },
+  "mn.hachas_pie": { es: "{0}, atacar o tocar: fijar el lado, después la altura · {1}: dejar", en: "{0}, attack or tap: lock the side, then the height · {1}: quit" },
+  "mn.hachas_tiro": { es: "Tiro {0} / {1}", en: "Throw {0} / {1}" },
+  "mn.hachas_puntos": { es: "{0} puntos", en: "{0} points" },
+  "mn.hachas_meta": { es: "Hacen falta {0}", en: "{0} needed" },
+  "mn.hachas_hrafn": { es: "Hrafn: {0}", en: "Hrafn: {0}" },
+  "mn.hachas_viento": { es: "Viento", en: "Wind" },
+  "mn.hachas_afuera": { es: "¡Afuera!", en: "Missed!" },
+  "mn.hachas_res": { es: "{0} puntos de {1}", en: "{0} points of {1}" },
+  "mn.hachas_res_duelo": { es: "Vos {0} · Hrafn {1}", en: "You {0} · Hrafn {1}" },
+  "mn.hachas_v_viento": { es: "Con viento: apuntá al costado", en: "Windy: aim to the side" },
+  "mn.hachas_v_movil": { es: "Diana colgada: adelantate", en: "Hanging target: lead it" },
+  "mn.hachas_v_lejos": { es: "Desde lejos", en: "From afar" },
+  "mn.hachas_v_duelo": { es: "Duelo con Hrafn, de la Guardia", en: "Duel with Hrafn of the Guard" },
+  "ek.hachas_accion": { es: "Lanzar hachas a la diana", en: "Throw axes at the target" },
+  "ek.hachas_quien": { es: "La Guardia mira desde el cerco", en: "The Guard watches from the fence" },
+  "ek.hachas_record": { es: "¡Nuevo récord en la diana de la Guardia: {0}!", en: "New record at the Guard's target: {0}!" },
+  "ek.hachas_record_sub": { es: "{0} de plata del sargento", en: "{0} silver from the sergeant" },
+  "ek.hachas_bien": { es: "La Guardia golpea los escudos", en: "The Guard bangs their shields" },
+  "ek.hachas_mal": { es: "Un recluta se ríe por lo bajo", en: "A recruit snickers" },
+});

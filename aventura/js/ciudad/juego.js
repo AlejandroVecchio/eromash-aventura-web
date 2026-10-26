@@ -226,6 +226,11 @@ window.EIKHOLT = (function () {
       if (p.nombrado) mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_" + p.id), fn: () => hablarNombrado(p) };
       else mejor = { texto: t("av.accion_hablar") + " · " + t("av.nombre_ek_" + p.rol), fn: () => hablarVecino(p) };
     }
+    const dn = dianaCerca();
+    if (dn && dn.d < dm) {
+      dm = dn.d;
+      mejor = dn;
+    }
     const am = RECORRER25.aMano();
     if (am && am.d < dm + 0.5 * M) {
       dm = am.d;
@@ -234,6 +239,36 @@ window.EIKHOLT = (function () {
     const s0 = sondear();
     if (s0 && s0.d < dm + 0.3 * M) mejor = s0;
     return mejor;
+  }
+
+  // ---------- la diana del campo de la Guardia: hachas al blanco (MINIJ «hachas») ----------
+  // cada partida pasa a la variante siguiente; superar el récord paga; ganar el duelo con Hrafn lo deja de rival
+  function dianaCerca() {
+    if (!window.MINIJ || !MINIJ.JUEGOS.hachas || !plano) return null;
+    const e = ero();
+    let d = Infinity;
+    for (const q of plano.cosas) if (q.id === "dianaTiro") d = Math.min(d, Math.hypot(q.x - e.x, q.y - e.y));
+    if (d > 7 * M) return null;
+    return { texto: t("ek.hachas_accion"), d: Math.max(0, d - 3 * M), fn: () => lanzarHachas() };
+  }
+  function lanzarHachas() {
+    const h = (st.hachas = st.hachas || { veces: 0, record: 0 });
+    const VAR = ["base", "viento", "movil", "lejos", "duelo"];
+    MINIJ.empezar("hachas", {
+      variante: VAR[h.veces % VAR.length],
+      quien: t("ek.hachas_quien"),
+      fin: (r) => {
+        if (r.dejo) return;
+        h.veces++;
+        if (r.puntos > h.record) {
+          const plata = 10 + Math.max(0, r.puntos - Math.max(20, h.record));
+          h.record = r.puntos;
+          if (window.PODERES && PODERES.darPlata) PODERES.darPlata(plata);
+          HUD.aviso(t("ek.hachas_record", [r.puntos]), "lugar", t("ek.hachas_record_sub", [plata]));
+        } else HUD.aviso(t(r.gano ? "ek.hachas_bien" : "ek.hachas_mal"), r.gano ? "#FFD98A" : "#E0B2B2");
+        if (r.gano && window.RPG) RPG.dar(60, jug.x, jug.y);
+      },
+    });
   }
 
   // ---------- Eromash camina ----------
@@ -585,5 +620,5 @@ window.EIKHOLT = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, aBosque, estado: () => st, jug: () => jug, cercano: () => activo && cercano() };
+  return { activo: () => activo, cam, plano: () => plano, ero, entrar, salir, anclas: () => ANCLAS, lugarDe, aBosque, estado: () => st, jug: () => jug, cercano: () => activo && cercano(), lanzarHachas };
 })();
