@@ -12,6 +12,31 @@
     }
   }
   (window.PRUEBAS = window.PRUEBAS || []).push(
+    { nombre: "tallar: cada marca pide su tecla; la justa talla, otra raja, y la dificultad suma letras", fn: async (A, { igual, si }) => {
+      JUEGO.empezar(9, true);
+      const letras = (v) => {
+        MINIJ.empezar("tallar", { variante: v, semilla: 5 });
+        const n = MINIJ.estado().v.letras;
+        MINIJ.cerrar();
+        return n;
+      };
+      si(MINIJ.empezar("tallar", { semilla: 5 }) && MINIJ.estado().cuenta === 3, "arranca con cuenta atrás");
+      const S = MINIJ.estado(),
+        def = MINIJ.JUEGOS.tallar;
+      si(S.marcas.every((m) => m.veta || MINIJ.RITMO.slice(0, 3).includes(m.k)), "la base usa A S D");
+      S.pausa = 0;
+      const [a, b] = S.marcas.filter((m) => m.tr === 0 && !m.veta);
+      S.s = a.s;
+      def.golpe(S, a.k);
+      igual(a.hecha, 2, "la tecla justa talla:");
+      if (b) {
+        S.s = b.s;
+        def.golpe(S, MINIJ.RITMO.find((k) => k !== b.k));
+        si(b.hecha < 0 && S.grietas === 1, "otra tecla raja");
+      }
+      MINIJ.cerrar();
+      si(letras("base") === 3 && letras("rapido") > 3 && letras("palabra") === 8, "cada dificultad suma letras hasta las ocho");
+    } },
     { nombre: "tallar: golpear justo en el oro talla la runa en cada variante; no golpear la parte", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       for (const v of ["base", "rapido", "dura", "vetas", "palabra"]) {

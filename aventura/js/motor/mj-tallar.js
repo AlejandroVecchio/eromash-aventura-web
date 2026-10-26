@@ -1,7 +1,9 @@
 // ---------- minijuego: tallar la runa (MINIJ «tallar») ----------
 // La piedra de Ása: el cincel recorre cada trazo de una runa y en cada trazo hay marcas de oro donde hay que dar el
-// golpe de martillo justo cuando el cincel pasa (la tecla de usar, la de atacar o tocar la piedra). Un golpe a
-// destiempo o una marca que se pasa resquebraja la piedra; demasiadas grietas y se parte. Variantes: base, rápido (el
+// golpe de martillo justo cuando el cincel pasa. Cada marca pide su tecla (A S D W Q E R F, más letras cuanto más
+// difícil; `MINIJ.RITMO`) y la anuncia con un aro que se cierra: el golpe va cuando el aro toca la marca. Con el puntero,
+// tocar la piedra golpea. Arranca con una cuenta atrás. Un golpe a destiempo, con otra tecla o una marca que se pasa
+// resquebraja la piedra; demasiadas grietas y se parte. Variantes: base, rápido (el
 // cincel corre más), piedra dura (la ventana del golpe es más chica), vetas (marcas violeta de las ataduras que no hay
 // que golpear) y la palabra (dos runas seguidas). Devuelve { gano, precision, grietas }. Lo usan Ása al abrir muescas
 // y la pestaña de tallas al unir tres (engarces.js).
@@ -41,7 +43,7 @@
     S.marcas = [];
     S.trs.forEach((tr, k) => {
       const n = Math.max(1, Math.min(S.v.marcas || 3, Math.round(tr.largo / 90)));
-      for (let m = 0; m < n; m++) S.marcas.push({ tr: k, s: tr.largo * ((m + 0.5 + (S.rnd() - 0.5) * 0.4) / n), hecha: 0 });
+      for (let m = 0; m < n; m++) S.marcas.push({ tr: k, s: tr.largo * ((m + 0.5 + (S.rnd() - 0.5) * 0.4) / n), hecha: 0, k: MINIJ.RITMO[Math.floor(S.rnd() * (S.v.letras || 3))] });
     });
     S.total += S.marcas.length;
     // las vetas van entre las marcas, nunca encima de una
@@ -74,14 +76,44 @@
     }
   }
 
+  // un golpe de martillo: k es la tecla de ritmo apretada (null con el puntero, que vale para cualquiera)
+  function golpe(S, k) {
+    if (S.gano || S.pausa > 0) return;
+    const tr = S.trs[S.trazo];
+    if (!tr) return;
+    const ven = S.v.ventana || 26,
+      [x, y] = punto(tr, Math.max(0, Math.min(tr.largo, S.s)));
+    S.golpes++;
+    S.martillo = 0.15;
+    // la veta: golpearla raja
+    const veta = S.marcas.find((m) => m.veta && m.tr === S.trazo && !m.hecha && Math.abs(m.s - S.s) < ven);
+    if (veta) return (veta.hecha = -1), chispas(S, x, y, "#9A6BD8"), grieta(S, x, y);
+    const m = pendientes(S).sort((a, b) => Math.abs(a.s - S.s) - Math.abs(b.s - S.s))[0];
+    if (m && Math.abs(m.s - S.s) <= ven) {
+      // otra tecla: la marca se raja
+      if (k && m.k !== k) return (m.hecha = -1), (S.luz.mala = 0.4), grieta(S, x, y);
+      const justo = Math.abs(m.s - S.s) <= ven * 0.45;
+      m.hecha = justo ? 2 : 1;
+      S.justos += justo ? 1 : 0.6;
+      chispas(S, x, y, justo ? "#73D5DB" : "#FFD98A");
+      MINIJ_SONAR(justo ? 720 : 520, 0.12, "triangle");
+      if (window.SONIDO) SONIDO.tocar("filo", { vol: 0.35, tono: justo ? 1.6 : 1.2 });
+      return;
+    }
+    grieta(S, x, y);
+  }
+
   MINIJ.registrar("tallar", {
+    // la dificultad sube sobre todo con las letras (`letras`: cuántas de A S D W Q E R F); la velocidad, de a poco
     variantes: {
-      base: { vel: 230, marcas: 3, ventana: 28, fallos: 3 },
-      rapido: { vel: 360, marcas: 3, ventana: 30, fallos: 3 },
-      dura: { vel: 240, marcas: 3, ventana: 17, fallos: 3 },
-      vetas: { vel: 240, marcas: 3, ventana: 26, fallos: 3, vetas: 3 },
-      palabra: { vel: 280, marcas: 2, ventana: 26, fallos: 4, runas: 2 },
+      base: { vel: 170, marcas: 3, ventana: 28, fallos: 3, letras: 3 },
+      rapido: { vel: 260, marcas: 3, ventana: 30, fallos: 3, letras: 4 },
+      dura: { vel: 190, marcas: 3, ventana: 19, fallos: 3, letras: 5 },
+      vetas: { vel: 200, marcas: 3, ventana: 26, fallos: 3, vetas: 3, letras: 6 },
+      palabra: { vel: 230, marcas: 2, ventana: 26, fallos: 4, runas: 2, letras: 8 },
     },
+    cuenta: 3,
+    golpe, // (las pruebas golpean con una tecla)
     pie: "mn.tallar_pie",
     armar(S) {
       const todas = Object.keys(RUNAS()),
@@ -101,7 +133,8 @@
       armarRuna(S, 0);
     },
     paso(S, dt) {
-      if (CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) this.tocar(S, 0);
+      const k = MINIJ.ritmo();
+      if (k) golpe(S, k);
       S.chispas.forEach((p) => ((p.x += p.vx * dt), (p.y += p.vy * dt), (p.vy += 600 * dt), (p.v -= dt)));
       S.chispas = S.chispas.filter((p) => p.v > 0);
       if (S.gano) {
@@ -136,29 +169,9 @@
         }
       }
     },
-    // un golpe de martillo
+    // tocar la piedra con el puntero: un golpe que vale para cualquier letra
     tocar(S, i) {
-      if (S.gano || S.pausa > 0 || i == null) return;
-      const tr = S.trs[S.trazo];
-      if (!tr) return;
-      const ven = S.v.ventana || 26,
-        [x, y] = punto(tr, Math.max(0, Math.min(tr.largo, S.s)));
-      S.golpes++;
-      S.martillo = 0.15;
-      // la veta: golpearla raja
-      const veta = S.marcas.find((m) => m.veta && m.tr === S.trazo && !m.hecha && Math.abs(m.s - S.s) < ven);
-      if (veta) return (veta.hecha = -1), chispas(S, x, y, "#9A6BD8"), grieta(S, x, y);
-      const m = pendientes(S).sort((a, b) => Math.abs(a.s - S.s) - Math.abs(b.s - S.s))[0];
-      if (m && Math.abs(m.s - S.s) <= ven) {
-        const justo = Math.abs(m.s - S.s) <= ven * 0.45;
-        m.hecha = justo ? 2 : 1;
-        S.justos += justo ? 1 : 0.6;
-        chispas(S, x, y, justo ? "#73D5DB" : "#FFD98A");
-        MINIJ_SONAR(justo ? 720 : 520, 0.12, "triangle");
-        if (window.SONIDO) SONIDO.tocar("filo", { vol: 0.35, tono: justo ? 1.6 : 1.2 });
-        return;
-      }
-      grieta(S, x, y);
+      if (i != null) golpe(S, null);
     },
     hit: () => 0,
     res: (S) => t("mn.tallar_res", [Math.round((S.precision || 0) * 100), S.grietas]),
@@ -225,6 +238,12 @@
         if (!m.hecha) D.rombo(x, y, ven * 0.5 + cerca * 8, "#5E130D");
         D.rombo(x, y, 9 + cerca * 6, col);
         if (cerca > 0.6) D.halo(x, y, 30, "#FFD98A", (cerca - 0.6) * 0.8);
+        // las que el cincel alcanza en menos de 1,6 s: su tecla a un costado del trazo y el aro que se cierra
+        const falta = (m.s - S.s) / (S.v.vel || 230),
+          a = punto(S.trs[m.tr], m.s)[2] - Math.PI / 2;
+        if (m.hecha || m.tr !== S.trazo || falta > 1.6) return;
+        D.tecla(x + Math.cos(a) * 48, y + Math.sin(a) * 48, m.k, 38, falta < 0.9 ? "#FFD98A" : "#F2ECEC");
+        if (falta < 0.9 && falta > -0.15) D.aro(x, y, 20, falta / 0.9, "#FFD98A");
       });
       // el cincel y el martillo
       const tr = S.trs[S.trazo];

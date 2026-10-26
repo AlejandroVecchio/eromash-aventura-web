@@ -1,7 +1,7 @@
 // Textos de tallar la runa (motor/mj-tallar.js) y de lo que lo pide en engarces.js: prefijo mn.tallar y en.tallar
 I18N.textos({
   "mn.tallar": { es: "Tallar la runa", en: "Carve the rune" },
-  "mn.tallar_pie": { es: "{0}, atacar o tocar la piedra: golpear cuando el cincel pasa por el oro · {1}: dejar", en: "{0}, attack or tap the stone: strike as the chisel crosses the gold · {1}: quit" },
+  "mn.tallar_pie": { es: "Apretá la letra de cada marca cuando el aro se cierra (o tocá la piedra) · {1}: dejar", en: "Press each mark's letter as its ring closes (or tap the stone) · {1}: quit" },
   "mn.tallar_palabra": { es: "La palabra", en: "The word" },
   "mn.tallar_grietas": { es: "Grietas", en: "Cracks" },
   "mn.tallar_res": { es: "Precisión {0} % · {1} grietas", en: "Precision {0}% · {1} cracks" },
