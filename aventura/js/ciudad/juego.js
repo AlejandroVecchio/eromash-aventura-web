@@ -154,6 +154,7 @@ window.EIKHOLT = (function () {
   function oculto(p) {
     if (p.ladron) return !(window.LADRON25 && LADRON25.activo());
     if (p.asamblea) return !(window.ASAMBLEA25 && ASAMBLEA25.hoy(A));
+    if (p.baile) return !(window.BLOT25 && BLOT25.hoy(A));
     if (!p.nombrado) return false;
     const n = deCapital(p.id);
     return !n || n.fuera || !dentroElipse(n.x, n.y, 1.1);
@@ -219,7 +220,7 @@ window.EIKHOLT = (function () {
   // ---------- lo que se puede hacer cerca ----------
   function cercano() {
     if (J.modo !== "juego" || !activo) return null;
-    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo()) || (window.PATITOS25 && PATITOS25.activo())) return null; // un juego en pantalla
+    if ((window.TIRO25 && TIRO25.activo()) || (window.PULSO25 && PULSO25.activo()) || (window.PATITOS25 && PATITOS25.activo()) || (window.BLOT25 && BLOT25.activo())) return null; // un juego en pantalla
     const e = ero();
     let mejor = null,
       dm = Infinity;
@@ -300,6 +301,9 @@ window.EIKHOLT = (function () {
     // acompañar la ronda de noche de la Guardia (RONDA25)
     const rn = window.RONDA25 && RONDA25.cercano(plano, e, st, A, MUNDO25.gente());
     if (rn && !rc && !ta && !es) (mejor = rn), (dm = rn.d);
+    // la ronda del blót: sumarse al baile (BLOT25)
+    const bl = window.BLOT25 && BLOT25.cercano(plano, e, st, A);
+    if (bl && bl.d < dm && !rc && !ta && !es) (mejor = bl), (dm = bl.d);
     // las piedras al agua desde el muelle (PATITOS25)
     const pt = window.PATITOS25 && PATITOS25.cercano(plano, e, st, A);
     if (pt && pt.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = pt), (dm = pt.d);
@@ -494,7 +498,7 @@ window.EIKHOLT = (function () {
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     jug.pelea = false;
-    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo()) && !(window.PATITOS25 && PATITOS25.activo());
+    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo()) && !(window.PULSO25 && PULSO25.activo()) && !(window.PATITOS25 && PATITOS25.activo()) && !(window.BLOT25 && BLOT25.activo());
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -739,6 +743,7 @@ window.EIKHOLT = (function () {
     if (window.TIRO25) TIRO25.actualizar(dt, st, A);
     if (window.PULSO25) PULSO25.actualizar(dt, st, A);
     if (window.PATITOS25) PATITOS25.actualizar(dt, st, A);
+    if (window.BLOT25) BLOT25.actualizar(dt, st, A, ero());
     if (window.RONDA25) RONDA25.actualizar(dt, plano, st, A, ero());
     if (window.GALLINAS25 && J.modo === "juego") GALLINAS25.actualizar(dt, plano, st, A, ero());
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
@@ -846,6 +851,7 @@ window.EIKHOLT = (function () {
     if (st.recados && st.recados.activo && window.RECADOS25) l.push(t("ek.hoy_recado", [t("ek.rc_cosa_" + (st.recados.i % RECADOS25.LISTA.length))]));
     const pr = window.PROMESAS25 && PROMESAS25.activa();
     if (pr) l.push(t("ek.hoy_promesa", [t("ek.pr_" + pr.deseo)]));
+    if (window.BLOT25) l.push(d % 7 === 5 ? t("ek.hoy_blot") : t("ek.hoy_blot_en", [(5 - (d % 7) + 7) % 7]));
     if (window.CUENTOS25 && h < 24) l.push(t("ek.hoy_cuento", [t("ek.cu_" + CUENTOS25.deHoy(A) + "_titulo")]));
     if (window.GALLINAS25 && d % 3 === 1 && h >= 9 && h < 17 && !(st.gallinas && st.gallinas.dia === d && st.gallinas.hecho)) l.push(t("ek.hoy_gallinas"));
     if (window.HUERTA25 && HUERTA25.listos(plano, st, A).length) l.push(t("ek.hoy_huerta"));

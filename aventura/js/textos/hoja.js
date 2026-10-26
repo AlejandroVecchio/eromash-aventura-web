@@ -39,6 +39,7 @@ I18N.textos({
   "hj.de_holmr": { es: "Campeón del hólmr", en: "Champion of the holmr" },
   "hj.de_santuarios": { es: "Bendición de los dioses", en: "Blessing of the gods" },
   "hj.de_promesa": { es: "Promesa del Roble", en: "Oak promise" },
+  "hj.de_blot": { es: "Ánimo del blót", en: "Blót cheer" },
   "hj.de_legendarios": { es: "Poderes legendarios", en: "Legendary powers" },
   "hj.de_contratos": { es: "Trofeo en el cinto", en: "Trophy on the belt" },
   "hj.de_casa": { es: "La casa de Hrolf", en: "Hrolf's house" },

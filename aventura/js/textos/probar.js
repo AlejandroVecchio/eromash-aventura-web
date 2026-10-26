@@ -45,6 +45,8 @@ I18N.textos({
   "pb.ek_cuentos_d": { es: "De noche, junto a la cuentacuentos de los forasteros", en: "At night, by the strangers' storyteller" },
   "pb.ek_patitos": { es: "Piedras al agua", en: "Skipping stones" },
   "pb.ek_patitos_d": { es: "De tarde, en el muelle del río", en: "In the afternoon, at the river dock" },
+  "pb.ek_blot": { es: "La ronda del blót", en: "The blót dance" },
+  "pb.ek_blot_d": { es: "La noche de fiesta, junto a la ronda", en: "On the feast night, by the dancing ring" },
   "pb.ek_tiro": { es: "El tiro de hachas", en: "Axe throwing" },
   "pb.ek_tiro_d": { es: "Frente a una diana del campo de la Guardia", en: "In front of a target at the Guard's yard" },
   "pb.ek_ladron": { es: "El ratero del mercado", en: "The market thief" },

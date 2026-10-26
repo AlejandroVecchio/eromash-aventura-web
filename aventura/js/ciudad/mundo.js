@@ -280,6 +280,8 @@ window.MUNDO25 = (function () {
       const [x, y] = buscarLibre(L.forasteros[0] + 150, L.forasteros[1] + 170);
       poner({ id: vecino("cuentista"), x, y, vx: 0, vy: 0, s: 1, horas: [19, 24], cuentos: true });
     }
+    // la ronda del blót (BLOT25): dieciséis vecinos que bailan una noche de cada siete, al lado del Roble
+    if (window.BLOT25) for (let i = 0; i < 16; i++) poner({ id: vecino(i % 5 ? null : "vecina"), x: 0, y: 0, vx: 1, vy: 0, s: 1, horas: [19, 24], baile: { a: (i / 16) * Math.PI * 2 + 0.2 } });
     // el ratero del mercado (LADRON25): solo se ve mientras huye
     poner({ id: vecino("ladron"), x: 0, y: 0, vx: 0, vy: 0, s: 1, ladron: true });
     // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
@@ -325,6 +327,17 @@ window.MUNDO25 = (function () {
           p.prende = q.prende;
           p.miraA = q.prende ? [q.x, q.y] : null; // mira el farol que prende
         }
+        continue;
+      }
+      if (p.baile) {
+        // la ronda del blót: giran todos juntos alrededor de su centro (BLOT25.enRonda)
+        if (!p.visible) continue;
+        p.baile.a += BLOT25.VUELTA * dt;
+        const [x, y] = BLOT25.enRonda(p.baile.a);
+        p.vx = (x - p.x) / Math.max(dt, 1e-3);
+        p.vy = (y - p.y) / Math.max(dt, 1e-3);
+        p.x = x;
+        p.y = y;
         continue;
       }
       if (!p.vx && !p.vy) continue;

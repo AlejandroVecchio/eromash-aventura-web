@@ -114,6 +114,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/ciudad/ · 
 
 - **asamblea.js**: la asamblea del Ting (módulo ASAMBLEA25)
+- **blot.js**: la ronda del blót (módulo BLOT25)
 - **casas.js**: las casas de la capital (módulo CASAS25)
   - proyección · lo que lleva cada pared, vista de frente (s de 0 a len, t = 0 el piso, hacia arriba negativo) · el cuerpo de la casa · lo que se arrima a la casa · el dibujo entero
 - **cuentos.js**: los cuentos junto al fuego de los forasteros (módulo CUENTOS25)
