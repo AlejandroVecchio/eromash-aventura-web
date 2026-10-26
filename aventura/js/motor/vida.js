@@ -1149,6 +1149,8 @@ window.VIDA = (function () {
     niebla,
     lugares,
     clima: (amb) => Object.assign(amb, { lluvia, bruma }),
+    // el clima de este momento sin suavizar (lo pide Eikholt, que se juega con el bosque en pausa): { ll, br }
+    climaAhora: () => climaDe(A.H.E.tiempo),
     viento: () => Math.min(0.2, Math.abs(viento - 12) / 600 + lluvia * 0.12),
     // para la página de mecánicas: dibujar una partícula suelta
     dibujarParte,

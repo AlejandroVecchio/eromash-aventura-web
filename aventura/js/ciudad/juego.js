@@ -372,7 +372,7 @@ window.EIKHOLT = (function () {
     const h = window.LUZ ? LUZ.hora(A.H.E.tiempo) : 12,
       noche = h >= 21 || h < 5;
     SONIDO.oyente(er.x / 2, er.y / 2);
-    SONIDO.bucle("viento", "viento", noche ? 0.1 : 0.07, { filtro: 320 });
+    SONIDO.bucle("viento", "viento", (noche ? 0.1 : 0.07) + lluvia * 0.14, { filtro: 320 + lluvia * 500 });
     if (noche && (grilloT -= dt) <= 0) {
       grilloT = 0.3 + Math.random() * 1.1;
       for (let k = 0; k < 3; k++) SONIDO.tono("sine", 4200 + Math.random() * 600, 4100, 0.05, 0.01, { ambiente: true, retraso: k * 0.07 });
@@ -656,7 +656,7 @@ window.EIKHOLT = (function () {
     RECORRER25.callados = J.modo !== "juego";
     RECORRER25.actualizar(dt, tiempo, h, cam, null);
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
-    MUNDO25.moverGente(dt, h, oculto);
+    MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();
     // cada tanto: quién está dónde (la historia avanza) y dónde quedó Eromash
     guardar += dt;
@@ -685,6 +685,49 @@ window.EIKHOLT = (function () {
     camaraPaso(dt || 1e-4, cw, ch);
     MUNDO25.dibujar(c, cam, cw, ch, tiempo, hora(), historia);
     c.setTransform(1, 0, 0, 1, 0, 0);
+    climaCiudad(c, cw, ch, dt);
+  }
+  // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
+  const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
+  // el mismo clima del día que el bosque (VIDA.climaAhora): la lluvia cae inclinada sobre la ciudad y la oscurece un
+  // poco, la bruma del alba la blanquea. Calidad baja: nada; media: menos gotas.
+  let lluvia = 0,
+    bruma = 0;
+  function climaCiudad(c, cw, ch, dt) {
+    if (!window.VIDA || !VIDA.climaAhora) return;
+    const cl = VIDA.climaAhora(),
+      k = Math.min(1, (dt || 0) * 0.4);
+    lluvia += (cl.ll - lluvia) * k;
+    bruma += (cl.br - bruma) * k;
+    const nv = window.CALIDAD ? CALIDAD.nivel : "alta";
+    if (nv === "baja") return;
+    if (bruma > 0.02) {
+      c.fillStyle = `rgba(214,222,230,${0.16 * bruma})`;
+      c.fillRect(0, 0, cw, ch);
+    }
+    if (lluvia > 0.02) {
+      const n0 = Math.round((nv === "alta" ? 260 : 110) * lluvia),
+        T = tiempo;
+      c.save();
+      c.globalAlpha = 0.35;
+      c.strokeStyle = "#C8DCE0";
+      c.lineWidth = 1.6;
+      c.beginPath();
+      for (let i = 0; i < n0; i++) {
+        const sx = (Math.sin(i * 12.9898) * 43758.5453) % 1,
+          v = 0.8 + Math.abs((Math.sin(i * 78.233) * 12345.678) % 1) * 0.4,
+          q = (T * 1.3 * v + Math.abs((Math.sin(i * 4.1) * 9876.5) % 1)) % 1;
+        const x = (Math.abs(sx) * cw + q * 120) % cw,
+          y = q * (ch + 200) - 100;
+        c.moveTo(x, y);
+        c.lineTo(x - 8, y - 30);
+      }
+      c.stroke();
+      c.globalAlpha = 0.12 * lluvia;
+      c.fillStyle = "#1E2A34";
+      c.fillRect(0, 0, cw, ch);
+      c.restore();
+    }
   }
   // ---------- el mapa propio (ciudad/mapa.js): la M abre el de la ciudad y desde ahí se pasa al del bosque ----------
   const datosMapa = () => ({
