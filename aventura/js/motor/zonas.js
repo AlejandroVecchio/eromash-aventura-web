@@ -303,7 +303,7 @@ window.ZONAS = (function () {
       // los pilares de las salas grandes
       if (s.w >= 6 && s.h >= 5 && s.tipo !== "entrada")
         [[0.3, 0.38], [0.7, 0.38], [0.3, 0.75], [0.7, 0.75]].forEach(([u, v], i) => (s.tipo === "jefe" || i < 2) && Z.obst.push({ id: "pilarCripta", x: X(s.x + s.w * u), y: Y(s.y + s.h * v), r: 60, runa: ["eihwaz", "hagalaz", "naudiz", "isa"][i] }));
-      if (s.tipo === "tesoro") Z.cofres.push({ x: cx, y: cy, k: Z.id + "_c" + si, rico: true, cerrojo: "ligados" });
+      if (s.tipo === "tesoro") Z.cofres.push({ x: cx, y: cy, k: Z.id + "_c" + si, rico: true, cerrojo: si % 2 ? "losas:atadas" : "ligados" });
       // la gente de cada sala: un grupo con su líder (más grande en las salas grandes)
       if (s.tipo === "sala" || s.tipo === "oscura" || s.tipo === "tesoro") {
         const fam = d.familia,
@@ -477,8 +477,12 @@ window.ZONAS = (function () {
     HUD.aviso(t("zn.encendiste"), "#FF8D71");
   }
   function abrir(cf, abierta) {
-    // el cofre de la sala del tesoro cierra con anillos ligados y el de las islas con la gran cerradura (MINIJ)
-    if (cf.cerrojo && !abierta && window.MINIJ) return MINIJ.empezar("anillos", { variante: cf.cerrojo, quien: t("mn.cerrado"), fin: (r) => r.gano && abrir(cf, true) });
+    // el cofre de la sala del tesoro cierra con anillos ligados o losas atadas y el de las islas con la gran cerradura
+    // (MINIJ; "tipo:variante" para otro minijuego que no sea los anillos)
+    if (cf.cerrojo && !abierta && window.MINIJ) {
+      const [tipo, variante] = cf.cerrojo.includes(":") ? cf.cerrojo.split(":") : ["anillos", cf.cerrojo];
+      return MINIJ.empezar(tipo, { variante, quien: t(tipo === "anillos" ? "mn.cerrado" : "mn." + tipo + "_cerrado"), fin: (r) => r.gano && abrir(cf, true) });
+    }
     st.cofres[cf.k] = true;
     PODERES.botinCofre(cf.x, cf.y, t("zn.cofre"), { plata: cf.rico ? 120 + Math.floor(Math.random() * 60) : 50, frag: true, vida: true });
   }

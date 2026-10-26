@@ -1070,7 +1070,7 @@ window.VIDA = (function () {
           noche = A.noche() > 0.5;
         if (m.id === "fresnoEcos" && d < 200) dar(d, t("vd.fresno_escuchar"), () => escucharFresno(m), o.x, o.y - 160);
         else if (m.id === "anilloAlfar" && d < 140) dar(d, noche ? t("vd.anillo_entrar") : t("vd.anillo_dia"), () => entrarAnillo(m, noche), o.x, o.y - 60);
-        else if (m.id === "pozaEstrellas" && d < 190) dar(d, noche ? t("vd.poza_mirar") : t("vd.poza_dia"), () => mirarPoza(m, noche), o.x, o.y - 110);
+        else if (m.id === "pozaEstrellas" && d < 190) dar(d, noche ? t(st.poza ? "vd.poza_tejer_noche" : "vd.poza_mirar") : t("vd.poza_dia"), () => mirarPoza(m, noche), o.x, o.y - 110);
       });
     },
     alRuna(r, zona) {
@@ -1123,20 +1123,41 @@ window.VIDA = (function () {
     evento("rito", m.cosa.x, m.cosa.y - 20, { col: "#8CF0B4", runa: "ingwaz" });
     for (let i = 0; i < 5; i++) mariposaEn(m.cosa.x + azar(-80, 80), m.cosa.y + azar(-30, 30));
     HUD.aviso(t("vd.anillo_bendicion"), "lugar", t("vd.anillo_sub"));
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.absorber({ col: "#8CF0B4", col2: "#F2ECEC", forma: "rombo" });
     A.H.guardar && A.H.guardar();
   }
+  // la Poza de Urd: antes de la visión las Nornas piden un telar sin huecos; después tejen con Eromash una vez por noche
   function mirarPoza(m, noche) {
     if (!noche) return HUD.aviso(t("vd.poza_espera"), "#C8F2F4");
     m.cosa.o.pulso = 1;
     evento("piedra", m.cosa.x, m.cosa.y - 40, { col: "#C8F2F4", runa: "dagaz" });
-    if (st.poza) return HUD.aviso(t("vd.poza_ya"), "#C8F2F4");
-    st.poza = true;
-    jug.interactuando = 1;
-    if (window.MAPA) MAPA.descubrir(m.cosa.x, m.cosa.y, 9000);
-    if (window.PODERES && PODERES.darFragmento) PODERES.darFragmento();
-    HUD.aviso(t("vd.poza_vision"), "lugar", t("vd.poza_sub"));
-    A.H.guardar && A.H.guardar();
+    const tejer = (variante, alGanar) => {
+      if (!window.MINIJ) return alGanar();
+      MINIJ.empezar("hilo", { variante, x: m.cosa.x, y: m.cosa.y, fin: (r) => (r && r.gano ? alGanar() : HUD.aviso(t("vd.poza_falla"), "#C8F2F4")) });
+    };
+    if (st.poza) {
+      const hoy = indiceNoche();
+      if (st.pozaNoche === hoy) return HUD.aviso(t("vd.poza_ya_noche"), "#C8F2F4");
+      return tejer(hoy % 2 ? "reloj" : "nudos", () => {
+        st.pozaNoche = hoy;
+        const plata = 30 + Math.min(60, hoy * 2);
+        if (window.PODERES && PODERES.darPlata) PODERES.darPlata(plata);
+        if (window.RPG) RPG.dar(180, m.cosa.x, m.cosa.y);
+        evento("rito", m.cosa.x, m.cosa.y - 40, { col: "#C8F2F4" });
+        HUD.aviso(t("vd.poza_tejido"), "lugar", t("vd.poza_tejido_sub", [plata]));
+        A.H.guardar && A.H.guardar();
+      });
+    }
+    HUD.aviso(t("vd.poza_tejer"), "#C8F2F4");
+    tejer("lleno", () => {
+      st.poza = true;
+      st.pozaNoche = indiceNoche();
+      jug.interactuando = 1;
+      if (window.MAPA) MAPA.descubrir(m.cosa.x, m.cosa.y, 9000);
+      if (window.PODERES && PODERES.darFragmento) PODERES.darFragmento();
+      HUD.aviso(t("vd.poza_vision"), "lugar", t("vd.poza_sub"));
+      A.H.guardar && A.H.guardar();
+    });
   }
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
   // el mapa pregunta por los lugares místicos; el motor por el clima y el viento
@@ -1153,5 +1174,11 @@ window.VIDA = (function () {
     // para la página de mecánicas: dibujar una partícula suelta
     dibujarParte,
     rombo,
+    // la poza más cercana (las pruebas y Probar mecánicas la piden sin caminar hasta ella)
+    estado: () => st,
+    mirarPoza: (noche) => {
+      const m = MISTICOS.find((q) => q.id === "pozaEstrellas");
+      if (m) mirarPoza(m, noche);
+    },
   };
 })();

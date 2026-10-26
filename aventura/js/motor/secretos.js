@@ -206,18 +206,23 @@ window.SECRETOS = (function () {
 
   // ---------- acciones ----------
   // los cofres que cierran con la cerradura de anillos (MINIJ): las arcas enterradas contra el tiempo, los cofres
-  // rúnicos con anillos ligados y uno de cada cuatro arcones del leñador con tres anillos
+  // rúnicos con anillos ligados y uno de cada cuatro arcones del leñador con tres anillos; otro de cada cuatro cierra
+  // con las losas deslizantes ("tipo:variante" para otro minijuego que no sea los anillos)
   function cerrojo(c) {
     if (!window.MINIJ) return null;
     if (c.tipo === "arcaEnterrada") return "reloj";
     if (c.tipo === "cofreRunico") return "ligados";
     if (c.tipo === "arconLenador" && c.id % 4 === 1) return "base";
+    if (c.tipo === "arconLenador" && c.id % 4 === 3) return "losas:base";
     return null;
   }
   function abrir(c, abierta) {
     if (c.cosa.o.sellado) return sellado(c);
     const v = !abierta && cerrojo(c);
-    if (v) return MINIJ.empezar("anillos", { variante: v, quien: t("mn.cerrado"), x: c.cosa.x, y: c.cosa.y, fin: (r) => r.gano && abrir(c, true) });
+    if (v) {
+      const [tipo, variante] = v.includes(":") ? v.split(":") : ["anillos", v];
+      return MINIJ.empezar(tipo, { variante, quien: t(tipo === "anillos" ? "mn.cerrado" : "mn." + tipo + "_cerrado"), x: c.cosa.x, y: c.cosa.y, fin: (r) => r.gano && abrir(c, true) });
+    }
     jug.interactuando = 0.3;
     J.retrasar(0.18, () => {
       st.cofres[c.id] = true;

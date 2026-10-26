@@ -241,7 +241,7 @@ window.BOTIN = (function () {
     if (st.bolsa.length >= MAX_BOLSA) return HUD.aviso(t("ob.bolsa_llena"), "#C8402D");
     st.suelo.splice(i, 1);
     dar(s.it);
-    if (window.ANIMA && s.it.r >= 2) ANIMA.gesto("feliz");
+    if (window.ANIMA) s.it.r >= 2 ? ANIMA.gesto("tesoro", 0, { col: O().RAREZAS[s.it.r].col }) : ANIMA.gesto("botin");
   }
   // la pieza tirada, plana en el piso (gira con la cámara como todo lo del piso)
   function dibujarEnPiso(c, s) {

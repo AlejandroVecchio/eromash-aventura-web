@@ -87,6 +87,19 @@
       for (let k = 0; k < S.n; k++) if (d > radio(k) - ANCHO && d <= radio(k)) return k * 2 + (x >= CX ? 1 : 0);
       return null;
     },
+    // la pista de Loki: el primer anillo desalineado (de adentro hacia afuera) queda en su lugar, por el lado más corto
+    pista(S) {
+      if (S.gano) return false;
+      const k = S.giro.findIndex((g, q) => g !== S.meta[q]);
+      if (k < 0) return false;
+      const d = (S.meta[k] - S.giro[k] + N) % N,
+        dir = d <= N / 2 ? 1 : -1;
+      for (let n = 0; n < N && S.giro[k] !== S.meta[k]; n++) girar(S, k, dir, true);
+      S.cur = k;
+      S.luz["a" + k] = 0.9;
+      if (resuelto(S)) S.gano = 0.7;
+      return true;
+    },
     res: (S) => t("mn.anillos_res", [S.movs]),
     dibujar(S, D) {
       const c = D.c,

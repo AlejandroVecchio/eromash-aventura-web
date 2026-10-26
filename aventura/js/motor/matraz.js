@@ -80,7 +80,7 @@ window.MATRAZ = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "matrazLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;display:none";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto;display:none";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     // arrastrar el matraz con el dedo o el mouse; tocar al final cierra

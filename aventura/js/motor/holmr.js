@@ -145,7 +145,7 @@ window.HOLMR = (function () {
     lienzo = document.createElement("canvas");
     lienzo.id = "holmrLienzo";
     lienzo.className = "ui";
-    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;display:none;cursor:crosshair";
+    lienzo.style.cssText = "position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;pointer-events:auto;display:none;cursor:crosshair";
     document.body.appendChild(lienzo);
     c = lienzo.getContext("2d");
     lienzo.addEventListener("pointerdown", (e) => {
@@ -407,7 +407,7 @@ window.HOLMR = (function () {
         }
       }
       if (window.VIDA) VIDA.evento("mision", C[0], C[1]);
-      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.ANIMA) ANIMA.gesto("grito");
     } else {
       st.perdidos++;
       jug.hp = Math.max(Math.round(jug.hpMax * 0.4), Math.min(jug.hp, jug.hpMax));

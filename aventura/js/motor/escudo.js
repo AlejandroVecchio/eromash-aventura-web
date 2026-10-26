@@ -70,7 +70,7 @@ window.ESCUDO = (function () {
       SONIDO.tocar("filo", { vol: 0.7, tono: 0.8 });
       SONIDO.tocar("golpeFuerte", { vol: 0.5, tono: 1.3 });
     }
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("desafio");
   }
   function romper() {
     rota = BASE.rota;
