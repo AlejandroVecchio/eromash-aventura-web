@@ -290,6 +290,9 @@ window.EIKHOLT = (function () {
     // lo perdido de hoy: hablar con la dueña, levantarlo del piso y devolverlo (PERDIDOS25)
     const pd = window.PERDIDOS25 && PERDIDOS25.cercano(plano, e, st, A, MUNDO25.gente());
     if (pd && !rc && !ta && !es) (mejor = pd), (dm = pd.d);
+    // las dianas del campo de la Guardia: tirar cinco hachas (TIRO25)
+    const tr = window.TIRO25 && TIRO25.cercano(plano, e, st, A);
+    if (tr && tr.d < dm + 0.5 * M && !rc && !ta && !es) (mejor = tr), (dm = tr.d);
     // el perro del corral y los gatos mansos: acariciarlos (RECORRER25.animalCerca)
     const an = RECORRER25.animalCerca(1.4 * M);
     if (an && an.d < dm && !rc && !ta && !es)
@@ -475,7 +478,7 @@ window.EIKHOLT = (function () {
     if (jug.salto > 0) jug.salto = Math.max(0, jug.salto - dt);
     if (jug.sinGolpe > 4 && !jug.muerto) jug.hp = Math.min(jug.hpMax, jug.hp + 12 * (J.regenVida || 1) * dt);
     jug.pelea = false;
-    const libre = J.modo === "juego";
+    const libre = J.modo === "juego" && !(window.TIRO25 && TIRO25.activo());
     const e = libre ? CONTROLES.eje() : { x: 0, y: 0 },
       mov = Math.hypot(e.x, e.y) > 0.15,
       mag = Math.min(1, Math.hypot(e.x, e.y));
@@ -717,6 +720,7 @@ window.EIKHOLT = (function () {
     if (window.ESCONDIDAS25 && J.modo === "juego") ESCONDIDAS25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
     if (window.PROMESAS25) PROMESAS25.actualizar(st);
     if (window.LADRON25 && J.modo === "juego") LADRON25.actualizar(dt, plano, MUNDO25.gente(), st, A, ero());
+    if (window.TIRO25) TIRO25.actualizar(dt, st, A);
     for (const p of MUNDO25.gente()) if (p.charla > 0 && (p.charla -= dt) <= 0) p.miraA = null;
     MUNDO25.moverGente(dt, h, (p) => oculto(p) || bajoTecho(p));
     mirarHistoria();
@@ -749,6 +753,7 @@ window.EIKHOLT = (function () {
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (window.PERDIDOS25) PERDIDOS25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
     climaCiudad(c, cw, ch, dt);
+    if (window.TIRO25) TIRO25.dibujar(c, cw, ch, tiempo);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
   const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !p.farol && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);

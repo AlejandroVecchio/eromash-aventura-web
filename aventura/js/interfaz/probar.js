@@ -217,6 +217,7 @@ window.PROBAR = (function () {
                   enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.ladron) s.ladron.dia = -1; const L = EIKHOLT.plano().lugares.mercado; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 300); });
                 },
               },
+              { id: "ek_tiro", si: hay("TIRO25"), fn: () => (hora(10), enCiudad(null, null, () => { const o = EIKHOLT.plano().cosas.find((q) => q.id === "dianaTiro"); const e = EIKHOLT.ero(); if (o) (e.x = o.x - 120), (e.y = o.y + 40); })) },
               { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

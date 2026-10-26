@@ -35,6 +35,8 @@ I18N.textos({
   "pb.ek_ting_d": { es: "El próximo día de asamblea, a las 12, junto a Bergljot", en: "The next assembly day, at noon, next to Bergljot" },
   "pb.ek_escondidas": { es: "Escondidas con los chicos", en: "Hide-and-seek with the kids" },
   "pb.ek_escondidas_d": { es: "A las 10, al lado de Tyra", en: "At 10:00, next to Tyra" },
+  "pb.ek_tiro": { es: "El tiro de hachas", en: "Axe throwing" },
+  "pb.ek_tiro_d": { es: "Frente a una diana del campo de la Guardia", en: "In front of a target at the Guard's yard" },
   "pb.ek_ladron": { es: "El ratero del mercado", en: "The market thief" },
   "pb.ek_ladron_d": { es: "A las 13 de un día de ratero, en el mercado", en: "At 13:00 on a thief day, at the market" },
   "pb.ek_ronda": { es: "La ronda de noche", en: "The night watch" },
