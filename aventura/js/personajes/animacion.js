@@ -4,6 +4,9 @@
 // un poco, qué cara pone y si destella. Golpe recibido, duda, correr, saltar y caer, malherido, cansado, esquiva con
 // estela, giro, respirar y parpadear, mirar alrededor, ataque con anticipación, caer al morir y volver.
 // Los gestos (duda, feliz, susto) los piden los sistemas con ANIMA.gesto(tipo).
+// Absorber energía (ANIMA.absorber({ col, col2, forma, dur })): se afirma, cierra los ojos y se estira mientras las
+// partículas le giran alrededor y se le meten en el pecho, se tiñe del color y suelta con un rebote. Sirve para
+// cualquier energía: la vida de Berkano (rúnica), y lo que venga con otro color o forma de partícula.
 window.ANIMA = (function () {
   "use strict";
   const st = {
@@ -17,6 +20,7 @@ window.ANIMA = (function () {
     parpadeo: 3,
     quietoT: 0,
     gesto: null, // { tipo, t, dur }
+    absorbe: null, // { t, dur, col, col2, forma, motas, emitir }
     estela: [],
     estelaT: 0,
     muerteT: -1,
@@ -29,6 +33,85 @@ window.ANIMA = (function () {
     if (st.gesto && st.gesto.t < 0.25 && st.gesto.tipo === "susto" && tipo !== "susto") return;
     st.gesto = { tipo, t: 0, dur: dur || DUR[tipo] || 1 };
   }
+  // ---------- absorber energía ----------
+  // op.col / op.col2: los dos colores de las partículas; op.forma: "rombo" (brasas rúnicas), "cuadro" (motas) o
+  // "chispa" (rayitas); op.dur: lo que dura todo (las partículas entran en el primer 70 %); op.n: cuántas
+  const FORMAS = ["rombo", "cuadro", "chispa"];
+  function absorber(op = {}) {
+    st.absorbe = { t: 0, dur: op.dur || 1.1, col: op.col || "#73D5DB", col2: op.col2 || "#C8F2F4", forma: FORMAS.includes(op.forma) ? op.forma : "rombo", n: op.n || 34, motas: [], emitir: 0 };
+    if (st.gesto && st.gesto.tipo !== "susto") st.gesto = null;
+  }
+  function avanzarAbsorbe(dt) {
+    const a = st.absorbe;
+    if (!a) return;
+    a.t += dt;
+    const k = a.t / a.dur,
+      baja = window.CALIDAD && CALIDAD.nivel === "baja";
+    // salen en un anillo alrededor y van en espiral hacia el pecho (en unidades del dibujo, desde los pies)
+    if (k < 0.7) {
+      a.emitir += dt * ((baja ? 0.35 : 1) * a.n) / (a.dur * 0.7);
+      while (a.emitir >= 1) {
+        a.emitir--;
+        a.motas.push({ ang: Math.random() * Math.PI * 2, r: 120 + Math.random() * 70, z: 20 + Math.random() * 130, t: 0, dura: 0.45 + Math.random() * 0.3, gira: (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3), s: 7 + Math.random() * 6, c2: Math.random() < 0.35 });
+      }
+    }
+    a.motas.forEach((m) => (m.t += dt));
+    a.motas = a.motas.filter((m) => m.t < m.dura);
+    if (k >= 1 && !a.motas.length) st.absorbe = null;
+  }
+  // dónde va cada partícula: x al costado, y hacia la cámara (para saber si va delante o detrás), alto
+  function posMota(m) {
+    const e = m.t / m.dura,
+      f = e * e * (3 - 2 * e),
+      r = m.r * (1 - f),
+      ang = m.ang + m.gira * e;
+    return { x: Math.cos(ang) * r, y: Math.sin(ang) * r * 0.35, z: m.z + (78 - m.z) * f, e };
+  }
+  function dibujarMota(c, a, m, q, x0, y0) {
+    const x = x0 + q.x,
+      y = y0 + q.y - q.z,
+      s = m.s * (1 - q.e * 0.55),
+      col = m.c2 ? a.col2 : a.col;
+    c.globalAlpha = q.e < 0.12 ? q.e / 0.12 : 1;
+    c.fillStyle = col;
+    c.beginPath();
+    if (a.forma === "cuadro") c.rect(x - s / 2, y - s / 2, s, s);
+    else if (a.forma === "chispa") {
+      // una rayita que apunta al pecho
+      const l = Math.hypot(q.x, q.z - 78) || 1,
+        ux = -q.x / l,
+        uy = (q.z - 78) / l;
+      c.moveTo(x - ux * s * 1.6, y - uy * s * 1.6);
+      c.lineTo(x + uy * s * 0.35, y - ux * s * 0.35);
+      c.lineTo(x + ux * s * 0.6, y + uy * s * 0.6);
+      c.lineTo(x - uy * s * 0.35, y + ux * s * 0.35);
+    } else {
+      c.moveTo(x, y - s);
+      c.lineTo(x + s * 0.7, y);
+      c.lineTo(x, y + s);
+      c.lineTo(x - s * 0.7, y);
+    }
+    c.closePath();
+    c.fill();
+  }
+  // las partículas de atrás (delante = false) o de adelante del cuerpo, con (x0, y0) los pies en el dibujo
+  function dibujarAbsorbe(c, x0, y0, delante) {
+    const a = st.absorbe;
+    if (!a) return;
+    // un brillo del color detrás del pecho mientras le entra
+    if (!delante && a.t < a.dur && window.DIB) {
+      const k = a.t / a.dur;
+      DIB.halo(c, x0, y0 - 80, 110, a.col, k < 0.72 ? 0.25 + 0.5 * (k / 0.72) : 0.75 * (1 - (k - 0.72) / 0.28));
+    }
+    if (!a.motas.length) return;
+    c.save();
+    a.motas.forEach((m) => {
+      const q = posMota(m);
+      if (q.y >= 0 === delante) dibujarMota(c, a, m, q, x0, y0);
+    });
+    c.restore();
+  }
+
   // ox: de dónde vino el golpe (x del mundo); el cuerpo se va para el otro lado
   function golpe(p, ox) {
     st.golpeT = 0;
@@ -45,6 +128,7 @@ window.ANIMA = (function () {
     st.giroT += dt;
     st.vuelveT += dt;
     if (st.gesto && (st.gesto.t += dt) > st.gesto.dur) st.gesto = null;
+    avanzarAbsorbe(dt);
     if (st.saltoAntes > 0 && p.salto <= 0) st.aterrizaT = 0;
     st.saltoAntes = p.salto;
     const vista = p.mira.vista + (p.mira.espejo ? "-" : "");
@@ -71,7 +155,7 @@ window.ANIMA = (function () {
 
   // la pose de este cuadro. base: { paso, malherido, cansado, canal } que el motor ya sabe
   function pose(p, base) {
-    const o = { sx: 1, sy: 1, rot: 0, dx: 0, dy: 0, ojos: null, flash: 0, alfa: 1, vista: null, espejo: null, golpe: false };
+    const o = { sx: 1, sy: 1, rot: 0, dx: 0, dy: 0, ojos: null, flash: 0, alfa: 1, vista: null, espejo: null, golpe: false, tinte: null };
     const t = st.t;
     // respirar (siempre, apenas)
     o.sy *= 1 + Math.sin(t * 2.2) * 0.012;
@@ -176,6 +260,34 @@ window.ANIMA = (function () {
         o.dy -= Math.max(0, r) * 8;
       }
     }
+    // absorber energía: se afirma, cierra los ojos y se estira tiñéndose mientras le entra, y suelta con un rebote
+    const ab = st.absorbe;
+    if (ab && ab.t < ab.dur) {
+      const k = ab.t / ab.dur;
+      if (k < 0.18) {
+        const q = k / 0.18;
+        o.sx *= 1 + 0.09 * q;
+        o.sy *= 1 - 0.11 * q;
+        o.ojos = "concentrado";
+      } else if (k < 0.72) {
+        const q = (k - 0.18) / 0.54,
+          sube = Math.sin(Math.min(1, q * 1.4) * Math.PI * 0.5);
+        o.sx *= 1.09 - 0.15 * sube;
+        o.sy *= 0.89 + 0.21 * sube;
+        o.dy -= 7 * sube;
+        o.rot += Math.sin(ab.t * 42) * 0.018 * q;
+        o.ojos = "cerrado";
+        o.tinte = { col: ab.col, k: 0.12 + 0.4 * q };
+      } else {
+        const q = (k - 0.72) / 0.28,
+          r = resorte(q * 0.6, 8, 22);
+        o.sx *= 1 + 0.12 * r;
+        o.sy *= 1 - 0.1 * r;
+        o.dy -= 7 * (1 - q);
+        o.ojos = q < 0.6 ? "fierce" : null;
+        o.tinte = { col: ab.col2, k: 0.55 * (1 - q) };
+      }
+    }
     // el golpe recibido: se aplasta, se tuerce para el lado contrario, retrocede y destella en blanco
     if (st.golpeT < 0.5) {
       const r = resorte(st.golpeT, 9, 32),
@@ -209,9 +321,11 @@ window.ANIMA = (function () {
   }
   // la silueta blanca de un dibujo, para el destello del golpe y la estela (se arma una vez por imagen)
   const blancos = new Map();
-  function blanco(img) {
+  // col: la misma silueta de otro color (el tinte de absorber); se arma una vez por imagen y color
+  function blanco(img, col = "#F2ECEC") {
     if (!img.complete || !img.naturalWidth) return null;
-    let b = blancos.get(img);
+    const clave = col === "#F2ECEC" ? img : img.src + col;
+    let b = blancos.get(clave);
     if (!b) {
       b = document.createElement("canvas");
       b.width = 250;
@@ -219,11 +333,11 @@ window.ANIMA = (function () {
       const c = b.getContext("2d");
       c.drawImage(img, 0, 0, 250, 300);
       c.globalCompositeOperation = "source-in";
-      c.fillStyle = "#F2ECEC";
+      c.fillStyle = col;
       c.fillRect(0, 0, 250, 300);
-      blancos.set(img, b);
+      blancos.set(clave, b);
     }
     return b;
   }
-  return { gesto, golpe, actualizar, pose, blanco, estela: () => st.estela, quieto: () => st.quietoT };
+  return { gesto, golpe, actualizar, pose, blanco, absorber, dibujarAbsorbe, absorbiendo: () => !!st.absorbe, FORMAS, estela: () => st.estela, quieto: () => st.quietoT };
 })();

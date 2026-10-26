@@ -433,6 +433,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/personajes/ · Eromash y la gente
 
 - **animacion.js**: cómo se mueve Eromash (módulo ANIMA)
+  - absorber energía
 - **gente.js**: la gente de Eldervald (módulo GENTE)
   - los espíritus, como en su hoja: la huldra y el nøkk
 - **viajeros.js**: los forasteros del Hongo Dorado (fichas y dibujos propios de GENTE)

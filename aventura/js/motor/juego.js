@@ -1235,8 +1235,10 @@
     }
     c.save();
     c.globalAlpha = po.alfa;
-    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45;
+    if (p.inv > 0 && p.esq <= 0 && !p.vuelve && !po.golpe && !po.tinte && Math.floor(J.t * 20) % 2) c.globalAlpha = 0.45; // absorbiendo no parpadea: se tiene que ver
     if (p.esq > 0) c.globalAlpha = 0.8;
+    // la energía que absorbe (ANIMA.absorber): las partículas de atrás van antes del cuerpo
+    if (!enSilueta) ANIMA.dibujarAbsorbe(c, p.x + po.dx, yy + h - 6, false);
     // desde los pies: así aplastarse y estirarse no lo despegan del piso
     c.translate(p.x + po.dx, yy + h - 6);
     if (vista === "E" && espejo) c.scale(-1, 1);
@@ -1250,7 +1252,16 @@
         c.drawImage(bl, -w / 2, -h + 6, w, h);
       }
     }
+    // teñido del color de la energía que absorbe
+    if (po.tinte && po.tinte.k > 0) {
+      const ti = ANIMA.blanco(img, po.tinte.col);
+      if (ti) {
+        c.globalAlpha = po.tinte.k * po.alfa;
+        c.drawImage(ti, -w / 2, -h + 6, w, h);
+      }
+    }
     c.restore();
+    if (!enSilueta) ANIMA.dibujarAbsorbe(c, p.x + po.dx, yy + h - 6, true);
     if (window.ESCUDO) ESCUDO.dibujar(c, p, ctxEsc, false);
     if (!detras) dibujarEspada(sp.x, sp.y, sp.ang, sp.s, jug.carga >= golpesAhora().carga);
     c.restore();

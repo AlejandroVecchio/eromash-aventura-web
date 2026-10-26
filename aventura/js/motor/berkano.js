@@ -54,7 +54,7 @@ window.BERKANO = (function () {
   //   corona  tres piedritas salen del piso, giran alrededor de Eromash cada vez más rápido y se le meten en el pecho
   const MODOS = ["piso", "hud", "cielo", "corona"];
   let modo = (location.search.match(/[?&]berkano=(\w+)/) || [])[1];
-  if (!MODOS.includes(modo)) modo = "piso";
+  if (!MODOS.includes(modo)) modo = "hud"; // la que eligió Alejandro (26/10/2026); las otras quedan para probar
   const FIN = { piso: 0.9, hud: 0.8, cielo: 0.62, corona: 0.85 }, // cuándo estalla
     LLEGA = { piso: 0, hud: 0.4, cielo: 0, corona: 0 }, // cuánto tarda la vida en llegar después del estallido
     SURGE = { boca: 0.12, sube: 0.62 }; // la del piso: se abre el piso y termina de salir
@@ -107,6 +107,8 @@ window.BERKANO = (function () {
   function estallar() {
     const s = surge;
     s.estallo = true;
+    // Eromash absorbe la energía (nada de festejar): la animación de ANIMA, con las partículas rúnicas
+    if (window.ANIMA) ANIMA.absorber({ col: RUNICO, col2: "#C8F2F4", forma: "rombo", dur: LLEGA[s.modo] + 0.75 });
     if (s.modo === "piso") {
       J.sacudir(0.55);
       J.marcas.push({ tipo: "anillo", x: s.x, y: s.y, s: 1.8, col: RUNICO, t: 0 });
@@ -139,14 +141,12 @@ window.BERKANO = (function () {
     const s = surge;
     s.curado = true;
     jug.hp = Math.min(jug.hpMax, Math.max(jug.hp, s.vida));
-    jug.vuelve = 0.6;
     J.marcas.push({ tipo: "anillo", x: jug.x, y: jug.y, s: 1.2, col: "#C8F2F4", t: 0 });
     if (window.VIDA) VIDA.evento("sanar", jug.x, jug.y);
     if (window.SONIDO) {
       SONIDO.tocar("runa", { vol: 0.7 });
       SONIDO.tono("triangle", 392, 784, 0.7, 0.06, { filtro: 2800 });
     }
-    if (window.ANIMA) ANIMA.gesto("feliz");
     A.numero(jug.x, jug.y - 90, s.vida, RUNICO);
     const quedan = cargadas();
     HUD.aviso(quedan || st.p.some((p) => p >= 0.05) ? t("bk.salvado") + " · " + t("bk.salvado_sub", [quedan]) : t("bk.ultima"), RUNICO);
@@ -294,7 +294,7 @@ window.BERKANO = (function () {
     for (let k = 0; k < n; k++) {
       const a = Math.random() * Math.PI * 2,
         v = 400 + Math.random() * 900;
-      trozos.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 200, t: 0, dura: 0.6 + Math.random() * 0.4, s: (6 + Math.random() * 14) * (p.esc / 2), r: Math.random() * 6, vr: (Math.random() - 0.5) * 14, c: k % 3 ? "#77736C" : "#9A968E" });
+      trozos.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 200, t: 0, dura: 0.6 + Math.random() * 0.4, s: (4 + Math.random() * 8) * (p.esc / 2.5), r: Math.random() * 6, vr: (Math.random() - 0.5) * 14, c: k % 3 ? "#77736C" : "#9A968E" });
     }
     const m = baja() ? 8 : 26;
     for (let k = 0; k < m; k++) gotas.push({ x: p.x + (Math.random() - 0.5) * 60 * p.esc, y: p.y + (Math.random() - 0.5) * 60 * p.esc, t: -Math.random() * 0.1, dura: LLEGA.hud * (0.7 + Math.random() * 0.3), cur: (Math.random() - 0.5) * 240, c: k % 3 ? RUNICO : "#C8F2F4", s: 4 + Math.random() * 5 });
