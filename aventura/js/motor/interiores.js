@@ -38,6 +38,36 @@ window.INTERIORES = (function () {
     const k = (charlasVecino[vec.nombre] = charlasVecino[vec.nombre] == null ? 0 : charlasVecino[vec.nombre] + 1);
     A.dialogoLibre([[vec.nombre, "in.vecino_" + vi + "_" + (k % 4)]]);
   }
+  // el gato de una casa: ronronea, se estira o pide más
+  function acariciarGato() {
+    if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.2, tono: 1.6 });
+    A.dialogoLibre([["eromash", "in.gato_" + Math.floor(Math.random() * 4)]]);
+  }
+  // la losa de las runas (sótano viejo, cuarto secreto): la primera vez da un fragmento
+  const leerLosa = (k) => (q) => {
+    if (st.cofres[k]) return A.dialogoLibre([["eromash", "in.sot_losa_otra"]]);
+    st.cofres[k] = q.o.leida = true;
+    if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5 });
+    A.dialogoLibre([["eromash", "in.sot_losa"]], () => PODERES.darFragmento());
+  };
+  // la familia de una casa de varios cuartos: el dueño de la entrada duerme en el dormitorio y su pareja anda de día
+  // por la cocina, el taller, la sala, el estudio o el almacén (charla in.familia_<clase>_N)
+  const DE_DIA = ["cocina", "taller", "sala", "estudio", "almacen"];
+  function familiaDe(pl) {
+    const c0 = pl.cuartos[0];
+    if (!c0 || !String(c0.base || "").startsWith("casa_")) return null;
+    const vec = vecinoDe(c0.sem || 0.01, (+String(c0.base).slice(5) || 0) % 5),
+      r = DIB.azar(Math.round((c0.sem || 0.01) * 1000) + 977),
+      mujer = +vec.nombre.slice(4) < 6,
+      fichas = mujer ? ["vecino", "trabajador", "trabajador3"] : ["vecina", "vecina2"],
+      otra = (+vec.nombre.slice(4) % 6 + 1 + Math.floor(r() * 5)) % 6;
+    return {
+      vec,
+      dorm: pl.cuartos.findIndex((cu) => cu.clase === "dormitorio"),
+      dia: pl.cuartos.findIndex((cu, i) => i > 0 && DE_DIA.includes(cu.clase)),
+      pareja: { ficha: fichas[Math.floor(r() * fichas.length)], nombre: "vec_" + ((mujer ? 6 : 0) + otra) },
+    };
+  }
   // ---------- cómo es cada cuarto ----------
   // muebles: { id, x, y, o, r (medio ancho que choca), accion: clave de texto, fn }
   function armarCuarto(tipo, edificio, clave, editor) {
@@ -50,7 +80,7 @@ window.INTERIORES = (function () {
     // quien vive en la casa (solo las de la gente): de noche duerme en su cama y la cama no se usa
     const vec = tipo === "casa" && !editor ? vecinoDe(sem, v % 5) : null;
     const cama = (x, y, s) => {
-      if (vec && vec.noche) {
+      if (vec && vec.noche && !edificio.o.duermeAparte) {
         vec.enCama = true;
         const f = (window.GENTE && GENTE.FICHAS[vec.ficha]) || {};
         mueble("camaPieles", x, y, { s: s || 1, ocupada: true, pelo: f.pelo, piel: f.piel }, 210, null, () => A.dialogoLibre([["eromash", "in.vecino_duerme", [t("av.nombre_" + vec.nombre)]]]));
@@ -157,10 +187,7 @@ window.INTERIORES = (function () {
       if (!vec.noche) g.push({ id: vec.ficha, x: [720, 470, 560, 560, 860][vi], y: [700, FONDO + 160, 680, FONDO + 170, 700][vi], nombre: vec.nombre, hablar: () => hablarVecino(vec, vi) });
       // el gato de la casa, hecho un ovillo junto al hogar (o al pie de la cama donde no hay hogar)
       rg();
-      if (rg() < 0.8) mueble("gatoCasa", [520, 960, 930, 1000, 1010][vi], [FONDO + 150, FONDO + 150, 720, FONDO + 175, 730][vi], { s: 1, pal: Math.floor(rg() * 3) }, 50, "in.accion_gato", () => {
-        if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.2, tono: 1.6 });
-        A.dialogoLibre([["eromash", "in.gato_" + Math.floor(Math.random() * 4)]]);
-      });
+      if (rg() < 0.8) mueble("gatoCasa", [520, 960, 930, 1000, 1010][vi], [FONDO + 150, FONDO + 150, 720, FONDO + 175, 730][vi], { s: 1, pal: Math.floor(rg() * 3) }, 50, "in.accion_gato", acariciarGato);
     }
     // la trampilla del sótano: a la vista en los cuartos grandes, debajo de la alfombra en algunas casas
     const lugarTrampilla = { lindes: [1120, 690], herreria: [1180, 850], sanacion: [770, 830], taberna: [800, 855] };
@@ -334,12 +361,7 @@ window.INTERIORES = (function () {
       mueble("armero", 760, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.sot_viejo_armero"));
       // la losa de las runas: leerla la primera vez da un fragmento
       const kl = clave + "_losa";
-      mueble("losaRunica", 990, 780, { s: 0.9, leida: !!st.cofres[kl] }, 80, "in.accion_losa", (q) => {
-        if (st.cofres[kl]) return A.dialogoLibre([["eromash", "in.sot_losa_otra"]]);
-        st.cofres[kl] = q.o.leida = true;
-        if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5 });
-        A.dialogoLibre([["eromash", "in.sot_losa"]], () => PODERES.darFragmento());
-      });
+      mueble("losaRunica", 990, 780, { s: 0.9, leida: !!st.cofres[kl] }, 80, "in.accion_losa", leerLosa(kl));
       mueble("cantaros", 1180, FONDO + 30, { s: 1 }, 90, "in.accion_cantaros", examinar("in.sot_viejo_cantaros"));
       mueble("cajas", 520, 830, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
       mueble("barriles", 1100, FONDO + 40, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.sot_viejo_barriles"));
@@ -419,7 +441,8 @@ window.INTERIORES = (function () {
     let res;
     if (cu.base) {
       // un cuarto armado sobre una plantilla; «propio» (una variación duplicada) no toma lo cambiado en la plantilla
-      const ed = { o: { sem: cu.sem || 0.01, v: +String(cu.base).slice(5) || 0 } };
+      const fam0 = n === 0 ? familiaDe(pl) : null,
+        ed = { o: { sem: cu.sem || 0.01, v: +String(cu.base).slice(5) || 0, duermeAparte: !!(fam0 && fam0.dorm > 0) } };
       saltar = cu.propio ? cu.base : null;
       try {
         res = String(cu.base).startsWith("sot_") ? armarSotano("casa", ed, clave, cu.base.slice(4)) : armarCuarto(cu.base.startsWith("casa_") ? "casa" : cu.base, ed, clave, editor);
@@ -511,6 +534,20 @@ window.INTERIORES = (function () {
     });
     // ---- los muebles de cada clase, donde no estorben los pasos ----
     if (!cu.base) amueblar(res, cu, clave, rs, mueble, examinar);
+    // la familia: de noche el dueño en la cama del dormitorio; de día su pareja en su cuarto
+    const fam = !editor && familiaDe(pl);
+    if (fam && fam.vec.noche && n === fam.dorm) {
+      const q = m.find((q) => q.id === "camaPieles"),
+        f = (window.GENTE && GENTE.FICHAS[fam.vec.ficha]) || {},
+        nom = () => t("av.nombre_" + fam.vec.nombre);
+      if (q) Object.assign(q.o, { ocupada: true, pelo: f.pelo, piel: f.piel }), Object.assign(q, { accion: null, etiqueta: () => t("sn.accion_mirar", [nom()]), fn: () => A.dialogoLibre([["eromash", "in.vecino_duerme", [nom()]]]) });
+    }
+    if (fam && !fam.vec.noche && n === fam.dia) {
+      const x = [820, 600, 1040, 380].find((xx) => !m.some((q) => !q.piso && Math.abs(q.x - xx) < (q.r || 80) * 0.8 && Math.abs(q.y - 700) < 90)) || 820,
+        pa = fam.pareja;
+      let k = -1;
+      res.gente.push({ id: pa.ficha, x, y: 700, nombre: pa.nombre, mira: { vista: "S", espejo: false }, hablar: () => A.dialogoLibre([[pa.nombre, "in.familia_" + cu.clase + "_" + (++k % 3)]]) });
+    }
     if (!sotano && !cu.base) {
       const libre = (x) => !pared().some((q) => Math.abs(q.x - x) < (q.r || 80) + 140);
       res.ventana = cu.clase === "secreto" ? 0 : [1150, 560, 1380, 300].find(libre) || 0;
@@ -522,14 +559,14 @@ window.INTERIORES = (function () {
   }
   // los muebles por clase: [id, en la pared, probabilidad]
   const RECETAS = {
-    entrada: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["armero", 1, 0.5], ["barriles", 1, 0.5], ["arconCasa", 0, 0.3]],
-    sala: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["mesaBanco", 0, 0.7], ["estanteRollos", 1, 0.4], ["barriles", 1, 0.4]],
-    dormitorio: [["camaPieles", 0, 1], ["arconCasa", 0, 0.8], ["telar", 1, 0.5], ["cesto", 0, 0.4], ["hogarPiedra", 1, 0.3]],
-    cocina: [["hogarPiedra", 1, 1], ["barriles", 1, 1], ["mesaBanco", 0, 1], ["cantaros", 1, 0.7], ["cesto", 0, 0.7], ["sacos", 0, 0.4]],
-    taller: [["telar", 1, 0.8], ["armero", 1, 0.8], ["yunque", 0, 0.6], ["cajas", 0, 1], ["barriles", 1, 0.4]],
+    entrada: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["armero", 1, 0.5], ["pielColgada", 1, 0.5], ["barriles", 1, 0.5], ["arconCasa", 0, 0.3]],
+    sala: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["gatoCasa", 0, 0.6], ["mesaBanco", 0, 0.7], ["pielColgada", 1, 0.5], ["estanteRollos", 1, 0.4], ["barriles", 1, 0.4]],
+    dormitorio: [["camaPieles", 0, 1], ["arconCasa", 0, 0.8], ["pielColgada", 1, 0.7], ["telar", 1, 0.5], ["cesto", 0, 0.4], ["hogarPiedra", 1, 0.3]],
+    cocina: [["hogarPiedra", 1, 1], ["caldero", 0, 0.9], ["barriles", 1, 1], ["mesaBanco", 0, 1], ["cantaros", 1, 0.7], ["cesto", 0, 0.7], ["gatoCasa", 0, 0.5], ["sacos", 0, 0.4]],
+    taller: [["mesaTrabajo", 0, 1], ["telar", 1, 0.8], ["armero", 1, 0.8], ["yunque", 0, 0.6], ["cajas", 0, 1], ["pielColgada", 1, 0.5], ["barriles", 1, 0.4]],
     estudio: [["escritorioRunico", 0, 1], ["estanteRollos", 1, 1], ["atril", 0, 0.8], ["estanteRollos", 1, 0.4], ["arconCasa", 0, 0.4]],
     almacen: [["barriles", 1, 1], ["cajas", 0, 1], ["sacos", 0, 0.8], ["cantaros", 1, 0.7], ["cesto", 0, 0.6], ["barriles", 1, 0.5]],
-    secreto: [["cofreSotano", 0, 1], ["atril", 0, 0.8], ["huesos", 1, 0.6], ["estanteRollos", 1, 0.5], ["cajas", 0, 0.5]],
+    secreto: [["cofreSotano", 0, 1], ["losaRunica", 0, 0.6], ["atril", 0, 0.8], ["huesos", 1, 0.6], ["estanteRollos", 1, 0.5], ["cajas", 0, 0.5]],
   };
   const PIEZA = {
     hogarPiedra: { r: 150, s: 0.85, dy: 30, accion: "in.accion_hogar" },
@@ -549,6 +586,11 @@ window.INTERIORES = (function () {
     huesos: { r: 110, s: 0.9, dy: 30, accion: "in.accion_huesos", dlg: "in.sot_huesos" },
     yunque: { r: 80, s: 1.1, accion: "in.accion_yunque", dlg: "in.herreria_yunque" },
     cofreSotano: { r: 110, s: 1, accion: "in.accion_cofre" },
+    pielColgada: { r: 90, s: 0.9, dy: 4, accion: "in.accion_piel", dlg: "in.casa_piel" },
+    caldero: { r: 90, s: 0.85, accion: "in.accion_caldero", dlg: "in.casa_caldero" },
+    mesaTrabajo: { r: 170, s: 0.9, accion: "in.accion_mesatrabajo", dlg: "in.casa_mesatrabajo" },
+    losaRunica: { r: 80, s: 0.85, accion: "in.accion_losa" },
+    gatoCasa: { r: 50, s: 1, accion: "in.accion_gato" },
   };
   function amueblar(res, cu, clave, rs, mueble, examinar) {
     const m = res.muebles;
@@ -578,10 +620,15 @@ window.INTERIORES = (function () {
       if (id === "cesto") o.sem = rs() * 3;
       if (id === "arconCasa") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirArcon(q, k));
       if (id === "cofreSotano") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirCofre(q, k, cu.clase === "secreto"));
+      if (id === "losaRunica") (o.leida = !!st.cofres[k]), (fn = leerLosa(k));
+      if (id === "gatoCasa") (o.pal = Math.floor(rs() * 3)), (fn = acariciarGato);
+      if (id === "pielColgada") o.pal = Math.floor(rs() * 3);
       if (id === "atril" && cu.clase === "secreto") (o.leido = !!st.cofres[k]), (fn = (q) => leerLibro(q, k, "in.libro_escondite"));
       else if (id === "atril") o.leido = true;
       mueble(id, x, y, o, r, d.accion, fn);
     });
+    // una alfombra en el medio de las salas, los dormitorios y los estudios, si no tapa nada del piso
+    if (["sala", "dormitorio", "estudio"].includes(cu.clase) && rs() < 0.75 && !m.some((q) => q.piso && Math.abs(q.x - 820) < 300)) m.push({ id: "alfombra", x: 820, y: 770, o: { s: 0.7 }, r: 0, piso: true, quieto: true });
   }
   // pasar de un cuarto a otro del mismo plano
   function cuartoPlano(p, n) {
@@ -689,7 +736,8 @@ window.INTERIORES = (function () {
     jug.anda = 0;
     jug.mira = { vista: "N", espejo: false };
     if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.45 });
-    HUD.aviso(p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : cuarto.vecino ? t("in.casa_de", [t("av.nombre_" + cuarto.vecino)]) : t("in.nombre_" + p.tipo), "#FFD98A");
+    const deQuien = cuarto.vecino && (p.tipo !== "plano" || String(p.plano).startsWith("auto_"));
+    HUD.aviso(deQuien ? t("in.casa_de", [t("av.nombre_" + cuarto.vecino)]) : p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : t("in.nombre_" + p.tipo), "#FFD98A");
   }
   function salir() {
     if (!dentro || dentro.saliendo) return;

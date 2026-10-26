@@ -392,8 +392,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-instructores.js**: los instructores y el muñeco de práctica (assets de INSTRUCTORES)
   - assets: munecoPractica
 - **assets-interiores.js**: los muebles de adentro (interiores)
-  - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco · El mapa clavado del escondite · La losa de las runas
-  - assets: escritorioRunico, hogarPiedra, camaPieles, gatoCasa, mapaClavado, losaRunica, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
+  - El escritorio rúnico · El hogar de piedra · La cama de pieles · El arcón de la casa · El yunque y la forja de Ása · El estante de hierbas de Thora · El mostrador del Hongo Dorado · El telar · Mesa con banco · El mapa clavado del escondite · La losa de las runas · El caldero de la cocina · La mesa de trabajo del taller · La piel colgada
+  - assets: escritorioRunico, hogarPiedra, camaPieles, gatoCasa, mapaClavado, losaRunica, caldero, mesaTrabajo, pielColgada, arconCasa, forjaAsa, yunque, estanteHierbas, mostrador, barriles, telar, mesaBanco
 - **assets-jotunn.js**: el asiento de Hrímnir (assets de JOTUNN)
   - assets: asientoJotunn, menhirEscarcha, jotunnFigura
 - **assets-libros.js**: los libros de Eldervald (assets de LIBROS)
