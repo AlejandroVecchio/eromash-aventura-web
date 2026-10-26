@@ -308,6 +308,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-rastreo.js**: minijuego: el rastreo con la Lente (MINIJ «rastreo»)
 - **mj-rayo.js**: minijuego: el rayo de luz rúnica (MINIJ «rayo»)
 - **mj-tafl.js**: minijuego: hnefatafl (MINIJ «tafl»)
+  - una pieza: disco de piedra (atacante oscuro con Tiwaz, defensor claro con Algiz, rey con su corona) · «Cómo se juega»: páginas con tablitas de 5 × 5 dibujadas como la tabla de verdad
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
   - de dónde sale cada tipo · los de cada misión

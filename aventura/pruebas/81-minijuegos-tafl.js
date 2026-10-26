@@ -4,6 +4,24 @@
   const vacia = (n) => Array.from({ length: n }, () => Array(n).fill(null));
   const i = (S, x, y) => y * S.n + x;
   (window.PRUEBAS = window.PRUEBAS || []).push(
+    { nombre: "tafl: «Cómo se juega» abre sus páginas, frena a Fjalar y Esc lo cierra sin dejar la partida", fn: async (A, { igual, si }) => {
+      JUEGO.empezar(9, true);
+      MINIJ.empezar("tafl", { semilla: 4 });
+      const S = MINIJ.estado(),
+        def = MINIJ.JUEGOS.tafl;
+      igual(def.hit(S, 300, 585), -2, "el botón:");
+      def.tocar(S, -2);
+      si(S.ayuda && S.pag === 0, "abre en la primera página");
+      def.tocar(S, -4);
+      def.tocar(S, -4);
+      igual(S.pag, 2, "pasa de página:");
+      const antes = JSON.stringify(S.b);
+      for (let k = 0; k < 30; k++) def.paso(S, 0.1);
+      igual(JSON.stringify(S.b), antes, "Fjalar espera mientras se lee:");
+      si(def.cierra(S) && !S.ayuda, "Esc cierra el panel");
+      si(!def.cierra(S), "con el panel cerrado, Esc deja la partida como siempre");
+      MINIJ.cerrar();
+    } },
     { nombre: "tafl: comer deja la pieza tachada un instante y cuenta la tomada", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       MINIJ.empezar("tafl", { semilla: 3 });

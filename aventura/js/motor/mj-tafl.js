@@ -139,6 +139,170 @@
     fin(S);
   }
 
+
+  // ---------- una pieza: disco de piedra (atacante oscuro con Tiwaz, defensor claro con Algiz, rey con su corona) ----------
+  function pieza(D, p, px, py, r) {
+    const c = D.c,
+      disco = (rr, col) => {
+        const pts = [];
+        for (let k = 0; k < 16; k++) pts.push(px + Math.cos((k / 16) * Math.PI * 2) * rr, py + Math.sin((k / 16) * Math.PI * 2) * rr * 0.8);
+        D.P(pts, col);
+      };
+    DIB.alfa(c, 0.35, () => D.P([px - r, py + r * 0.7, px + r, py + r * 0.7, px + r * 0.8, py + r, px - r * 0.8, py + r], "#111111"));
+    if (p === "A") disco(r, "#2A2220"), disco(r * 0.7, "#3A3634"), D.runa("tiwaz", px, py, r * 0.4, "#9C2315", 0.3);
+    else {
+      disco(r, p === "K" ? "#E0B2B2" : "#C8C2BE");
+      disco(r * 0.7, p === "K" ? "#F2ECEC" : "#E8E2DE");
+      if (p === "K") D.P([px - r * 0.5, py - r * 0.1, px - r * 0.5, py - r * 0.6, px - r * 0.25, py - r * 0.35, px, py - r * 0.7, px + r * 0.25, py - r * 0.35, px + r * 0.5, py - r * 0.6, px + r * 0.5, py - r * 0.1], "#FFD98A");
+      else D.runa("algiz", px, py, r * 0.4, "#5E130D", 0.3);
+    }
+  }
+  function cruz(c, px, py, r, a) {
+    DIB.alfa(c, a, () => {
+      c.save();
+      c.strokeStyle = "#C8402D";
+      c.lineWidth = 5;
+      c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(px - r, py - r);
+      c.lineTo(px + r, py + r);
+      c.moveTo(px + r, py - r);
+      c.lineTo(px - r, py + r);
+      c.stroke();
+      c.restore();
+    });
+  }
+
+  // ---------- «Cómo se juega»: páginas con tablitas de 5 × 5 dibujadas como la tabla de verdad ----------
+  // filas: A atacante, D defensor, K rey, . vacío; en minúscula la que cae (tachada). op: flechas [x, y, x2, y2, col],
+  // marcas [x, y, col] (un marco), puntos [x, y] (adónde puede ir)
+  const AYUDA = [
+    { t: "mn.tafl_a_mueve", ej: [
+      { f: [".....", ".....", ".D...", ".....", "....."], puntos: [[0, 2], [3, 2], [4, 2], [1, 0], [1, 1], [1, 3], [1, 4]], k: "mn.tafl_a_mueve1" },
+      { f: [".....", ".....", "D....", ".....", "....."], puntos: [[1, 2], [3, 2], [4, 2]], marcas: [[2, 2, "#C8402D"]], k: "mn.tafl_a_mueve2" },
+    ] },
+    { t: "mn.tafl_a_come", ej: [
+      { f: [".....", "Da..D", ".....", ".....", "....."], flechas: [[4, 1, 2, 1]], marcas: [[2, 1, "#73D5DB"]], k: "mn.tafl_a_come1" },
+      { f: [".....", ".D...", ".a...", ".....", ".D..."], flechas: [[1, 4, 1, 3]], marcas: [[1, 3, "#73D5DB"]], k: "mn.tafl_a_come2" },
+    ] },
+    { t: "mn.tafl_a_mas", ej: [
+      { f: [".....", "...D.", "...a.", ".Da..", "...D."], flechas: [[3, 4, 3, 3]], marcas: [[3, 3, "#73D5DB"]], k: "mn.tafl_a_dos" },
+      { f: [".D...", ".....", ".....", "A.A..", "....."], flechas: [[1, 0, 1, 3, "#7BC86C"]], marcas: [[1, 3, "#7BC86C"]], k: "mn.tafl_a_seguro" },
+    ] },
+    { t: "mn.tafl_a_ayudan", ej: [
+      { f: [".a...", "..D..", ".....", ".....", "....."], flechas: [[2, 1, 2, 0]], marcas: [[2, 0, "#73D5DB"], [0, 0, "#FFD98A"]], k: "mn.tafl_a_esquina" },
+      { f: [".....", ".....", ".....", "..a..", "...D."], flechas: [[3, 4, 2, 4]], marcas: [[2, 4, "#73D5DB"], [2, 2, "#FFD98A"]], k: "mn.tafl_a_trono" },
+    ] },
+    { t: "mn.tafl_a_rey", ej: [
+      { f: [".....", ".Ka.D", ".....", ".....", "....."], flechas: [[4, 1, 3, 1]], marcas: [[3, 1, "#73D5DB"]], k: "mn.tafl_a_reyCome" },
+      { f: [".....", ".AK.A", ".....", ".....", "....."], flechas: [[4, 1, 3, 1, "#C8402D"]], marcas: [[2, 1, "#7BC86C"]], k: "mn.tafl_a_reySalva" },
+    ] },
+    { t: "mn.tafl_a_gana", ej: [
+      { f: [".....", ".....", ".....", ".....", "..K.."], flechas: [[2, 4, 0, 4, "#FFD98A"], [2, 4, 4, 4, "#FFD98A"]], k: "mn.tafl_a_ganaRey" },
+      { f: [".....", ".....", ".....", ".AK.A", "..A.."], flechas: [[4, 3, 3, 3, "#C8402D"]], marcas: [[2, 2, "#FFD98A"], [2, 3, "#C8402D"]], k: "mn.tafl_a_ganaFjalar" },
+    ] },
+  ];
+  // los botones del panel, en el lienzo de 1600 × 900
+  const BOTON_AYUDA = { x: 190, y: 560, w: 220, h: 50 },
+    BOT_ANT = { x: 380, y: 744, w: 150, h: 48 },
+    BOT_SIG = { x: 1070, y: 744, w: 150, h: 48 },
+    BOT_CERRAR = { x: 1162, y: 132, w: 56, h: 48 };
+  const en_ = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  function boton(D, b, txt, col) {
+    const { x, y, w, h } = b;
+    D.P([x + 8, y, x + w, y, x + w, y + h - 8, x + w - 8, y + h, x, y + h, x, y + 8], "#2A2220");
+    D.P([x, y, x + w, y, x + w, y + 3, x, y + 3], col);
+    D.texto(txt, x + w / 2, y + h / 2 + 7, 18, "#F2ECEC", "center", 700);
+  }
+  // texto en renglones que no pasan de `ancho`
+  function parrafo(D, txt, x, y, ancho, tam, col) {
+    const c = D.c;
+    c.font = `500 ${tam}px "DM Sans", system-ui, sans-serif`;
+    let linea = "",
+      n = 0;
+    txt.split(" ").forEach((pal) => {
+      const prueba = linea ? linea + " " + pal : pal;
+      if (c.measureText(prueba).width > ancho && linea) D.texto(linea, x, y + n++ * (tam + 8), tam, col, "left", 500), (linea = pal);
+      else linea = prueba;
+    });
+    if (linea) D.texto(linea, x, y + n * (tam + 8), tam, col, "left", 500);
+  }
+  function tablita(D, x0, y0, e) {
+    const c = D.c,
+      q = 52,
+      n = 5,
+      m = 2,
+      ctr = (u) => u * q + q / 2;
+    D.P([x0 - 12, y0 - 12, x0 + n * q + 12, y0 - 12, x0 + n * q + 12, y0 + n * q + 12, x0 - 12, y0 + n * q + 12], "#4A2A1E");
+    D.P([x0 + (n * q) / 2, y0 - 12, x0 + n * q + 12, y0 - 12, x0 + n * q + 12, y0 + n * q + 12, x0 + (n * q) / 2, y0 + n * q + 12], "#5E3A26");
+    for (let y = 0; y < n; y++)
+      for (let x = 0; x < n; x++) {
+        const px = x0 + x * q,
+          py = y0 + y * q,
+          es = ((x === 0 || x === n - 1) && (y === 0 || y === n - 1)) || (x === m && y === m);
+        D.P([px + 2, py + 2, px + q - 2, py + 2, px + q - 2, py + q - 2, px + 2, py + q - 2], es ? "#2A2220" : (x + y) % 2 ? "#A8622E" : "#9A5A2A");
+        if (es) D.runa(x === m && y === m ? "othala" : "raidho", px + q / 2, py + q / 2, q * 0.2, "#5E3A26", 0.24);
+      }
+    (e.puntos || []).forEach(([x, y]) => D.rombo(x0 + ctr(x), y0 + ctr(y), 7, "#73D5DB"));
+    (e.marcas || []).forEach(([x, y, col]) => {
+      c.save();
+      c.strokeStyle = col;
+      c.lineWidth = 3;
+      c.strokeRect(x0 + x * q + 4, y0 + y * q + 4, q - 8, q - 8);
+      c.restore();
+    });
+    (e.flechas || []).forEach(([x, y, x2, y2, col = "#73D5DB"]) => {
+      const ax = x0 + ctr(x),
+        ay = y0 + ctr(y),
+        a = Math.atan2(y2 - y, x2 - x),
+        bx = x0 + ctr(x2) - Math.cos(a) * 18,
+        by = y0 + ctr(y2) - Math.sin(a) * 18;
+      c.save();
+      c.strokeStyle = col;
+      c.lineWidth = 5;
+      c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(ax, ay);
+      c.lineTo(bx, by);
+      c.stroke();
+      c.restore();
+      D.P([bx + Math.cos(a) * 10, by + Math.sin(a) * 10, bx + Math.cos(a + 2.3) * 9, by + Math.sin(a + 2.3) * 9, bx + Math.cos(a - 2.3) * 9, by + Math.sin(a - 2.3) * 9], col);
+    });
+    e.f.forEach((fila, y) =>
+      fila.split("").forEach((ch, x) => {
+        if (ch === ".") return;
+        const px = x0 + ctr(x),
+          py = y0 + ctr(y) - 1;
+        pieza(D, ch.toUpperCase(), px, py, q * 0.34);
+        if (ch !== ch.toUpperCase()) cruz(c, px, py, q * 0.26, 1);
+      }),
+    );
+  }
+  function dibujarAyuda(S, D) {
+    const c = D.c,
+      pg = AYUDA[S.pag];
+    DIB.alfa(c, 0.82, () => D.P([0, 0, 1600, 0, 1600, 900, 0, 900], "#111111"));
+    D.P([380, 120, 1220, 120, 1220, 812, 380, 812], "#1C1716");
+    D.P([380, 120, 1220, 120, 1220, 124, 380, 124], "#9C2315");
+    D.texto(t("mn.tafl_ayuda"), 420, 170, 30, "#FFD98A", "left", 700);
+    D.texto(t(pg.t), 420, 212, 20, "#73D5DB", "left", 700);
+    pg.ej.forEach((e, k) => {
+      const x = 440 + k * 400;
+      tablita(D, x, 250, e);
+      parrafo(D, t(e.k), x - 10, 560, 320, 16, "#E0B2B2");
+    });
+    boton(D, BOT_CERRAR, "✕", "#9C2315");
+    if (S.pag > 0) boton(D, BOT_ANT, "‹ " + t("mn.tafl_ayuda_ant"), "#73D5DB");
+    if (S.pag < AYUDA.length - 1) boton(D, BOT_SIG, t("mn.tafl_ayuda_sig") + " ›", "#73D5DB");
+    D.texto(S.pag + 1 + " / " + AYUDA.length, 800, 776, 16, "#E0B2B2", "center", 500);
+  }
+  // el panel abierto se maneja solo: flechas o los botones pasan de página, usar o el ✕ lo cierran
+  function pasoAyuda(S) {
+    if (CONTROLES.recien("izquierda")) S.pag = Math.max(0, S.pag - 1);
+    if (CONTROLES.recien("derecha")) S.pag = Math.min(AYUDA.length - 1, S.pag + 1);
+    if (CONTROLES.recien("interactuar") || CONTROLES.recien("atacar") || CONTROLES.recien("diario")) S.ayuda = false;
+  }
+
   MINIJ.registrar("tafl", {
     variantes: {
       base: { n: 7 },
@@ -148,7 +312,15 @@
       gran: { n: 9 },
     },
     pie: "mn.tafl_pie",
+    // Esc con el panel abierto lo cierra en vez de dejar la partida
+    cierra(S) {
+      if (!S.ayuda) return false;
+      S.ayuda = false;
+      return true;
+    },
     armar(S) {
+      S.ayuda = false;
+      S.pag = 0;
       S.n = S.v.n || 7;
       S.m = (S.n - 1) >> 1;
       S.b = SALIDA[S.n].map((f) => f.split("").map((c) => (c === "." ? null : c)));
@@ -162,6 +334,8 @@
       S.gano = 0;
     },
     paso(S, dt) {
+      if (S.ayuda) return pasoAyuda(S);
+      if (CONTROLES.recien("diario")) return (S.ayuda = true), (S.pag = 0);
       const mov = (dx, dy) => {
         const x = Math.max(0, Math.min(S.n - 1, (S.cur % S.n) + dx)),
           y = Math.max(0, Math.min(S.n - 1, Math.floor(S.cur / S.n) + dy));
@@ -187,6 +361,13 @@
       }
     },
     tocar(S, i) {
+      if (i === -2) return (S.ayuda = true), (S.pag = 0);
+      if (S.ayuda) {
+        if (i === -3) S.pag = Math.max(0, S.pag - 1);
+        else if (i === -4) S.pag = Math.min(AYUDA.length - 1, S.pag + 1);
+        else if (i === -5) S.ayuda = false;
+        return;
+      }
       if (S.gano || i == null || S.turno !== S.yo) return;
       const x = i % S.n,
         y = Math.floor(i / S.n),
@@ -201,6 +382,8 @@
       S.piensa = 0.6;
     },
     hit(S, x, y) {
+      if (S.ayuda) return en_(BOT_CERRAR, x, y) ? -5 : en_(BOT_ANT, x, y) && S.pag > 0 ? -3 : en_(BOT_SIG, x, y) ? -4 : null;
+      if (en_(BOTON_AYUDA, x, y)) return -2;
       const q = tam(S),
         x0 = CX - (S.n * q) / 2,
         y0 = CY - (S.n * q) / 2,
@@ -246,22 +429,10 @@
             py = y0 + (S.anim.y + (y - S.anim.y) * f) * q + q / 2;
           }
           const r = q * 0.34,
-            sel = S.sel && S.sel[0] === x && S.sel[1] === y,
-            disco = (rr, col) => {
-              const pts = [];
-              for (let k = 0; k < 16; k++) pts.push(px + Math.cos((k / 16) * Math.PI * 2) * rr, py + Math.sin((k / 16) * Math.PI * 2) * rr * 0.8);
-              D.P(pts, col);
-            };
-          DIB.alfa(c, 0.35, () => D.P([px - r, py + r * 0.7, px + r, py + r * 0.7, px + r * 0.8, py + r, px - r * 0.8, py + r], "#111111"));
-          if (p === "A") disco(r, "#2A2220"), disco(r * 0.7, "#3A3634"), D.runa("tiwaz", px, py, r * 0.4, "#9C2315", 0.3);
-          else {
-            disco(r, p === "K" ? "#E0B2B2" : "#C8C2BE");
-            disco(r * 0.7, p === "K" ? "#F2ECEC" : "#E8E2DE");
-            if (p === "K") D.P([px - r * 0.5, py - r * 0.1, px - r * 0.5, py - r * 0.6, px - r * 0.25, py - r * 0.35, px, py - r * 0.7, px + r * 0.25, py - r * 0.35, px + r * 0.5, py - r * 0.6, px + r * 0.5, py - r * 0.1], "#FFD98A");
-            else D.runa("algiz", px, py, r * 0.4, "#5E130D", 0.3);
-          }
+            sel = S.sel && S.sel[0] === x && S.sel[1] === y;
+          pieza(D, p, px, py, r);
           if (sel) D.halo(px, py, r * 1.4, "#73D5DB", 0.5);
-          if (caeria.some(([a, b]) => a === x && b === y)) cruz(px, py, r * 0.7, 0.85);
+          if (caeria.some(([a, b]) => a === x && b === y)) cruz(c, px, py, r * 0.7, 0.85);
         }
       // lo que se acaba de comer: la pieza que se desvanece tachada
       if (S.caidas)
@@ -270,23 +441,8 @@
             py = y0 + y * q + q / 2,
             a = Math.min(1, S.caidas.t / 0.9);
           DIB.alfa(c, a * 0.6, () => D.rombo(px, py, q * 0.3, p === "A" ? "#2A2220" : "#C8C2BE"));
-          cruz(px, py, q * 0.25, a);
+          cruz(c, px, py, q * 0.25, a);
         });
-      function cruz(px, py, r, a) {
-        DIB.alfa(c, a, () => {
-          c.save();
-          c.strokeStyle = "#C8402D";
-          c.lineWidth = 5;
-          c.lineCap = "round";
-          c.beginPath();
-          c.moveTo(px - r, py - r);
-          c.lineTo(px + r, py + r);
-          c.moveTo(px + r, py - r);
-          c.lineTo(px - r, py + r);
-          c.stroke();
-          c.restore();
-        });
-      }
       // la marca del teclado
       const cx = x0 + (S.cur % S.n) * q,
         cy = y0 + Math.floor(S.cur / S.n) * q;
@@ -303,6 +459,8 @@
       D.texto(t("mn.tafl_tomadas", [S.tomadas[S.yo], S.tomadas[S.yo === "A" ? "D" : "A"]]), 300, 340, 16, "#F2ECEC", "center", 500);
       // las reglas a mano
       ["mn.tafl_regla1", "mn.tafl_regla2", "mn.tafl_regla3", "mn.tafl_regla4"].forEach((k, n) => D.texto(t(k), 300, 420 + n * 30, 14, n === 1 ? "#FF8D71" : "#E0B2B2", "center", 500));
+      boton(D, BOTON_AYUDA, t("mn.tafl_ayuda") + " · " + CONTROLES.glifo("diario"), "#73D5DB");
+      if (S.ayuda) dibujarAyuda(S, D);
       if (S.v.jugadas) D.texto(t("mn.tafl_quedan", [Math.max(0, S.v.jugadas - S.jugadas)]), 1380, 124, 20, "#73D5DB", "right", 700);
     },
   });
