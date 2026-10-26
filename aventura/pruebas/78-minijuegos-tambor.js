@@ -10,7 +10,7 @@
         const d = 60 / (S.v.bpm || 90) / 2,
           rel = S.t - S.t0,
           q = S.notas.find((n) => !n.hecho && rel >= n.paso * d);
-        if (q) def.tocar(S, op.mal ? 1 - q.tipo : q.tipo);
+        if (q) def.tecla(S, op.mal ? MINIJ.RITMO.find((k) => k !== q.k) : q.k);
       }
       def.paso(S, dt);
     }
@@ -22,7 +22,7 @@
         let res = null;
         si(MINIJ.empezar("tambor", { variante: v, semilla: 5, fin: (r) => (res = r) }), "empieza " + v);
         const S = MINIJ.estado();
-        si(S.notas[0].paso === 0 && S.notas[0].tipo === 0, v + " arranca con un golpe al centro");
+        si(S.notas[0].paso === 0 && S.notas.every((n) => MINIJ.RITMO.slice(0, S.v.letras).includes(n.k)), v + " arranca en el primer paso y usa sus letras");
         si(new Set(S.notas.map((n) => n.paso)).size === S.notas.length, v + " un golpe por paso");
         tocar(S);
         si(S.fin && S.fin.gano, v + " ganado");
@@ -52,7 +52,7 @@
       const S = MINIJ.estado(),
         def = MINIJ.JUEGOS.tambor;
       igual(def.hit(S, 860, 500), 0, "el centro del parche:");
-      igual(def.hit(S, 860 + 200, 500), 1, "el aro:");
+      igual(def.hit(S, 860 + 200, 500), 0, "el aro también:");
       igual(def.hit(S, 200, 200), null, "afuera nada:");
       S.fase = "toca";
       S.t0 = S.t - 0.4 * (60 / S.v.bpm / 2) - 0.3; // entre dos pasos, lejos de cualquier golpe
