@@ -306,10 +306,13 @@ window.INTERIORES = (function () {
       mueble("estanteRollos", 640, FONDO + 10, { s: 1, sem: 0.3 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos"));
       mueble("estanteRollos", 960, FONDO + 10, { s: 1, sem: 0.7 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos2"));
       atril(820, 790, "in.libro_lindes");
+      if (ASSETS.LISTA.mesaCopista) mueble("mesaCopista", 1110, 790, { s: 0.75 }, 130, "in.accion_copista", examinar("in.sot_archivo_copista"));
       cofre(1360, 820, true);
     } else if (clase === "carbonera") {
       mueble("armero", 700, FONDO + 20, { s: 1 }, 150, "in.accion_armero", examinar("in.sot_carbonera_armero"));
-      mueble("cajas", 1060, 760, { s: 1.05, vela: true }, 110, "in.accion_cajas", examinar("in.sot_carbonera_cajas"));
+      // el carbón que cae por la bajada de la pared
+      mueble("montonCarbon", 1010, FONDO + 70, { s: 0.55 }, 110, "in.accion_carbon", examinar("in.sot_carbonera_carbon"));
+      mueble("cajas", 1200, 790, { s: 1.05, vela: true }, 110, "in.accion_cajas", examinar("in.sot_carbonera_cajas"));
       mueble("barriles", 1350, FONDO + 40, { s: 0.8 }, 100, "in.accion_barriles", examinar("in.sot_carbonera_barriles"));
       cofre(560, 840, false);
     } else if (clase === "despensa") {
@@ -321,6 +324,7 @@ window.INTERIORES = (function () {
       cofre(1330, 830, false);
     } else if (clase === "escondite") {
       mueble("muroFalso", 1180, FONDO + 6, { s: 1 }, 130, "in.accion_tunel", examinar("in.sot_tunel"));
+      mueble("mapaClavado", 470, FONDO + 4, { s: 1 }, 80, "in.accion_mapa", examinar("in.sot_escondite_mapa"));
       mueble("huesos", 620, FONDO + 30, { s: 0.9 }, 110, "in.accion_huesos", examinar("in.sot_huesos"));
       mueble("sacos", 1440, 760, { s: 1 }, 80, "in.accion_sacos", examinar("in.sot_sacos"));
       atril(720, 780, "in.libro_escondite");
@@ -328,8 +332,16 @@ window.INTERIORES = (function () {
       cofre(1360, 850, true);
     } else {
       mueble("armero", 760, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.sot_viejo_armero"));
+      // la losa de las runas: leerla la primera vez da un fragmento
+      const kl = clave + "_losa";
+      mueble("losaRunica", 990, 780, { s: 0.9, leida: !!st.cofres[kl] }, 80, "in.accion_losa", (q) => {
+        if (st.cofres[kl]) return A.dialogoLibre([["eromash", "in.sot_losa_otra"]]);
+        st.cofres[kl] = q.o.leida = true;
+        if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5 });
+        A.dialogoLibre([["eromash", "in.sot_losa"]], () => PODERES.darFragmento());
+      });
       mueble("cantaros", 1180, FONDO + 30, { s: 1 }, 90, "in.accion_cantaros", examinar("in.sot_viejo_cantaros"));
-      mueble("cajas", 560, 820, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
+      mueble("cajas", 520, 830, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
       mueble("barriles", 1100, FONDO + 40, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.sot_viejo_barriles"));
       cofre(1360, 830, false);
     }
@@ -839,26 +851,42 @@ window.INTERIORES = (function () {
   // el sótano, como en la lámina «Bajo las casas de Eikholt»: el piso de la casa arriba (tablas, vigas y la trampilla),
   // postes sobre zócalos de piedra y un farol colgado. Las despensas, bodegas y escondites tienen pared de tablas; el
   // sótano viejo es de piedra, más viejo que la casa, con runas en los pilares y raíces que bajan.
+  // lo quieto del sótano se pinta una vez en un lienzo (d.cvSot); cada cuadro solo va lo que se mueve (vivoSotano)
   function dibujarSotano(c, d, tt) {
+    if (!d.cvSot) {
+      d.cvSot = document.createElement("canvas");
+      d.cvSot.width = RW;
+      d.cvSot.height = RH;
+      pintarSotano(d.cvSot.getContext("2d"), d);
+    }
+    c.drawImage(d.cvSot, 0, 0, RW, RH);
+    vivoSotano(c, d, tt);
+  }
+  function pintarSotano(c, d) {
     const r = DIB.azar(d.sotano.length * 31 + 5),
-      viejo = d.sotano === "viejo",
+      cl = d.sotano,
+      viejo = cl === "viejo",
+      piedra = viejo || cl === "carbonera",
+      tierra = cl === "escondite",
       M = { tabla: ["#4A3020", "#55382A", "#40281A", "#5C3E2C"], viga: "#2E1C12", vigaL: "#5C3E2C", poste: "#3E2818", posteL: "#6A4A34", piedra: ["#4A4A48", "#55554F", "#3E3E3C", "#5E5C56"], junta: "#24221F" };
     c.fillStyle = "#0E0A08";
     c.fillRect(0, 0, RW, RH);
-    if (viejo) {
-      // piedra grande, con musgo en las juntas
+    if (piedra) {
+      // piedra grande, con musgo en las juntas (en la carbonera, piedra tiznada de hollín)
+      if (!viejo) M.piedra = ["#34302E", "#3C3835", "#2C2826", "#423D39"];
       for (let fila = 0; fila * 96 < FONDO; fila++) {
         const y = FONDO - fila * 96;
         for (let x = -80 + (fila % 2) * 90; x < RW + 80; ) {
           const w = 150 + r() * 90;
           DIB.P(c, [x + 5, y - 4, x + w - 5, y - 6 + r() * 4, x + w - 2, y - 90 + r() * 6, x + 4, y - 92 + r() * 6], M.piedra[Math.floor(r() * 4)]);
-          DIB.P(c, [x + 5, y - 86, x + w - 5, y - 88, x + w - 8, y - 92, x + 8, y - 92], "#6A6862");
-          if (r() < 0.3) DIB.alfa(c, 0.6, () => DIB.E(c, x + w * r(), y - 4, 26, 6, "#4E6B3A"));
+          DIB.P(c, [x + 5, y - 86, x + w - 5, y - 88, x + w - 8, y - 92, x + 8, y - 92], viejo ? "#6A6862" : "#4A4642");
+          if (viejo && r() < 0.3) DIB.alfa(c, 0.6, () => DIB.E(c, x + w * r(), y - 4, 26, 6, "#4E6B3A"));
           x += w;
         }
       }
-      // raíces que bajan por la piedra
-      for (let k = 0; k < 6; k++) {
+      // raíces que bajan por la piedra (en la carbonera, manchas de hollín)
+      if (!viejo) for (let k = 0; k < 9; k++) DIB.alfa(c, 0.35, () => DIB.E(c, 60 + k * 180 + r() * 60, 200 + r() * 300, 70 + r() * 60, 110 + r() * 60, "#141010"));
+      else for (let k = 0; k < 6; k++) {
         const x = 80 + k * 280 + r() * 80;
         c.beginPath();
         c.moveTo(x, 130);
@@ -867,6 +895,23 @@ window.INTERIORES = (function () {
         c.lineWidth = 6 + r() * 6;
         c.stroke();
       }
+    } else if (tierra) {
+      // tierra apisonada con piedras metidas y marcos de troncos que sostienen el techo, como en un túnel
+      DIB.P(c, [0, 130, RW, 130, RW, FONDO, 0, FONDO], "#3A2A1C");
+      for (let k = 0; k < 70; k++) DIB.E(c, r() * RW, 150 + r() * (FONDO - 170), 8 + r() * 22, 6 + r() * 14, ["#4A3826", "#2E2016", "#55504A", "#463A30"][k % 4]);
+      for (let k = 0; k < 14; k++) DIB.alfa(c, 0.25, () => DIB.L(c, r() * RW, 140, r() * RW, FONDO, "#2A1C12", 2 + r() * 3));
+      [860, 1360].forEach((x) => {
+        DIB.P(c, [x - 90, FONDO, x - 70, FONDO, x - 64, 150, x - 84, 150], "#4A3020");
+        DIB.P(c, [x + 70, FONDO, x + 90, FONDO, x + 84, 150, x + 64, 150], "#5C3E2C");
+        DIB.P(c, [x - 100, 150, x + 100, 150, x + 100, 176, x - 100, 176], "#5C3E2C");
+      });
+      // las rayas que alguien rascó contando los días, y una Hagalaz junto a los huesos
+      for (let g = 0; g < 4; g++) {
+        const gx = 360 + g * 52;
+        for (let k = 0; k < 4; k++) DIB.L(c, gx + k * 9, 300, gx + k * 9 + 2, 340, "#8A7A64", 2.5);
+        DIB.L(c, gx - 4, 334, gx + 34, 306, "#8A7A64", 2.5);
+      }
+      FUTHARK.dibujar(c, "hagalaz", 640, 420, 46, "#8A7A64", 4);
     } else {
       // zócalo de piedra y tablas verticales
       for (let x = -20; x < RW + 40; ) {
@@ -909,11 +954,44 @@ window.INTERIORES = (function () {
         DIB.P(c, [x - 70, FONDO + 20, x + 70, FONDO + 20, x + 70, 140, x - 70, 140], "#5E5C56");
         DIB.P(c, [x - 70, FONDO + 20, x - 10, FONDO + 20, x - 10, 140, x - 70, 140], "#4A4A46");
         for (let k = 1; k < 4; k++) DIB.L(c, x - 70, 140 + k * 120, x + 70, 140 + k * 120, M.junta, 3);
-        DIB.halo(c, x, 330, 90, "#73D5DB", 0.35 + 0.12 * Math.sin(tt * 1.6));
-        FUTHARK.dibujar(c, rn, x, 380, 90, "#73D5DB", 7);
       });
-      ["gebo", "hagalaz"].forEach((rn, k) => FUTHARK.dibujar(c, rn, 760 + k * 120, 360, 50, "#73D5DB", 5));
-    } else {
+    } else if (cl === "carbonera") {
+      // la bajada del carbón desde la calle y las tenazas y martillos viejos colgados
+      DIB.P(c, [950, 130, 1070, 130, 1060, FONDO - 30, 960, FONDO - 30], "#3E2818");
+      DIB.P(c, [1010, 130, 1070, 130, 1060, FONDO - 30, 1010, FONDO - 30], "#5C3E2C");
+      DIB.P(c, [972, 130, 1048, 130, 1044, 180, 976, 180], "#141010");
+      for (let k = 0; k < 6; k++) DIB.P(c, [990 + k * 8, 200 + k * 50, 1004 + k * 8, 196 + k * 50, 1006 + k * 8, 210 + k * 50, 992 + k * 8, 214 + k * 50], "#1E1A18");
+      DIB.L(c, 1260, 200, 1500, 200, "#2A1A10", 8);
+      [[1290, 0], [1340, 1], [1390, 0], [1440, 1], [1480, 0]].forEach(([x, k]) => {
+        DIB.L(c, x, 200, x, 214, "#2A2420", 3);
+        if (k) {
+          DIB.L(c, x, 214, x, 330, "#5C3E2C", 7);
+          DIB.P(c, [x - 26, 214, x + 26, 214, x + 26, 244, x - 26, 244], "#3A3A40");
+        } else {
+          DIB.L(c, x - 6, 214, x - 14, 340, "#3A3A40", 5);
+          DIB.L(c, x + 6, 214, x + 14, 340, "#3A3A40", 5);
+        }
+      });
+    } else if (cl === "archivo") {
+      // mapas viejos clavados a las tablas, uno a cada lado
+      [[150, 0.02], [1310, -0.03]].forEach(([x, a]) => {
+        c.save();
+        c.translate(x, 300);
+        c.rotate(a);
+        DIB.P(c, [-90, -80, 90, -84, 96, 70, -86, 76], "#B89A6E");
+        DIB.P(c, [-90, -80, 90, -84, 92, -60, -88, -56], "#C8AE84");
+        c.beginPath();
+        c.moveTo(-60, 40);
+        c.bezierCurveTo(-20, -10, 10, 50, 60, -30);
+        c.strokeStyle = "#4A78D0";
+        c.lineWidth = 3;
+        c.stroke();
+        for (let k = 0; k < 9; k++) DIB.P(c, [-70 + k * 16, -20 + (k % 3) * 14, -62 + k * 16, -36 + (k % 3) * 14, -54 + k * 16, -20 + (k % 3) * 14], "#4E6B3A");
+        DIB.E(c, -84, -76, 4, 4, "#3A2A1E");
+        DIB.E(c, 86, -80, 4, 4, "#3A2A1E");
+        c.restore();
+      });
+    } else if (!tierra) {
       // ristras de ajo, atados de hierbas y ajíes colgados de la viga
       const ristra = (x, tipo) => {
         DIB.L(c, x, 130, x, 170, "#8A7A5A", 2);
@@ -926,15 +1004,6 @@ window.INTERIORES = (function () {
       };
       [90, 130, 175, 1240, 1290, 1340].forEach((x, k) => ristra(x, k % 3));
     }
-    // el farol colgado, con su luz cálida
-    const fx = 820,
-      fy = 250;
-    DIB.L(c, fx, 136, fx, fy - 40, "#2A2420", 3);
-    DIB.halo(c, fx, fy, 260, "#FFD98A", 0.55 + 0.06 * Math.sin(tt * 7));
-    DIB.P(c, [fx - 18, fy - 40, fx + 18, fy - 40, fx + 22, fy + 24, fx - 22, fy + 24], "#2A2420");
-    DIB.P(c, [fx - 12, fy - 30, fx + 12, fy - 30, fx + 15, fy + 16, fx - 15, fy + 16], "#FFD98A");
-    DIB.E(c, fx, fy + 2, 5, 9, "#FFF4D0");
-    DIB.P(c, [fx - 22, fy - 40, fx + 22, fy - 40, fx, fy - 56], "#2A2420");
     // telarañas en la esquina
     DIB.alfa(c, 0.35, () => {
       for (let i = 0; i < 5; i++) DIB.L(c, RW, 142, RW - 70 - i * 26, 142 + 70 - i * 12, "#B5A5A0", 1.2);
@@ -953,6 +1022,103 @@ window.INTERIORES = (function () {
     }
     if (!viejo) for (let k = 0; k < 5; k++) DIB.L(c, 300 + k * 260, FONDO + 30 + k * 40, 380 + k * 250, FONDO + 70 + k * 30, "#2A1E14", 4);
     plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 16, 190, FONDO + 16], "rgba(0,0,0,0.5)");
+    // el charco donde gotea el techo
+    if (GOTEA[cl]) DIB.alfa(c, 0.55, () => DIB.E(c, GOTEA[cl], FONDO + 96, 70, 16, "#1E2A2E"));
+  }
+  // dónde gotea el techo en cada sótano (el charco va en el piso, la gota en vivoSotano)
+  const GOTEA = { escondite: 1060, viejo: 1250, carbonera: 1300 };
+  // lo que se mueve en el sótano: el farol, las runas de los pilares, el polvo en la luz de la trampilla y la gota
+  function vivoSotano(c, d, tt) {
+    const cl = d.sotano,
+      alta = !window.CALIDAD || CALIDAD.nivel === "alta",
+      baja = window.CALIDAD && CALIDAD.nivel === "baja";
+    if (cl === "viejo") {
+      [["fehu", 160], ["mannaz", 1460]].forEach(([rn, x]) => {
+        if (!baja) DIB.halo(c, x, 330, 90, "#73D5DB", 0.35 + 0.12 * Math.sin(tt * 1.6));
+        FUTHARK.dibujar(c, rn, x, 380, 90, "#73D5DB", 7);
+      });
+      ["gebo", "hagalaz"].forEach((rn, k) => FUTHARK.dibujar(c, rn, 760 + k * 120, 360, 50, "#73D5DB", 5));
+    }
+    // el farol colgado, que se mece apenas
+    const fa = Math.sin(tt * 0.9) * 0.04,
+      fx = 820 + Math.sin(fa) * 110,
+      fy = 250;
+    DIB.L(c, 820, 136, fx, fy - 40, "#2A2420", 3);
+    if (!baja) DIB.halo(c, fx, fy, 260, "#FFD98A", 0.55 + 0.06 * Math.sin(tt * 7));
+    c.save();
+    c.translate(fx, fy);
+    c.rotate(-fa);
+    DIB.P(c, [-18, -40, 18, -40, 22, 24, -22, 24], "#2A2420");
+    DIB.P(c, [-12, -30, 12, -30, 15, 16, -15, 16], "#FFD98A");
+    DIB.E(c, 0, 2, 5, 9, "#FFF4D0");
+    DIB.P(c, [-22, -40, 22, -40, 0, -56], "#2A2420");
+    c.restore();
+    if (giro) return;
+    // motas de polvo que flotan en la luz de la trampilla
+    if (!baja)
+      for (let k = 0; k < (alta ? 18 : 8); k++) {
+        const f = (tt * 0.035 + k * 0.618) % 1,
+          y = 90 + f * (FONDO + 20),
+          x = 300 + Math.sin(tt * 0.4 + k * 2.1) * (40 + f * 120) + (k % 5) * 14 - 28;
+        DIB.alfa(c, 0.5 * Math.sin(f * Math.PI), () => DIB.R(c, x, y, 3, 3, "#FFE8B0"));
+      }
+    // la gota: cae del techo al charco y deja un anillo
+    const gx = GOTEA[cl];
+    if (gx && !baja) {
+      const f = (tt % 2.6) / 2.6,
+        caida = 0.28;
+      if (f < caida) DIB.E(c, gx, 140 + (f / caida) ** 2 * (FONDO - 44), 3, 6, "#9EC8D0");
+      else {
+        const a = (f - caida) / (1 - caida);
+        c.beginPath();
+        c.ellipse(gx, FONDO + 96, 10 + a * 60, 3 + a * 12, 0, 0, Math.PI * 2);
+        c.strokeStyle = "rgba(158,200,208," + 0.6 * (1 - a) + ")";
+        c.lineWidth = 2;
+        c.stroke();
+      }
+    }
+  }
+  // la rata del sótano: cada tanto cruza de una pared a la otra pegada al fondo, y corre más si Eromash está cerca
+  function rataSotano(d, tt) {
+    const dt = Math.min(0.1, Math.max(0, tt - (d.rataUlt || tt)));
+    d.rataUlt = tt;
+    if (!d.rata) d.rata = { prox: 3 + Math.random() * 5 };
+    const R = d.rata;
+    if (!R.vista) {
+      R.prox -= dt;
+      if (R.prox > 0) return null;
+      const izq = Math.random() < 0.5;
+      Object.assign(R, { vista: true, x: izq ? 120 : RW - 120, y: FONDO + 40 + Math.random() * 80, v: izq ? 1 : -1, pausa: 0.6 + Math.random() * 0.8, fase: 0 });
+    }
+    const lejos = Math.hypot((d.ix || 0) - R.x, (d.iy || 0) - R.y) > 260;
+    if (R.pausa > 0 && lejos && Math.abs(R.x - RW / 2) < 200) R.pausa -= dt;
+    else R.x += R.v * (lejos ? 230 : 520) * dt;
+    R.fase += dt * (lejos ? 14 : 26);
+    if (R.x < 60 || R.x > RW - 60) (R.vista = false), (R.prox = 10 + Math.random() * 14);
+    return R;
+  }
+  function dibujarRata(c, R) {
+    const s = escala(R.y) / 2.6,
+      p = Math.sin(R.fase) * 3;
+    c.save();
+    c.translate(R.x, R.y);
+    c.scale(R.v * s, s);
+    DIB.alfa(c, 0.35, () => DIB.E(c, 0, 0, 26, 6, "#000"));
+    c.beginPath();
+    c.moveTo(-18, -6);
+    c.quadraticCurveTo(-40, -2 + p, -56, -10 - p);
+    c.strokeStyle = "#8A6A60";
+    c.lineWidth = 2.5;
+    c.stroke();
+    DIB.L(c, -10, -4, -12 + p, 0, "#3A2C26", 3);
+    DIB.L(c, 8, -4, 10 - p, 0, "#3A2C26", 3);
+    DIB.E(c, -2, -11, 20, 10, "#4A3A34");
+    DIB.E(c, 2, -14, 14, 6, "#5E4C44");
+    DIB.P(c, [12, -16, 30, -10, 14, -4], "#5E4C44");
+    DIB.E(c, 12, -19, 5, 5, "#8A6A60");
+    DIB.E(c, 22, -12, 1.8, 1.8, "#111111");
+    DIB.E(c, 30, -10, 2, 2, "#C8908A");
+    c.restore();
   }
   function dibujarPared(c, d, tt) {
     if (d.pared === "sotano") return dibujarSotano(c, d, tt);
@@ -1108,6 +1274,8 @@ window.INTERIORES = (function () {
       } }),
     );
     if (d.ix !== undefined && jugador) lista.push({ y: d.iy, f: () => jugador(d.ix, d.iy, escala(d.iy)) });
+    const rata = d.pared === "sotano" && jugador && rataSotano(d, tt);
+    if (rata) lista.push({ y: rata.y, f: () => dibujarRata(c, rata) });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((q) => q.f());
   }
@@ -1288,6 +1456,12 @@ window.INTERIORES = (function () {
       if (q.id === "tablaSuelta" && q.o.brillo) L0.push({ x: q.x + 44 * s, y: q.y - 120 * s, r: 120, col: "255,217,138", f: 0.4 });
       if (q.id === "yunque") L0.push({ x: q.x + 10 * s, y: q.y - 144 * s, r: 220, col: "255,141,113", f: 0.6 });
     });
+    if (d.pared === "sotano") {
+      // el farol colgado y, en el sótano viejo, las runas de los pilares
+      L0.push({ x: 820, y: 250, r: 460, col: "255,217,138", f: 0.75 + Math.sin(tAhora * 7) * 0.04 });
+      if (d.sotano === "viejo") [160, 1460].forEach((x) => L0.push({ x, y: 360, r: 300, col: "115,213,219", f: 0.45 + 0.12 * Math.sin(tAhora * 1.6) }));
+    }
+    d.muebles.forEach((q) => q.id === "losaRunica" && L0.push({ x: q.x, y: q.y - 130, r: 280, col: "115,213,219", f: 0.55 + 0.2 * Math.sin(tAhora * 1.4) }));
     if (d.luzVentana) L0.push({ x: d.luzVentana.x, y: d.luzVentana.y, r: d.luzVentana.r, col: "200,224,240", f: 0.6 });
     if (d.repisa) L0.push({ x: d.ventana > 900 ? 500 : 1300, y: 400, r: 200, col: "74,120,208", f: 0.5 });
     return L0;
@@ -1401,7 +1575,8 @@ window.INTERIORES = (function () {
       clase = pl.slice(4);
     const p =
       puertas.find((q) => !sot && plantillaDe(q.cosa.id, q.cosa.o) === pl) ||
-      puertas.find((q) => sot && CLASE_SOTANO[q.tipo] === clase) ||
+      // los sótanos se prueban desde una casa común: la taberna, la herrería y la sanación tienen su propio cuarto
+      puertas.find((q) => sot && q.tipo === "casa") ||
       puertas.find((q) => q.tipo === "casa") ||
       puertas[0];
     if (!p) return;

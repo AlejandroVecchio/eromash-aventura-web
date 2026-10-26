@@ -465,6 +465,54 @@
   }
   // el gato de la casa: hecho un ovillo junto al hogar, la cola alrededor y las orejas paradas; respira y a veces
   // mueve una oreja. o.pal: 0 gris, 1 naranja, 2 negro. Redondo y parejo: igual de cualquier lado.
+  // ---------- El mapa clavado del escondite ----------
+  // Un cuero raspado clavado a la pared con cuatro clavos: la empalizada vieja, el túnel en punteado y una X roja donde
+  // termina. Plano contra la pared (ASSETS.cartaV en LISTA).
+  function mapaClavado(c, x, y, t, o) {
+    const s = (o && o.s) || 1;
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    DIB.P(c, [-70, -190, 66, -196, 74, -96, -64, -88], "#B89A6E");
+    DIB.P(c, [-70, -190, 66, -196, 68, -176, -68, -170], "#C8AE84");
+    // la empalizada en arco y las casas
+    c.beginPath();
+    c.arc(-6, -110, 52, Math.PI * 1.05, Math.PI * 1.95);
+    c.strokeStyle = "#5E3A22";
+    c.lineWidth = 3;
+    c.stroke();
+    for (const [u, v] of [[-30, -126], [-8, -136], [14, -124]]) DIB.R(c, u - 5, v - 5, 10, 8, "#7A4A2E");
+    // el túnel, en punteado, y la X
+    c.setLineDash([5, 5]);
+    c.beginPath();
+    c.moveTo(-40, -104);
+    c.quadraticCurveTo(10, -98, 44, -150);
+    c.stroke();
+    c.setLineDash([]);
+    DIB.L(c, 38, -158, 52, -144, "#9C2315", 4);
+    DIB.L(c, 52, -158, 38, -144, "#9C2315", 4);
+    for (const [u, v] of [[-62, -184], [58, -188], [64, -102], [-56, -96]]) DIB.E(c, u, v, 4, 4, "#3A2A1E");
+    c.restore();
+  }
+  // ---------- La losa de las runas ----------
+  // Una laja parada, más vieja que la casa, con una fila de runas que laten con la luz rúnica en la cara de adelante.
+  function losaRunica(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr),
+      lat = 0.55 + 0.25 * Math.sin(t * 1.4);
+    VOL.sombra(c, pr, 0, 0, 80, 34, 0.4);
+    S.poner(0, 0, () =>
+      VOL.caja(c, pr, -60, -18, 0, 60, 18, 220, ["#3E3E3C", "#55554F", "#6A6862"], {
+        tapa: "#6E6C66",
+        frente: (cc, l, h) => {
+          DIB.P(cc, [6, -h + 10, l - 8, -h + 6, l - 4, -6, 4, -4], "#4E4C46");
+          DIB.alfa(cc, lat, () => ["ansuz", "othala", "hagalaz", "dagaz"].forEach((rn, k) => FUTHARK.dibujar(cc, rn, l / 2, -h + 40 + k * 46, 30, "#73D5DB", 4)));
+          if (o && o.leida) DIB.alfa(cc, 0.25, () => DIB.P(cc, [l / 2 - 20, -h + 14, l / 2 + 20, -h + 14, l / 2 + 20, -10, l / 2 - 20, -10], "#73D5DB"));
+        },
+      }),
+    );
+    S.dibujar();
+  }
   function gatoCasa(c, x, y, t, o) {
     const s = o.s || 1,
       PAL = [["#6E6A70", "#8E8A90", "#B0ACB2"], ["#B8642A", "#D8843A", "#F0A85A"], ["#1E1A1E", "#2E2A30", "#4A4650"]][(o.pal || 0) % 3],
@@ -619,6 +667,8 @@
     hogarPiedra: { f: hogarPiedra, fv: hogarPiedraV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     camaPieles: { f: camaPieles, fv: camaPielesV, vol: true, alto: 250, choque: null, grupo: "interiores" },
     gatoCasa: { f: gatoCasa, figura: true, alto: 60, choque: null, grupo: "interiores" },
+    mapaClavado: { f: mapaClavado, fv: ASSETS.cartaV(mapaClavado, 150, 200), vol: true, alto: 200, choque: null, grupo: "interiores" },
+    losaRunica: { f: losaRunica, vol: true, alto: 230, choque: null, grupo: "interiores" },
     arconCasa: { f: arconCasa, fv: arconCasaV, vol: true, alto: 150, choque: null, grupo: "interiores" },
     forjaAsa: { f: forjaAsa, fv: forjaAsaV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     yunque: { f: yunque, fv: yunqueV, vol: true, alto: 160, choque: null, grupo: "interiores" },
@@ -628,7 +678,7 @@
     telar: { f: telar, fv: telarV, vol: true, alto: 310, choque: null, grupo: "interiores" },
     mesaBanco: { f: mesaBanco, alto: 220, choque: null, grupo: "interiores", vol: true },
   });
-  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { gatoCasa: { pal: 1 } });
+  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { gatoCasa: { pal: 1 }, losaRunica: { leida: false } });
   ASSETS.vela = vela;
   ASSETS.runaViva = runaViva;
 })();
