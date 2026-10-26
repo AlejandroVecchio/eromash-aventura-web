@@ -137,6 +137,14 @@ window.GENTE = (function () {
     geir: { nombre: "geir", alto: 0.94, ancho: 0.9, piel: "#D8B090", pielSombra: "#B89070", pelo: "#C8803A", ropa: "#6A5A4A", ropaSombra: "#52463A", delantal: "#4A3020", delantalSombra: "#3A2418", pantalon: "#3A3026", botas: "#2A2018", cinto: "#5E4430" },
     // el guardia de la muralla que espera su punta de lanza en la herrería
     hr_guardia: { nombre: "hr_guardia", alto: 1.04, ancho: 1.1, piel: "#D0A080", pielSombra: "#AE8064", pelo: "#3A2A1E", barba: "#3A2A1E", ropa: "#5A5E5A", ropaSombra: "#464A46", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", gorro: "#6E6A6E", insignia: true },
+    // Ketill, el copista de Svanhild: flaco, de mediana edad, barba rala, túnica parda con manchas de tinta en las mangas
+    ketill: { nombre: "ketill", alto: 0.98, ancho: 0.9, piel: "#D8B494", pielSombra: "#B89474", pelo: "#7A5634", barba: "#7A5634", ropa: "#6A5A48", ropaSombra: "#544636", pantalon: "#3E342A", botas: "#2A2018", cinto: "#3A2A1A", tinta: true },
+    // Hlíf, la aprendiz de Thora: joven, trenza rubia, vestido de lana y delantal verde manchado de hierbas
+    hlif: { nombre: "hlif", alto: 0.9, ancho: 0.88, piel: "#E8C8A8", pielSombra: "#C8A888", pelo: "#D8B060", ropa: "#8A7A60", ropaSombra: "#6E604A", falda: true, delantal: "#4E5C32", delantalSombra: "#3A4428", pantalon: "#5A4A38", botas: "#3A2A1E", cinto: "#5A4030", trenza: true },
+    // La gente de las casas de Eikholt (motor/interiores.js, vecinoDe): dos vecinas con falda y un vecino de capa corta.
+    vecina: { nombre: "vecina", alto: 0.92, ancho: 0.92, piel: "#D8B496", pielSombra: "#B8947A", pelo: "#7A4A2A", ropa: "#7A3A34", ropaSombra: "#5E2C28", falda: true, delantal: "#C8B48C", delantalSombra: "#A8946E", pantalon: "#4A3A2C", botas: "#2A2018", cinto: "#4A3424", trenza: true },
+    vecina2: { nombre: "vecina", alto: 0.88, ancho: 0.96, piel: "#E0C0A4", pielSombra: "#C0A086", pelo: "#B8B0A4", ropa: "#4E5A6A", ropaSombra: "#3C4652", falda: true, delantal: "#6E5A3E", delantalSombra: "#56462E", pantalon: "#3A3228", botas: "#241C16", cinto: "#3A2A1A", trenza: true },
+    vecino: { nombre: "vecino", alto: 0.98, ancho: 1.02, piel: "#C49478", pielSombra: "#A4765C", pelo: "#6A4A2A", barba: "#6A4A2A", ropa: "#5A6A3E", ropaSombra: "#46522E", capa: "#7A5A3A", capaSombra: "#5E442C", pantalon: "#3E342A", botas: "#2A2018", cinto: "#5E4430" },
     // El herido: el trabajador que no puede apoyar la pierna; se dibuja sentado con la venda.
     herido: {
       nombre: "trabajador",
@@ -538,10 +546,26 @@ window.GENTE = (function () {
     c.translate(x, y);
     c.scale(s * (o.espejo ? -1 : 1), s);
     sombra(c, 0, 0, 22 * f.ancho, 6, 0.4);
+    // o.antorcha: lleva una antorcha en la otra mano (la ronda de noche); de espaldas queda detrás del cuerpo
+    const vi = o.vista || "S",
+      atras = o.antorcha && (vi === "N" || vi === "NE");
+    if (atras) antorcha(c, f, t, 18 * f.ancho);
     if (f.sentado) sentado(c, f, t);
     else if (PROPIOS[id]) PROPIOS[id](c, t, o);
-    else VISTAS[o.vista || "S"](c, f, t, o);
+    else VISTAS[vi](c, f, t, o);
+    if (o.antorcha && !atras) antorcha(c, f, t, vi === "E" ? 4 : -19 * f.ancho);
     c.restore();
+  }
+  function antorcha(c, f, t, x) {
+    const a = f.alto,
+      fl = Math.sin(t * 13 + x) * 1.5,
+      y0 = -34 * a,
+      y1 = -86 * a;
+    L(c, x, y0, x + 2, y1, "#6B4A2C", 3);
+    R(c, x - 2, y1 - 2, 8, 5, "#3A2A1A");
+    P(c, [x - 4, y1 - 2, x + 1 + fl, y1 - 22, x + 7, y1 - 2], "#C8402D");
+    P(c, [x - 2, y1 - 2, x + 1 + fl * 0.7, y1 - 16, x + 5, y1 - 2], "#FF8D71");
+    P(c, [x, y1 - 2, x + 1 + fl * 0.4, y1 - 10, x + 3, y1 - 2], "#FFD98A");
   }
   return { LISTA, FICHAS, PROPIOS, VISTAS, dibujar, vistaDe, nombre: (id) => (FICHAS[id] || FICHAS.trabajador).nombre };
 })();

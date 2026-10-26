@@ -53,6 +53,8 @@ window.MUNDO25 = (function () {
       f.ropa = "#5A5E5A";
     }
     if (rol === "pescador") f.gorro = "#4A6A7A";
+    if (rol === "borracho") f.gorro = undefined;
+    if (rol === "ladron") (f.capa = "#3A3026"), (f.gorro = "#46423E"), (f.delantal = undefined);
     if (rol === "viajero") f.capa = elige(["#9C2315", "#56667A", "#6E5A3E"]);
     f.ropaSombra = tono(f.ropa, -0.25);
     f.pielSombra = tono(f.piel, -0.15);
@@ -189,6 +191,15 @@ window.MUNDO25 = (function () {
       const a = (i / 4) * Math.PI * 2;
       poner({ id: vecino("guardia"), x: Math.cos(a) * 3000, y: Math.sin(a) * 3000, vx: -Math.sin(a) * 50, vy: Math.cos(a) * 50, s: 1, horas: [5, 8], ronda: true });
     }
+    // de noche, dos parejas de la Guardia hacen la vuelta del anillo de los oficios con antorchas, una para cada lado
+    // (la luz la pone LUCES25 con luces(): las antorchas que se ven)
+    if (plano.rOficios)
+      for (let i = 0; i < 4; i++) {
+        const a = Math.floor(i / 2) * Math.PI + 0.4 + (i % 2) * 0.03,
+          dir = i < 2 ? 1 : -1,
+          r = plano.rOficios(a);
+        poner({ id: vecino("guardia"), x: Math.cos(a) * r, y: Math.sin(a) * r, vx: 1, vy: 0, s: 1, horas: [21, 5], ronda: "oficios", dir, antorcha: true });
+      }
     for (const [k, n, rad, rol] of RONDAS) {
       const c0 = L[k];
       if (!c0) continue;
@@ -212,14 +223,14 @@ window.MUNDO25 = (function () {
       ["ivar", plano.anclas.hongo_puerta, -200, 160, [17, 2]],
       ["solve", plano.anclas.hongo_puerta, 160, 220, [19, 2], { habla: true }],
       ["ragna", L.camas_hongos, 0, 140, [7, 19]],
-      ["folke", L.paseo_sogas, 0, 200, [7, 19]],
+      ["folke", L.paseo_sogas, 0, 200, [7, 12]], // a la tarde tuerce adentro (motor/oficios.js)
       ["grim", L.corral, -300, 380, [0, 24]],
       ["sigrun", plano.anclas.sanacion, 120, 120, [8, 21]],
       ["bergljot", plano.ting, 260, 260, [9, 16]],
       ["torvald", plano.anclas.svanhild_casa, 200, 260, [8, 18]],
       ["kolbrun", [L.ting[0] + 1700, L.ting[1] - 400], 0, 0, [8, 18]],
       ["maren", [0, 0], 1150, 400, [10, 17]],
-      ["sten", plano.anclas.carpinteria, 140, 160, [7, 18]],
+      ["sten", plano.anclas.carpinteria, 140, 160, [7, 12]], // a la tarde, en su banco
       ["ketil", plano.anclas.puerta_sur, 260, -260, [0, 24]],
       ["ingrid", L.forasteros, 300, 300, [7, 22]],
       ["tyra", [0, 0], 2300, 900, [8, 19], { vx: 110 }],
@@ -228,8 +239,72 @@ window.MUNDO25 = (function () {
     ];
     for (const [id, c0, dx, dy, horas, o] of VECINOS) if (c0) gente.push(Object.assign({ id, x: c0[0] + dx, y: c0[1] + dy, vx: 0, vy: 0, s: 1, horas, nombrado: true }, o || {}));
     for (let i = gente.length - 1; i >= 0; i--) if (!libre(gente[i].x, gente[i].y)) gente.splice(i, 1);
+    // la asamblea del Ting (ASAMBLEA25): cada tres días, de 11 a 13, la ciudad rodea la piedra; en el juego se ven solo
+    // los días de asamblea (lo decide oculto() de ciudad/juego.js)
+    if (plano.ting)
+      for (let i = 0; i < 16; i++) {
+        const a = Math.PI * 0.15 + (i / 15) * Math.PI * 0.7 + (rr() - 0.5) * 0.08,
+          r = 560 + (i % 3) * 110 + rr() * 40,
+          x = plano.ting[0] + Math.cos(a) * r,
+          y = plano.ting[1] + 120 + Math.sin(a) * r * 0.8;
+        if (libre(x, y, 22)) poner({ id: vecino(i % 6 ? null : "guardia"), x, y, vx: 0, vy: 0, s: 1, horas: [11, 13], asamblea: true });
+      }
+    // dos guardias en cada puerta de la empalizada, uno a cada lado del paso, del lado de adentro: saludan a Eromash
+    // cuando entra o sale (recorrer.js, `p.porton`)
+    for (const k of ["sur", "norte", "este", "oeste"]) {
+      const a0 = plano.anclas["puerta_" + k];
+      if (!a0) continue;
+      const r = Math.hypot(a0[0], a0[1]) || 1,
+        ux = a0[0] / r,
+        uy = a0[1] / r;
+      for (const s of [1, -1]) {
+        const x = a0[0] - ux * 260 - uy * s * 200,
+          y = a0[1] - uy * 260 + ux * s * 200;
+        if (libre(x, y, 20)) poner({ id: vecino("guardia"), x, y, vx: 0, vy: 0, s: 1, porton: k });
+      }
+    }
+    // de 22 a 2, tres parroquianos del Hongo Dorado salen a tomar aire y vuelven tambaleándose (`p.borracho`)
+    const hp = plano.anclas.hongo_puerta;
+    if (hp)
+      for (let i = 0; i < 3; i++) {
+        const [x, y] = buscarLibre(hp[0] + (i - 1) * 220, hp[1] + 260 + (i % 2) * 120);
+        poner({ id: vecino("borracho"), x, y, vx: 30, vy: 0, s: 1, horas: [22, 2], borracho: { cx: x, cy: y, f: i * 2.1 } });
+      }
+    // la vecina que perdió algo hoy (PERDIDOS25), junto al pozo
+    if (L.pozo) {
+      const [x, y] = buscarLibre(L.pozo[0] - 260, L.pozo[1] + 180);
+      poner({ id: vecino("vecina"), x, y, vx: 0, vy: 0, s: 1, horas: [8, 19], perdio: true });
+    }
+    // la cuentacuentos de paso junto al fogón de los forasteros (CUENTOS25), de 19 a 24
+    if (L.forasteros) {
+      const [x, y] = buscarLibre(L.forasteros[0] + 150, L.forasteros[1] + 170);
+      poner({ id: vecino("cuentista"), x, y, vx: 0, vy: 0, s: 1, horas: [19, 24], cuentos: true });
+    }
+    // la ronda del blót (BLOT25): dieciséis vecinos que bailan una noche de cada siete, al lado del Roble
+    if (window.BLOT25) for (let i = 0; i < 16; i++) poner({ id: vecino(i % 5 ? null : "vecina"), x: 0, y: 0, vx: 1, vy: 0, s: 1, horas: [19, 24], baile: { a: (i / 16) * Math.PI * 2 + 0.2 } });
+    // el ratero del mercado (LADRON25): solo se ve mientras huye
+    poner({ id: vecino("ladron"), x: 0, y: 0, vx: 0, vy: 0, s: 1, ladron: true });
+    // los dos viejos del hnefatafl, cada uno de su lado de la mesa (TAFL25)
+    const tf = plano.cosas.find((o) => o.id === "hnefatafl");
+    if (tf)
+      for (const s of [1, -1]) {
+        const w = s * 112;
+        poner({ id: vecino(s > 0 ? "vecino" : "vecina"), x: tf.x - w * Math.sin(tf.ry), y: tf.y + w * Math.cos(tf.ry), vx: 0, vy: 0, s: 1, horas: [10, 18], tafl: [tf.x, tf.y] });
+      }
+    // cada puesto del mercado tiene su puestero de día, parado a un costado del mostrador (del lado que esté libre):
+    // pregona lo suyo cuando Eromash pasa cerca (RECORRER25) y no se va con la lluvia, que tiene el toldo
+    for (const q of plano.puestos || []) {
+      const ux = Math.cos(q.ry),
+        uy = Math.sin(q.ry),
+        bx = q.x + Math.sin(q.ry) * 80,
+        by = q.y - Math.cos(q.ry) * 80;
+      const lado = [1, -1].map((s) => [bx + ux * s * (q.W / 2 + 50), by + uy * s * (q.W / 2 + 50)]).find(([x, y]) => libre(x, y, 25));
+      if (lado) poner({ id: vecino("vendedor"), x: lado[0], y: lado[1], vx: 0, vy: 0, s: 1, horas: [7, 19], puesto: q.vende });
+    }
     // lo que alumbra de noche (LUCES25) y las sombras de lo que está parado (SOMBRAS25)
     LUCES25.armar(plano);
+    // los faroleros (LUCES25): uno por anillo de faroles de la plaza, con la pértiga encendida (antorcha)
+    LUCES25.faroleros().forEach((r) => poner({ id: vecino("farolero"), x: 0, y: r.R, vx: 0, vy: 0, s: 1, farol: r, antorcha: true }));
     SOMBRAS25.iniciar(plano);
     // Eromash camina por la ciudad (RECORRER25): curiosidades, cofres, barrios, la gente y los animales que reaccionan
     RECORRER25.iniciar({ plano, libre, gente, inicio: op.inicio, juego: op.juego, dibujarEro: op.dibujarEro, alCofre: op.alCofre });
@@ -240,7 +315,55 @@ window.MUNDO25 = (function () {
   function moverGente(dt, h, oculto) {
     for (const p of gente) {
       p.visible = (!p.horas || aHora(h, p.horas)) && !(oculto && oculto(p));
+      if (p.farol) {
+        // el farolero va de farol en farol a la hora que le toca (LUCES25.dondeFarolero)
+        const q = LUCES25.dondeFarolero(p.farol, h);
+        p.visible = !!q && p.visible;
+        if (q) {
+          p.x = q.x;
+          p.y = q.y;
+          p.vx = q.prende ? 0 : q.vx * 60;
+          p.vy = q.prende ? 0 : q.vy * 60;
+          p.prende = q.prende;
+          p.miraA = q.prende ? [q.x, q.y] : null; // mira el farol que prende
+        }
+        continue;
+      }
+      if (p.baile) {
+        // la ronda del blót: giran todos juntos alrededor de su centro (BLOT25.enRonda)
+        if (!p.visible) continue;
+        p.baile.a += BLOT25.VUELTA * dt;
+        const [x, y] = BLOT25.enRonda(p.baile.a);
+        p.vx = (x - p.x) / Math.max(dt, 1e-3);
+        p.vy = (y - p.y) / Math.max(dt, 1e-3);
+        p.x = x;
+        p.y = y;
+        continue;
+      }
       if (!p.vx && !p.vy) continue;
+      if (p.ladron) continue; // lo mueve LADRON25
+      if (p.borracho) {
+        // pasos que no saben adónde van, sin alejarse mucho de la puerta del Hongo
+        const b = p.borracho;
+        if (p.charla > 0) continue;
+        b.f += dt;
+        const vx = Math.sin(b.f * 0.7) * 45 + Math.sin(b.f * 2.3) * 25 + (b.cx - p.x) * 0.15,
+          vy = Math.cos(b.f * 0.5) * 30 + Math.sin(b.f * 1.9) * 18 + (b.cy - p.y) * 0.15;
+        if (libre(p.x + vx * dt, p.y + vy * dt)) (p.x += vx * dt), (p.y += vy * dt);
+        p.vx = vx;
+        p.vy = vy;
+        continue;
+      }
+      if (p.ronda === "oficios") {
+        // la ronda de noche sigue el anillo de los oficios, a paso de guardia
+        const a = Math.atan2(p.y, p.x) + (p.dir * 55 * dt) / Math.hypot(p.x, p.y),
+          r = plano.rOficios(a);
+        p.vx = (Math.cos(a) * r - p.x) / Math.max(dt, 1e-3);
+        p.vy = (Math.sin(a) * r - p.y) / Math.max(dt, 1e-3);
+        p.x = Math.cos(a) * r;
+        p.y = Math.sin(a) * r;
+        continue;
+      }
       if (p.ronda) {
         // la ronda sigue la vuelta de la plaza
         const a = Math.atan2(p.y, p.x) + (50 / 3000) * dt;
@@ -291,7 +414,7 @@ window.MUNDO25 = (function () {
     const todos = mas ? gente.concat(mas) : gente;
     const extra = (cam.esc < VISTA25.LEJOS.gente ? [] : todos)
       .filter((p) => p.visible !== false && enPantalla(p))
-      .map((p) => ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
+      .map((p) => ({ x: p.x, y: p.y, f: (cx, sx, sy) => GENTE.dibujar(cx, p.id, sx, sy, tt, { ...mirada(p), antorcha: p.antorcha, camina: !!((p.vx || p.vy) && !(p.charla > 0)) || p.camina, hablando: p.charla > 0 || p.hablando || (p.habla && Math.sin(tt * 0.7 + p.x) > 0.3) || (p.canta && !p.callada) }) }));
     extra.push(...RECORRER25.extra(cam, tt));
     ENSERES25.noche = h >= 18 || h < 6 ? 1 : 0;
     // la luz según la hora (LUCES25): sombras que caen según el sol, el color de cada hora, la bruma de lo lejano y de
@@ -302,7 +425,9 @@ window.MUNDO25 = (function () {
     c.setTransform(1, 0, 0, 1, 0, 0);
     LUCES25.antes(c, cam, cw, ch, h, tt, n);
     if (n > 0.01) {
-      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero);
+      // las antorchas de la ronda de noche alumbran por donde pasan
+      const antorchas = gente.filter((p) => p.antorcha && p.visible !== false).map((p) => ({ x: p.x, y: p.y, r: 360, col: "#FF8D71", f: 0.7 + 0.08 * Math.sin(tt * 11 + p.x) }));
+      const enVista = LUCES25.dePantalla(cam, cw, ch, h, tt, RECORRER25.ero, antorchas);
       LUZ.dibujar(c, cw, ch, 0, 0, 1, enVista, { o: 0, n, osc: Math.min(0.82, 0.06 + n * 0.74) }, tt);
       LUCES25.despues(c, cam, cw, ch, h, tt, n, enVista);
     }

@@ -246,6 +246,8 @@ window.FORJA = (function () {
     if (l === "temple") return templar();
     if (toque) S.toque = l;
     S.apretado[l] = true;
+    // se juzga con el reloj del momento del toque, no con el del último cuadro (el toque y el mouse llegan entre cuadros)
+    S.ahora = performance.now() / 1000 - S.t0 - 0.5;
     // la nota más cercana de ese carril que todavía no se tocó
     let mejor = null,
       dm = 9;

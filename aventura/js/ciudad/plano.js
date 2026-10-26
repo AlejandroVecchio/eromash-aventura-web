@@ -4,7 +4,7 @@
 // los forasteros al nordeste, las huertas al este, el Hongo Dorado al sudeste, el río por el este y el sur), pensado en
 // metros y llevado al mundo del juego con M unidades por metro: a esta escala la empalizada queda a 9000 unidades del
 // Roble y cruzar la ciudad corriendo lleva casi un minuto. El norte es -y y el este +x, como en el bosque.
-// PLANO25.armar() → { M, R_MURO, cosas, calles, rio, choques, anclas, lugares, puertas }
+// PLANO25.armar() → { M, R_MURO, cosas, calles, rio, choques, anclas, casasQueSeEntran, edificiosQueSeEntran, lugares, puertas }
 window.PLANO25 = (function () {
   "use strict";
   const PI = Math.PI,
@@ -185,7 +185,11 @@ window.PLANO25 = (function () {
   function armar() {
     const cosas = [], // { tipo: "casa" | "asset", x, y (unidades), ... }
       choques = [], // { poli: [[x, y]…] } | { circulo: [x, y, r] }
-      anclas = {};
+      anclas = {},
+      casasQueSeEntran = [], // { nombre, x, y (delante de la puerta, unidades), sem, v }
+      edificiosQueSeEntran = [], // la hospedería y el cuartel: { tipo, x, y (delante de la puerta), sem }
+      puestos = [], // los del Mercado de los Toldos: { n, vende, x, y (delante del mostrador, unidades), ry, W (el ancho del puesto) }
+      casasCerradas = []; // las demás: { nombre, x, y, sem } (se golpean)
     // lo que se puede mirar de cerca al recorrer la ciudad: { clave, x, y (unidades), r }; textos ci.cur_<clave>
     const curiosidades = [];
     const curiosidad = (clave, x, z, r = 3.5) => curiosidades.push({ clave, x: x * M, y: z * M, r: r * M });
@@ -455,6 +459,8 @@ window.PLANO25 = (function () {
         const ry = Math.atan2(-Math.cos(a2) * mira, Math.sin(a2) * mira);
         const puesto = PUESTOS25.crear(nt + 3);
         cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa: puesto, nombre: "puesto" + nt });
+        const fr = puesto.D / 2 + 110;
+        puestos.push({ n: nt, vende: puesto.vende, x: x * M - fr * Math.sin(ry), y: z * M + fr * Math.cos(ry), ry, W: puesto.W });
         choques.push({ poli: puesto.huella(x * M, z * M, ry) });
         nt++;
       }
@@ -497,6 +503,11 @@ window.PLANO25 = (function () {
       cosas.push({ tipo: "casa", x: x * M, y: z * M, ry, casa, nombre });
       especiales.push({ x, z, mx: casa.W / M / 2 + 3.5, mz: casa.D / M / 2 + 3.5, ang: ry });
       for (const h of casa.huella(x * M, z * M, ry)) choques.push({ poli: h });
+      // los que arma oficios.js por dentro (INTERIORES.CUARTOS): se entran por su puerta
+      if (nombre === "hospederia" || nombre === "cuartel") {
+        const [px, pz] = aMundoE(x, z, ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1.2);
+        edificiosQueSeEntran.push({ tipo: nombre, x: px * M, y: pz * M, sem: (sem % 997) / 997 });
+      }
       return casa;
     };
     const AZUL_GRIS = ["#2C3440", "#3A4654", "#52606E"];
@@ -573,6 +584,7 @@ window.PLANO25 = (function () {
       asset("farol", lx + 15, lz + 6, { s: 1.3 });
       anclas.svanhild_casa = U([lx + 4, lz]);
       anclas.losa = U([lx + 9, lz + 3]);
+      anclas.lindes_puerta = U(aMundoE(lx - 6, lz - 2, ry, cuerpo.puertaLocal[0] / M, cuerpo.puertaLocal[1] / M + 1.2)); // delante de su puerta
     }
     // el Hongo Dorado: la casa más grande, dos pisos, galería, buhardillas y el cartel, mirando a la plaza
     {
@@ -884,6 +896,14 @@ window.PLANO25 = (function () {
     const patios = [];
     levantadas.forEach(([cc, casa], i) => {
       cosas.push({ tipo: "casa", x: cc.x * M, y: cc.z * M, ry: cc.ry, casa, nombre: "casa" + i });
+      // las que tienen el farol encendido junto a la puerta (ficha.entra) se entran: adentro es una casa de INTERIORES
+      if (casa.ficha.entra && !casa.ficha.tapiada) {
+        const [px, pz] = aMundo(cc.x, cc.z, cc.ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1.2);
+        casasQueSeEntran.push({ nombre: "casa" + i, x: px * M, y: pz * M, sem: ((cc.sem % 997) + 0.5) / 997, v: cc.sem % 5 });
+      } else if (!casa.ficha.tapiada) {
+        const [px, pz] = aMundo(cc.x, cc.z, cc.ry, casa.puertaLocal[0] / M, casa.puertaLocal[1] / M + 1);
+        casasCerradas.push({ nombre: "casa" + i, x: px * M, y: pz * M, sem: Math.abs(cc.sem) % 97 });
+      }
       if (casa.ficha.tapiada) curiosidad("tapiada", cc.x - (cc.fondo / 2 + 1.5) * Math.sin(cc.ry), cc.z + (cc.fondo / 2 + 1.5) * Math.cos(cc.ry), 4);
       for (const h of casa.huella(cc.x * M, cc.z * M, cc.ry)) choques.push({ poli: h });
       const W2 = cc.ancho / 2,
@@ -1153,7 +1173,13 @@ window.PLANO25 = (function () {
     const calles = CALLES.map((c) => ({ pts: c.pts.map(U), w: c.w * M, tipo: c.tipo }));
     const lugares = {};
     for (const k in LUGAR) lugares[k] = U(LUGAR[k]);
-    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, lugares, puertas: PUERTAS, plaza: 50.5 * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
+    lugares.mercado = U(polar(-PI * 0.75, 31.5)); // el Mercado de los Toldos, en el anillo de adentro (para el mapa)
+    // la mesa de hnefatafl y las cintas de promesa del Roble, para el mapa (TAFL25 y PROMESAS25)
+    for (const [k, id] of [["hnefatafl", "hnefatafl"], ["cintas", "cintasPromesa"]]) {
+      const o = cosas.find((q) => q.id === id);
+      if (o) lugares[k] = [o.x, o.y];
+    }
+    return { M, R_MURO: R_MURO * M, R_FUERA: R_FUERA * M, curiosidades, cofres, cosas, calles, rio: { pts: RIO.map(U), ancho: ANCHO_RIO * M }, choques, anclas, casasQueSeEntran, casasCerradas, edificiosQueSeEntran, puestos, lugares, puertas: PUERTAS, plaza: 50.5 * M, rOficios: (a) => rOficios(a) * M, ting: U(LUGAR.ting), roble: U(LUGAR.roble), aCalle: (x, y) => aCalle(x / M, y / M).d * M };
   }
   return { armar, M };
 })();

@@ -162,6 +162,15 @@
     // almohada
     P(c, poli(x - 105 * s, y - 120 * s, 40 * s, 18 * s, 7, 0.3), "#F2ECEC");
     P(c, poli(x - 98 * s, y - 126 * s, 26 * s, 10 * s, 7, 0.3), "#FFFFFF");
+    // o.ocupada: alguien duerme tapado hasta la nariz (la manta sube y baja)
+    if (o.ocupada) {
+      const r = Math.sin(t * 1.6) * 3 * s,
+        pelo = o.pelo || "#7A5634";
+      P(c, poli(x - 100 * s, y - 138 * s, 26 * s, 20 * s, 8, 0.2), pelo);
+      P(c, poli(x - 86 * s, y - 132 * s, 16 * s, 12 * s, 7, 0.2), o.piel || "#E0B898");
+      P(c, [x - 70 * s, y - 70 * s, x - 66 * s, y - 136 * s - r, x + 40 * s, y - 150 * s - r, x + 150 * s, y - 132 * s, x + 200 * s, y - 70 * s], "#7A5634");
+      P(c, [x + 40 * s, y - 150 * s - r, x + 150 * s, y - 132 * s, x + 200 * s, y - 70 * s, x + 110 * s, y - 90 * s], "#9A7448");
+    }
   }
 
   // ---------- El arcón de la casa ----------
@@ -447,6 +456,151 @@
     VOL.caja(c, pr, -170, -74, 70, 196, 74, 100, ["#A89880", "#C8B8A0", "#DCCCB4"]);
     VOL.prisma(c, pr, [[-30, -82], [80, -86], [214, -70], [214, 84], [60, 88], [-40, 80]], 96, 116, ["#5A3E22", "#7A5634", "#9A7448"]);
     VOL.prisma(c, pr, VOL.redonda(-115, 0, 40, 8, 0.3, 50), 100, 120, ["#C8C0B8", "#F2ECEC", "#FFFFFF"]);
+    if (o.ocupada) {
+      const r = Math.sin(t * 1.6) * 3,
+        pelo = o.pelo || "#7A5634";
+      VOL.cilindro(c, pr, -112, 0, 24, 120, 150, [pelo, pelo, pelo], { n: 8, tapa: pelo });
+      VOL.prisma(c, pr, [[-80, -70], [60, -80], [200, -66], [200, 70], [60, 80], [-80, 72]], 100, 146 + r, ["#5A3E22", "#7A5634", "#9A7448"]);
+    }
+  }
+  // el gato de la casa: hecho un ovillo junto al hogar, la cola alrededor y las orejas paradas; respira y a veces
+  // mueve una oreja. o.pal: 0 gris, 1 naranja, 2 negro. Redondo y parejo: igual de cualquier lado.
+  // ---------- El mapa clavado del escondite ----------
+  // Un cuero raspado clavado a la pared con cuatro clavos: la empalizada vieja, el túnel en punteado y una X roja donde
+  // termina. Plano contra la pared (ASSETS.cartaV en LISTA).
+  function mapaClavado(c, x, y, t, o) {
+    const s = (o && o.s) || 1;
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    DIB.P(c, [-70, -190, 66, -196, 74, -96, -64, -88], "#B89A6E");
+    DIB.P(c, [-70, -190, 66, -196, 68, -176, -68, -170], "#C8AE84");
+    // la empalizada en arco y las casas
+    c.beginPath();
+    c.arc(-6, -110, 52, Math.PI * 1.05, Math.PI * 1.95);
+    c.strokeStyle = "#5E3A22";
+    c.lineWidth = 3;
+    c.stroke();
+    for (const [u, v] of [[-30, -126], [-8, -136], [14, -124]]) DIB.R(c, u - 5, v - 5, 10, 8, "#7A4A2E");
+    // el túnel, en punteado, y la X
+    c.setLineDash([5, 5]);
+    c.beginPath();
+    c.moveTo(-40, -104);
+    c.quadraticCurveTo(10, -98, 44, -150);
+    c.stroke();
+    c.setLineDash([]);
+    DIB.L(c, 38, -158, 52, -144, "#9C2315", 4);
+    DIB.L(c, 52, -158, 38, -144, "#9C2315", 4);
+    for (const [u, v] of [[-62, -184], [58, -188], [64, -102], [-56, -96]]) DIB.E(c, u, v, 4, 4, "#3A2A1E");
+    c.restore();
+  }
+  // ---------- La losa de las runas ----------
+  // Una laja parada, más vieja que la casa, con una fila de runas que laten con la luz rúnica en la cara de adelante.
+  function losaRunica(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr),
+      lat = 0.55 + 0.25 * Math.sin(t * 1.4);
+    VOL.sombra(c, pr, 0, 0, 80, 34, 0.4);
+    S.poner(0, 0, () =>
+      VOL.caja(c, pr, -60, -18, 0, 60, 18, 220, ["#3E3E3C", "#55554F", "#6A6862"], {
+        tapa: "#6E6C66",
+        frente: (cc, l, h) => {
+          DIB.P(cc, [6, -h + 10, l - 8, -h + 6, l - 4, -6, 4, -4], "#4E4C46");
+          DIB.alfa(cc, lat, () => ["ansuz", "othala", "hagalaz", "dagaz"].forEach((rn, k) => FUTHARK.dibujar(cc, rn, l / 2, -h + 40 + k * 46, 30, "#73D5DB", 4)));
+          if (o && o.leida) DIB.alfa(cc, 0.25, () => DIB.P(cc, [l / 2 - 20, -h + 14, l / 2 + 20, -h + 14, l / 2 + 20, -10, l / 2 - 20, -10], "#73D5DB"));
+        },
+      }),
+    );
+    S.dibujar();
+  }
+  // ---------- El caldero de la cocina ----------
+  // La olla de hierro colgada del trípode sobre las brasas, con el vapor que sube (redonda: igual de cualquier lado).
+  function caldero(c, x, y, t, o) {
+    const s = o.s || 1;
+    sombra(c, x, y + 2 * s, 90 * s, 16 * s, 0.45);
+    // las brasas
+    for (let k = 0; k < 7; k++) E(c, x - 48 * s + k * 16 * s, y - 6 * s - (k % 2) * 4 * s, 12 * s, 7 * s, k % 3 ? "#5E130D" : "#C8402D");
+    halo(c, x, y - 14 * s, 60 * s, "#FF8D71", 0.35 + Math.sin(t * 6) * 0.05);
+    // el trípode
+    L(c, x - 80 * s, y, x, y - 230 * s, "#2A2420", 6 * s);
+    L(c, x + 80 * s, y, x, y - 230 * s, "#3A3430", 6 * s);
+    L(c, x + 10 * s, y + 6 * s, x, y - 230 * s, "#2A2420", 5 * s);
+    L(c, x, y - 226 * s, x, y - 150 * s, "#4A4448", 3 * s);
+    // la olla: mitad en sombra, la boca y el asa
+    P(c, poli(x, y - 92 * s, 56 * s, 50 * s, 14, 0), "#2E2A2C");
+    P(c, [x, y - 142 * s, x + 56 * s, y - 92 * s, x + 40 * s, y - 56 * s, x, y - 44 * s], "#444046");
+    E(c, x, y - 140 * s, 48 * s, 11 * s, "#1A1618");
+    E(c, x, y - 138 * s, 40 * s, 8 * s, "#7A6A3A");
+    c.beginPath();
+    c.ellipse(x, y - 140 * s, 52 * s, 16 * s, 0, Math.PI, Math.PI * 2);
+    c.strokeStyle = "#4A4448";
+    c.lineWidth = 3 * s;
+    c.stroke();
+    // el vapor
+    if (!window.CALIDAD || CALIDAD.nivel !== "baja")
+      for (let k = 0; k < 4; k++) {
+        const f = (t * 0.3 + k * 0.25) % 1;
+        alfa(c, 0.3 * (1 - f), () => E(c, x + Math.sin(t + k * 2) * 14 * s, y - 150 * s - f * 120 * s, (14 + f * 24) * s, (10 + f * 14) * s, "#E8E0D8"));
+      }
+  }
+  // ---------- La mesa de trabajo del taller ----------
+  // Un tablón grueso sobre caballetes con el martillo, la gubia, un cepillo y virutas; una tabla a medio tallar.
+  function mesaTrabajo(c, x, y, t, o) {
+    const pr = VOL.pr(x, y, o),
+      S = VOL.escena(pr);
+    VOL.sombra(c, pr, 0, 0, 170, 60, 0.45);
+    S.poner(0, 0, () => {
+      for (const u of [-130, 130]) {
+        VOL.palo(c, pr, u - 20, -30, 0, u, 0, 120, 8, MADERA[1]);
+        VOL.palo(c, pr, u + 20, -30, 0, u, 0, 120, 8, MADERA[0]);
+        VOL.palo(c, pr, u - 20, 30, 0, u, 0, 120, 8, MADERA[1]);
+        VOL.palo(c, pr, u + 20, 30, 0, u, 0, 120, 8, MADERA[0]);
+      }
+      VOL.caja(c, pr, -170, -45, 120, 170, 45, 140, MT, { tapa: "#8A3A22" });
+      // la tabla a medio tallar, con la runa empezada
+      VOL.caja(c, pr, -120, -20, 140, 10, 20, 148, ["#8A6A3E", "#A88450", "#C8A46A"], { tapa: "#C8A46A" });
+      // el martillo y la gubia
+      VOL.palo(c, pr, 40, -10, 144, 110, 10, 144, 4, "#7A3E20");
+      VOL.caja(c, pr, 104, -2, 140, 124, 22, 156, ["#3A3A40", "#4A4A50", "#6A6A70"]);
+      VOL.palo(c, pr, 60, 26, 144, 120, 30, 144, 3, "#B8A890");
+      for (let k = 0; k < 5; k++) VOL.elipse(c, pr, -150 + k * 18, 10 - k * 6, 140.5, 7, 4, "#D8C08A");
+    });
+    S.dibujar();
+  }
+  // ---------- La piel colgada ----------
+  // Una piel de lobo estirada en su bastidor de ramas, colgada de la pared (plana: ASSETS.cartaV en LISTA).
+  function pielColgada(c, x, y, t, o) {
+    const s = (o && o.s) || 1,
+      col = [["#6A5A4A", "#8A7A6A", "#A89884"], ["#3A3230", "#4E4644", "#6A625E"], ["#8A6A3E", "#A8844E", "#C8A46A"]][((o && o.pal) || 0) % 3];
+    c.save();
+    c.translate(x, y);
+    c.scale(s, s);
+    L(c, -80, -240, 80, -240, "#4A3020", 6);
+    L(c, -76, -244, -70, -40, "#4A3020", 6);
+    L(c, 76, -244, 70, -40, "#4A3020", 6);
+    L(c, -74, -60, 74, -60, "#4A3020", 5);
+    P(c, [-60, -226, -20, -212, 20, -212, 60, -226, 54, -180, 62, -120, 40, -76, 0, -64, -40, -76, -62, -120, -54, -180], col[1]);
+    P(c, [-60, -226, -20, -212, 0, -212, 0, -64, -40, -76, -62, -120, -54, -180], col[0]);
+    P(c, [-14, -170, 14, -170, 8, -100, -8, -100], col[2]);
+    for (const [a, b] of [[-60, -226], [60, -226], [-62, -120], [62, -120], [-40, -76], [40, -76]]) L(c, a, b, a < 0 ? -72 : 72, b, "#B8A890", 1.5);
+    c.restore();
+  }
+  function gatoCasa(c, x, y, t, o) {
+    const s = o.s || 1,
+      PAL = [["#6E6A70", "#8E8A90", "#B0ACB2"], ["#B8642A", "#D8843A", "#F0A85A"], ["#1E1A1E", "#2E2A30", "#4A4650"]][(o.pal || 0) % 3],
+      r = Math.sin(t * 1.4) * 1.5 * s,
+      oreja = Math.sin(t * 0.7) > 0.97 ? 4 * s : 0;
+    sombra(c, x, y + 2 * s, 46 * s, 10 * s, 0.4);
+    // el cuerpo y la cola
+    P(c, poli(x, y - 20 * s - r, 40 * s, 22 * s + r, 10, 0), PAL[1]);
+    P(c, poli(x - 10 * s, y - 14 * s, 26 * s, 12 * s, 9, 0), PAL[0]);
+    P(c, [x + 30 * s, y - 6 * s, x + 44 * s, y - 14 * s, x + 30 * s, y - 2 * s, x - 20 * s, y + 2 * s, x - 30 * s, y - 4 * s], PAL[2]);
+    // la cabeza apoyada, los ojos cerrados y las orejas
+    P(c, poli(x - 30 * s, y - 26 * s, 17 * s, 14 * s, 8, 0), PAL[1]);
+    P(c, [x - 44 * s, y - 34 * s, x - 42 * s, y - 50 * s - oreja, x - 34 * s, y - 38 * s], PAL[1]);
+    P(c, [x - 26 * s, y - 38 * s, x - 18 * s, y - 52 * s, x - 16 * s, y - 34 * s], PAL[2]);
+    L(c, x - 38 * s, y - 26 * s, x - 33 * s, y - 25 * s, "#111111", 1.5 * s);
+    L(c, x - 27 * s, y - 26 * s, x - 22 * s, y - 25 * s, "#111111", 1.5 * s);
   }
   // el arcón de la casa: madera roja con herrajes, la tapa con el cierre dorado y Othala (abierto: la tapa parada)
   function arconCasaV(c, x, y, t, o) {
@@ -584,6 +738,12 @@
     escritorioRunico: { f: escritorioRunico, fv: escritorioRunicoV, vol: true, alto: 280, choque: null, grupo: "interiores" },
     hogarPiedra: { f: hogarPiedra, fv: hogarPiedraV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     camaPieles: { f: camaPieles, fv: camaPielesV, vol: true, alto: 250, choque: null, grupo: "interiores" },
+    gatoCasa: { f: gatoCasa, figura: true, alto: 60, choque: null, grupo: "interiores" },
+    mapaClavado: { f: mapaClavado, fv: ASSETS.cartaV(mapaClavado, 150, 200), vol: true, alto: 200, choque: null, grupo: "interiores" },
+    losaRunica: { f: losaRunica, vol: true, alto: 230, choque: null, grupo: "interiores" },
+    caldero: { f: caldero, figura: true, alto: 240, choque: null, grupo: "interiores" },
+    mesaTrabajo: { f: mesaTrabajo, vol: true, alto: 160, choque: null, grupo: "interiores" },
+    pielColgada: { f: pielColgada, fv: ASSETS.cartaV(pielColgada, 170, 250), vol: true, alto: 250, choque: null, grupo: "interiores" },
     arconCasa: { f: arconCasa, fv: arconCasaV, vol: true, alto: 150, choque: null, grupo: "interiores" },
     forjaAsa: { f: forjaAsa, fv: forjaAsaV, vol: true, alto: 600, choque: null, grupo: "interiores" },
     yunque: { f: yunque, fv: yunqueV, vol: true, alto: 160, choque: null, grupo: "interiores" },
@@ -593,6 +753,7 @@
     telar: { f: telar, fv: telarV, vol: true, alto: 310, choque: null, grupo: "interiores" },
     mesaBanco: { f: mesaBanco, alto: 220, choque: null, grupo: "interiores", vol: true },
   });
+  ASSETS.EJEMPLO = Object.assign(ASSETS.EJEMPLO || {}, { gatoCasa: { pal: 1 }, losaRunica: { leida: false } });
   ASSETS.vela = vela;
   ASSETS.runaViva = runaViva;
 })();

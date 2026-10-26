@@ -2252,7 +2252,7 @@
     CONTROLES.actualizar();
     if (J.modo === "menu") {
       if (!INVENTARIO.paso()) HUD.pasoMenu();
-      if (CONTROLES.recien("mapa") && (document.getElementById("mapaLienzo") || document.getElementById("mapaZona"))) cerrarMenu();
+      if (CONTROLES.recien("mapa") && (document.getElementById("mapaLienzo") || document.getElementById("mapa25Lienzo") || document.getElementById("mapaZona"))) cerrarMenu();
       if (CONTROLES.recien("pausa") && H.E && J.cam.x) {
         if (document.querySelector("#capaCaja h1") == null) cerrarMenu();
       }

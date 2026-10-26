@@ -18,8 +18,59 @@ window.INTERIORES = (function () {
   const puertas = []; // { cosa, tipo, clave }
 
   const TIPO_DE = { casaEikholt: "casa", casaLindes: "lindes", herreriaAsa: "herreria", casaSanacion: "sanacion", hongoDorado: "taberna" };
-  // cuartos que arman otros sistemas (la casa propia de casa.js): CUARTOS[tipo](ayuda, edificio, clave) → { pared, ventana, estandarte, repisa }
+  // cuartos que arman otros sistemas (la casa propia de casa.js, los talleres de oficios.js): CUARTOS[tipo](ayuda, edificio,
+  // clave) → { pared, ventana, estandarte, repisa }; ayuda.gente({ id, x, y, nombre, hablar }) pone a alguien adentro
   const CUARTOS = {};
+  // ---------- quien vive en cada casa ----------
+  // Cada casa de la gente tiene su dueño, con nombre (la casa es «la casa de …»): sale de la semilla de la casa, así es
+  // siempre el mismo. De día está en lo suyo y contesta según cómo vive (in.vecino_<variante>_N); de 22 a 6 duerme.
+  const VECINAS = ["vecina", "vecina2"],
+    VECINOS = [["vecina", "vecino"], ["vecina", "vecina2"], ["trabajador3", "vecino"], ["hg_cazador"], ["vecina2", "trabajador"]];
+  // doce nombres de mujer (vec_0..5 y vec_12..17) y doce de hombre (vec_6..11 y vec_18..23)
+  const nombreVec = (mujer, k) => "vec_" + (k < 6 ? (mujer ? 0 : 6) + k : (mujer ? 12 : 18) + k - 6);
+  function vecinoDe(sem, vi) {
+    const r = DIB.azar(Math.round(sem * 1000) + 313),
+      fichas = VECINOS[vi],
+      ficha = fichas[Math.floor(r() * fichas.length)],
+      mujer = VECINAS.includes(ficha),
+      h = LUZ.hora(A.H.E.tiempo);
+    return { ficha, nombre: nombreVec(mujer, Math.floor(r() * 12)), noche: h >= 22 || h < 6 };
+  }
+  const charlasVecino = {};
+  function hablarVecino(vec, vi) {
+    const k = (charlasVecino[vec.nombre] = charlasVecino[vec.nombre] == null ? 0 : charlasVecino[vec.nombre] + 1);
+    A.dialogoLibre([[vec.nombre, "in.vecino_" + vi + "_" + (k % 4)]]);
+  }
+  // el gato de una casa: ronronea, se estira o pide más
+  function acariciarGato() {
+    if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.2, tono: 1.6 });
+    A.dialogoLibre([["eromash", "in.gato_" + Math.floor(Math.random() * 4)]]);
+  }
+  // la losa de las runas (sótano viejo, cuarto secreto): la primera vez da un fragmento
+  const leerLosa = (k) => (q) => {
+    if (st.cofres[k]) return A.dialogoLibre([["eromash", "in.sot_losa_otra"]]);
+    st.cofres[k] = q.o.leida = true;
+    if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5 });
+    A.dialogoLibre([["eromash", "in.sot_losa"]], () => PODERES.darFragmento());
+  };
+  // la familia de una casa de varios cuartos: el dueño de la entrada duerme en el dormitorio y su pareja anda de día
+  // por la cocina, el taller, la sala, el estudio o el almacén (charla in.familia_<clase>_N)
+  const DE_DIA = ["cocina", "taller", "sala", "estudio", "almacen"];
+  function familiaDe(pl) {
+    const c0 = pl.cuartos[0];
+    if (!c0 || !String(c0.base || "").startsWith("casa_")) return null;
+    const vec = vecinoDe(c0.sem || 0.01, (+String(c0.base).slice(5) || 0) % 5),
+      r = DIB.azar(Math.round((c0.sem || 0.01) * 1000) + 977),
+      mujer = VECINAS.includes(vec.ficha),
+      fichas = mujer ? ["vecino", "trabajador", "trabajador3"] : ["vecina", "vecina2"],
+      otra = Math.floor(r() * 12);
+    return {
+      vec,
+      dorm: pl.cuartos.findIndex((cu) => cu.clase === "dormitorio"),
+      dia: pl.cuartos.findIndex((cu, i) => i > 0 && DE_DIA.includes(cu.clase)),
+      pareja: { ficha: fichas[Math.floor(r() * fichas.length)], nombre: nombreVec(!mujer, otra) },
+    };
+  }
   // ---------- cómo es cada cuarto ----------
   // muebles: { id, x, y, o, r (medio ancho que choca), accion: clave de texto, fn }
   function armarCuarto(tipo, edificio, clave, editor) {
@@ -29,7 +80,18 @@ window.INTERIORES = (function () {
       v = edificio.o.v != null ? edificio.o.v : Math.floor(sem * 3) % 3;
     const mueble = (id, x, y, o, r, accion, fn) => m.push({ id, x, y, o: Object.assign({ s: 1 }, o), r, accion, fn });
     const arcon = (x, y) => mueble("arconCasa", x, y, { abierto: !!st.cofres[clave] }, 90, "in.accion_arcon", (q) => abrirArcon(q, clave));
-    const cama = (x, y, s) => mueble("camaPieles", x, y, { s: s || 1 }, 210, "in.accion_cama", dormir);
+    // quien vive en la casa (solo las de la gente): de noche duerme en su cama y la cama no se usa
+    const vec = tipo === "casa" && !editor ? vecinoDe(sem, v % 5) : null;
+    const cama = (x, y, s) => {
+      if (vec && vec.noche && !edificio.o.duermeAparte) {
+        vec.enCama = true;
+        const f = (window.GENTE && GENTE.FICHAS[vec.ficha]) || {};
+        mueble("camaPieles", x, y, { s: s || 1, ocupada: true, pelo: f.pelo, piel: f.piel }, 210, null, () => A.dialogoLibre([["eromash", "in.vecino_duerme", [t("av.nombre_" + vec.nombre)]]]));
+        m[m.length - 1].etiqueta = () => t("sn.accion_mirar", [t("av.nombre_" + vec.nombre)]);
+        return;
+      }
+      mueble("camaPieles", x, y, { s: s || 1 }, 210, "in.accion_cama", dormir);
+    };
     const hogar = (x) => mueble("hogarPiedra", x, FONDO + 30, { s: 0.85 }, 150, "in.accion_hogar", calentarse);
     const examinar = (clave2) => () => A.dialogoLibre([["eromash", clave2]]);
     // la tabla suelta de la pared con un nicho detrás
@@ -40,7 +102,8 @@ window.INTERIORES = (function () {
     let pared = "cabana",
       ventana = 1150,
       estandarte = null,
-      repisa = false;
+      repisa = false,
+      insignia = String(clave).startsWith("ek_"); // en Eikholt el estandarte lleva la cornamenta de la capital
     if (tipo === "lindes") {
       // el estudio de Svanhild: el escritorio rúnico en el medio, como la mesa del mago
       mueble("escritorioRunico", 800, 800, { s: 1.1, carta: true }, 330, "in.accion_escritorio", examinar("in.lindes_escritorio"));
@@ -75,11 +138,12 @@ window.INTERIORES = (function () {
       estandarte = 990;
       ventana = 560;
     } else if (CUARTOS[tipo]) {
-      const r = CUARTOS[tipo]({ mueble, cama, hogar, examinar, dormir }, edificio, clave) || {};
+      const r = CUARTOS[tipo]({ mueble, cama, hogar, examinar, dormir, gente: (q) => g.push(q) }, edificio, clave) || {};
       if (r.pared) pared = r.pared;
       if (r.ventana != null) ventana = r.ventana;
       if (r.estandarte != null) estandarte = r.estandarte;
       if (r.repisa != null) repisa = r.repisa;
+      if (r.insignia) insignia = true;
     } else {
       // las casas de la gente: cinco maneras de vivir, y no todas tienen arcón
       const conArcon = editor || Math.floor(sem * 7) % 3 === 0,
@@ -121,6 +185,15 @@ window.INTERIORES = (function () {
         repisa = true;
       }
     }
+    if (vec) {
+      const vi = v % 5,
+        rg = DIB.azar(Math.round(sem * 1000) + 419);
+      // de día, en lo suyo: a la mesa, en el telar, en el escritorio, junto al armero o al atril
+      if (!vec.noche) g.push({ id: vec.ficha, x: [720, 470, 560, 560, 860][vi], y: [700, FONDO + 160, 680, FONDO + 170, 700][vi], nombre: vec.nombre, hablar: () => hablarVecino(vec, vi) });
+      // el gato de la casa, hecho un ovillo junto al hogar (o al pie de la cama donde no hay hogar)
+      rg();
+      if (rg() < 0.8) mueble("gatoCasa", [520, 960, 930, 1000, 1010][vi], [FONDO + 150, FONDO + 150, 720, FONDO + 175, 730][vi], { s: 1, pal: Math.floor(rg() * 3) }, 50, "in.accion_gato", acariciarGato);
+    }
     // la trampilla del sótano: a la vista en los cuartos grandes, debajo de la alfombra en algunas casas
     const lugarTrampilla = { lindes: [1120, 690], herreria: [1180, 850], sanacion: [770, 830], taberna: [800, 855] };
     const LT = [[480, 735], [620, 725], [900, 690], [760, 700], [960, 860]];
@@ -154,7 +227,7 @@ window.INTERIORES = (function () {
         m.push(al);
       } else if (escondida) m.push({ id: "alfombra", x: tx - 190, y: ty + 8, o: { s: 0.5, movida: true }, r: 0, piso: true, quieto: true });
     }
-    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa };
+    const res = { muebles: m, gente: g.map((q) => Object.assign({ mira: { vista: "S", espejo: false } }, q)), pared, ventana, estandarte, repisa, insignia, vecino: vec && vec.nombre };
     return aplicarCambios(res, tipo === "casa" ? "casa_" + (v % 5) : tipo, clave);
   }
 
@@ -265,10 +338,13 @@ window.INTERIORES = (function () {
       mueble("estanteRollos", 640, FONDO + 10, { s: 1, sem: 0.3 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos"));
       mueble("estanteRollos", 960, FONDO + 10, { s: 1, sem: 0.7 }, 150, "in.accion_rollos", examinar("in.sot_archivo_rollos2"));
       atril(820, 790, "in.libro_lindes");
+      if (ASSETS.LISTA.mesaCopista) mueble("mesaCopista", 1110, 790, { s: 0.75 }, 130, "in.accion_copista", examinar("in.sot_archivo_copista"));
       cofre(1360, 820, true);
     } else if (clase === "carbonera") {
       mueble("armero", 700, FONDO + 20, { s: 1 }, 150, "in.accion_armero", examinar("in.sot_carbonera_armero"));
-      mueble("cajas", 1060, 760, { s: 1.05, vela: true }, 110, "in.accion_cajas", examinar("in.sot_carbonera_cajas"));
+      // el carbón que cae por la bajada de la pared
+      mueble("montonCarbon", 1010, FONDO + 70, { s: 0.55 }, 110, "in.accion_carbon", examinar("in.sot_carbonera_carbon"));
+      mueble("cajas", 1200, 790, { s: 1.05, vela: true }, 110, "in.accion_cajas", examinar("in.sot_carbonera_cajas"));
       mueble("barriles", 1350, FONDO + 40, { s: 0.8 }, 100, "in.accion_barriles", examinar("in.sot_carbonera_barriles"));
       cofre(560, 840, false);
     } else if (clase === "despensa") {
@@ -280,6 +356,7 @@ window.INTERIORES = (function () {
       cofre(1330, 830, false);
     } else if (clase === "escondite") {
       mueble("muroFalso", 1180, FONDO + 6, { s: 1 }, 130, "in.accion_tunel", examinar("in.sot_tunel"));
+      mueble("mapaClavado", 470, FONDO + 4, { s: 1 }, 80, "in.accion_mapa", examinar("in.sot_escondite_mapa"));
       mueble("huesos", 620, FONDO + 30, { s: 0.9 }, 110, "in.accion_huesos", examinar("in.sot_huesos"));
       mueble("sacos", 1440, 760, { s: 1 }, 80, "in.accion_sacos", examinar("in.sot_sacos"));
       atril(720, 780, "in.libro_escondite");
@@ -287,8 +364,11 @@ window.INTERIORES = (function () {
       cofre(1360, 850, true);
     } else {
       mueble("armero", 760, FONDO + 20, { s: 0.9 }, 140, "in.accion_armero", examinar("in.sot_viejo_armero"));
+      // la losa de las runas: leerla la primera vez da un fragmento
+      const kl = clave + "_losa";
+      mueble("losaRunica", 990, 780, { s: 0.9, leida: !!st.cofres[kl] }, 80, "in.accion_losa", leerLosa(kl));
       mueble("cantaros", 1180, FONDO + 30, { s: 1 }, 90, "in.accion_cantaros", examinar("in.sot_viejo_cantaros"));
-      mueble("cajas", 560, 820, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
+      mueble("cajas", 520, 830, { s: 0.9, vela: true }, 100, "in.accion_cajas", examinar("in.sot_viejo_cajas"));
       mueble("barriles", 1100, FONDO + 40, { s: 0.75 }, 90, "in.accion_barriles", examinar("in.sot_viejo_barriles"));
       cofre(1360, 830, false);
     }
@@ -366,7 +446,8 @@ window.INTERIORES = (function () {
     let res;
     if (cu.base) {
       // un cuarto armado sobre una plantilla; «propio» (una variación duplicada) no toma lo cambiado en la plantilla
-      const ed = { o: { sem: cu.sem || 0.01, v: +String(cu.base).slice(5) || 0 } };
+      const fam0 = n === 0 ? familiaDe(pl) : null,
+        ed = { o: { sem: cu.sem || 0.01, v: +String(cu.base).slice(5) || 0, duermeAparte: !!(fam0 && fam0.dorm > 0) } };
       saltar = cu.propio ? cu.base : null;
       try {
         res = String(cu.base).startsWith("sot_") ? armarSotano("casa", ed, clave, cu.base.slice(4)) : armarCuarto(cu.base.startsWith("casa_") ? "casa" : cu.base, ed, clave, editor);
@@ -458,6 +539,20 @@ window.INTERIORES = (function () {
     });
     // ---- los muebles de cada clase, donde no estorben los pasos ----
     if (!cu.base) amueblar(res, cu, clave, rs, mueble, examinar);
+    // la familia: de noche el dueño en la cama del dormitorio; de día su pareja en su cuarto
+    const fam = !editor && familiaDe(pl);
+    if (fam && fam.vec.noche && n === fam.dorm) {
+      const q = m.find((q) => q.id === "camaPieles"),
+        f = (window.GENTE && GENTE.FICHAS[fam.vec.ficha]) || {},
+        nom = () => t("av.nombre_" + fam.vec.nombre);
+      if (q) Object.assign(q.o, { ocupada: true, pelo: f.pelo, piel: f.piel }), Object.assign(q, { accion: null, etiqueta: () => t("sn.accion_mirar", [nom()]), fn: () => A.dialogoLibre([["eromash", "in.vecino_duerme", [nom()]]]) });
+    }
+    if (fam && !fam.vec.noche && n === fam.dia) {
+      const x = [820, 600, 1040, 380].find((xx) => !m.some((q) => !q.piso && Math.abs(q.x - xx) < (q.r || 80) * 0.8 && Math.abs(q.y - 700) < 90)) || 820,
+        pa = fam.pareja;
+      let k = -1;
+      res.gente.push({ id: pa.ficha, x, y: 700, nombre: pa.nombre, mira: { vista: "S", espejo: false }, hablar: () => A.dialogoLibre([[pa.nombre, "in.familia_" + cu.clase + "_" + (++k % 3)]]) });
+    }
     if (!sotano && !cu.base) {
       const libre = (x) => !pared().some((q) => Math.abs(q.x - x) < (q.r || 80) + 140);
       res.ventana = cu.clase === "secreto" ? 0 : [1150, 560, 1380, 300].find(libre) || 0;
@@ -469,14 +564,14 @@ window.INTERIORES = (function () {
   }
   // los muebles por clase: [id, en la pared, probabilidad]
   const RECETAS = {
-    entrada: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["armero", 1, 0.5], ["barriles", 1, 0.5], ["arconCasa", 0, 0.3]],
-    sala: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["mesaBanco", 0, 0.7], ["estanteRollos", 1, 0.4], ["barriles", 1, 0.4]],
-    dormitorio: [["camaPieles", 0, 1], ["arconCasa", 0, 0.8], ["telar", 1, 0.5], ["cesto", 0, 0.4], ["hogarPiedra", 1, 0.3]],
-    cocina: [["hogarPiedra", 1, 1], ["barriles", 1, 1], ["mesaBanco", 0, 1], ["cantaros", 1, 0.7], ["cesto", 0, 0.7], ["sacos", 0, 0.4]],
-    taller: [["telar", 1, 0.8], ["armero", 1, 0.8], ["yunque", 0, 0.6], ["cajas", 0, 1], ["barriles", 1, 0.4]],
+    entrada: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["armero", 1, 0.5], ["pielColgada", 1, 0.5], ["barriles", 1, 0.5], ["arconCasa", 0, 0.3]],
+    sala: [["hogarPiedra", 1, 1], ["mesaBanco", 0, 1], ["gatoCasa", 0, 0.6], ["mesaBanco", 0, 0.7], ["pielColgada", 1, 0.5], ["estanteRollos", 1, 0.4], ["barriles", 1, 0.4]],
+    dormitorio: [["camaPieles", 0, 1], ["arconCasa", 0, 0.8], ["pielColgada", 1, 0.7], ["telar", 1, 0.5], ["cesto", 0, 0.4], ["hogarPiedra", 1, 0.3]],
+    cocina: [["hogarPiedra", 1, 1], ["caldero", 0, 0.9], ["barriles", 1, 1], ["mesaBanco", 0, 1], ["cantaros", 1, 0.7], ["cesto", 0, 0.7], ["gatoCasa", 0, 0.5], ["sacos", 0, 0.4]],
+    taller: [["mesaTrabajo", 0, 1], ["telar", 1, 0.8], ["armero", 1, 0.8], ["yunque", 0, 0.6], ["cajas", 0, 1], ["pielColgada", 1, 0.5], ["barriles", 1, 0.4]],
     estudio: [["escritorioRunico", 0, 1], ["estanteRollos", 1, 1], ["atril", 0, 0.8], ["estanteRollos", 1, 0.4], ["arconCasa", 0, 0.4]],
     almacen: [["barriles", 1, 1], ["cajas", 0, 1], ["sacos", 0, 0.8], ["cantaros", 1, 0.7], ["cesto", 0, 0.6], ["barriles", 1, 0.5]],
-    secreto: [["cofreSotano", 0, 1], ["atril", 0, 0.8], ["huesos", 1, 0.6], ["estanteRollos", 1, 0.5], ["cajas", 0, 0.5]],
+    secreto: [["cofreSotano", 0, 1], ["losaRunica", 0, 0.6], ["atril", 0, 0.8], ["huesos", 1, 0.6], ["estanteRollos", 1, 0.5], ["cajas", 0, 0.5]],
   };
   const PIEZA = {
     hogarPiedra: { r: 150, s: 0.85, dy: 30, accion: "in.accion_hogar" },
@@ -496,6 +591,11 @@ window.INTERIORES = (function () {
     huesos: { r: 110, s: 0.9, dy: 30, accion: "in.accion_huesos", dlg: "in.sot_huesos" },
     yunque: { r: 80, s: 1.1, accion: "in.accion_yunque", dlg: "in.herreria_yunque" },
     cofreSotano: { r: 110, s: 1, accion: "in.accion_cofre" },
+    pielColgada: { r: 90, s: 0.9, dy: 4, accion: "in.accion_piel", dlg: "in.casa_piel" },
+    caldero: { r: 90, s: 0.85, accion: "in.accion_caldero", dlg: "in.casa_caldero" },
+    mesaTrabajo: { r: 170, s: 0.9, accion: "in.accion_mesatrabajo", dlg: "in.casa_mesatrabajo" },
+    losaRunica: { r: 80, s: 0.85, accion: "in.accion_losa" },
+    gatoCasa: { r: 50, s: 1, accion: "in.accion_gato" },
   };
   function amueblar(res, cu, clave, rs, mueble, examinar) {
     const m = res.muebles;
@@ -525,10 +625,15 @@ window.INTERIORES = (function () {
       if (id === "cesto") o.sem = rs() * 3;
       if (id === "arconCasa") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirArcon(q, k));
       if (id === "cofreSotano") (o.abierto = !!st.cofres[k]), (fn = (q) => abrirCofre(q, k, cu.clase === "secreto"));
+      if (id === "losaRunica") (o.leida = !!st.cofres[k]), (fn = leerLosa(k));
+      if (id === "gatoCasa") (o.pal = Math.floor(rs() * 3)), (fn = acariciarGato);
+      if (id === "pielColgada") o.pal = Math.floor(rs() * 3);
       if (id === "atril" && cu.clase === "secreto") (o.leido = !!st.cofres[k]), (fn = (q) => leerLibro(q, k, "in.libro_escondite"));
       else if (id === "atril") o.leido = true;
       mueble(id, x, y, o, r, d.accion, fn);
     });
+    // una alfombra en el medio de las salas, los dormitorios y los estudios, si no tapa nada del piso
+    if (["sala", "dormitorio", "estudio"].includes(cu.clase) && rs() < 0.75 && !m.some((q) => q.piso && Math.abs(q.x - 820) < 300)) m.push({ id: "alfombra", x: 820, y: 770, o: { s: 0.7 }, r: 0, piso: true, quieto: true });
   }
   // pasar de un cuarto a otro del mismo plano
   function cuartoPlano(p, n) {
@@ -576,6 +681,8 @@ window.INTERIORES = (function () {
   // la trampilla de un cuarto que arma otro sistema (la sala del Hongo Dorado): baja a su sótano de siempre y, al subir
   // la escalera, alSubir() lo vuelve a poner arriba
   function bajarDesde(p, alSubir) {
+    // la bodega del Hongo Dorado es un cuarto aparte, en volumen (motor/bodega.js)
+    if (p.tipo === "taberna" && window.BODEGA) return BODEGA.entrar(p, alSubir);
     const s0 = armarSotano(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(s0, { tipo: p.tipo, puerta: p, arriba: { alSubir }, ix: 380, iy: FONDO + 110, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;
@@ -624,6 +731,9 @@ window.INTERIORES = (function () {
     if (p.tipo === "taberna" && window.HONGO) return HONGO.entrar(p);
     // la herrería de Ása también es un taller aparte, a 30° (motor/herreria.js)
     if (p.tipo === "herreria" && window.HERRERIA) return HERRERIA.entrar(p);
+    if (p.tipo === "sanacion" && window.SANACION) return SANACION.entrar(p);
+    // el estudio de Svanhild, en volumen (motor/lindes.js)
+    if (p.tipo === "lindes" && window.LINDES) return LINDES.entrar(p);
     const cuarto = p.tipo === "plano" ? cuartoPlano(p, 0) : armarCuarto(p.tipo, p.cosa, p.clave);
     dentro = Object.assign(cuarto, { tipo: p.tipo, puerta: p, ix: 240, iy: 830, fundido: 1, saliendo: 0 });
     J.dentro = sistemaDentro;
@@ -631,7 +741,8 @@ window.INTERIORES = (function () {
     jug.anda = 0;
     jug.mira = { vista: "N", espejo: false };
     if (window.SONIDO) SONIDO.tocar("puerta", { vol: 0.45 });
-    HUD.aviso(p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : t("in.nombre_" + p.tipo), "#FFD98A");
+    const deQuien = cuarto.vecino && (p.tipo !== "plano" || String(p.plano).startsWith("auto_"));
+    HUD.aviso(deQuien ? t("in.casa_de", [t("av.nombre_" + cuarto.vecino)]) : p.tipo === "plano" ? plano(p.plano).nombre || t("in.nombre_casa") : t("in.nombre_" + p.tipo), "#FFD98A");
   }
   function salir() {
     if (!dentro || dentro.saliendo) return;
@@ -742,7 +853,8 @@ window.INTERIORES = (function () {
     }
     for (const n of dentro.gente) {
       const d = Math.hypot(dentro.ix - n.x, dentro.iy - n.y);
-      if (d < 190) prueba(d - 40, t("av.accion_hablar") + " · " + t("av.nombre_" + n.id), () => PODERES.hablarCon(n));
+      // la gente gana a los muebles que tiene al lado (el dueño detrás de su mesa)
+      if (d < 190) prueba(d - 90, t("av.accion_hablar") + " · " + t("av.nombre_" + (n.nombre || n.id)), () => (n.hablar ? n.hablar() : PODERES.hablarCon(n)));
     }
     return mejor;
   }
@@ -793,26 +905,42 @@ window.INTERIORES = (function () {
   // el sótano, como en la lámina «Bajo las casas de Eikholt»: el piso de la casa arriba (tablas, vigas y la trampilla),
   // postes sobre zócalos de piedra y un farol colgado. Las despensas, bodegas y escondites tienen pared de tablas; el
   // sótano viejo es de piedra, más viejo que la casa, con runas en los pilares y raíces que bajan.
+  // lo quieto del sótano se pinta una vez en un lienzo (d.cvSot); cada cuadro solo va lo que se mueve (vivoSotano)
   function dibujarSotano(c, d, tt) {
+    if (!d.cvSot) {
+      d.cvSot = document.createElement("canvas");
+      d.cvSot.width = RW;
+      d.cvSot.height = RH;
+      pintarSotano(d.cvSot.getContext("2d"), d);
+    }
+    c.drawImage(d.cvSot, 0, 0, RW, RH);
+    vivoSotano(c, d, tt);
+  }
+  function pintarSotano(c, d) {
     const r = DIB.azar(d.sotano.length * 31 + 5),
-      viejo = d.sotano === "viejo",
+      cl = d.sotano,
+      viejo = cl === "viejo",
+      piedra = viejo || cl === "carbonera",
+      tierra = cl === "escondite",
       M = { tabla: ["#4A3020", "#55382A", "#40281A", "#5C3E2C"], viga: "#2E1C12", vigaL: "#5C3E2C", poste: "#3E2818", posteL: "#6A4A34", piedra: ["#4A4A48", "#55554F", "#3E3E3C", "#5E5C56"], junta: "#24221F" };
     c.fillStyle = "#0E0A08";
     c.fillRect(0, 0, RW, RH);
-    if (viejo) {
-      // piedra grande, con musgo en las juntas
+    if (piedra) {
+      // piedra grande, con musgo en las juntas (en la carbonera, piedra tiznada de hollín)
+      if (!viejo) M.piedra = ["#34302E", "#3C3835", "#2C2826", "#423D39"];
       for (let fila = 0; fila * 96 < FONDO; fila++) {
         const y = FONDO - fila * 96;
         for (let x = -80 + (fila % 2) * 90; x < RW + 80; ) {
           const w = 150 + r() * 90;
           DIB.P(c, [x + 5, y - 4, x + w - 5, y - 6 + r() * 4, x + w - 2, y - 90 + r() * 6, x + 4, y - 92 + r() * 6], M.piedra[Math.floor(r() * 4)]);
-          DIB.P(c, [x + 5, y - 86, x + w - 5, y - 88, x + w - 8, y - 92, x + 8, y - 92], "#6A6862");
-          if (r() < 0.3) DIB.alfa(c, 0.6, () => DIB.E(c, x + w * r(), y - 4, 26, 6, "#4E6B3A"));
+          DIB.P(c, [x + 5, y - 86, x + w - 5, y - 88, x + w - 8, y - 92, x + 8, y - 92], viejo ? "#6A6862" : "#4A4642");
+          if (viejo && r() < 0.3) DIB.alfa(c, 0.6, () => DIB.E(c, x + w * r(), y - 4, 26, 6, "#4E6B3A"));
           x += w;
         }
       }
-      // raíces que bajan por la piedra
-      for (let k = 0; k < 6; k++) {
+      // raíces que bajan por la piedra (en la carbonera, manchas de hollín)
+      if (!viejo) for (let k = 0; k < 9; k++) DIB.alfa(c, 0.35, () => DIB.E(c, 60 + k * 180 + r() * 60, 200 + r() * 300, 70 + r() * 60, 110 + r() * 60, "#141010"));
+      else for (let k = 0; k < 6; k++) {
         const x = 80 + k * 280 + r() * 80;
         c.beginPath();
         c.moveTo(x, 130);
@@ -821,6 +949,23 @@ window.INTERIORES = (function () {
         c.lineWidth = 6 + r() * 6;
         c.stroke();
       }
+    } else if (tierra) {
+      // tierra apisonada con piedras metidas y marcos de troncos que sostienen el techo, como en un túnel
+      DIB.P(c, [0, 130, RW, 130, RW, FONDO, 0, FONDO], "#3A2A1C");
+      for (let k = 0; k < 70; k++) DIB.E(c, r() * RW, 150 + r() * (FONDO - 170), 8 + r() * 22, 6 + r() * 14, ["#4A3826", "#2E2016", "#55504A", "#463A30"][k % 4]);
+      for (let k = 0; k < 14; k++) DIB.alfa(c, 0.25, () => DIB.L(c, r() * RW, 140, r() * RW, FONDO, "#2A1C12", 2 + r() * 3));
+      [860, 1360].forEach((x) => {
+        DIB.P(c, [x - 90, FONDO, x - 70, FONDO, x - 64, 150, x - 84, 150], "#4A3020");
+        DIB.P(c, [x + 70, FONDO, x + 90, FONDO, x + 84, 150, x + 64, 150], "#5C3E2C");
+        DIB.P(c, [x - 100, 150, x + 100, 150, x + 100, 176, x - 100, 176], "#5C3E2C");
+      });
+      // las rayas que alguien rascó contando los días, y una Hagalaz junto a los huesos
+      for (let g = 0; g < 4; g++) {
+        const gx = 360 + g * 52;
+        for (let k = 0; k < 4; k++) DIB.L(c, gx + k * 9, 300, gx + k * 9 + 2, 340, "#8A7A64", 2.5);
+        DIB.L(c, gx - 4, 334, gx + 34, 306, "#8A7A64", 2.5);
+      }
+      FUTHARK.dibujar(c, "hagalaz", 640, 420, 46, "#8A7A64", 4);
     } else {
       // zócalo de piedra y tablas verticales
       for (let x = -20; x < RW + 40; ) {
@@ -863,11 +1008,44 @@ window.INTERIORES = (function () {
         DIB.P(c, [x - 70, FONDO + 20, x + 70, FONDO + 20, x + 70, 140, x - 70, 140], "#5E5C56");
         DIB.P(c, [x - 70, FONDO + 20, x - 10, FONDO + 20, x - 10, 140, x - 70, 140], "#4A4A46");
         for (let k = 1; k < 4; k++) DIB.L(c, x - 70, 140 + k * 120, x + 70, 140 + k * 120, M.junta, 3);
-        DIB.halo(c, x, 330, 90, "#73D5DB", 0.35 + 0.12 * Math.sin(tt * 1.6));
-        FUTHARK.dibujar(c, rn, x, 380, 90, "#73D5DB", 7);
       });
-      ["gebo", "hagalaz"].forEach((rn, k) => FUTHARK.dibujar(c, rn, 760 + k * 120, 360, 50, "#73D5DB", 5));
-    } else {
+    } else if (cl === "carbonera") {
+      // la bajada del carbón desde la calle y las tenazas y martillos viejos colgados
+      DIB.P(c, [950, 130, 1070, 130, 1060, FONDO - 30, 960, FONDO - 30], "#3E2818");
+      DIB.P(c, [1010, 130, 1070, 130, 1060, FONDO - 30, 1010, FONDO - 30], "#5C3E2C");
+      DIB.P(c, [972, 130, 1048, 130, 1044, 180, 976, 180], "#141010");
+      for (let k = 0; k < 6; k++) DIB.P(c, [990 + k * 8, 200 + k * 50, 1004 + k * 8, 196 + k * 50, 1006 + k * 8, 210 + k * 50, 992 + k * 8, 214 + k * 50], "#1E1A18");
+      DIB.L(c, 1260, 200, 1500, 200, "#2A1A10", 8);
+      [[1290, 0], [1340, 1], [1390, 0], [1440, 1], [1480, 0]].forEach(([x, k]) => {
+        DIB.L(c, x, 200, x, 214, "#2A2420", 3);
+        if (k) {
+          DIB.L(c, x, 214, x, 330, "#5C3E2C", 7);
+          DIB.P(c, [x - 26, 214, x + 26, 214, x + 26, 244, x - 26, 244], "#3A3A40");
+        } else {
+          DIB.L(c, x - 6, 214, x - 14, 340, "#3A3A40", 5);
+          DIB.L(c, x + 6, 214, x + 14, 340, "#3A3A40", 5);
+        }
+      });
+    } else if (cl === "archivo") {
+      // mapas viejos clavados a las tablas, uno a cada lado
+      [[150, 0.02], [1310, -0.03]].forEach(([x, a]) => {
+        c.save();
+        c.translate(x, 300);
+        c.rotate(a);
+        DIB.P(c, [-90, -80, 90, -84, 96, 70, -86, 76], "#B89A6E");
+        DIB.P(c, [-90, -80, 90, -84, 92, -60, -88, -56], "#C8AE84");
+        c.beginPath();
+        c.moveTo(-60, 40);
+        c.bezierCurveTo(-20, -10, 10, 50, 60, -30);
+        c.strokeStyle = "#4A78D0";
+        c.lineWidth = 3;
+        c.stroke();
+        for (let k = 0; k < 9; k++) DIB.P(c, [-70 + k * 16, -20 + (k % 3) * 14, -62 + k * 16, -36 + (k % 3) * 14, -54 + k * 16, -20 + (k % 3) * 14], "#4E6B3A");
+        DIB.E(c, -84, -76, 4, 4, "#3A2A1E");
+        DIB.E(c, 86, -80, 4, 4, "#3A2A1E");
+        c.restore();
+      });
+    } else if (!tierra) {
       // ristras de ajo, atados de hierbas y ajíes colgados de la viga
       const ristra = (x, tipo) => {
         DIB.L(c, x, 130, x, 170, "#8A7A5A", 2);
@@ -880,15 +1058,6 @@ window.INTERIORES = (function () {
       };
       [90, 130, 175, 1240, 1290, 1340].forEach((x, k) => ristra(x, k % 3));
     }
-    // el farol colgado, con su luz cálida
-    const fx = 820,
-      fy = 250;
-    DIB.L(c, fx, 136, fx, fy - 40, "#2A2420", 3);
-    DIB.halo(c, fx, fy, 260, "#FFD98A", 0.55 + 0.06 * Math.sin(tt * 7));
-    DIB.P(c, [fx - 18, fy - 40, fx + 18, fy - 40, fx + 22, fy + 24, fx - 22, fy + 24], "#2A2420");
-    DIB.P(c, [fx - 12, fy - 30, fx + 12, fy - 30, fx + 15, fy + 16, fx - 15, fy + 16], "#FFD98A");
-    DIB.E(c, fx, fy + 2, 5, 9, "#FFF4D0");
-    DIB.P(c, [fx - 22, fy - 40, fx + 22, fy - 40, fx, fy - 56], "#2A2420");
     // telarañas en la esquina
     DIB.alfa(c, 0.35, () => {
       for (let i = 0; i < 5; i++) DIB.L(c, RW, 142, RW - 70 - i * 26, 142 + 70 - i * 12, "#B5A5A0", 1.2);
@@ -907,6 +1076,103 @@ window.INTERIORES = (function () {
     }
     if (!viejo) for (let k = 0; k < 5; k++) DIB.L(c, 300 + k * 260, FONDO + 30 + k * 40, 380 + k * 250, FONDO + 70 + k * 30, "#2A1E14", 4);
     plancha(c, [200, FONDO, 1400, FONDO, 1410, FONDO + 16, 190, FONDO + 16], "rgba(0,0,0,0.5)");
+    // el charco donde gotea el techo
+    if (GOTEA[cl]) DIB.alfa(c, 0.55, () => DIB.E(c, GOTEA[cl], FONDO + 96, 70, 16, "#1E2A2E"));
+  }
+  // dónde gotea el techo en cada sótano (el charco va en el piso, la gota en vivoSotano)
+  const GOTEA = { escondite: 1060, viejo: 1250, carbonera: 1300 };
+  // lo que se mueve en el sótano: el farol, las runas de los pilares, el polvo en la luz de la trampilla y la gota
+  function vivoSotano(c, d, tt) {
+    const cl = d.sotano,
+      alta = !window.CALIDAD || CALIDAD.nivel === "alta",
+      baja = window.CALIDAD && CALIDAD.nivel === "baja";
+    if (cl === "viejo") {
+      [["fehu", 160], ["mannaz", 1460]].forEach(([rn, x]) => {
+        if (!baja) DIB.halo(c, x, 330, 90, "#73D5DB", 0.35 + 0.12 * Math.sin(tt * 1.6));
+        FUTHARK.dibujar(c, rn, x, 380, 90, "#73D5DB", 7);
+      });
+      ["gebo", "hagalaz"].forEach((rn, k) => FUTHARK.dibujar(c, rn, 760 + k * 120, 360, 50, "#73D5DB", 5));
+    }
+    // el farol colgado, que se mece apenas
+    const fa = Math.sin(tt * 0.9) * 0.04,
+      fx = 820 + Math.sin(fa) * 110,
+      fy = 250;
+    DIB.L(c, 820, 136, fx, fy - 40, "#2A2420", 3);
+    if (!baja) DIB.halo(c, fx, fy, 260, "#FFD98A", 0.55 + 0.06 * Math.sin(tt * 7));
+    c.save();
+    c.translate(fx, fy);
+    c.rotate(-fa);
+    DIB.P(c, [-18, -40, 18, -40, 22, 24, -22, 24], "#2A2420");
+    DIB.P(c, [-12, -30, 12, -30, 15, 16, -15, 16], "#FFD98A");
+    DIB.E(c, 0, 2, 5, 9, "#FFF4D0");
+    DIB.P(c, [-22, -40, 22, -40, 0, -56], "#2A2420");
+    c.restore();
+    if (giro) return;
+    // motas de polvo que flotan en la luz de la trampilla
+    if (!baja)
+      for (let k = 0; k < (alta ? 18 : 8); k++) {
+        const f = (tt * 0.035 + k * 0.618) % 1,
+          y = 90 + f * (FONDO + 20),
+          x = 300 + Math.sin(tt * 0.4 + k * 2.1) * (40 + f * 120) + (k % 5) * 14 - 28;
+        DIB.alfa(c, 0.5 * Math.sin(f * Math.PI), () => DIB.R(c, x, y, 3, 3, "#FFE8B0"));
+      }
+    // la gota: cae del techo al charco y deja un anillo
+    const gx = GOTEA[cl];
+    if (gx && !baja) {
+      const f = (tt % 2.6) / 2.6,
+        caida = 0.28;
+      if (f < caida) DIB.E(c, gx, 140 + (f / caida) ** 2 * (FONDO - 44), 3, 6, "#9EC8D0");
+      else {
+        const a = (f - caida) / (1 - caida);
+        c.beginPath();
+        c.ellipse(gx, FONDO + 96, 10 + a * 60, 3 + a * 12, 0, 0, Math.PI * 2);
+        c.strokeStyle = "rgba(158,200,208," + 0.6 * (1 - a) + ")";
+        c.lineWidth = 2;
+        c.stroke();
+      }
+    }
+  }
+  // la rata del sótano: cada tanto cruza de una pared a la otra pegada al fondo, y corre más si Eromash está cerca
+  function rataSotano(d, tt) {
+    const dt = Math.min(0.1, Math.max(0, tt - (d.rataUlt || tt)));
+    d.rataUlt = tt;
+    if (!d.rata) d.rata = { prox: 3 + Math.random() * 5 };
+    const R = d.rata;
+    if (!R.vista) {
+      R.prox -= dt;
+      if (R.prox > 0) return null;
+      const izq = Math.random() < 0.5;
+      Object.assign(R, { vista: true, x: izq ? 120 : RW - 120, y: FONDO + 40 + Math.random() * 80, v: izq ? 1 : -1, pausa: 0.6 + Math.random() * 0.8, fase: 0 });
+    }
+    const lejos = Math.hypot((d.ix || 0) - R.x, (d.iy || 0) - R.y) > 260;
+    if (R.pausa > 0 && lejos && Math.abs(R.x - RW / 2) < 200) R.pausa -= dt;
+    else R.x += R.v * (lejos ? 230 : 520) * dt;
+    R.fase += dt * (lejos ? 14 : 26);
+    if (R.x < 60 || R.x > RW - 60) (R.vista = false), (R.prox = 10 + Math.random() * 14);
+    return R;
+  }
+  function dibujarRata(c, R) {
+    const s = escala(R.y) / 2.6,
+      p = Math.sin(R.fase) * 3;
+    c.save();
+    c.translate(R.x, R.y);
+    c.scale(R.v * s, s);
+    DIB.alfa(c, 0.35, () => DIB.E(c, 0, 0, 26, 6, "#000"));
+    c.beginPath();
+    c.moveTo(-18, -6);
+    c.quadraticCurveTo(-40, -2 + p, -56, -10 - p);
+    c.strokeStyle = "#8A6A60";
+    c.lineWidth = 2.5;
+    c.stroke();
+    DIB.L(c, -10, -4, -12 + p, 0, "#3A2C26", 3);
+    DIB.L(c, 8, -4, 10 - p, 0, "#3A2C26", 3);
+    DIB.E(c, -2, -11, 20, 10, "#4A3A34");
+    DIB.E(c, 2, -14, 14, 6, "#5E4C44");
+    DIB.P(c, [12, -16, 30, -10, 14, -4], "#5E4C44");
+    DIB.E(c, 12, -19, 5, 5, "#8A6A60");
+    DIB.E(c, 22, -12, 1.8, 1.8, "#111111");
+    DIB.E(c, 30, -10, 2, 2, "#C8908A");
+    c.restore();
   }
   function dibujarPared(c, d, tt) {
     if (d.pared === "sotano") return dibujarSotano(c, d, tt);
@@ -972,14 +1238,15 @@ window.INTERIORES = (function () {
       DIB.R(c, vx - 92, vy - 4, 184, 8, "#5E130D");
       d.luzVentana = noche ? null : { x: vx, y: vy + 60, r: 420, col: "#C8E0F0" };
     }
-    // estandarte rojo de cola de golondrina con la E
+    // estandarte rojo de cola de golondrina con la E (en Eikholt, con la cornamenta: d.insignia)
     if (d.estandarte) {
       const ex = d.estandarte,
         sw = Math.sin(tt * 0.7) * 4;
       plancha(c, [ex - 90, 150, ex + 90, 150, ex + 90, 520 + sw, ex, 470 + sw, ex - 90, 520 + sw], "#9C2315");
       plancha(c, [ex - 90, 150, ex - 50, 150, ex - 50, 500 + sw, ex - 90, 520 + sw], "#5E130D");
       DIB.R(c, ex - 104, 140, 208, 16, "#C9A45A");
-      if (d.tipo === "taberna") {
+      if (d.insignia) DIB.insignia(c, (x2, y2) => [ex + x2 * 150, 215 + y2 * 150], "#F2ECEC");
+      else if (d.tipo === "taberna") {
         plancha(c, [ex - 50, 330, ex, 250, ex + 50, 330], "#FFD98A");
         DIB.R(c, ex - 10, 330, 20, 60, "#F2ECEC");
       } else {
@@ -1062,6 +1329,8 @@ window.INTERIORES = (function () {
       } }),
     );
     if (d.ix !== undefined && jugador) lista.push({ y: d.iy, f: () => jugador(d.ix, d.iy, escala(d.iy)) });
+    const rata = d.pared === "sotano" && jugador && rataSotano(d, tt);
+    if (rata) lista.push({ y: rata.y, f: () => dibujarRata(c, rata) });
     lista.sort((a, b) => a.y - b.y);
     lista.forEach((q) => q.f());
   }
@@ -1242,6 +1511,12 @@ window.INTERIORES = (function () {
       if (q.id === "tablaSuelta" && q.o.brillo) L0.push({ x: q.x + 44 * s, y: q.y - 120 * s, r: 120, col: "255,217,138", f: 0.4 });
       if (q.id === "yunque") L0.push({ x: q.x + 10 * s, y: q.y - 144 * s, r: 220, col: "255,141,113", f: 0.6 });
     });
+    if (d.pared === "sotano") {
+      // el farol colgado y, en el sótano viejo, las runas de los pilares
+      L0.push({ x: 820, y: 250, r: 460, col: "255,217,138", f: 0.75 + Math.sin(tAhora * 7) * 0.04 });
+      if (d.sotano === "viejo") [160, 1460].forEach((x) => L0.push({ x, y: 360, r: 300, col: "115,213,219", f: 0.45 + 0.12 * Math.sin(tAhora * 1.6) }));
+    }
+    d.muebles.forEach((q) => q.id === "losaRunica" && L0.push({ x: q.x, y: q.y - 130, r: 280, col: "115,213,219", f: 0.55 + 0.2 * Math.sin(tAhora * 1.4) }));
     if (d.luzVentana) L0.push({ x: d.luzVentana.x, y: d.luzVentana.y, r: d.luzVentana.r, col: "200,224,240", f: 0.6 });
     if (d.repisa) L0.push({ x: d.ventana > 900 ? 500 : 1300, y: 400, r: 200, col: "74,120,208", f: 0.5 });
     return L0;
@@ -1355,7 +1630,8 @@ window.INTERIORES = (function () {
       clase = pl.slice(4);
     const p =
       puertas.find((q) => !sot && plantillaDe(q.cosa.id, q.cosa.o) === pl) ||
-      puertas.find((q) => sot && CLASE_SOTANO[q.tipo] === clase) ||
+      // los sótanos se prueban desde una casa común: la taberna, la herrería y la sanación tienen su propio cuarto
+      puertas.find((q) => sot && q.tipo === "casa") ||
       puertas.find((q) => q.tipo === "casa") ||
       puertas[0];
     if (!p) return;
@@ -1368,7 +1644,9 @@ window.INTERIORES = (function () {
   }
   // salir del cuarto directo a otro lugar (la escalera del sótano de la hospedería)
   function salirA(x, y) {
-    if (!dentro) return;
+    // también desde un cuarto que arma otro sistema (la bodega de Góinn): se le avisa que se va
+    if (!dentro && !(J.dentro && J.dentro.alSalir)) return;
+    if (J.dentro && J.dentro.alSalir) J.dentro.alSalir();
     dentro = null;
     J.dentro = null;
     jug.x = x;
@@ -1383,5 +1661,5 @@ window.INTERIORES = (function () {
     puertas.push(p);
     return p;
   }
-  return { puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
+  return { dormirAqui: () => dormir(), nombreVecino: (sem, v) => vecinoDe(sem, v % 5).nombre, puertas, agregarPuerta, CUARTOS, entrar, salirA, bajarDesde, generarPlano, plano, planoDe, CLASES, COMO, irA: (n) => dentro && dentro.plano && irA(n, -1), adentro: () => !!dentro, cuarto: () => dentro, PLANTILLAS, PAREDES, RW, RH, FONDO, escala, vista, dibujarVista, claveMueble, plantillaDe, aVista, deVista, ponerGiro: (g) => (giro = g || 0) };
 })();

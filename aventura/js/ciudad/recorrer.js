@@ -53,8 +53,12 @@ window.RECORRER25 = (function () {
   // ---------- quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio ----------
   const FRASES_GENERICAS = { guardia: "ek.dice_guardia_", trabajador: "ek.dice_vecino_", trabajador2: "ek.dice_vecina_", trabajador3: "ek.dice_viajero_", herido: "ek.dice_vecina_", svanhild: null, eydis: null, orm: null };
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4, borracho: 5, cuentista: 3 };
   function frase(id, n, rol) {
+    n = Math.abs(Math.floor(n)) || 0;
+    // una de cada tres veces, los que no tienen nombre comentan lo que Eromash hizo afuera (FAMA25)
+    const fama = rol && /^(vecino|vecina|vendedor|guardia|viajero|borracho)$/.test(rol) && n % 3 === 0 && window.FAMA25 && FAMA25.frase(n / 3);
+    if (fama) return tr(fama);
     if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));
     const pre = FRASES_GENERICAS[id];
     if (pre === null) return null;
@@ -102,7 +106,7 @@ window.RECORRER25 = (function () {
     for (let i = 0; i < casas.length; i += 7) {
       const o = casas[i],
         d = (o.casa.D || 300) / 2 + 60;
-      animales.push({ tipo: "gato", x: o.x - d * Math.sin(o.ry) + 80, y: o.y + d * Math.cos(o.ry), vx: 0, vy: 0, col: ["#2A2420", "#8A6A4A", "#5E5A56", "#D8C8B0"][i % 4], f: r() * 9, susto: 0 });
+      animales.push({ tipo: "gato", x: o.x - d * Math.sin(o.ry) + 80, y: o.y + d * Math.cos(o.ry), vx: 0, vy: 0, col: ["#2A2420", "#8A6A4A", "#5E5A56", "#D8C8B0"][i % 4], f: r() * 9, susto: 0, arisco: i % 2 === 0 });
     }
     for (let i = 0; i < 16; i++) {
       const a = r() * TAU,
@@ -293,9 +297,10 @@ window.RECORRER25 = (function () {
         dy = ero.y - p.y,
         d = Math.hypot(dx, dy);
       p.miraA = null;
-      // los chicos se esconden: corren lejos y después espían desde donde quedaron
-      if (CHICOS[p.id]) {
-        if (d < 380 && !p.huye) {
+      // los chicos se esconden si él llega corriendo: corren lejos y después espían desde donde quedaron (caminando
+      // despacio se dejan alcanzar, y se los puede invitar a las escondidas: ESCONDIDAS25)
+      if (CHICOS[p.id] && !p.escondido) {
+        if (d < 380 && !p.huye && ero.anda === 2) {
           p.huye = 1.6;
           p.vxAntes = p.vx;
           p.vyAntes = p.vy;
@@ -313,11 +318,35 @@ window.RECORRER25 = (function () {
         if (!p.huye && d < 1100 && !p.vx && !p.vy) p.miraA = [dx, dy];
         continue;
       }
+      // los guardias de las puertas saludan al que pasa (de día y de noche distinto), uno por vez y cada tanto
+      if (p.porton && d < 420 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+        const noche = h >= 21 || h < 6;
+        globos.push({ p, texto: tr("ek.saludo_" + (noche ? "noche_" : "dia_") + (Math.floor(t + p.x) % 4 + 4) % 4), t: 0 });
+        for (const q of gente) if (q.porton === p.porton) q.pregon = t + 45;
+        enfriaGlobo = 3;
+      }
+      // los del hnefatafl miran el tablero y comentan la partida si él anda cerca
+      if (p.tafl) {
+        p.miraA = [p.tafl[0] - p.x, p.tafl[1] - p.y];
+        if (d < 480 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+          globos.push({ p, texto: tr("ek.tafl_dice_" + (Math.floor(t * 0.23 + p.x) % 6 + 6) % 6), t: 0 });
+          p.pregon = t + 20;
+          enfriaGlobo = 5;
+        }
+        continue;
+      }
       // Gudrun: tararea junto al pozo y se calla cuando él está cerca
       if (p.canta) p.callada = d < 520;
       // los que están quietos lo miran pasar; Håkon lo mira desde todo el campo
       const radio = p.id === "hakon" ? 1600 : 520;
       if (d < radio && !p.vx && !p.vy) p.miraA = [dx, dy];
+      // los puesteros pregonan lo suyo cuando él pasa cerca, aunque vaya caminando (cada uno cada tanto)
+      if (p.puesto && d < 560 && d > 120 && enfriaGlobo <= 0 && !globos.length && !api.callados && (p.pregon || 0) <= t) {
+        globos.push({ p, texto: tr("ek.pregon_" + p.puesto + "_" + (Math.floor(t * 0.31 + p.x) & 3)), t: 0 });
+        p.pregon = t + 30;
+        enfriaGlobo = 4;
+        continue;
+      }
       // a veces dicen algo si se queda al lado (una frase a la vez en toda la ciudad)
       if (d < 230 && enfriaGlobo <= 0 && !ero.anda && !globos.length && !api.callados) {
         const s = frase(p.id, Math.floor(t * 0.37 + p.x), p.rol);
@@ -349,14 +378,17 @@ window.RECORRER25 = (function () {
           a.vy = (dy / d) * 260;
         } else if (Math.random() < dt * 0.8) {
           // picotean y dan pasitos cerca de su gallinero
+          // (las escapadas de GALLINAS25 no vuelven solas: hay que arrearlas)
           const ax = a.cx - a.x,
             ay = a.cy - a.y,
-            vuelta = Math.hypot(ax, ay) > 450;
+            vuelta = !a.escapada && Math.hypot(ax, ay) > 450;
           a.vx = vuelta ? ax * 0.3 : (Math.random() - 0.5) * 90;
           a.vy = vuelta ? ay * 0.3 : (Math.random() - 0.5) * 90;
         } else if (Math.random() < dt) a.vx = a.vy = 0;
       } else if (a.tipo === "gato") {
-        if (d < 260 && !a.susto) a.susto = 1.4;
+        // los ariscos huyen siempre; los mansos solo si él llega corriendo (y se dejan acariciar)
+        if (a.mimo > 0) (a.mimo -= dt), (a.vx = a.vy = 0), (a.susto = 0);
+        else if (d < 260 && !a.susto && (a.arisco || ero.anda === 2)) a.susto = 1.4;
         if (a.susto > 0) {
           a.susto -= dt;
           a.vx = (dx / d) * 300;
@@ -388,7 +420,8 @@ window.RECORRER25 = (function () {
         // el perro del corral: si Eromash se queda cerca un momento, lo sigue un rato
         if (d < 300) a.sigue = Math.min(25, a.sigue + dt * 4);
         else a.sigue = Math.max(0, a.sigue - dt);
-        if (a.sigue > 3 && d > 160) {
+        if (a.mimo > 0) (a.mimo -= dt), (a.vx = a.vy = 0);
+        else if (a.sigue > 3 && d > 160) {
           a.vx = (-dx / d) * Math.min(420, d * 1.4);
           a.vy = (-dy / d) * Math.min(420, d * 1.4);
         } else a.vx = a.vy = 0;
@@ -475,8 +508,8 @@ window.RECORRER25 = (function () {
   const VK = {};
   const imgVk = (v) => VK[v] || (VK[v] = VIKINGO.imagen("R", v, "calm"));
   function dibujarEromash(c, x, y, t, fantasma) {
-    // (la figura a través de lo que lo tapa es siempre la simple: la del juego pone su propia transparencia)
-    if (dibujarEro && !fantasma) return dibujarEro(c, x, y, t);
+    // en el juego es el Eromash de verdad (también para su silueta, sin sombra: la saca el recorte)
+    if (dibujarEro) return dibujarEro(c, x, y, t);
     const k = 1 / 1.96,
       bote = ero.anda ? Math.abs(Math.sin(ero.paso)) * 6 : Math.sin(t * 2) * 1.2;
     c.save();
@@ -487,6 +520,57 @@ window.RECORRER25 = (function () {
     if (ero.vista.espejo) c.scale(-1, 1);
     if (img.complete) c.drawImage(img, -62, -150 - bote, 125, 150);
     c.restore();
+  }
+  // ---------- la silueta de Eromash detrás de las cosas ----------
+  // Como en el bosque: Eromash (con su pose de verdad, de frente, de perfil o de espaldas) se dibuja aparte, se recorta
+  // con lo que tiene delante y se pinta claro encima, así se lo ve solo donde algo lo tapa y nunca dos veces.
+  const silCv = document.createElement("canvas"),
+    silC = silCv.getContext("2d"),
+    tapaCv = document.createElement("canvas"),
+    tapaC = tapaCv.getContext("2d");
+  function siluetaEromash(c, cam, cw, ch, ex, ey, t) {
+    const l = VISTA25.tapas(ex, ey);
+    if (!l.length) return;
+    const e = cam.esc,
+      bx = ex - 110,
+      by = ey - 210,
+      bw = 220,
+      bh = 240,
+      w = Math.ceil(bw * e),
+      h = Math.ceil(bh * e);
+    if (w < 2 || h < 2) return;
+    if (silCv.width !== w || silCv.height !== h) {
+      silCv.width = tapaCv.width = w;
+      silCv.height = tapaCv.height = h;
+    }
+    tapaC.setTransform(1, 0, 0, 1, 0, 0);
+    tapaC.clearRect(0, 0, w, h);
+    tapaC.setTransform(e, 0, 0, e, -bx * e, -by * e);
+    VISTA25.dibujarTapas(tapaC, l, cam, t);
+    // solo lo sólido tapa: la sombra en el piso (semitransparente) se borra del recorte
+    const im = tapaC.getImageData(0, 0, w, h),
+      px = im.data;
+    let algo = false;
+    for (let i = 3; i < px.length; i += 4) {
+      px[i] = px[i] > 230 ? 255 : 0;
+      if (px[i]) algo = true;
+    }
+    if (!algo) return;
+    tapaC.putImageData(im, 0, 0);
+    silC.setTransform(1, 0, 0, 1, 0, 0);
+    silC.globalCompositeOperation = "source-over";
+    silC.clearRect(0, 0, w, h);
+    silC.setTransform(e, 0, 0, e, -bx * e, -by * e);
+    dibujarEromash(silC, ex, ey, t, true);
+    silC.setTransform(1, 0, 0, 1, 0, 0);
+    silC.globalCompositeOperation = "destination-in";
+    silC.drawImage(tapaCv, 0, 0);
+    silC.globalCompositeOperation = "source-in";
+    silC.fillStyle = "#F2ECEC";
+    silC.fillRect(0, 0, w, h);
+    silC.globalCompositeOperation = "source-over";
+    VISTA25.aVista(c, cam, cw, ch);
+    alfa(c, 0.6, () => c.drawImage(silCv, bx, by, bw, bh));
   }
   // un animal visto de costado, dado vuelta según hacia dónde va en la pantalla
   function dibujarAnimal(c, a, sx, sy, t, cam) {
@@ -557,11 +641,19 @@ window.RECORRER25 = (function () {
       L(c, -18, -20, -28, -30 + cola, a.col, 4);
     }
     c.restore();
+    // acariciado: un rombo rosa que sube
+    if (a.mimo > 0) {
+      const k = 1 - a.mimo / 2,
+        hy = sy - 58 - k * 26;
+      c.globalAlpha = Math.min(1, a.mimo * 1.5);
+      P(c, [sx, hy - 7, sx + 6, hy, sx, hy + 7, sx - 6, hy], "#E0B2B2");
+      c.globalAlpha = 1;
+    }
   }
 
   // lo que va parado en el orden del mundo: Eromash, los animales y los globos de lo que dicen
   function extra(cam, t) {
-    const l = [{ x: ero.x, y: ero.y, f: (c, sx, sy) => dibujarEromash(c, sx, sy, t) }];
+    const l = [{ x: ero.x, y: ero.y, ero: true, f: (c, sx, sy) => dibujarEromash(c, sx, sy, t) }];
     const lejos = cam.esc < VISTA25.LEJOS.gente;
     if (!lejos) for (const a of animales) l.push({ x: a.x, y: a.y, f: (c, sx, sy) => dibujarAnimal(c, a, sx, sy, t, cam) });
     return l;
@@ -677,13 +769,9 @@ window.RECORRER25 = (function () {
     const e = cam.esc;
     const noche = h >= 17 && h < 21 ? (h - 17) / 4 : h >= 21 || h < 5 ? 1 : h < 7 ? (7 - h) / 2 : 0;
     if (capa === "mundo") {
-      // Eromash se ve a través de lo que lo tapa (un techo, la copa del Roble): su figura otra vez, apenas transparente
+      // Eromash se ve a través de lo que lo tapa (un techo, la copa del Roble, un farol): solo donde lo tapa
       const [ex, ey] = V(ero.x, ero.y);
-      // (solo si de verdad algo lo tapa: si está a la vista no se lo dibuja dos veces)
-      if (VISTA25.tapado(ex, ey)) {
-        VISTA25.aVista(c, cam, cw, ch);
-        alfa(c, 0.32, () => dibujarEromash(c, ex, ey, t, true));
-      }
+      siluetaEromash(c, cam, cw, ch, ex, ey, t);
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (capa === "mundo") {
@@ -873,6 +961,32 @@ window.RECORRER25 = (function () {
     }
   }
 
-  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), callados: false };
+  // el perro o un gato manso a mano, para acariciarlo (lo pide cercano() de ciudad/juego.js)
+  function animalCerca(r) {
+    let mejor = null,
+      dm = r;
+    for (const a of animales) {
+      if ((a.tipo !== "perro" && !(a.tipo === "gato" && !a.arisco)) || a.susto > 0) continue;
+      const d = Math.hypot(a.x - ero.x, a.y - ero.y);
+      if (d < dm) (dm = d), (mejor = a);
+    }
+    return mejor && { a: mejor, d: dm };
+  }
+  // los cuervos del Roble y de las piedras levantan vuelo todos hacia (dx, dy) (CUERVOS25)
+  function volarCuervos(dx, dy) {
+    const l = Math.hypot(dx, dy) || 1;
+    for (const a of animales)
+      if (a.tipo === "cuervo") {
+        a.vuela = 1;
+        a.vz = 260;
+        a.vx = (dx / l) * 340 + (Math.random() - 0.5) * 80;
+        a.vy = (dy / l) * 340 + (Math.random() - 0.5) * 80;
+      }
+  }
+  function mimar(a) {
+    a.mimo = 2;
+    if (a.tipo === "perro") a.sigue = 25;
+  }
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, volarCuervos, decir: (p, texto) => ((globos.length = 0), globos.push({ p, texto, t: 0 })), gallinas: () => animales.filter((a) => a.tipo === "gallina"), tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
   return api;
 })();

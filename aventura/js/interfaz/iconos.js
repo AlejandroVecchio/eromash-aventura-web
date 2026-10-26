@@ -295,9 +295,47 @@ window.ICONOS = (function () {
       for (let k = -6; k <= 6; k += 3) linea(c, [x + k * u, y + 1 * u, x + k * u, y + 4.5 * u], col, 1 * u);
       linea(c, [x - 7 * u, y + 5 * u, x + 7 * u, y + 5 * u], RUNICO, 1.2 * u);
     },
+    // los de Eikholt (ciudad/mapa.js): el yunque de Ása, la jarra del Hongo Dorado, la Casa de Sanación y las puertas
+    yunque(c, x, y, u, col) {
+      pol(c, [x - 6.5 * u, y - 3 * u, x + 4 * u, y - 3 * u, x + 6.5 * u, y - 1.2 * u, x + 3 * u, y - 0.2 * u, x - 4 * u, y - 0.2 * u], col);
+      pol(c, [x - 2.2 * u, y - 0.2 * u, x + 2.2 * u, y - 0.2 * u, x + 1.5 * u, y + 2.6 * u, x - 1.5 * u, y + 2.6 * u], CLARO);
+      pol(c, [x - 4 * u, y + 2.6 * u, x + 4 * u, y + 2.6 * u, x + 4 * u, y + 4.6 * u, x - 4 * u, y + 4.6 * u], col);
+      pol(c, [x + 3 * u, y - 7 * u, x + 4 * u, y - 7 * u, x + 3 * u, y - 4.2 * u], ORO);
+    },
+    taberna(c, x, y, u, col) {
+      pol(c, [x - 4.5 * u, y - 3.5 * u, x + 2.5 * u, y - 3.5 * u, x + 2.5 * u, y + 5 * u, x - 4.5 * u, y + 5 * u], col);
+      linea(c, [x + 2.5 * u, y - 1.5 * u, x + 5.5 * u, y - 1.5 * u, x + 5.5 * u, y + 2.5 * u, x + 2.5 * u, y + 2.5 * u], col, 1.4 * u);
+      pol(c, [x - 5 * u, y - 3.5 * u, x - 3 * u, y - 6 * u, x + 1 * u, y - 5.5 * u, x + 3 * u, y - 3.5 * u], CLARO);
+      linea(c, [x - 2.5 * u, y - 1 * u, x - 2.5 * u, y + 3 * u], ORO, 1 * u);
+    },
+    sanacion(c, x, y, u, col) {
+      // un frasco con la runa Berkano
+      pol(c, [x - 1.5 * u, y - 6 * u, x + 1.5 * u, y - 6 * u, x + 1.5 * u, y - 3.5 * u, x + 4.5 * u, y - 1 * u, x + 4.5 * u, y + 5 * u, x - 4.5 * u, y + 5 * u, x - 4.5 * u, y - 1 * u, x - 1.5 * u, y - 3.5 * u], col);
+      linea(c, [x - 1 * u, y - 0.5 * u, x - 1 * u, y + 3.5 * u], CLARO, 0.9 * u);
+      linea(c, [x - 1 * u, y - 0.5 * u, x + 1.6 * u, y + 0.7 * u, x - 1 * u, y + 1.5 * u, x + 1.6 * u, y + 2.5 * u, x - 1 * u, y + 3.5 * u], CLARO, 0.9 * u);
+    },
+    // la mesa de hnefatafl de la plaza de Eikholt: el tablero en rombo con las piezas y el rey dorado
+    tafl(c, x, y, u, col) {
+      pol(c, [x, y - 6 * u, x + 6.5 * u, y, x, y + 6 * u, x - 6.5 * u, y], col);
+      for (const [i, j] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -2], [0, 2], [-2, 0], [2, 0]]) pol(c, [x + (i - j) * 1.6 * u, y + (i + j) * 1.2 * u - 1 * u, x + (i - j) * 1.6 * u + 1 * u, y + (i + j) * 1.2 * u, x + (i - j) * 1.6 * u, y + (i + j) * 1.2 * u + 1 * u, x + (i - j) * 1.6 * u - 1 * u, y + (i + j) * 1.2 * u], i + j === 0 || Math.abs(i) + Math.abs(j) === 2 ? OSCURO : CLARO);
+      pol(c, [x, y - 2.6 * u, x + 1.5 * u, y, x, y + 1.6 * u, x - 1.5 * u, y], ORO);
+    },
+    // las cintas de promesa del Roble: un poste con tres cintas al viento
+    cintas(c, x, y, u, col) {
+      linea(c, [x - 2 * u, y + 5.5 * u, x - 2 * u, y - 6 * u], "#B89A6E", 1.4 * u);
+      pol(c, [x - 2 * u, y - 5 * u, x + 5.5 * u, y - 4 * u, x + 4 * u, y - 2.6 * u, x - 2 * u, y - 3.4 * u], col);
+      pol(c, [x - 2 * u, y - 2 * u, x + 4.5 * u, y - 0.6 * u, x + 3 * u, y + 0.8 * u, x - 2 * u, y - 0.4 * u], ORO);
+      pol(c, [x - 2 * u, y + 1 * u, x + 3.5 * u, y + 2.8 * u, x + 2 * u, y + 4 * u, x - 2 * u, y + 2.6 * u], "#7BC86C");
+    },
+    puerta(c, x, y, u, col) {
+      pol(c, [x - 6 * u, y + 5 * u, x - 6 * u, y - 4 * u, x - 3 * u, y - 6 * u, x - 3 * u, y + 5 * u], col);
+      pol(c, [x + 6 * u, y + 5 * u, x + 6 * u, y - 4 * u, x + 3 * u, y - 6 * u, x + 3 * u, y + 5 * u], col);
+      pol(c, [x - 3 * u, y - 3.5 * u, x + 3 * u, y - 3.5 * u, x + 3 * u, y - 2 * u, x - 3 * u, y - 2 * u], col);
+      pol(c, [x - 2 * u, y + 5 * u, x - 2 * u, y - 1 * u, x + 2 * u, y - 1 * u, x + 2 * u, y + 5 * u], OSCURO);
+    },
   };
   // el color de cada miniatura por defecto
-  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", libro: "#F2ECEC", holmr: "#C8402D", manantial: RUNICO, puente: "#B89A6E" };
+  const COLOR = { ciudad: ROSA, casa: "#9C2315", puesto: "#C8402D", aserradero: "#9C2315", santuario: "#8A8478", salon: "#5E4A36", tumulo: "#5C6448", torre: "#6A6660", caravana: "#7A5634", campamento: ROJO, claro: "#C9A0F0", paso: "#6A6660", lugar: ROSA, altar: ORO, piedra: RUNICO, piedraCamino: "#C8402D", cofre: ORO, manzano: "#F5A524", mistico: "#8CF0B4", mercader: ORO, contrato: "#C8402D", instructor: "#FFD98A", horgr: "#C8402D", bandidos: "#9C2315", nido: "#3A3634", jotunn: "#8E8A86", pesca: "#5A8CA8", libro: "#F2ECEC", holmr: "#C8402D", manantial: RUNICO, puente: "#B89A6E", yunque: "#8E8A86", taberna: "#F5A524", sanacion: "#7BC86C", puerta: "#B89A6E", tafl: "#B89A6E", cintas: "#C8402D" };
 
   function dibujar(c, tipo, x, y, r, op = {}) {
     const f = DIBUJOS[tipo] || DIBUJOS.lugar;

@@ -168,6 +168,8 @@ canvas.mapa { cursor: crosshair; }
 .mapa-zoom button { width: 40px; height: 40px; font-size: 22px; font-weight: 700; line-height: 1; border: 2px solid #F2ECEC; background: rgba(17,17,17,0.85); color: #F2ECEC; cursor: pointer; }
 .mapa-zoom button:hover { background: #9C2315; }
 .mapa-ley { margin: 10px 0 0 !important; font-size: 12px !important; }
+.mapa-hoy { margin: -4px 0 10px !important; font-size: 13px !important; line-height: 1.4; }
+.mapa-hoy b { color: var(--oro); font-weight: 600; }
 .diario-resumen p { margin: 0 0 8px; font-size: 14px; }
 .diario-resumen b { color: var(--oro); font-weight: 800; }
 /* minimapa: arriba a la izquierda, con la hora del día */
