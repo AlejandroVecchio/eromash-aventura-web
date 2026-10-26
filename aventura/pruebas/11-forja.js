@@ -59,22 +59,33 @@
       await esperar(1500);
       FORJA.empezar("espadaAncha", "fuego", 123);
       const S = FORJA.estado();
-      // un robot que aprieta cuando cada nota llega al yunque (durante 7,5 s)
+      // un robot que aprieta cuando cada nota llega al yunque (durante 7,5 s); mira el reloj y no S.ahora, que solo
+      // avanza con cada cuadro y con la máquina cargada salta de a mucho
       const fin = performance.now() + 7500;
       while (performance.now() < fin) {
+        const ya = performance.now() / 1000 - S.t0 - 0.5;
         for (const n of S.p.notas)
-          if (n.estado === "viene" && Math.abs(n.t - S.ahora) < 0.025) {
+          if (n.estado === "viene" && Math.abs(n.t - ya) < 0.03) {
             FORJA.pulsar(n.l);
             setTimeout(() => FORJA.soltarCarril(n.l), n.dur ? n.dur * 1000 + 60 : 40);
           }
         await esperar(8);
       }
       si(S.cuentas.perfecto + S.cuentas.bien >= 3, "aciertos: " + JSON.stringify(S.cuentas));
-      const antes = PODERES.pj().plata;
+      // lo que entre por otro lado mientras tanto (descubrir un lugar paga 8 al volver al juego) no cuenta
+      const antes = PODERES.pj().plata,
+        dar = PODERES.darPlata;
+      let otra = 0;
+      PODERES.darPlata = (n) => {
+        const p0 = PODERES.pj().plata;
+        dar(n);
+        otra += PODERES.pj().plata - p0;
+      };
       tecla("Escape", true);
       await esperar(120);
       tecla("Escape", false);
-      igual(PODERES.pj().plata - antes, 123, "devolvió la plata:");
+      PODERES.darPlata = dar;
+      igual(PODERES.pj().plata - antes - otra, 123, "devolvió la plata:");
       si(!FORJA.estado() && JUEGO.J.modo === "juego", "vuelve al juego");
     } },
   );
