@@ -96,9 +96,18 @@ Una losa en grilla con una piedra que echa luz rúnica (Kenaz), piedras espejo t
   - **El sello del Santuario de las Raíces** en la misión principal EL-07 (`juego.js`): antes del calco, la luz rúnica tiene que llegar al sello entre las raíces (`ataduras`, semilla fija). Dejarlo no hace el calco.
   - `RITOS.tocar(r)` lo abre sin caminar (pruebas).
 
-## Hnefatafl
+## Hnefatafl (`mj-tafl.js`)
 
-(próximamente)
+El juego de tablero de los nórdicos sobre la tabla de Fjalar: el rey (con su corona de oro) y sus defensores (Algiz) en el medio, los atacantes (Tiwaz) en los bordes. Todas las piezas corren en línea recta como la torre, sin saltar. Solo el rey se para en el trono y en las esquinas; las demás pasan por encima del trono vacío. Una pieza queda tomada entre dos enemigas, o entre una enemiga y una casilla hostil (esquina o trono vacío); el rey ayuda a tomar. El rey gana llegando a una esquina; los atacantes ganan rodeándolo por los cuatro lados (el trono cuenta como atacante). Quien no puede mover pierde. Se toca una pieza (se marcan sus destinos) y después adónde va; con el teclado, flechas y usar. Devuelve `{ gano, jugadas }`.
+
+- **Variantes**: `base` (brandubh de 7, el jugador defiende), `ataque` (el jugador ataca y Fjalar defiende), `borde` (al rey le alcanza cualquier borde), `reloj` (escapar en 24 jugadas) y `gran` (tablut de 9).
+- **Para que se entienda**: los destinos que comen llevan un rombo rojo (con la marca encima, lo que caería se ve tachado), lo comido se desvanece tachado, y a la izquierda están las cuatro reglas a mano.
+- **Cómo se juega** (botón a la izquierda, acción `diario`): seis páginas con tablitas de 5 × 5 dibujadas como la tabla (`AYUDA`): cómo se mueve, cómo se come, solo come el que mueve, las casillas que ayudan, el rey y cómo se gana. Flechas o botones pasan de página; usar, el ✕ o Esc lo cierran (Esc no deja la partida: `cierra(S)` en `MINIJ.registrar`). Fjalar espera mientras se lee.
+- **Fjalar piensa** una jugada adelante: gana si puede, toma si puede, nunca deja el escape (o el encierro) servido y no deja una pieza para que se la tomen.
+- **Dónde está**: el Hongo Dorado (`hongo.js`). Del lado de su cajón al que mira Fjalar aparece «Jugar al hnefatafl con Fjalar».
+  - Cada partida ganada sube de tabla: borde, base, reloj, ataque, gran (`st.tafl`).
+  - La apuesta (plata y experiencia) se cobra una vez por día (`st.taflDia`).
+  - `HONGO.taflConFjalar()` lo abre sin caminar (pruebas).
 
 ## El rastreo con la Lente (`mj-rastreo.js`)
 

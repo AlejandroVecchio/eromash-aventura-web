@@ -4,7 +4,7 @@
 // luz de arriba a la derecha, las runas del futhark (las de JUEGOS_RUNAS), el puntero y los controles por acciones, el
 // cartel del final y el pie con las teclas. Cada minijuego se registra con
 //   MINIJ.registrar(tipo, { armar(S), paso(S, dt), tocar(S, i), hit(S, x, y) → i, arrastre(S, x, y, fase),
-//                            dibujar(S, D), variantes: { id: op }, pie: clave, res(S) → texto })
+//                            dibujar(S, D), variantes: { id: op }, pie: clave, res(S) → texto, cierra(S) → true si Esc cerró algo propio en vez de dejar el juego })
 // y se juega con MINIJ.empezar(tipo, { variante, quien, x, y, fin(res) }): `fin` recibe { gano, dejo, ... } y quien lo
 // pidió (un cofre, un encargo, un acertijo) decide qué pasa. Las variantes reutilizan el mismo juego con otras reglas.
 // Probar mecánicas lista solo todo lo registrado (`MINIJ.lista()`). Textos `mn.` (y los de cada juego).
@@ -108,7 +108,7 @@ window.MINIJ = (function () {
       if (S.fin.t > 0.4 && (CONTROLES.recien("interactuar") || CONTROLES.recien("seguir") || CONTROLES.recien("pausa"))) return cerrar();
       return dibujar();
     }
-    if (CONTROLES.recien("pausa")) return terminar({ gano: false, dejo: true });
+    if (CONTROLES.recien("pausa") && !(S.def.cierra && S.def.cierra(S))) return terminar({ gano: false, dejo: true });
     // el reloj de las variantes contra el tiempo
     if (S.v.tiempo) {
       S.queda = Math.max(0, S.v.tiempo - S.t);

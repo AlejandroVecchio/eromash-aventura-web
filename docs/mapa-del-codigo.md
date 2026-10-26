@@ -307,6 +307,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-hilo.js**: minijuego: el hilo de las Nornas (MINIJ «hilo»)
 - **mj-rastreo.js**: minijuego: el rastreo con la Lente (MINIJ «rastreo»)
 - **mj-rayo.js**: minijuego: el rayo de luz rúnica (MINIJ «rayo»)
+- **mj-tafl.js**: minijuego: hnefatafl (MINIJ «tafl»)
+  - una pieza: disco de piedra (atacante oscuro con Tiwaz, defensor claro con Algiz, rey con su corona) · «Cómo se juega»: páginas con tablitas de 5 × 5 dibujadas como la tabla de verdad
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
   - de dónde sale cada tipo · los de cada misión
@@ -504,6 +506,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-hilo.js**: Textos del hilo de las Nornas (motor/mj-hilo.js) y de la Poza de Urd que lo pide (motor/vida.js): prefijo mn.hilo
 - **mj-rastreo.js**: Textos del rastreo con la Lente (motor/mj-rastreo.js) y del último rastro de los contratos que lo pide (motor/contratos.js): prefijo mn.rastreo
 - **mj-rayo.js**: Textos del rayo de luz rúnica (motor/mj-rayo.js) y de lo que lo pide (motor/ritos.js, el sello de EL-07 en motor/juego.js): prefijo mn.rayo
+- **mj-tafl.js**: Textos de hnefatafl (motor/mj-tafl.js) y de Fjalar en el Hongo Dorado que lo pide (motor/hongo.js): prefijo mn.tafl y ho.tafl
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
