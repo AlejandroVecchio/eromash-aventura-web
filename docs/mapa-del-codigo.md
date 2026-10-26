@@ -305,6 +305,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-anillos.js**: minijuego: la cerradura de anillos (MINIJ «anillos»)
 - **mj-hachas.js**: minijuego: hachas al blanco (MINIJ «hachas»)
 - **mj-hilo.js**: minijuego: el hilo de las Nornas (MINIJ «hilo»)
+- **mj-rastreo.js**: minijuego: el rastreo con la Lente (MINIJ «rastreo»)
 - **mj-rayo.js**: minijuego: el rayo de luz rúnica (MINIJ «rayo»)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
@@ -501,6 +502,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **minijuegos.js**: Textos del motor de los minijuegos (motor/minijuegos.js) y de la cerradura de anillos (motor/mj-anillos.js): prefijo mn.
 - **mj-hachas.js**: Textos de hachas al blanco (motor/mj-hachas.js) y de la diana de la Guardia que lo pide (ciudad/juego.js): prefijo mn.hachas y ek.hachas
 - **mj-hilo.js**: Textos del hilo de las Nornas (motor/mj-hilo.js) y de la Poza de Urd que lo pide (motor/vida.js): prefijo mn.hilo
+- **mj-rastreo.js**: Textos del rastreo con la Lente (motor/mj-rastreo.js) y del último rastro de los contratos que lo pide (motor/contratos.js): prefijo mn.rastreo
 - **mj-rayo.js**: Textos del rayo de luz rúnica (motor/mj-rayo.js) y de lo que lo pide (motor/ritos.js, el sello de EL-07 en motor/juego.js): prefijo mn.rayo
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas

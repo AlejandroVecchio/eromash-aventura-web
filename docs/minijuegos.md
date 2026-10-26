@@ -100,6 +100,9 @@ Una losa en grilla con una piedra que echa luz rúnica (Kenaz), piedras espejo t
 
 (próximamente)
 
-## El rastreo con la Lente
+## El rastreo con la Lente (`mj-rastreo.js`)
 
-(próximamente)
+El piso del bosque visto por la Lente: hojas, agujas, piedras y huellas. Solo dentro del círculo de la Lente se ven las huellas. Las de la bestia que se sigue forman un camino desde el borde y hay que marcarlas en orden; la siguiente late apenas con luz rúnica cuando la Lente anda cerca. Hay huellas de otros bichos que confunden. Marcar una que no es (o saltearse una del camino) enfría el rastro, y con demasiado frío se pierde. Con el puntero se arrastra la Lente y un toque sin arrastrar marca ahí; con el teclado o el mando, las flechas (o la palanca) mueven la Lente y usar marca lo que está en el centro. Devuelve `{ gano, frio }`.
+
+- **Variantes**: `base` (8 huellas), `senuelos` (más huellas ajenas y viejas de la misma bestia), `lluvia` (las huellas se borran: 45 s), `noche` (la Lente ve menos) y `largo` (13 huellas, 80 s). `op.bestia` elige la forma de la huella (lobo, jabalí, draugr, cuervo, fatuo, trol).
+- **Dónde está**: el último de los tres rastros de cada contrato de caza (`contratos.js`, `examinar`). Se lee con la Lente antes de llevar a la guarida; la variante sale del contrato (y de noche es `noche`). Dejarlo o perder no avanza y se puede volver a mirar. `examinar(id, i, true)` lo saltea (pruebas).
