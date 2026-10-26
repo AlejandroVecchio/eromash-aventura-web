@@ -316,6 +316,7 @@ window.EIKHOLT = (function () {
     if (J.dentro !== sistemaCiudad) {
       activo = false;
       volver = true;
+      if (window.SONIDO) SONIDO.bucle("fogata", "fogata", 0); // los braseros de la calle no se oyen adentro
       return true;
     }
     if (jugUlt && Math.hypot(jug.x - jugUlt[0], jug.y - jugUlt[1]) > 60) {
@@ -344,6 +345,64 @@ window.EIKHOLT = (function () {
     pasoAcum = 0;
     const calle = !(Math.hypot(er.x, er.y) > plano.plaza + 200 && plano.aCalle(er.x, er.y) > 40);
     SONIDO.tocar(calle ? "pasoPiedra" : "paso", { vol: [0, 0.18, 0.25, 0.34][jug.paso], var: 0.1, filtro: calle ? null : 2200 });
+  }
+  // lo que se oye en la ciudad (el bosque deja de sonar mientras se juega acá): el viento más bajo entre las casas, los
+  // grillos de noche, las fogatas y los braseros cerca, el yunque de Ása de día, monedas y telas en el mercado y la
+  // campana de la Asamblea a las 6, a las 12, a las 18 y a las 21. Las distancias van a la mitad: la ciudad tiene 60
+  // unidades por metro y el bosque 30, así lo de SONIDO (pensado para el bosque) cae igual con los metros.
+  let fuegos = null,
+    horaAntes = null,
+    grilloT = 0,
+    yunqueT = 2,
+    mercadoT = 4;
+  const S2 = (x, y) => ({ x: x / 2, y: y / 2 });
+  // la campana se oye en toda la ciudad: más baja cuanto más lejos, nunca del todo
+  function campana(veces, er) {
+    const L = plano.lugares.campana;
+    if (!L) return;
+    const g = Math.max(0.3, 1 - Math.hypot(L[0] - er.x, L[1] - er.y) / 9000);
+    for (let i = 0; i < veces; i++)
+      [196, 392, 466, 587, 784].forEach((f, k) => SONIDO.tono("sine", f, f * 0.995, 3.4 - k * 0.4, [0.09, 0.07, 0.04, 0.035, 0.02][k] * g, { ambiente: true, retraso: i * 2.2 }));
+  }
+  function sonidosCiudad(dt, er) {
+    if (!window.SONIDO || !SONIDO.listo || !SONIDO.listo()) return;
+    const h = window.LUZ ? LUZ.hora(A.H.E.tiempo) : 12,
+      noche = h >= 21 || h < 5;
+    SONIDO.oyente(er.x / 2, er.y / 2);
+    SONIDO.bucle("viento", "viento", noche ? 0.1 : 0.07, { filtro: 320 });
+    if (noche && (grilloT -= dt) <= 0) {
+      grilloT = 0.3 + Math.random() * 1.1;
+      for (let k = 0; k < 3; k++) SONIDO.tono("sine", 4200 + Math.random() * 600, 4100, 0.05, 0.01, { ambiente: true, retraso: k * 0.07 });
+    }
+    // la fogata o el brasero más cercano
+    if (!fuegos) fuegos = plano.cosas.filter((o) => o.id === "brasero" || o.id === "fogonOlla");
+    let f = 0;
+    for (const o of fuegos) {
+      const d = Math.hypot(o.x - er.x, (o.y - er.y) * 1.3);
+      if (d < 1200) f = Math.max(f, 1 - d / 1200);
+    }
+    SONIDO.bucle("fogata", "fogata", f * 0.6);
+    // el yunque de Ása, de 8 a 18: dos o tres golpes, una pausa
+    const he = plano.anclas.herreria;
+    if (he && h >= 8 && h < 18 && (yunqueT -= dt) <= 0) {
+      yunqueT = 1.1 + Math.random() * 1.6;
+      const n = 2 + Math.floor(Math.random() * 2),
+        o = S2(he[0], he[1]);
+      for (let k = 0; k < n; k++) {
+        SONIDO.tono("triangle", 1750 + Math.random() * 60, 1680, 0.32, 0.06, Object.assign({ retraso: k * 0.28, filtro: 3800 }, o));
+        SONIDO.tono("sine", 2630, 2600, 0.5, 0.025, Object.assign({ retraso: k * 0.28 }, o));
+      }
+    }
+    // el mercado de día: monedas y telas que se mueven en algún puesto cercano
+    if (plano.puestos && h >= 7 && h < 19 && (mercadoT -= dt) <= 0) {
+      mercadoT = 2 + Math.random() * 4;
+      const p = plano.puestos[Math.floor(Math.random() * plano.puestos.length)];
+      SONIDO.tocar(Math.random() < 0.55 ? "plata" : "tela", Object.assign({ vol: 0.16, var: 0.15 }, S2(p.x, p.y)));
+    }
+    // la campana de la Asamblea
+    const hi = Math.floor(h);
+    if (horaAntes !== null && hi !== horaAntes && [6, 12, 18, 21].includes(hi)) campana(hi === 12 ? 1 : 3, er);
+    horaAntes = hi;
   }
   // igual que en el bosque (motor/juego.js, actualizarJugador): en la ciudad no hay pelea, así que correr no cansa,
   // la estamina vuelve rápido, la vida vuelve sola a los 4 s, dos toques de Shift dejan corriendo (o un toque con
@@ -415,6 +474,7 @@ window.EIKHOLT = (function () {
     if (jug.saltoAntes > 0 && jug.salto <= 0 && window.SONIDO) SONIDO.tocar("caida", { vol: 0.4, tono: 1.1 });
     jug.saltoAntes = jug.salto;
     pasos(dt, er);
+    sonidosCiudad(dt, er);
     jug.anda = mov ? (jug.correr ? 2 : 1) : 0;
     er.anda = jug.anda;
     // el motor ve a Eromash en el lugar del bosque que corresponde (mapa, misiones, guardado)
