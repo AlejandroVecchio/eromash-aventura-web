@@ -190,6 +190,8 @@ I18N.textos({
   "ek.tafl_dice_3": { es: "El rey solo necesita una esquina. Una.", en: "The king only needs one corner. Just one." },
   "ek.tafl_dice_4": { es: "Veinte años mirándote jugar y seguís abriendo por el mismo lado.", en: "Twenty years watching you play and you still open on the same side." },
   "ek.tafl_dice_5": { es: "¿Quién movió esta? ¿Fuiste vos o fue el viento?", en: "Who moved this one? Was it you or the wind?" },
+  "ek.acariciar_perro": { es: "Acariciar al perro", en: "Pet the dog" },
+  "ek.acariciar_gato": { es: "Acariciar al gato", en: "Pet the cat" },
   "ek.dice_recluta_0": { es: "Håkon dice que el muñeco de paja pega más fuerte que yo.", en: "Håkon says the straw dummy hits harder than I do." },
   "ek.dice_recluta_1": { es: "Primero la guardia, después el escudo, después la lanza. Así me lo hacen repetir.", en: "Guard first, then shield, then spear. That's what they make me repeat." },
   "ek.dice_recluta_2": { es: "Mañana me toca la ronda del adarve. Desde arriba se ve hasta el río.", en: "Tomorrow I'm on walkway watch. From up there you can see all the way to the river." },

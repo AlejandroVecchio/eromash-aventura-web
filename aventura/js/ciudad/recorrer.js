@@ -103,7 +103,7 @@ window.RECORRER25 = (function () {
     for (let i = 0; i < casas.length; i += 7) {
       const o = casas[i],
         d = (o.casa.D || 300) / 2 + 60;
-      animales.push({ tipo: "gato", x: o.x - d * Math.sin(o.ry) + 80, y: o.y + d * Math.cos(o.ry), vx: 0, vy: 0, col: ["#2A2420", "#8A6A4A", "#5E5A56", "#D8C8B0"][i % 4], f: r() * 9, susto: 0 });
+      animales.push({ tipo: "gato", x: o.x - d * Math.sin(o.ry) + 80, y: o.y + d * Math.cos(o.ry), vx: 0, vy: 0, col: ["#2A2420", "#8A6A4A", "#5E5A56", "#D8C8B0"][i % 4], f: r() * 9, susto: 0, arisco: i % 2 === 0 });
     }
     for (let i = 0; i < 16; i++) {
       const a = r() * TAU,
@@ -375,7 +375,9 @@ window.RECORRER25 = (function () {
           a.vy = vuelta ? ay * 0.3 : (Math.random() - 0.5) * 90;
         } else if (Math.random() < dt) a.vx = a.vy = 0;
       } else if (a.tipo === "gato") {
-        if (d < 260 && !a.susto) a.susto = 1.4;
+        // los ariscos huyen siempre; los mansos solo si él llega corriendo (y se dejan acariciar)
+        if (a.mimo > 0) (a.mimo -= dt), (a.vx = a.vy = 0), (a.susto = 0);
+        else if (d < 260 && !a.susto && (a.arisco || ero.anda === 2)) a.susto = 1.4;
         if (a.susto > 0) {
           a.susto -= dt;
           a.vx = (dx / d) * 300;
@@ -407,7 +409,8 @@ window.RECORRER25 = (function () {
         // el perro del corral: si Eromash se queda cerca un momento, lo sigue un rato
         if (d < 300) a.sigue = Math.min(25, a.sigue + dt * 4);
         else a.sigue = Math.max(0, a.sigue - dt);
-        if (a.sigue > 3 && d > 160) {
+        if (a.mimo > 0) (a.mimo -= dt), (a.vx = a.vy = 0);
+        else if (a.sigue > 3 && d > 160) {
           a.vx = (-dx / d) * Math.min(420, d * 1.4);
           a.vy = (-dy / d) * Math.min(420, d * 1.4);
         } else a.vx = a.vy = 0;
@@ -627,6 +630,14 @@ window.RECORRER25 = (function () {
       L(c, -18, -20, -28, -30 + cola, a.col, 4);
     }
     c.restore();
+    // acariciado: un rombo rosa que sube
+    if (a.mimo > 0) {
+      const k = 1 - a.mimo / 2,
+        hy = sy - 58 - k * 26;
+      c.globalAlpha = Math.min(1, a.mimo * 1.5);
+      P(c, [sx, hy - 7, sx + 6, hy, sx, hy + 7, sx - 6, hy], "#E0B2B2");
+      c.globalAlpha = 1;
+    }
   }
 
   // lo que va parado en el orden del mundo: Eromash, los animales y los globos de lo que dicen
@@ -939,6 +950,21 @@ window.RECORRER25 = (function () {
     }
   }
 
-  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
+  // el perro o un gato manso a mano, para acariciarlo (lo pide cercano() de ciudad/juego.js)
+  function animalCerca(r) {
+    let mejor = null,
+      dm = r;
+    for (const a of animales) {
+      if ((a.tipo !== "perro" && !(a.tipo === "gato" && !a.arisco)) || a.susto > 0) continue;
+      const d = Math.hypot(a.x - ero.x, a.y - ero.y);
+      if (d < dm) (dm = d), (mejor = a);
+    }
+    return mejor && { a: mejor, d: dm };
+  }
+  function mimar(a) {
+    a.mimo = 2;
+    if (a.tipo === "perro") a.sigue = 25;
+  }
+  const api = { iniciar, actualizar, extra, piso, encima, ero, mirada: (p) => p.miraA, aMano, animalCerca, mimar, tarjetaAbierta: () => !!tarjeta, cerrar, estado, cargar, cuenta: () => cuenta(), zona: () => zona, callados: false };
   return api;
 })();

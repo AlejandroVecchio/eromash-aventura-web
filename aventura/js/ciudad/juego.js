@@ -282,6 +282,17 @@ window.EIKHOLT = (function () {
     // la mesa de hnefatafl: apostar o mirar la partida (TAFL25)
     const tf = window.TAFL25 && TAFL25.cercano(plano, e, st, A, MUNDO25.gente());
     if (tf && !rc && !ta && !es) mejor = tf;
+    // el perro del corral y los gatos mansos: acariciarlos (RECORRER25.animalCerca)
+    const an = RECORRER25.animalCerca(1.4 * M);
+    if (an && an.d < dm && !rc && !ta && !es)
+      mejor = {
+        texto: t(an.a.tipo === "perro" ? "ek.acariciar_perro" : "ek.acariciar_gato"),
+        fn: () => {
+          RECORRER25.mimar(an.a);
+          if (window.ANIMA) ANIMA.gesto("asiente");
+          if (window.SONIDO) SONIDO.tono("sine", an.a.tipo === "perro" ? 520 : 760, an.a.tipo === "perro" ? 380 : 640, 0.25, 0.05);
+        },
+      };
     // los asientos del Ting: sentarse a esperar hasta otra hora (ESPERAR25)
     const sp = window.ESPERAR25 && ESPERAR25.cercano(plano, e, A);
     if (sp && sp.d < dm && !rc && !ta && !es && !pm) mejor = sp;
