@@ -1,0 +1,23 @@
+// Textos del motor de los minijuegos (motor/minijuegos.js) y de la cerradura de anillos (motor/mj-anillos.js): prefijo mn.
+I18N.textos({
+  "mn.pie": { es: "Flechas: elegir · {0}: usar · {1}: dejar", en: "Arrows: choose · {0}: use · {1}: quit" },
+  "mn.gano": { es: "¡Lo lograste!", en: "You did it!" },
+  "mn.perdio": { es: "Esta vez no", en: "Not this time" },
+  "mn.dejo": { es: "Lo dejaste", en: "You left it" },
+  "mn.sin_tiempo": { es: "Se acabó el tiempo", en: "Time is up" },
+  "mn.seguir": { es: "{0} para seguir", en: "{0} to continue" },
+  "mn.queda": { es: "{0} s", en: "{0} s" },
+  "mn.probar": { es: "{0} · {1}", en: "{0} · {1}" },
+  "mn.base": { es: "Normal", en: "Normal" },
+  "mn.anillos": { es: "La cerradura de anillos", en: "The ring lock" },
+  "mn.anillos_pie": { es: "▲ ▼: elegir anillo · ◀ ▶: girarlo · tocar un lado del anillo lo gira · {1}: dejar", en: "▲ ▼: choose ring · ◀ ▶: turn it · tap a side of a ring to turn it · {1}: quit" },
+  "mn.anillos_palabra": { es: "La palabra del cerrojo", en: "The lock's word" },
+  "mn.anillos_movs": { es: "Giros: {0}", en: "Turns: {0}" },
+  "mn.anillos_res": { es: "Abriste la cerradura en {0} giros", en: "You opened the lock in {0} turns" },
+  "mn.anillos_v_cuatro": { es: "Cuatro anillos", en: "Four rings" },
+  "mn.anillos_v_ligados": { es: "Anillos ligados: girar uno mueve el de afuera al revés", en: "Bound rings: turning one moves the outer one the other way" },
+  "mn.anillos_v_reloj": { es: "Contra el tiempo", en: "Against the clock" },
+  "mn.anillos_v_gran": { es: "La gran cerradura", en: "The great lock" },
+  "mn.cerrado": { es: "Cerrado con anillos rúnicos", en: "Sealed with runic rings" },
+  "mn.abrir_anillos": { es: "Abrir la cerradura", en: "Open the lock" },
+});

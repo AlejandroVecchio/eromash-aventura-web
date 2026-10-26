@@ -303,7 +303,7 @@ window.ZONAS = (function () {
       // los pilares de las salas grandes
       if (s.w >= 6 && s.h >= 5 && s.tipo !== "entrada")
         [[0.3, 0.38], [0.7, 0.38], [0.3, 0.75], [0.7, 0.75]].forEach(([u, v], i) => (s.tipo === "jefe" || i < 2) && Z.obst.push({ id: "pilarCripta", x: X(s.x + s.w * u), y: Y(s.y + s.h * v), r: 60, runa: ["eihwaz", "hagalaz", "naudiz", "isa"][i] }));
-      if (s.tipo === "tesoro") Z.cofres.push({ x: cx, y: cy, k: Z.id + "_c" + si, rico: true });
+      if (s.tipo === "tesoro") Z.cofres.push({ x: cx, y: cy, k: Z.id + "_c" + si, rico: true, cerrojo: "ligados" });
       // la gente de cada sala: un grupo con su líder (más grande en las salas grandes)
       if (s.tipo === "sala" || s.tipo === "oscura" || s.tipo === "tesoro") {
         const fam = d.familia,
@@ -390,7 +390,7 @@ window.ZONAS = (function () {
       if (c.tipo === "volcan") Z.obst.push({ id: "volcan", x: c.x, y: c.y, r: 560, ry: 0.45, s: Math.min(1.2, (m ? m.r : 1000) / 1100) });
       if (c.tipo === "cueva") Z.obst.push({ id: "bocaCueva", x: c.x, y: c.y, r: 130, ry: 0.3, cosa: c });
       if (c.tipo === "ruinas") [[-200, -40], [180, -60], [0, 120], [-60, -200]].forEach(([dx, dy], k) => Z.obst.push({ id: "pilarCripta", x: c.x + dx, y: c.y + dy, r: 60, runa: ["ansuz", "othala", "tiwaz", "gebo"][k] }));
-      if (c.tipo === "cofre") Z.cofres.push({ x: c.x, y: c.y, k: Z.id + "_c" + c.i, rico: true });
+      if (c.tipo === "cofre") Z.cofres.push({ x: c.x, y: c.y, k: Z.id + "_c" + c.i, rico: true, cerrojo: "gran" });
       if (c.tipo === "campamento") {
         const fam = c.familia || "lobos",
           grupo = [];
@@ -476,7 +476,9 @@ window.ZONAS = (function () {
     if (window.SONIDO) SONIDO.tocar("fogata", { vol: 0.5, x: f.x, y: f.y });
     HUD.aviso(t("zn.encendiste"), "#FF8D71");
   }
-  function abrir(cf) {
+  function abrir(cf, abierta) {
+    // el cofre de la sala del tesoro cierra con anillos ligados y el de las islas con la gran cerradura (MINIJ)
+    if (cf.cerrojo && !abierta && window.MINIJ) return MINIJ.empezar("anillos", { variante: cf.cerrojo, quien: t("mn.cerrado"), fin: (r) => r.gano && abrir(cf, true) });
     st.cofres[cf.k] = true;
     PODERES.botinCofre(cf.x, cf.y, t("zn.cofre"), { plata: cf.rico ? 120 + Math.floor(Math.random() * 60) : 50, frag: true, vida: true });
   }

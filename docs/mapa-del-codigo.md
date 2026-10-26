@@ -299,6 +299,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - tener, dar y gastar · desarmar · la forja · las vetas · la bolsa · el sistema
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
+- **minijuegos.js**: el motor de los minijuegos (MINIJ, modo "minij")
+  - registrar, empezar, terminar · el lienzo y el puntero · cada cuadro (lo llama juego.js por J.modos) · el dibujo
+- **mj-anillos.js**: minijuego: la cerradura de anillos (MINIJ «anillos»)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
@@ -488,6 +491,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la interfaz · la saga de Sigrun Mano de Hierro (cuatro tomos) · libros de oficio · libros de caza · libros de saber
 - **materiales.js**: Textos de los materiales de la forja y las vetas (motor/materiales.js, mundo/assets-materiales.js): prefijo mt.
 - **mejoras.js**: Textos de las mejoras de movimiento, golpes, viajes y misiones (prefijo mj.), los dos idiomas.
+- **minijuegos.js**: Textos del motor de los minijuegos (motor/minijuegos.js) y de la cerradura de anillos (motor/mj-anillos.js): prefijo mn.
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
