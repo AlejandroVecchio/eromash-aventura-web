@@ -343,7 +343,7 @@ window.JOTUNN = (function () {
     HUD.aviso(t("jt.vencido_d"), "lugar", t("jt.vencido"));
     J.sacudir(1);
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, tono: 0.7 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("grito");
     if (window.VIDA) VIDA.evento("lider", e.x, e.y);
   }
 

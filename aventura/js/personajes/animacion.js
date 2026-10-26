@@ -21,18 +21,67 @@ window.ANIMA = (function () {
     quietoT: 0,
     gesto: null, // { tipo, t, dur }
     absorbe: null, // { t, dur, col, col2, forma, motas, emitir }
+    chispas: [], // las de los gestos
     estela: [],
     estelaT: 0,
     muerteT: -1,
     vuelveT: 9,
     vuelveAntes: 0,
   };
-  const DUR = { duda: 1.3, feliz: 0.9, susto: 0.7 };
-  function gesto(tipo, dur) {
+  // ---------- los gestos ----------
+  // ANIMA.gesto(tipo, dur, op): op.col pinta las partículas del gesto que tiene (tesoro, sacudirse, grito).
+  // De uso (pedido de Alejandro, 26/10/2026: nada de los ojitos ^-^ al juntar o festejar):
+  //   botin       se agacha a juntar, se endereza orgulloso y saltan unas chispas doradas (cofres)
+  //   tesoro      se agacha, salta girando y cae firme con un anillo de chispas del color de la rareza (lo bueno)
+  //   grito       toma aire y ruge estirado, temblando, con brasas que suben (misión, victoria, una compra grande)
+  //   asiente     dos cabeceos: entendido (un libro, un consejo, un trato)
+  //   alivio      se afloja y suelta el aire, con los ojos cerrados (comer, tomar algo)
+  //   reverencia  se inclina hondo ante un dios y se queda un momento (hörgar, bendiciones)
+  //   desafio     levanta el mentón y se planta (una parada justa)
+  //   sacudirse   se sacude entero como un perro mojado, con gotas del color (tintes, salir del agua)
+  // De reserva: tiritar (frío), desperezarse (al despertar, quieto mucho), mareo (aturdido), pisoton (intimidar),
+  // y los de siempre: duda, susto. «feliz» queda solo por compatibilidad: no se usa.
+  const DUR = { duda: 1.3, feliz: 0.9, susto: 0.7, botin: 0.8, tesoro: 1.15, grito: 1.25, asiente: 0.8, alivio: 1.0, reverencia: 1.5, desafio: 0.6, sacudirse: 0.9, tiritar: 1.6, desperezarse: 1.7, mareo: 1.8, pisoton: 0.75 };
+  const GESTOS = Object.keys(DUR).filter((g) => g !== "feliz");
+  function gesto(tipo, dur, op = {}) {
     // un gesto no pisa a otro más importante que recién empezó
     if (st.gesto && st.gesto.t < 0.25 && st.gesto.tipo === "susto" && tipo !== "susto") return;
-    st.gesto = { tipo, t: 0, dur: dur || DUR[tipo] || 1 };
+    st.gesto = { tipo, t: 0, dur: dur || DUR[tipo] || 1, col: op.col, k0: 0 };
+    st.quietoT = 0; // que no se ponga a mirar alrededor en medio del gesto
   }
+  // las chispas de los gestos: salen del cuerpo (en unidades del dibujo, desde los pies) y caen o suben
+  function chispas(n, op) {
+    const baja = window.CALIDAD && CALIDAD.nivel === "baja";
+    for (let i = 0; i < (baja ? Math.ceil(n / 3) : n); i++) {
+      const a = op.anillo ? (i / n) * Math.PI * 2 : Math.random() * Math.PI * 2,
+        v = (op.v || 160) * (0.6 + Math.random() * 0.7);
+      st.chispas.push({
+        x: (op.x || 0) + (Math.random() - 0.5) * (op.ancho || 20),
+        y: 0,
+        z: op.z == null ? 80 : op.z + Math.random() * (op.alto || 0),
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v * 0.35,
+        vz: (op.sube || 0) + Math.random() * (op.sube2 || 0),
+        g: op.g == null ? 600 : op.g,
+        t: 0,
+        dura: (op.dura || 0.6) * (0.7 + Math.random() * 0.6),
+        s: (op.s || 6) * (0.7 + Math.random() * 0.6),
+        col: Math.random() < 0.3 && op.col2 ? op.col2 : op.col,
+        forma: op.forma || "rombo",
+        gira: (Math.random() - 0.5) * 10,
+      });
+    }
+  }
+  // lo que suelta cada gesto en un momento justo (k de 0 a 1)
+  const EVENTOS = {
+    botin: [[0.34, (g) => chispas(9, { col: "#FFD98A", col2: "#FFE7A8", z: 70, v: 120, sube: 260, sube2: 160, dura: 0.6 })]],
+    tesoro: [[0.52, (g) => chispas(20, { col: g.col || "#FFD98A", col2: "#F2ECEC", anillo: true, z: 10, v: 260, sube: 120, g: 300, dura: 0.7, s: 7 })], [0.3, (g) => chispas(6, { col: g.col || "#FFD98A", z: 90, v: 60, sube: 200, dura: 0.5, s: 5 })]],
+    grito: [[0.28, (g) => chispas(16, { col: g.col || "#FF8D71", col2: "#FFD98A", z: 0, alto: 30, ancho: 120, v: 30, sube: 160, sube2: 160, g: -60, dura: 0.9, s: 6 })], [0.5, (g) => chispas(10, { col: g.col || "#FF8D71", col2: "#FFD98A", z: 0, ancho: 120, v: 30, sube: 200, sube2: 120, g: -60, dura: 0.8, s: 5 })]],
+    alivio: [[0.45, () => chispas(4, { col: "#F2ECEC", forma: "cuadro", z: 120, v: 30, sube: 50, g: -30, dura: 0.8, s: 5 })]],
+    sacudirse: [[0.2, (g) => chispas(12, { col: g.col || "#73D5DB", col2: "#F2ECEC", z: 70, alto: 50, v: 300, sube: 80, dura: 0.5, s: 4, forma: "cuadro" })], [0.5, (g) => chispas(10, { col: g.col || "#73D5DB", col2: "#F2ECEC", z: 60, alto: 50, v: 280, sube: 60, dura: 0.5, s: 4, forma: "cuadro" })]],
+    tiritar: [[0.3, () => chispas(3, { col: "#F2ECEC", forma: "cuadro", z: 115, v: 20, sube: 40, g: -20, dura: 0.9, s: 4 })], [0.75, () => chispas(3, { col: "#F2ECEC", forma: "cuadro", z: 115, v: 20, sube: 40, g: -20, dura: 0.9, s: 4 })]],
+    pisoton: [[0.42, () => chispas(14, { col: "#8E8A82", col2: "#5E5A52", forma: "cuadro", anillo: true, z: 2, v: 260, sube: 90, g: 500, dura: 0.5, s: 6 })]],
+  };
   // ---------- absorber energía ----------
   // op.col / op.col2: los dos colores de las partículas; op.forma: "rombo" (brasas rúnicas), "cuadro" (motas) o
   // "chispa" (rayitas); op.dur: lo que dura todo (las partículas entran en el primer 70 %); op.n: cuántas
@@ -96,6 +145,53 @@ window.ANIMA = (function () {
   }
   // las partículas de atrás (delante = false) o de adelante del cuerpo, con (x0, y0) los pies en el dibujo
   function dibujarAbsorbe(c, x0, y0, delante) {
+    // el mareo: tres rombos dorados que giran sobre la cabeza
+    const gm = st.gesto;
+    if (gm && gm.tipo === "mareo") {
+      const k = gm.t / gm.dur;
+      c.save();
+      c.globalAlpha = Math.min(1, k * 6, (1 - k) * 4);
+      for (let i = 0; i < 3; i++) {
+        const a = gm.t * 5 + (i * Math.PI * 2) / 3,
+          y = Math.sin(a) * 9;
+        if (y >= 0 !== delante) continue;
+        const x = x0 + Math.cos(a) * 34,
+          yy = y0 - 168 + y,
+          r = 7;
+        c.fillStyle = i ? "#FFD98A" : "#F2ECEC";
+        c.beginPath();
+        c.moveTo(x, yy - r);
+        c.lineTo(x + r * 0.7, yy);
+        c.lineTo(x, yy + r);
+        c.lineTo(x - r * 0.7, yy);
+        c.closePath();
+        c.fill();
+      }
+      c.restore();
+    }
+    // las chispas de los gestos, cada una adelante o atrás según dónde va
+    if (st.chispas.length) {
+      c.save();
+      st.chispas.forEach((q) => {
+        if (q.y >= 0 !== delante) return;
+        const e = q.t / q.dura,
+          sz = q.s * (1 - e * 0.6),
+          x = x0 + q.x,
+          y = y0 + q.y - q.z;
+        c.save();
+        c.globalAlpha = e < 0.1 ? e / 0.1 : 1 - Math.pow((e - 0.1) / 0.9, 1.6);
+        c.fillStyle = q.col;
+        c.translate(x, y);
+        c.rotate(q.gira * q.t);
+        c.beginPath();
+        if (q.forma === "cuadro") c.rect(-sz / 2, -sz / 2, sz, sz);
+        else (c.moveTo(0, -sz), c.lineTo(sz * 0.7, 0), c.lineTo(0, sz), c.lineTo(-sz * 0.7, 0));
+        c.closePath();
+        c.fill();
+        c.restore();
+      });
+      c.restore();
+    }
     const a = st.absorbe;
     if (!a) return;
     // un brillo del color detrás del pecho mientras le entra
@@ -127,7 +223,23 @@ window.ANIMA = (function () {
     st.aterrizaT += dt;
     st.giroT += dt;
     st.vuelveT += dt;
-    if (st.gesto && (st.gesto.t += dt) > st.gesto.dur) st.gesto = null;
+    if (st.gesto) {
+      const g = st.gesto;
+      g.t += dt;
+      const k = Math.min(1, g.t / g.dur);
+      (EVENTOS[g.tipo] || []).forEach(([en, fn]) => g.k0 < en && k >= en && fn(g));
+      g.k0 = k;
+      if (g.t > g.dur) st.gesto = null;
+    }
+    st.chispas.forEach((q) => {
+      q.t += dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+      q.z = Math.max(0, q.z + q.vz * dt);
+      q.vz -= q.g * dt;
+      q.vx *= 1 - dt * 1.5;
+    });
+    st.chispas = st.chispas.filter((q) => q.t < q.dura);
     avanzarAbsorbe(dt);
     if (st.saltoAntes > 0 && p.salto <= 0) st.aterrizaT = 0;
     st.saltoAntes = p.salto;
@@ -240,11 +352,144 @@ window.ANIMA = (function () {
     // gestos pedidos por los sistemas
     const g = st.gesto;
     if (g) {
-      const k = g.t / g.dur;
+      const k = g.t / g.dur,
+        deCostado = VOL.relativa(p.mira.vista, p.mira.espejo).vista === "E";
+      // inclinarse hacia adelante: de costado se tira; de frente o de espaldas se agacha (no se puede tirar a la cámara)
+      const inclinar = (v) => {
+        if (deCostado) o.rot += v;
+        else {
+          o.sy *= 1 - Math.abs(v) * 0.32;
+          o.sx *= 1 + Math.abs(v) * 0.12;
+          o.dy += Math.abs(v) * 10;
+        }
+      };
       if (g.tipo === "duda") {
         o.ojos = "duda";
         o.rot += Math.sin(g.t * 5.5) * 0.13 * (1 - k * 0.6);
         o.dy -= Math.abs(Math.sin(g.t * 2.5)) * 3;
+      } else if (g.tipo === "botin") {
+        // se agacha a juntar y se endereza orgulloso
+        if (k < 0.32) {
+          const q = Math.sin((k / 0.32) * Math.PI * 0.5);
+          inclinar(0.26 * q);
+          o.sy *= 1 - 0.1 * q;
+          o.sx *= 1 + 0.06 * q;
+          o.dy += 4 * q;
+          o.ojos = "concentrado";
+        } else {
+          const q = (k - 0.32) / 0.68,
+            r = resorte(q * 0.7, 6, 14);
+          inclinar(0.26 * Math.max(0, 1 - q * 4));
+          if (deCostado) o.rot -= 0.08 * Math.sin(Math.min(1, q * 2) * Math.PI * 0.5) * (1 - q);
+          o.sy *= 1 + 0.08 * r;
+          o.dy -= 6 * Math.max(0, r);
+          o.ojos = "fierce";
+        }
+      } else if (g.tipo === "tesoro") {
+        // se agacha, salta girando sobre sí mismo y cae firme
+        if (k < 0.15) {
+          const q = k / 0.15;
+          o.sy *= 1 - 0.14 * q;
+          o.sx *= 1 + 0.08 * q;
+          o.ojos = "concentrado";
+        } else if (k < 0.52) {
+          const q = (k - 0.15) / 0.37;
+          o.dy -= Math.sin(q * Math.PI) * 30;
+          o.sy *= 1 + 0.1 * Math.sin(q * Math.PI);
+          o.sx *= Math.max(0.22, Math.abs(Math.cos(q * Math.PI * 2))); // la vuelta entera en el aire
+          o.ojos = "fierce";
+        } else {
+          const q = (k - 0.52) / 0.48,
+            r = resorte(q * 0.5, 9, 24);
+          o.sy *= 1 - 0.16 * r + 0.05 * (1 - q);
+          o.sx *= 1 + 0.14 * r;
+          o.rot -= 0.06 * (1 - q);
+          o.ojos = "fierce";
+        }
+      } else if (g.tipo === "grito") {
+        // toma aire, ruge estirado y temblando
+        if (k < 0.25) {
+          const q = k / 0.25;
+          o.sy *= 1 - 0.1 * q;
+          o.sx *= 1 + 0.06 * q;
+          o.rot += 0.08 * q;
+          o.ojos = "concentrado";
+        } else if (k < 0.8) {
+          const q = (k - 0.25) / 0.55;
+          o.sy *= 1.14 - 0.03 * q;
+          o.sx *= 0.95;
+          o.dy -= 5;
+          o.rot += -0.1 + Math.sin(g.t * 52) * 0.035;
+          o.ojos = "fierce";
+        } else {
+          const q = (k - 0.8) / 0.2;
+          o.sy *= 1 + 0.11 * (1 - q);
+          o.rot -= 0.1 * (1 - q);
+          o.ojos = "fierce";
+        }
+      } else if (g.tipo === "asiente") {
+        // dos cabeceos
+        const c = Math.max(0, Math.sin(k * Math.PI * 4));
+        inclinar(c * 0.13);
+        o.ojos = c > 0.6 ? "cerrado" : "calm";
+      } else if (g.tipo === "alivio") {
+        // se afloja y suelta el aire
+        const c = Math.sin(k * Math.PI);
+        o.sy *= 1 - 0.08 * c;
+        o.sx *= 1 + 0.04 * c;
+        o.dy += 4 * c;
+        inclinar(0.05 * c);
+        o.ojos = c > 0.3 ? "cerrado" : "calm";
+      } else if (g.tipo === "reverencia") {
+        // se inclina hondo, se queda y se levanta
+        const c = k < 0.25 ? Math.sin((k / 0.25) * Math.PI * 0.5) : k < 0.7 ? 1 : 1 - Math.sin(((k - 0.7) / 0.3) * Math.PI * 0.5);
+        inclinar(0.42 * c);
+        o.dy += 3 * c;
+        o.ojos = c > 0.5 ? "cerrado" : "calm";
+      } else if (g.tipo === "desafio") {
+        // levanta el mentón y se planta
+        const c = Math.sin(Math.min(1, k * 2) * Math.PI * 0.5) * (1 - Math.max(0, (k - 0.7) / 0.3));
+        o.rot -= 0.13 * c;
+        o.sy *= 1 + 0.08 * c;
+        o.sx *= 1 + 0.04 * c;
+        o.ojos = "fierce";
+      } else if (g.tipo === "sacudirse") {
+        const c = 1 - k;
+        o.rot += Math.sin(g.t * 46) * 0.2 * c;
+        o.sx *= 1 + Math.sin(g.t * 46 + 1) * 0.07 * c;
+        o.ojos = "cerrado";
+      } else if (g.tipo === "tiritar") {
+        o.rot += Math.sin(g.t * 62) * 0.03;
+        o.sx *= 1 + Math.sin(g.t * 70) * 0.015;
+        o.sy *= 0.95;
+        o.dy += 2;
+        o.ojos = "flojo";
+      } else if (g.tipo === "desperezarse") {
+        // se estira bien alto, despacio, y vuelve
+        const c = Math.sin(k * Math.PI);
+        o.sy *= 1 + 0.18 * c;
+        o.sx *= 1 - 0.1 * c;
+        o.rot += Math.sin(k * Math.PI * 2) * 0.06;
+        o.ojos = c > 0.25 ? "cerrado" : "calm";
+      } else if (g.tipo === "mareo") {
+        const c = 1 - k * 0.5;
+        o.rot += Math.sin(g.t * 4.5) * 0.15 * c;
+        o.dx += Math.sin(g.t * 4.5) * 6 * c;
+        o.dy += Math.abs(Math.cos(g.t * 4.5)) * 3;
+        o.ojos = "duda";
+      } else if (g.tipo === "pisoton") {
+        // levanta y golpea el piso
+        if (k < 0.42) {
+          const q = k / 0.42;
+          o.dy -= Math.sin(q * Math.PI * 0.5) * 12;
+          o.sy *= 1 + 0.1 * q;
+          o.rot -= 0.06 * q;
+        } else {
+          const r = resorte((k - 0.42) * 0.8, 10, 26);
+          o.sy *= 1 - 0.2 * r;
+          o.sx *= 1 + 0.16 * r;
+        }
+        o.ojos = "fierce";
       } else if (g.tipo === "feliz") {
         o.ojos = "happy";
         if (g.t < 0.45) {
@@ -339,5 +584,5 @@ window.ANIMA = (function () {
     }
     return b;
   }
-  return { gesto, golpe, actualizar, pose, blanco, absorber, dibujarAbsorbe, absorbiendo: () => !!st.absorbe, FORMAS, estela: () => st.estela, quieto: () => st.quietoT };
+  return { gesto, golpe, actualizar, pose, blanco, absorber, dibujarAbsorbe, absorbiendo: () => !!st.absorbe, FORMAS, GESTOS, estela: () => st.estela, quieto: () => st.quietoT };
 })();

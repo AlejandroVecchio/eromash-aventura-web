@@ -55,7 +55,7 @@ window.SANTUARIOS = (function () {
       if (window.VIDA) VIDA.evento("sanar", h.x, h.y - 60); // (no "rito": ese da experiencia)
     }
     if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.6, tono: 0.9 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.gesto("reverencia");
     return true;
   }
   function hallar(id) {

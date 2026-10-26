@@ -267,7 +267,7 @@
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
-    ANIMA.gesto("feliz");
+    ANIMA.gesto("grito", 0, { col: "#FFD98A" });
     if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
     etapaVista = H.etapa();

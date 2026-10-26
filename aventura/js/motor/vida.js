@@ -1123,7 +1123,7 @@ window.VIDA = (function () {
     evento("rito", m.cosa.x, m.cosa.y - 20, { col: "#8CF0B4", runa: "ingwaz" });
     for (let i = 0; i < 5; i++) mariposaEn(m.cosa.x + azar(-80, 80), m.cosa.y + azar(-30, 30));
     HUD.aviso(t("vd.anillo_bendicion"), "lugar", t("vd.anillo_sub"));
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.absorber({ col: "#8CF0B4", col2: "#F2ECEC", forma: "rombo" });
     A.H.guardar && A.H.guardar();
   }
   function mirarPoza(m, noche) {

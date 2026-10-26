@@ -407,7 +407,7 @@ window.HOLMR = (function () {
         }
       }
       if (window.VIDA) VIDA.evento("mision", C[0], C[1]);
-      if (window.ANIMA) ANIMA.gesto("feliz");
+      if (window.ANIMA) ANIMA.gesto("grito");
     } else {
       st.perdidos++;
       jug.hp = Math.max(Math.round(jug.hpMax * 0.4), Math.min(jug.hp, jug.hpMax));

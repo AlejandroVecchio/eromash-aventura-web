@@ -420,7 +420,7 @@ window.BERKANO = (function () {
     J.marcas.push({ tipo: "anillo", x, y, s: 1.2, col: RUNICO, t: 0 });
     if (window.VIDA) VIDA.evento("runa", x, y);
     if (window.SONIDO) SONIDO.tocar("runa", { vol: 0.5 });
-    if (window.ANIMA) ANIMA.gesto("feliz");
+    if (window.ANIMA) ANIMA.absorber({ col: RUNICO, col2: "#C8F2F4", forma: "rombo" });
     HUD.aviso(t("bk.nueva"), "lugar", t("bk.nueva_sub", [cura(), st.p.length, MAX]));
     if (A.H.guardar) A.H.guardar();
   }
