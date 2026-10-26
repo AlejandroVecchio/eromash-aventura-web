@@ -238,6 +238,7 @@ window.PROBAR = (function () {
                   enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.blot) s.blot.dia = -1; const e = EIKHOLT.ero(); (e.x = BLOT25.CENTRO[0] + BLOT25.RADIO + 60), (e.y = BLOT25.CENTRO[1]); });
                 },
               },
+              { id: "ek_carga", si: hay("CARGA25"), fn: () => (hora(7), enCiudad(null, null, () => { const s = EIKHOLT.estado(); if (s.carga) s.carga.dia = -1; const m = EIKHOLT.plano().anclas.muelle; const e = EIKHOLT.ero(); (e.x = m[0] + 200), (e.y = m[1]); })) },
               { id: "ek_ronda", si: true, fn: () => (hora(23), (EIKHOLT.estado() && EIKHOLT.estado().ronda && (EIKHOLT.estado().ronda.dia = -1)), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
             ]
           : [],

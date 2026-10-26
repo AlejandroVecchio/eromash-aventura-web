@@ -301,6 +301,9 @@ window.EIKHOLT = (function () {
     // acompañar la ronda de noche de la Guardia (RONDA25)
     const rn = window.RONDA25 && RONDA25.cercano(plano, e, st, A, MUNDO25.gente());
     if (rn && !rc && !ta && !es) (mejor = rn), (dm = rn.d);
+    // descargar los botes del muelle (CARGA25): con la caja a cuestas gana a todo
+    const cg = window.CARGA25 && CARGA25.cercano(plano, e, st, A);
+    if (cg && (CARGA25.cargando() || cg.d < dm + 0.5 * M) && !rc) (mejor = cg), (dm = cg.d);
     // la ronda del blót: sumarse al baile (BLOT25)
     const bl = window.BLOT25 && BLOT25.cercano(plano, e, st, A);
     if (bl && bl.d < dm && !rc && !ta && !es) (mejor = bl), (dm = bl.d);
@@ -511,7 +514,7 @@ window.EIKHOLT = (function () {
     }
     const alterna = !CONTROLES.mando() && window.OPCIONES && OPCIONES.v("correr") === "alternar";
     if ((!mov && !alterna) || jug.cansado) jug.sprintFijo = false;
-    jug.correr = libre && mov && ((CONTROLES.pulsado("correr") && !alterna) || jug.sprintFijo) && !jug.cansado;
+    jug.correr = libre && mov && ((CONTROLES.pulsado("correr") && !alterna) || jug.sprintFijo) && !jug.cansado && !(window.CARGA25 && CARGA25.cargando());
     if ((jug.esq || 0) <= 0 && jug.staEspera <= 0) jug.sta += (mov ? 20 : 30) * 1.6 * dt;
     if (jug.cansado && jug.sta > jug.staMax * 0.35) jug.cansado = false;
     jug.sta = Math.min(jug.staMax, jug.sta);
@@ -522,7 +525,7 @@ window.EIKHOLT = (function () {
       si = Math.sin(cam.g),
       er = ero(),
       aMundo = (x, y) => [x * co + y * si, -x * si + y * co];
-    if (libre) for (const k of ["esquivar", "saltar"]) if (CONTROLES.recien(k)) jug.pedido = { k, t: 0.18 };
+    if (libre && !(window.CARGA25 && CARGA25.cargando())) for (const k of ["esquivar", "saltar"]) if (CONTROLES.recien(k)) jug.pedido = { k, t: 0.18 }; // con una caja a cuestas, ni saltar ni esquivar
     if (jug.pedido && (jug.pedido.t -= dt) <= 0) jug.pedido = null;
     const pide = (k) => jug.pedido && jug.pedido.k === k;
     if (jug.esq > 0) {
@@ -778,6 +781,7 @@ window.EIKHOLT = (function () {
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (window.PERDIDOS25) PERDIDOS25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
     if (window.HUERTA25) HUERTA25.brillo(c, cam, cw, ch, tiempo, plano, st, A);
+    if (window.CARGA25) CARGA25.dibujar(c, cam, cw, ch, ero());
     climaCiudad(c, cw, ch, dt);
     if (window.TIRO25) TIRO25.dibujar(c, cw, ch, tiempo);
     if (window.PULSO25) PULSO25.dibujar(c, cw, ch, tiempo);
@@ -851,6 +855,7 @@ window.EIKHOLT = (function () {
     if (st.recados && st.recados.activo && window.RECADOS25) l.push(t("ek.hoy_recado", [t("ek.rc_cosa_" + (st.recados.i % RECADOS25.LISTA.length))]));
     const pr = window.PROMESAS25 && PROMESAS25.activa();
     if (pr) l.push(t("ek.hoy_promesa", [t("ek.pr_" + pr.deseo)]));
+    if (window.CARGA25 && h < 10 && !(st.carga && st.carga.dia === d && st.carga.llevadas >= 3)) l.push(t("ek.hoy_carga"));
     if (window.BLOT25) l.push(d % 7 === 5 ? t("ek.hoy_blot") : t("ek.hoy_blot_en", [(5 - (d % 7) + 7) % 7]));
     if (window.CUENTOS25 && h < 24) l.push(t("ek.hoy_cuento", [t("ek.cu_" + CUENTOS25.deHoy(A) + "_titulo")]));
     if (window.GALLINAS25 && d % 3 === 1 && h >= 9 && h < 17 && !(st.gallinas && st.gallinas.dia === d && st.gallinas.hecho)) l.push(t("ek.hoy_gallinas"));
