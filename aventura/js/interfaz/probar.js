@@ -77,6 +77,30 @@ window.PROBAR = (function () {
     ir(g.centro[0], g.centro[1], null, 420);
   }
 
+  // ---------- Eikholt ----------
+  // estar en la ciudad (si no, viaja a la Puerta del Sur y espera a que la ciudad arranque) y después poner a Eromash en
+  // (x, y) del plano
+  function enCiudad(x, y, luego) {
+    limpiar();
+    const listo = () => {
+      const e = EIKHOLT.ero();
+      if (x != null) (e.x = x), (e.y = y);
+      if (luego) setTimeout(luego, 300);
+    };
+    if (EIKHOLT.activo()) return listo();
+    A.teletransportar(W.CIUDAD.c[0], W.CIUDAD.c[1] + W.CIUDAD.ry * 0.97);
+    let n = 0;
+    const esperar = () => (EIKHOLT.activo() ? listo() : ++n < 40 && setTimeout(esperar, 150));
+    setTimeout(esperar, 900);
+  }
+  // entrar directo a un taller (su puerta del bosque) o a un edificio que solo está en la ciudad
+  function adentroDe(tipo) {
+    limpiar();
+    const p = INTERIORES.puertas.find((q) => q.tipo === tipo);
+    if (p) return INTERIORES.entrar(p);
+    INTERIORES.entrar({ tipo, cosa: { id: "ek_" + tipo, x: jug.x, y: jug.y - 70, o: { sem: 0.4 } }, clave: "ek_" + tipo });
+  }
+
   // ---------- las entradas ----------
   // cada una: id (su texto pb.<id> y pb.<id>_d), si está (el sistema cargado) y qué hace
   const GRUPOS = [
@@ -167,6 +191,18 @@ window.PROBAR = (function () {
           },
         },
       ],
+    },
+    {
+      id: "eikholt",
+      lista: () =>
+        hay("EIKHOLT")
+          ? [
+              ...["carpinteria", "curtiembre", "cordeleria", "hospederia", "cuartel"].map((k) => ({ id: "ek_" + k, si: hay("INTERIORES") && !!INTERIORES.CUARTOS[k], fn: () => (plata(200), adentroDe(k)) })),
+              { id: "ek_mercado", si: hay("MERCADO25"), fn: () => (plata(300), enCiudad(null, null, () => { const q = EIKHOLT.plano().puestos.find((c) => c.vende === "hierbas"); const e = EIKHOLT.ero(); (e.x = q.x), (e.y = q.y); })) },
+              { id: "ek_tablon", si: hay("RECADOS25"), fn: () => enCiudad(null, null, () => { const L = EIKHOLT.plano().lugares.tablon; const e = EIKHOLT.ero(); (e.x = L[0]), (e.y = L[1] + 60); }) },
+              { id: "ek_ronda", si: true, fn: () => (hora(23), enCiudad(null, null, () => { const g = MUNDO25.gente().find((q) => q.antorcha); const e = EIKHOLT.ero(); if (g) (e.x = g.x + 200), (e.y = g.y + 150); })) },
+            ]
+          : [],
     },
     {
       id: "zonas",

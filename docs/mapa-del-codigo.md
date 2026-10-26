@@ -205,7 +205,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **opciones.js**: opciones (módulo OPCIONES)
   - teclas propias
 - **probar.js**: el menú para probar las mecánicas (sistema PROBAR)
-  - lo que se da · ir a un lugar · las entradas · los menús · el sistema
+  - lo que se da · ir a un lugar · Eikholt · las entradas · los menús · el sistema
 - **prologo.js**: el prólogo del mago (módulo PROLOGO)
   - el nombre pasado a runas · la cabaña (igual que la ilustración) · el escritorio · el pergamino: lo que escribe el mago, en runas (al revés para quien mira: de frente al mago) · la pluma que escribe sola · lo que hay en el escritorio · la escena desde arriba: el escritorio visto en planta, con el pergamino en el medio · el cuadro: elige la escena y la cámara · las preguntas
 
