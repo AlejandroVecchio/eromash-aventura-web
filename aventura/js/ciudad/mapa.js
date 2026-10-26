@@ -310,7 +310,7 @@ window.MAPA25 = (() => {
     senalado = null;
     const A = op.A;
     A.menu(
-      `<h2>${t("ci.mapa_titulo")}</h2><div class="mapa-cuerpo"><div class="mapa-marco"><canvas id="mapa25Lienzo" class="mapa"></canvas>` +
+      `<h2>${t("ci.mapa_titulo")}</h2>${op.hoy || ""}<div class="mapa-cuerpo"><div class="mapa-marco"><canvas id="mapa25Lienzo" class="mapa"></canvas>` +
         `<div class="mapa-zoom"><button id="mapa25Mas" aria-label="${t("mp.acercar")}">+</button><button id="mapa25Menos" aria-label="${t("mp.alejar")}">−</button></div></div></div>` +
         `<div class="sub mapa-ley" id="mapa25Pie">${t("ci.mapa_ayuda")}</div>`,
       [

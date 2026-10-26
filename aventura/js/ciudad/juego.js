@@ -802,9 +802,27 @@ window.EIKHOLT = (function () {
     casas: plano.casasQueSeEntran,
     vistas: (st && st.casasVistas) || [],
   });
+  // «Hoy en Eikholt»: lo que pasa hoy en la ciudad, para el pie del mapa (asamblea, ratero, lo perdido, el recado
+  // tomado, la cinta atada y los viejos del hnefatafl)
+  function hoyEnEikholt() {
+    const d = Math.floor(((H.E.tiempo / LUZ.DIA) * 24 + 9 - 6) / 24),
+      h = hora(),
+      l = [];
+    if (window.ASAMBLEA25) l.push(d % 3 === 0 ? t("ek.hoy_ting") : t("ek.hoy_ting_en", [3 - (d % 3)]));
+    if (window.LADRON25 && d % 2 === 1 && !(st.ladron && st.ladron.dia === d)) l.push(t("ek.hoy_ladron"));
+    if (window.PERDIDOS25 && !(st.perdido && st.perdido.dia === d && st.perdido.hecho)) {
+      const p = PERDIDOS25.hoy(plano, A);
+      l.push(st.perdido && st.perdido.dia === d && st.perdido.sabe ? t("ek.hoy_perdido_donde", [t("ek.pd_cosa_" + p.cosa), t("ci.m_" + p.lugar)]) : t("ek.hoy_perdido"));
+    }
+    if (st.recados && st.recados.activo && window.RECADOS25) l.push(t("ek.hoy_recado", [t("ek.rc_cosa_" + (st.recados.i % RECADOS25.LISTA.length))]));
+    const pr = window.PROMESAS25 && PROMESAS25.activa();
+    if (pr) l.push(t("ek.hoy_promesa", [t("ek.pr_" + pr.deseo)]));
+    if (window.TAFL25 && h < 18 && !(st.tafl && st.tafl.dia === d)) l.push(t("ek.hoy_tafl"));
+    return l.length ? `<div class="sub mapa-hoy"><b>${t("ek.hoy_titulo")}</b> · ${l.join(" · ")}</div>` : "";
+  }
   function abrirMapa() {
     if (!window.MAPA25) return window.MAPA && MAPA.abrir();
-    MAPA25.abrir({ A, plano, vivo: datosMapa, ponerMarca: (m) => st && (st.marca = m), alBosque: () => window.MAPA && MAPA.abrir() });
+    MAPA25.abrir({ A, plano, vivo: datosMapa, hoy: hoyEnEikholt(), ponerMarca: (m) => st && (st.marca = m), alBosque: () => window.MAPA && MAPA.abrir() });
   }
   const sistemaCiudad = { paso, dibujar, cercano };
 
