@@ -18,7 +18,8 @@ window.INTERIORES = (function () {
   const puertas = []; // { cosa, tipo, clave }
 
   const TIPO_DE = { casaEikholt: "casa", casaLindes: "lindes", herreriaAsa: "herreria", casaSanacion: "sanacion", hongoDorado: "taberna" };
-  // cuartos que arman otros sistemas (la casa propia de casa.js): CUARTOS[tipo](ayuda, edificio, clave) → { pared, ventana, estandarte, repisa }
+  // cuartos que arman otros sistemas (la casa propia de casa.js, los talleres de oficios.js): CUARTOS[tipo](ayuda, edificio,
+  // clave) → { pared, ventana, estandarte, repisa }; ayuda.gente({ id, x, y, nombre, hablar }) pone a alguien adentro
   const CUARTOS = {};
   // ---------- quien vive en cada casa ----------
   // Cada casa de la gente tiene su dueño, con nombre (la casa es «la casa de …»): sale de la semilla de la casa, así es
@@ -136,7 +137,7 @@ window.INTERIORES = (function () {
       estandarte = 990;
       ventana = 560;
     } else if (CUARTOS[tipo]) {
-      const r = CUARTOS[tipo]({ mueble, cama, hogar, examinar, dormir }, edificio, clave) || {};
+      const r = CUARTOS[tipo]({ mueble, cama, hogar, examinar, dormir, gente: (q) => g.push(q) }, edificio, clave) || {};
       if (r.pared) pared = r.pared;
       if (r.ventana != null) ventana = r.ventana;
       if (r.estandarte != null) estandarte = r.estandarte;

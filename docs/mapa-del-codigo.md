@@ -306,6 +306,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **matraz.js**: el matraz de la mesa de alquimia (MATRAZ, modo "matraz")
   - empezar y terminar · el lienzo · cada cuadro (lo llama juego.js por J.modos) · el dibujo (1600 × 900)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
+- **oficios.js**: los talleres de Eikholt por dentro (sistema OFICIOS)
+  - los cuartos
 - **pesca.js**: la pesca (sistema PESCA)
   - el agua · tirar, picar, pelear · el dibujo en el mundo · el puesto de Sverri · el sistema
 - **poderes.js**: poderes rúnicos, botín y la gente de Eikholt (sistema PODERES)
@@ -406,6 +408,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - assets: vetaHierro, vetaAmbar, vetaRunica
 - **assets-norte.js**: el corredor del norte: Paso del Guardián y Antigua tala (se suma a ASSETS)
   - assets: pilarAntiguo, lonaCuadrilla, tornoVigas, tablaPuente, pilaTablones, andamio, posteCruzaron, casetaPuentero, toconMarcado, muroRaices, granTocon, cabanaLenadores
+- **assets-oficios.js**: los talleres de Eikholt por dentro
+  - El banco del carpintero · La quilla en los caballetes · La tina de curtir · El potro de raspar · El torno del cordelero · Los rollos de soga
+  - assets: bancoCarpintero, quillaCaballetes, tinaCurtidor, potroRaspar, tornoCordelero, rollosSoga
 - **assets-pesca.js**: la pesca (assets de PESCA)
   - los peces · el puesto de pesca de Sverri
   - assets: canaSverri
@@ -509,6 +514,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
+- **oficios.js**: textos de los talleres de Eikholt por dentro (of.) y de sus muebles (as.)
 - **pesca.js**: Textos de la pesca (motor/pesca.js, mundo/assets-pesca.js): prefijo pe. (y as., co., mp.ley_pesca).
 - **piedras.js**: Textos de las piedras del camino, las piedras del rito, el bosque viejo y las miniaturas del mapa (prefijo pr.), los dos idiomas.
   - assets nuevos (catálogo) · piedras del camino · piedras del rito
