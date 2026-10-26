@@ -32,7 +32,7 @@ window.ANIMA = (function () {
   // ANIMA.gesto(tipo, dur, op): op.col pinta las partículas del gesto que tiene (tesoro, sacudirse, grito).
   // De uso (pedido de Alejandro, 26/10/2026: nada de los ojitos ^-^ al juntar o festejar):
   //   botin       se agacha a juntar, se endereza orgulloso y saltan unas chispas doradas (cofres)
-  //   tesoro      se agacha, salta girando y cae firme con un anillo de chispas del color de la rareza (lo bueno)
+  //   tesoro      se agacha a juntarlo, se yergue mirándolo y planta los pies con un anillo de chispas del color de la rareza (lo bueno)
   //   grito       toma aire y ruge estirado, temblando, con brasas que suben (misión, victoria, una compra grande)
   //   asiente     dos cabeceos: entendido (un libro, un consejo, un trato)
   //   alivio      se afloja y suelta el aire, con los ojos cerrados (comer, tomar algo)
@@ -386,24 +386,27 @@ window.ANIMA = (function () {
           o.ojos = "fierce";
         }
       } else if (g.tipo === "tesoro") {
-        // se agacha, salta girando sobre sí mismo y cae firme
-        if (k < 0.15) {
-          const q = k / 0.15;
+        // se agacha a juntarlo, se yergue mirándolo, planta los pies con fuerza y queda firme, pecho afuera
+        if (k < 0.2) {
+          const q = k / 0.2;
           o.sy *= 1 - 0.14 * q;
           o.sx *= 1 + 0.08 * q;
+          inclinar(0.2 * q);
           o.ojos = "concentrado";
-        } else if (k < 0.52) {
-          const q = (k - 0.15) / 0.37;
-          o.dy -= Math.sin(q * Math.PI) * 30;
-          o.sy *= 1 + 0.1 * Math.sin(q * Math.PI);
-          o.sx *= Math.max(0.22, Math.abs(Math.cos(q * Math.PI * 2))); // la vuelta entera en el aire
-          o.ojos = "fierce";
+        } else if (k < 0.5) {
+          const t = (k - 0.2) / 0.3,
+            q = t * t * (3 - 2 * t);
+          o.sy *= 0.86 + 0.22 * q;
+          o.sx *= 1.08 - 0.12 * q;
+          inclinar(0.2 * (1 - q) - 0.08 * q);
+          o.ojos = "concentrado";
         } else {
-          const q = (k - 0.52) / 0.48,
+          const q = (k - 0.5) / 0.5,
             r = resorte(q * 0.5, 9, 24);
-          o.sy *= 1 - 0.16 * r + 0.05 * (1 - q);
-          o.sx *= 1 + 0.14 * r;
-          o.rot -= 0.06 * (1 - q);
+          o.sy *= 1.08 - 0.14 * r - 0.08 * q;
+          o.sx *= 0.96 + 0.12 * r + 0.04 * q;
+          o.dy += 3 * Math.max(0, r);
+          inclinar(-0.08 * (1 - q));
           o.ojos = "fierce";
         }
       } else if (g.tipo === "grito") {
