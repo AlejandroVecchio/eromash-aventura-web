@@ -1,0 +1,22 @@
+// Textos del tambor del skald (motor/mj-tambor.js) y de lo que lo pide en el Hongo Dorado (motor/hongo.js): prefijo mn.tambor y ho.tambor
+I18N.textos({
+  "mn.tambor": { es: "El tambor del skald", en: "The skald's drum" },
+  "mn.tambor_pie": { es: "Apretá la letra de cada marca cuando el aro se cierra (o tocá el tambor) · {1}: dejar", en: "Press each mark's letter as its ring closes (or tap the drum) · {1}: quit" },
+  "mn.tambor_solve": { es: "Sølve toca…", en: "Sølve plays…" },
+  "mn.tambor_vos": { es: "¡Tu turno!", en: "Your turn!" },
+  "mn.tambor_sala": { es: "El ánimo de la sala", en: "The hall's mood" },
+  "mn.tambor_ronda": { es: "Ronda {0} / {1}", en: "Round {0} / {1}" },
+  "mn.tambor_leyenda": { es: "Repetí sus letras", en: "Repeat his letters" },
+  "mn.tambor_leyenda2": { es: "cuando el aro se cierra", en: "as the ring closes" },
+  "mn.tambor_res": { es: "{0} de {1} rondas · precisión {2} %", en: "{0} of {1} rounds · precision {2}%" },
+  "mn.tambor_v_rapido": { es: "Al galope: más rápido", en: "At a gallop: faster" },
+  "mn.tambor_v_oido": { es: "De oído: las letras solo se ven cuando Sølve las toca", en: "By ear: letters show only while Sølve plays them" },
+  "mn.tambor_v_largo": { es: "Compás largo: dos compases seguidos", en: "Long measure: two bars in a row" },
+  "mn.tambor_v_fiesta": { es: "La fiesta: seis rondas y una sala exigente", en: "The feast: six rounds and a demanding hall" },
+  "ho.accion_tambor": { es: "Tocar el tambor con Sølve", en: "Play the drum with Sølve" },
+  "ho.tambor_pide": { es: "Sølve te alcanza el tambor", en: "Sølve hands you the drum" },
+  "ho.tambor_bien": { es: "¡La sala golpea las mesas!", en: "The hall pounds the tables!" },
+  "ho.tambor_bien_sub": { es: "{0} de plata en propinas · estamina llena", en: "{0} silver in tips · stamina full" },
+  "ho.tambor_otra": { es: "Esta noche ya tocaste: la sala aplaude igual", en: "You already played tonight: the hall cheers anyway" },
+  "ho.tambor_mal": { es: "La sala se ríe. Sølve te guiña: mañana a la noche otra vez", en: "The hall laughs. Sølve winks: again tomorrow night" },
+});

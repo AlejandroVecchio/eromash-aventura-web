@@ -312,6 +312,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-losas.js**: minijuego: las losas deslizantes (MINIJ «losas»)
 - **mj-rastreo.js**: minijuego: el rastreo con la Lente (MINIJ «rastreo»)
 - **mj-rayo.js**: minijuego: el rayo de luz rúnica (MINIJ «rayo»)
+- **mj-tambor.js**: minijuego: el tambor del skald (MINIJ «tambor»)
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
   - de dónde sale cada tipo · los de cada misión
@@ -514,6 +515,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-losas.js**: Textos de las losas deslizantes (motor/mj-losas.js): prefijo mn.losas
 - **mj-rastreo.js**: Textos del rastreo con la Lente (motor/mj-rastreo.js) y del último rastro de los contratos que lo pide (motor/contratos.js): prefijo mn.rastreo
 - **mj-rayo.js**: Textos del rayo de luz rúnica (motor/mj-rayo.js) y de lo que lo pide (motor/ritos.js, el sello de EL-07 en motor/juego.js): prefijo mn.rayo
+- **mj-tambor.js**: Textos del tambor del skald (motor/mj-tambor.js) y de lo que lo pide en el Hongo Dorado (motor/hongo.js): prefijo mn.tambor y ho.tambor
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones
