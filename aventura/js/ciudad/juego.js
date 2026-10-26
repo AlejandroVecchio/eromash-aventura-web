@@ -198,7 +198,7 @@ window.EIKHOLT = (function () {
       [bx, by] = V(p.x, p.y);
     jug.mira = VIKINGO.vista(bx - ax, by - ay, jug.mira);
   }
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4 };
   const charlas = {};
   function hablarVecino(p) {
     mirarA(p);
@@ -693,7 +693,7 @@ window.EIKHOLT = (function () {
     climaCiudad(c, cw, ch, dt);
   }
   // con lluvia fuerte la mitad de los que pasean se meten bajo techo (los de la Guardia y los que tienen nombre, no)
-  const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
+  const bajoTecho = (p) => lluvia > 0.5 && !p.nombrado && !p.ronda && !p.puesto && !p.farol && !/guardia/.test(p.id) && (p.techo === undefined ? (p.techo = Math.random() < 0.5) : p.techo);
   // el mismo clima del día que el bosque (VIDA.climaAhora): la lluvia cae inclinada sobre la ciudad y la oscurece un
   // poco, la bruma del alba la blanquea. Calidad baja: nada; media: menos gotas.
   let lluvia = 0,

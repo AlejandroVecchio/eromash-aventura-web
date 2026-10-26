@@ -8,7 +8,7 @@
 //   día y la bruma de lo lejano cuando se aleja la vista.
 // Calidad gráfica: alta = todo · media = sin rayos del Roble ni reflejos, bruma más liviana · baja = solo el color de
 // la hora (plano, sin degradé) y la capa de LUZ en su versión plana.
-//   LUCES25.armar(plano)
+//   LUCES25.armar(plano) · faroleros() → las rondas de los faroleros · dondeFarolero(ronda, h) → { x, y, vx, vy, prende } o null
 //   LUCES25.dePantalla(cam, cw, ch, h, t, ero, mas) → luces en la pantalla para LUZ.dibujar (mas: las que se mueven)
 //   LUCES25.antes(c, cam, cw, ch, h, t, noche)   (después de dibujar el mundo, antes de la noche)
 //   LUCES25.despues(c, cam, cw, ch, h, t, noche, enVista)   (después de la capa de oscuridad)
@@ -106,6 +106,7 @@ window.LUCES25 = (function () {
       const a = p.anclas["puerta_" + k];
       if (a) sumar({ x: a[0], y: a[1], r: 800, col: RUNA, f: 0.7 });
     }
+    armarFaroleros();
     baldes = new Map();
     for (const l of luces) {
       const k = Math.floor(l.x / BALDE) + "," + Math.floor(l.y / BALDE);
@@ -115,6 +116,77 @@ window.LUCES25 = (function () {
     return luces;
   }
 
+  // ---------- los faroleros ----------
+  // Los faroles de los tres anillos de la plaza los prende alguien de verdad: un farolero por anillo (dos en el de
+  // afuera, uno para cada lado) sale de la punta sur a las 16:30, va farol por farol con su pértiga encendida y cada farol
+  // se prende cuando llega (`enc`); al alba (desde las 4:30) hace la misma vuelta apagándolos (`apaga`). MUNDO25 los pone
+  // en la gente con faroleros() y los mueve con dondeFarolero(r, h).
+  const V_FAROL = 150, // unidades por segundo
+    H_HORA = 40, // segundos reales por hora del juego (LUZ.DIA / 24)
+    PAUSA = 0.06, // lo que tarda en cada farol (horas)
+    SALE = 16.5,
+    A0 = Math.PI / 2; // la punta sur
+  let rondasFarol = [];
+  function armarFaroleros() {
+    rondasFarol = [];
+    const fs = luces.filter((l) => l.enc && l.r === 420 && l.col === ORO && !l.vela).map((l) => ({ l, r: Math.hypot(l.x, l.y), a: Math.atan2(l.y, l.x) }));
+    fs.sort((a, b) => a.r - b.r);
+    const anillos = [];
+    for (const f of fs) {
+      if (f.r > 3200) break;
+      const u = anillos[anillos.length - 1];
+      if (u && f.r - u[u.length - 1].r < 120) u.push(f);
+      else anillos.push([f]);
+    }
+    const rel = (a) => (((a - A0) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    for (const an of anillos) {
+      if (an.length < 6) continue;
+      const R = an.reduce((s, f) => s + f.r, 0) / an.length - 70;
+      const lados = an.length > 16 ? [[1, an.filter((f) => rel(f.a) < Math.PI)], [-1, an.filter((f) => rel(f.a) >= Math.PI)]] : [[1, an]];
+      for (const [dir, lista] of lados) {
+        const orden = lista.map((f) => ({ f, d: dir > 0 ? rel(f.a) : Math.PI * 2 - rel(f.a) })).sort((a, b) => a.d - b.d);
+        let h = SALE,
+          antes = 0;
+        const paradas = [];
+        for (const { f, d } of orden) {
+          h += ((d - antes) * R) / V_FAROL / H_HORA;
+          antes = d;
+          paradas.push({ a: A0 + dir * d, llega: h, sale: h + PAUSA });
+          f.l.enc = h + PAUSA / 2;
+          f.l.apaga = f.l.enc - 12;
+          f.l.rapido = true;
+          h += PAUSA;
+        }
+        rondasFarol.push({ R, dir, paradas, fin: h + 0.25 });
+      }
+    }
+  }
+  // dónde está el farolero de la ronda r a la hora h (null si no anda): { x, y, vx, vy, prende }
+  function dondeFarolero(r, h) {
+    const hh = h >= 12 ? h : h + 12,
+      P = r.paradas;
+    if (hh < SALE || hh > r.fin) return null;
+    let a = A0,
+      prende = false;
+    if (hh < P[0].llega) a = A0 + ((hh - SALE) / (P[0].llega - SALE)) * (P[0].a - A0);
+    else {
+      let k = P.length - 1;
+      for (let i = 0; i < P.length; i++)
+        if (hh < P[i].sale) {
+          k = i;
+          break;
+        }
+      const p = P[k];
+      if (hh >= p.llega && hh < p.sale) (a = p.a), (prende = true);
+      else if (hh >= p.sale && k === P.length - 1) a = p.a + r.dir * ((hh - p.sale) * V_FAROL * H_HORA) / r.R;
+      else {
+        const q = P[k - 1] || { a: A0, sale: SALE };
+        a = q.a + ((hh - q.sale) / (p.llega - q.sale)) * (p.a - q.a);
+      }
+    }
+    return { x: Math.cos(a) * r.R, y: Math.sin(a) * r.R, vx: -Math.sin(a) * r.dir, vy: Math.cos(a) * r.dir, prende };
+  }
+
   // cuánto alumbra cada luz en este momento
   function fuerza(l, h, t) {
     let f = l.f;
@@ -122,7 +194,8 @@ window.LUCES25 = (function () {
     if (l.forja) f *= 0.7 + 0.3 * Math.pow(0.5 + 0.5 * Math.sin(t * 1.6 + l.fase), 2); // el fuelle
     if (l.vela) f *= 0.94 + Math.sin(t * 1.7 + l.fase) * 0.06;
     if (l.late) f *= 0.65 + 0.35 * (0.5 + 0.5 * Math.sin(t * 0.9 + l.fase));
-    if (l.enc) f *= h >= 12 ? Math.max(0, Math.min(1, (h - l.enc) * 3)) : Math.max(0, Math.min(1, (l.enc - 11.5 - h) * 3));
+    if (l.rapido) f *= h >= 12 ? Math.max(0, Math.min(1, (h - l.enc) * 12)) : Math.max(0, Math.min(1, (l.apaga - h) * 12));
+    else if (l.enc) f *= h >= 12 ? Math.max(0, Math.min(1, (h - l.enc) * 3)) : Math.max(0, Math.min(1, (l.enc - 11.5 - h) * 3));
     if (l.parpadea) f *= Math.sin(t * 2.3) + Math.sin(t * 7.1 + 1) * 0.6 > 0.7 ? 0.05 : 1;
     return f;
   }
@@ -302,5 +375,5 @@ window.LUCES25 = (function () {
     c.globalCompositeOperation = "source-over";
   }
 
-  return { armar, dePantalla, antes, despues, grado, fuerza };
+  return { armar, dePantalla, antes, despues, grado, fuerza, faroleros: () => rondasFarol, dondeFarolero };
 })();

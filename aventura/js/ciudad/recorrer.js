@@ -53,7 +53,7 @@ window.RECORRER25 = (function () {
   // ---------- quién dice qué: los vecinos con nombre tienen sus frases (pj.<nombre>_0..3), los demás las del barrio ----------
   const FRASES_GENERICAS = { guardia: "ek.dice_guardia_", trabajador: "ek.dice_vecino_", trabajador2: "ek.dice_vecina_", trabajador3: "ek.dice_viajero_", herido: "ek.dice_vecina_", svanhild: null, eydis: null, orm: null };
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
-  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
+  const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5, farolero: 4 };
   function frase(id, n, rol) {
     n = Math.abs(Math.floor(n)) || 0;
     if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));

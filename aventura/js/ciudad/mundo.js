@@ -259,6 +259,8 @@ window.MUNDO25 = (function () {
     }
     // lo que alumbra de noche (LUCES25) y las sombras de lo que está parado (SOMBRAS25)
     LUCES25.armar(plano);
+    // los faroleros (LUCES25): uno por anillo de faroles de la plaza, con la pértiga encendida (antorcha)
+    LUCES25.faroleros().forEach((r) => poner({ id: vecino("farolero"), x: 0, y: r.R, vx: 0, vy: 0, s: 1, farol: r, antorcha: true }));
     SOMBRAS25.iniciar(plano);
     // Eromash camina por la ciudad (RECORRER25): curiosidades, cofres, barrios, la gente y los animales que reaccionan
     RECORRER25.iniciar({ plano, libre, gente, inicio: op.inicio, juego: op.juego, dibujarEro: op.dibujarEro, alCofre: op.alCofre });
@@ -269,6 +271,20 @@ window.MUNDO25 = (function () {
   function moverGente(dt, h, oculto) {
     for (const p of gente) {
       p.visible = (!p.horas || aHora(h, p.horas)) && !(oculto && oculto(p));
+      if (p.farol) {
+        // el farolero va de farol en farol a la hora que le toca (LUCES25.dondeFarolero)
+        const q = LUCES25.dondeFarolero(p.farol, h);
+        p.visible = !!q && p.visible;
+        if (q) {
+          p.x = q.x;
+          p.y = q.y;
+          p.vx = q.prende ? 0 : q.vx * 60;
+          p.vy = q.prende ? 0 : q.vy * 60;
+          p.prende = q.prende;
+          p.miraA = q.prende ? [q.x, q.y] : null; // mira el farol que prende
+        }
+        continue;
+      }
       if (!p.vx && !p.vy) continue;
       if (p.ronda === "oficios") {
         // la ronda de noche sigue el anillo de los oficios, a paso de guardia
