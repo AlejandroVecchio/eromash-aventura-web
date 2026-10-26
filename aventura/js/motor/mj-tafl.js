@@ -60,6 +60,7 @@
     b[y][x] = null;
     b[ny][nx] = p;
     let tomadas = 0;
+    const caen = [];
     const yo = lado(p);
     for (const [dx, dy] of D4) {
       const ax = nx + dx,
@@ -69,9 +70,10 @@
       if (hostil(S, b, ax + dx, ay + dy, lado(q))) {
         b[ay][ax] = null;
         tomadas++;
+        caen.push([ax, ay, q]);
       }
     }
-    return { b, tomadas };
+    return { b, tomadas, caen };
   }
   function rey(S, b) {
     for (let y = 0; y < N(S); y++) for (let x = 0; x < N(S); x++) if (b[y][x] === "K") return [x, y];
@@ -130,7 +132,7 @@
     S.b = r.b;
     S.anim = { x: j[0], y: j[1], nx: j[2], ny: j[3], f: 0 };
     S.ultima = j;
-    if (r.tomadas) (S.luz.toma = 0.5), (S.tomadas[S.turno] += r.tomadas);
+    if (r.tomadas) (S.luz.toma = 0.5), (S.tomadas[S.turno] += r.tomadas), (S.caidas = { l: r.caen, t: 0.9 });
     if (window.SONIDO) SONIDO.tocar(r.tomadas ? "golpe" : "clic", { vol: 0.4, tono: r.tomadas ? 1.2 : 1 });
     if (S.turno === S.yo) S.jugadas++;
     S.turno = S.turno === "A" ? "D" : "A";
@@ -171,6 +173,7 @@
       if (CONTROLES.recien("derecha")) mov(1, 0);
       if (CONTROLES.recien("interactuar") || CONTROLES.recien("atacar")) this.tocar(S, S.cur);
       if (S.anim) S.anim.f = Math.min(1, S.anim.f + dt * 6);
+      if (S.caidas && (S.caidas.t -= dt) <= 0) S.caidas = null;
       if (S.gano) {
         if ((S.gano -= dt) <= 0) MINIJ.terminar({ gano: S.final, jugadas: S.jugadas });
         return;
@@ -214,7 +217,10 @@
       // la tabla de madera tallada, las casillas, las esquinas y el trono con sus runas
       D.P([x0 - 20, y0 - 20, x0 + S.n * q + 20, y0 - 20, x0 + S.n * q + 20, y0 + S.n * q + 20, x0 - 20, y0 + S.n * q + 20], "#4A2A1E");
       D.P([x0 + (S.n * q) / 2, y0 - 20, x0 + S.n * q + 20, y0 - 20, x0 + S.n * q + 20, y0 + S.n * q + 20, x0 + (S.n * q) / 2, y0 + S.n * q + 20], "#5E3A26");
-      const destinos = S.sel ? jugadas(S, S.b, S.sel[0], S.sel[1]) : [];
+      // los destinos de la pieza elegida; donde la jugada come, un rombo rojo, y con la marca encima, lo que caería
+      const destinos = S.sel ? jugadas(S, S.b, S.sel[0], S.sel[1]).map(([nx, ny]) => [nx, ny, mover(S, S.b, [S.sel[0], S.sel[1], nx, ny]).caen]) : [];
+      const aca = destinos.find(([a, b]) => b * S.n + a === S.cur),
+        caeria = aca ? aca[2] : [];
       for (let y = 0; y < S.n; y++)
         for (let x = 0; x < S.n; x++) {
           const px = x0 + x * q,
@@ -222,7 +228,9 @@
             esp = esq(S, x, y) || trono(S, x, y);
           D.P([px + 2, py + 2, px + q - 2, py + 2, px + q - 2, py + q - 2, px + 2, py + q - 2], esp ? "#2A2220" : (x + y) % 2 ? "#A8622E" : "#9A5A2A");
           if (esp) D.runa(trono(S, x, y) ? "othala" : "raidho", px + q / 2, py + q / 2, q * 0.2, "#5E3A26", 0.24);
-          if (destinos.some(([a, b]) => a === x && b === y)) D.rombo(px + q / 2, py + q / 2, q * 0.12, "#73D5DB");
+          const dst = destinos.find(([a, b]) => a === x && b === y);
+          if (dst && dst[2].length) D.rombo(px + q / 2, py + q / 2, q * 0.2, "#C8402D"), D.rombo(px + q / 2, py + q / 2, q * 0.1, "#FF8D71");
+          else if (dst) D.rombo(px + q / 2, py + q / 2, q * 0.12, "#73D5DB");
           if (S.ultima && ((S.ultima[0] === x && S.ultima[1] === y) || (S.ultima[2] === x && S.ultima[3] === y))) DIB.alfa(c, 0.2, () => D.P([px + 2, py + 2, px + q - 2, py + 2, px + q - 2, py + q - 2, px + 2, py + q - 2], "#FFD98A"));
         }
       // las piezas: discos de piedra (atacantes oscuros, defensores claros, el rey con su corona)
@@ -253,7 +261,32 @@
             else D.runa("algiz", px, py, r * 0.4, "#5E130D", 0.3);
           }
           if (sel) D.halo(px, py, r * 1.4, "#73D5DB", 0.5);
+          if (caeria.some(([a, b]) => a === x && b === y)) cruz(px, py, r * 0.7, 0.85);
         }
+      // lo que se acaba de comer: la pieza que se desvanece tachada
+      if (S.caidas)
+        S.caidas.l.forEach(([x, y, p]) => {
+          const px = x0 + x * q + q / 2,
+            py = y0 + y * q + q / 2,
+            a = Math.min(1, S.caidas.t / 0.9);
+          DIB.alfa(c, a * 0.6, () => D.rombo(px, py, q * 0.3, p === "A" ? "#2A2220" : "#C8C2BE"));
+          cruz(px, py, q * 0.25, a);
+        });
+      function cruz(px, py, r, a) {
+        DIB.alfa(c, a, () => {
+          c.save();
+          c.strokeStyle = "#C8402D";
+          c.lineWidth = 5;
+          c.lineCap = "round";
+          c.beginPath();
+          c.moveTo(px - r, py - r);
+          c.lineTo(px + r, py + r);
+          c.moveTo(px + r, py - r);
+          c.lineTo(px - r, py + r);
+          c.stroke();
+          c.restore();
+        });
+      }
       // la marca del teclado
       const cx = x0 + (S.cur % S.n) * q,
         cy = y0 + Math.floor(S.cur / S.n) * q;
@@ -268,6 +301,8 @@
       D.texto(t(mio ? "mn.tafl_vos" : "mn.tafl_fjalar"), 300, 250, 22, mio ? "#73D5DB" : "#FFD98A", "center", 700);
       D.texto(t(S.yo === "D" ? "mn.tafl_defendes" : "mn.tafl_atacas"), 300, 290, 15, "#E0B2B2", "center", 500);
       D.texto(t("mn.tafl_tomadas", [S.tomadas[S.yo], S.tomadas[S.yo === "A" ? "D" : "A"]]), 300, 340, 16, "#F2ECEC", "center", 500);
+      // las reglas a mano
+      ["mn.tafl_regla1", "mn.tafl_regla2", "mn.tafl_regla3", "mn.tafl_regla4"].forEach((k, n) => D.texto(t(k), 300, 420 + n * 30, 14, n === 1 ? "#FF8D71" : "#E0B2B2", "center", 500));
       if (S.v.jugadas) D.texto(t("mn.tafl_quedan", [Math.max(0, S.v.jugadas - S.jugadas)]), 1380, 124, 20, "#73D5DB", "right", 700);
     },
   });

@@ -288,7 +288,9 @@ window.COMBATE = (function () {
           alertar(e);
           if (window.SONIDO && (e.lider || e.patron)) SONIDO.tocar("rugido", { vol: 0.55, tono: 0.85, x: e.x, y: e.y });
           // el rugido de un líder sobresalta a Eromash
+          // y a un semijefe le contesta con un pisotón
           if ((e.lider || e.patron) && window.ANIMA) ANIMA.gesto("susto");
+          if (e.patron && window.ANIMA) J.retrasar(0.75, () => !p.muerto && ANIMA.gesto("pisoton"));
         }
         break;
       case "persigue": {

@@ -4,6 +4,21 @@
   const vacia = (n) => Array.from({ length: n }, () => Array(n).fill(null));
   const i = (S, x, y) => y * S.n + x;
   (window.PRUEBAS = window.PRUEBAS || []).push(
+    { nombre: "tafl: comer deja la pieza tachada un instante y cuenta la tomada", fn: async (A, { igual, si }) => {
+      JUEGO.empezar(9, true);
+      MINIJ.empezar("tafl", { semilla: 3 });
+      const S = MINIJ.estado();
+      S.b = [".......", ".......", ".......", "...K...", ".....A.", ".......", ".....D."].map((f) => f.split("").map((c) => (c === "." ? null : c)));
+      S.b[3][5] = "D";
+      S.turno = "D";
+      S.piensa = 99;
+      MINIJ.JUEGOS.tafl.tocar(S, 6 * 7 + 5);
+      MINIJ.JUEGOS.tafl.tocar(S, 5 * 7 + 5);
+      igual(S.b[4][5], null, "el atacante de f5 cae:");
+      igual(S.tomadas.D, 1, "tomadas:");
+      si(S.caidas && S.caidas.l.length === 1, "queda tachada para verla caer");
+      MINIJ.cerrar();
+    } },
     { nombre: "tafl: la salida, cómo corren las piezas, el trono, las esquinas y las tomas", fn: async (A, { igual, si }) => {
       JUEGO.empezar(9, true);
       MINIJ.empezar("tafl", { semilla: 3 });
