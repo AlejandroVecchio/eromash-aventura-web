@@ -44,6 +44,14 @@ tener que leer el código para balancear.
   `60`) `+ 3 · nivel`, piedra despierta `40`, rito `90`, campamento liberado `70` (`+ 4 · nivel`).
 - Prueba: `?nivel=12` arranca una partida nueva en ese nivel.
 
+## Dominio de las runas (`motor/dominio.js`, `DOMINIO`; textos `dm.` en `textos/dominio.js`, estado `E.extra.dominio`)
+
+- Cada runa sube de rango (I a V) con el uso: 12, 35, 80 y 160 veces lanzada (`UMBRAL`).
+- Cada rango suma 12 % a lo que hace: el daño de Kenaz, Isa, Sowilo y las runas de los elementos (sube `J.poderRunico` mientras se lanza) y el escudo de Algiz (`J.rangoRuna`).
+- El III la hace un 10 % más barata y el IV otro 5 %. El V, la maestría, devuelve un cuarto de la energía cuando la runa alcanza a tres o más («Eco rúnico»).
+- El rango se ve en la casilla de la barra (I…V) y en su descripción, con cuánto falta. Subir de rango se festeja.
+- Sirve para cualquier runa de `PODERES.RUNAS`: envuelve `PODERES.lanzar` y deja todo como estaba al terminar.
+
 ## Atributos (`motor/atributos.js`, textos `at.`, estado `E.extra.atrib`)
 
 - Fuerza (Uruz), Destreza (Ehwaz), Vigor (Thurisaz) y Espíritu (Ansuz). Arrancan en 10; cada nivel da 3 puntos

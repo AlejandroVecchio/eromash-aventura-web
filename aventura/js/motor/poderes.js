@@ -265,7 +265,7 @@ window.PODERES = (function () {
       efectos.push({ tipo: "hielo", x: jug.x, y: jug.y, radio, t: 0, dur: 0.8 });
       avisarSistemas("isa", zona);
     } else if (r === "algiz") {
-      escudo = 40 + pj.nivel * 10;
+      escudo = Math.round((40 + pj.nivel * 10) * (J.rangoRuna || 1)); // el rango de Algiz (motor/dominio.js)
       escudoT = 7;
       efectos.push({ tipo: "escudo", t: 0, dur: 0.5 });
     } else if (r === "sowilo") {

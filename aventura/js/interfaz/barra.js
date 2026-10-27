@@ -16,12 +16,21 @@ window.BARRA = (function () {
   // cada cosa: tipo, cómo se dibuja (icono o runa), si Eromash la tiene, si está lista, cuánto le falta, cuántas
   // hay y qué hace
   const pe = () => PODERES.estado();
+  // el rango de la runa (motor/dominio.js) en la descripción
+  function rangoTxt(r) {
+    const D = DOMINIO,
+      n = D.rango(r);
+    const l = [t("dm.rango_d", [D.romano(r), Math.round((D.mult(r) - 1) * 100), Math.round(PODERES.RUNAS[r].coste * D.coste(r))])];
+    l.push(n >= 5 ? t("dm.rango_max") : t("dm.rango_falta", [D.falta(r)]));
+    return l.join(" ");
+  }
   const runa = (r) => ({
     tipo: "habilidad",
     runa: r,
     col: () => PODERES.RUNAS[r].col,
     nombre: () => t("pj.runa_" + r),
-    desc: () => t("bar.runa_d", [t("pj.runa_" + r + "_toma"), PODERES.RUNAS[r].coste]),
+    desc: () => t("bar.runa_d", [t("pj.runa_" + r + "_toma"), PODERES.RUNAS[r].coste]) + (window.DOMINIO ? " " + rangoTxt(r) : ""),
+    cant: () => (window.DOMINIO && PODERES.tiene(r) ? DOMINIO.romano(r) : null),
     tiene: () => PODERES.tiene(r),
     listo: () => pe().energia >= PODERES.RUNAS[r].coste,
     energia: () => Math.min(1, pe().energia / PODERES.RUNAS[r].coste),

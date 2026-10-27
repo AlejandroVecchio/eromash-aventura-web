@@ -250,6 +250,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - crear una pieza · lo que suman · lo que se lee · la pestaña de la mochila · de dónde salen · el sistema
 - **contratos.js**: los contratos de caza y los trofeos (sistema CONTRATOS)
   - el mundo · la bestia y su escolta · tomar, examinar, cobrar · el poste · la Bolsa: los trofeos · el sistema
+- **dominio.js**: el dominio de las runas (sistema DOMINIO)
 - **elementos.js**: las runas de los elementos y las reacciones (sistema ELEMENTOS)
   - las dos runas nuevas · las reacciones · el Roble del Trueno · la Fuente de Laguz · el códice · el dibujo · el sistema
 - **encuentros.js**: encuentros en el camino (sistema ENCUENTROS)
@@ -479,6 +480,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **comercio.js**: Textos del comercio con Ingrid y Kolbrun (motor/comercio.js, mundo/assets-comercio.js): prefijo cm.
 - **conjuntos.js**: Textos de los conjuntos de equipo (motor/conjuntos.js): prefijo cj.
 - **contratos.js**: Textos de los contratos de caza y los trofeos (motor/contratos.js, mundo/assets-contratos.js): prefijo ct.
+- **dominio.js**: Textos del dominio de las runas (prefijo dm.), los dos idiomas.
 - **eikholt.js**: Textos de Eikholt (prefijo ek.): el mapa aparte de la capital, sus lugares y lo que dice su gente.
   - la ciudad
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
