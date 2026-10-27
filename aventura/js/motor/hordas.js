@@ -171,7 +171,7 @@ window.HORDAS = (function () {
       const g = e.hordaGrupo;
       if (!g) return;
       const k = g.mas || 1;
-      if (e.lider || Math.random() < 0.55) PODERES.soltar(e.x, e.y, "plata", Math.round(e.d.plata * k * (0.7 + Math.random() * 0.6)));
+      if (e.lider || Math.random() < 0.55) PODERES.soltar(e.x, e.y, "plata", Math.round(e.d.plata * k * (0.7 + Math.random() * 0.6) * (window.ECONOMIA ? ECONOMIA.deCriatura(e, 100) / 100 : 1)));
       if (e.lider || Math.random() < 0.16) PODERES.soltar(e.x, e.y, "vida", e.lider ? 40 : 18);
       if (e.lider && (e.lider.unico || Math.random() < 0.25)) J.retrasar(0.6, () => PODERES.darFragmento());
       if (e.lider) {

@@ -350,7 +350,7 @@ window.RITOS = (function () {
     },
     alMorir(e) {
       if (!enCurso || enCurso.tipo !== "guardian" || !enCurso.guardianes.includes(e)) return;
-      if (e.lider || Math.random() < 0.4) PODERES.soltar(e.x, e.y, "plata", Math.round(e.d.plata * (e.lider ? 1 : 0.6)));
+      if (e.lider || Math.random() < 0.4) PODERES.soltar(e.x, e.y, "plata", Math.round(e.d.plata * (e.lider ? 1 : 0.6) * (window.ECONOMIA ? ECONOMIA.deCriatura(e, 100) / 100 : 1)));
     },
     cercanos(dar) {
       for (const p of camino) {

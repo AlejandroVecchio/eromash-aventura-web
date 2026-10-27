@@ -247,7 +247,7 @@
       if (window.CARTEL) CARTEL.pedir(dato, true);
       else HUD.aviso(tav("lugar_" + dato), "lugar", t("ui.lugar_descubierto"));
       // descubrir un lugar paga un poco de plata (los vecinos le pagan al que trae noticias del camino)
-      if (window.PODERES && PODERES.pj()) PODERES.darPlata(PLATA_LUGAR);
+      if (window.PODERES && PODERES.pj()) PODERES.darPlata(window.ECONOMIA ? ECONOMIA.deHistoria(PLATA_LUGAR) : PLATA_LUGAR);
       // el lugar entero queda a la vista en el mapa
       const L = W.LUGARES[dato];
       if (L && window.MAPA) MAPA.descubrir(L.p[0], L.p[1], L.r + 1200);
@@ -263,7 +263,7 @@
   // cada misión de la historia cumplida paga plata (más cuanto más adentro de la historia); la nueva se anuncia grande
   function misionNueva() {
     const n = H.E.mision,
-      plata = 25 + n * 15;
+      plata = window.ECONOMIA ? ECONOMIA.deHistoria(25 + n * 15) : 25 + n * 15; // crece con el nivel (motor/economia.js)
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
