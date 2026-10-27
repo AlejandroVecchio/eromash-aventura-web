@@ -233,7 +233,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **bestiario.js**: el bestiario (sistema BESTIARIO, pestaña de la mochila)
   - lo que sabe · los dibujos (íconos de la mochila) · la pestaña · el sistema
 - **botin.js**: el botín y el equipo de Eromash (sistema BOTIN)
-  - la bolsa y el equipo · comparar con lo puesto · lo que cae · en el mundo · la mochila · el sistema
+  - la bolsa y el equipo · comparar con lo puesto · lo que cae · el botín según el nivel · en el mundo · la mochila · el sistema
 - **caceria.js**: la Cacería Salvaje (sistema CACERIA)
   - cuándo · sonidos armados · la llegada · los jinetes que cruzan · el final · el cuerno · el sistema
 - **capital.js**: la vida de Eikholt (sistema CAPITAL)
