@@ -16,6 +16,9 @@
 #hudNivelSube small { display: block; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--runico); font-weight: 800; }
 #hudNivelSube b { display: block; font-family: "Eromash Display", system-ui, sans-serif; font-size: 54px; letter-spacing: 0.06em; color: var(--oro); text-shadow: 0 3px 0 #000a, 0 0 24px rgba(255, 217, 138, 0.35); }
 #hudNivelSube p { margin: 4px 0 0; font-size: 14px; color: var(--hueso); text-shadow: 0 1px 0 #000; }
+/* un salto de poder (motor/saltos.js): el rótulo en el dorado de las legendarias */
+#hudNivelSube.salto small { color: #F5A524; font-size: 13px; }
+#hudNivelSube.salto b { text-shadow: 0 3px 0 #000a, 0 0 34px rgba(245, 165, 36, 0.55); }
 #hudNivelSube.va { animation: nivelSube 4.2s forwards; }
 @keyframes nivelSube { 0% { opacity: 0; transform: translateX(-50%) scale(0.7); } 8% { opacity: 1; transform: translateX(-50%) scale(1.08); } 14%, 80% { opacity: 1; transform: translateX(-50%) scale(1); } 100% { opacity: 0; transform: translateX(-50%) translateY(-16px); } }
 
