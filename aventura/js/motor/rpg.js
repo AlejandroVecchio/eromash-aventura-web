@@ -37,7 +37,8 @@ window.RPG = (function () {
   const alSubirFns = []; // fn(nivel) → [líneas de texto] para el cartel de nivel
 
   // ---------- el nivel de cada criatura ----------
-  // por la distancia al Puesto (un nivel cada 800 unidades) más lo que el grupo tiene de más duro que su distancia
+  // por la distancia al Puesto (un nivel cada 800 unidades) más lo que el grupo tiene de más duro que su distancia,
+  // metido en la franja de niveles de la tierra donde vive (TIERRAS)
   function nivelDe(e) {
     if (e.nivel) return e.nivel;
     let n;
@@ -52,6 +53,8 @@ window.RPG = (function () {
       if (g && g.fam === "cuervos") n -= 1;
       if (g && g.fam === "trol") n += 2;
       n = Math.max(2, Math.round(n));
+      // dentro de la franja de su tierra (motor/tierras.js)
+      if (window.TIERRAS) n = TIERRAS.ajustar(c[0], c[1], n);
     }
     if (e.lider) n += e.lider.unico ? 3 : 1;
     if (e.semi || e.patron) n += 2;
