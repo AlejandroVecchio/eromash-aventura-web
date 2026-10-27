@@ -30,7 +30,7 @@ window.HORDAS = (function () {
       l.titulo = t("hd.unico_titulo");
     } else {
       l.nombre = l.base + " " + t("hd.ep_" + l.ep);
-      l.titulo = l.afijos.map((a) => t("hd.af_" + a)).join(" · ");
+      l.titulo = (l.rango > 1 ? [t("hd.rango_" + l.rango)] : []).concat(l.afijos.map((a) => t("hd.af_" + a))).join(" · ");
     }
   }
   // familias: qué criaturas forman cada grupo
@@ -173,7 +173,7 @@ window.HORDAS = (function () {
       const k = g.mas || 1;
       if (e.lider || Math.random() < 0.55) PODERES.soltar(e.x, e.y, "plata", Math.round(e.d.plata * k * (0.7 + Math.random() * 0.6)));
       if (e.lider || Math.random() < 0.16) PODERES.soltar(e.x, e.y, "vida", e.lider ? 40 : 18);
-      if (e.lider && (e.lider.unico || Math.random() < 0.25)) J.retrasar(0.6, () => PODERES.darFragmento());
+      if (e.lider && (e.lider.unico || Math.random() < 0.25 * (e.lider.rango || 1))) J.retrasar(0.6, () => PODERES.darFragmento());
       if (e.lider) {
         HUD.aviso(t(e.lider.unico ? "hd.unico_caido" : "hd.lider_caido", [e.lider.nombre]), e.lider.unico ? "#FFD98A" : "#E0B2B2");
         if (e.lider.unico) st.unicos[e.lider.unico] = true;
@@ -181,11 +181,37 @@ window.HORDAS = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
+  // ---------- los rangos de los líderes ----------
+  // RPG.nivelar lo llama cuando un líder toma su nivel: un campeón (rango 2) tiene al menos dos afijos y un señor
+  // (rango 3) tres, más vida y mando sobre su grupo (los suyos pegan un 10 % más cerca de él, en combate.js).
+  // Los afijos que se suman salen de una semilla del nombre: el mismo líder es igual en cada partida.
+  function subirRango(e, r) {
+    const l = e.lider;
+    if (!l || l.unico || (l.rango || 1) >= r) return;
+    const azar = DIB.azar(1000 + (l.ep || 0) * 31 + (l.base || "").length * 7 + Math.round(e.casa ? e.casa[0] : e.x));
+    l.afijos = l.afijos || [];
+    while (l.afijos.length < r) {
+      const libres = AF.filter((a) => !l.afijos.includes(a));
+      if (!libres.length) break;
+      const a = libres[Math.floor(azar() * libres.length)];
+      l.afijos.push(a);
+      // lo que CB.crear pone al nacer (los demás afijos se miran en cada golpe)
+      if (a === "veloz") (e.d.vel *= 1.5), (e.d.espera *= 0.75);
+      if (a === "piedra") e.d.vida = Math.round(e.d.vida * 1.6);
+    }
+    if (r >= 3) {
+      e.d.vida = Math.round(e.d.vida * 1.25);
+      e.s = (e.s || 1) * 1.06;
+    }
+    if (e.vida > 0) e.vida = e.d.vida;
+    l.rango = r;
+    rotular(l);
+  }
   // un líder nuevo con nombre y afijos, ya rotulado en el idioma actual (para los guardianes de las piedras)
   const liderNuevo = (extra) => {
     const l = lider(extra);
     rotular(l);
     return l;
   };
-  return { grupos, liderNuevo, crearGrupo, FAMILIAS };
+  return { grupos, liderNuevo, crearGrupo, subirRango, FAMILIAS };
 })();

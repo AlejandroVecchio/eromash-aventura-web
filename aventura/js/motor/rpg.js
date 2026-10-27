@@ -62,13 +62,19 @@ window.RPG = (function () {
     if (e.nivel) return;
     const n = nivelDe(e);
     e.nivel = n;
-    const kv = 1 + 0.08 * (n - 1),
-      kd = 1 + 0.045 * (n - 1);
+    // la curva: la vida crece más rápido que el daño y se empina arriba (a nivel 30 un lobo tiene unas 7 veces su vida),
+    // para que el daño del nivel, los atributos y el equipo de Eromash no dejen todo de un golpe
+    const kv = 1 + 0.1 * (n - 1) + 0.004 * (n - 1) * (n - 1),
+      kd = 1 + 0.06 * (n - 1);
     const llena = e.vida >= e.d.vida;
     e.d.vida = Math.round(e.d.vida * kv);
     e.d.dano = Math.round(e.d.dano * kd);
     if (llena) e.vida = e.d.vida;
+    // los líderes suben de rango con su nivel: más afijos y, los señores, mando sobre su grupo (motor/hordas.js)
+    if (e.lider && !e.lider.unico && window.HORDAS && HORDAS.subirRango) HORDAS.subirRango(e, rango(n));
   }
+  // el rango de un líder según su nivel: 1 líder, 2 campeón (desde 7), 3 señor (desde 15)
+  const rango = (n) => (n >= 15 ? 3 : n >= 7 ? 2 : 1);
   // qué tan peligrosa es para Eromash: el color del número
   function color(n) {
     const d = n - st.nivel;
@@ -83,7 +89,7 @@ window.RPG = (function () {
     const n = nivelDe(e),
       d = n - st.nivel;
     let x = (XP_TIPO[e.tipo] || 12) * (1 + 0.25 * (n - 1));
-    if (e.lider) x *= e.lider.unico ? 10 : 4;
+    if (e.lider) x *= e.lider.unico ? 10 : 3 + (e.lider.rango || 1);
     if (e.semi || e.patron) x *= 6;
     const k = d <= -6 ? 0.1 : Math.max(0.1, Math.min(1.3, 1 + d * 0.1));
     return Math.max(1, Math.round(x * k));
@@ -346,6 +352,7 @@ window.RPG = (function () {
     nivel: () => (st ? st.nivel : 1),
     estado: () => st,
     nivelDe,
+    rango,
     nivelar,
     color,
     xpDe,

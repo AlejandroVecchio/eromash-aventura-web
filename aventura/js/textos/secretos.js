@@ -164,6 +164,8 @@ I18N.textos({
   "hd.af_igneo": { es: "Ígneo", en: "Fire-wrought" },
   "hd.af_helado": { es: "Helado", en: "Frost-wrought" },
   "hd.af_runico": { es: "Rúnico", en: "Rune-bound" },
+  "hd.rango_2": { es: "Campeón", en: "Champion" },
+  "hd.rango_3": { es: "Señor", en: "Warlord" },
   "hd.unico_titulo": { es: "Único", en: "Unique" },
   "hd.unico_hrungnir": { es: "Hrungnir Corazón de Piedra", en: "Hrungnir Stoneheart" },
   "hd.unico_kolbrandr": { es: "Kolbrandr Lomo de Brasa", en: "Kolbrandr Emberback" },
