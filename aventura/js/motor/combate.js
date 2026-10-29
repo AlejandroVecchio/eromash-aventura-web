@@ -565,7 +565,7 @@ window.COMBATE = (function () {
         });
         DIB.halo(c, e.x, e.y - e.d.barra * 0.4, e.d.barra * 0.7, col, 0.5);
       }
-      CRIATURAS.dibujar(c, e.tipo, e.x, e.y, t, { vista: e.mira.vista, espejo: e.mira.espejo, mov: e.mov, golpe: e.golpe, herido: e.herido, muere: e.muerto, pal: e.pal, s: e.s, sem: e.sem, escudo: e.escudoK, basico: e.basico || 0, cabezazo: e.cabezazo || 0 });
+      CRIATURAS.dibujar(c, e.tipo, e.x, e.y, t, { vista: e.mira.vista, espejo: e.mira.espejo, mov: e.mov, golpe: e.golpe, herido: e.herido, muere: e.muerto, pal: e.pal, s: e.s, sem: e.sem, escudo: e.escudoK, basico: e.basico || 0, cabezazo: e.cabezazo || 0, estado: e.estado });
       // escarcha o fuego encima
       if (e.helado > 0) alfa(c, 0.45, () => DIB.E(c, e.x, e.y - e.d.barra * 0.45, e.d.radio * 1.4, e.d.barra * 0.5, "#C8F2F4"));
       if (e.quema > 0)
