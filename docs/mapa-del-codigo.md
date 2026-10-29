@@ -158,7 +158,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **arquero-bandido.js**: El arquero de los Sin Linde en vectores (módulo ARQUERO)
   - paletas: cambian la capucha y la ropa; el cuero, la piel y el arco quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
 - **bandido-hacha.js**: El bandido del hacha de los Sin Linde en vectores (módulo BANDIDO)
-  - paletas: cambian la capucha y la ropa; el cuero, la piel, el escudo y el hacha quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar · de costado con huesos: las piezas recortadas de la lámina parada (ESQUELETO + las animaciones de HUMANO)
+  - paletas: cambian la capucha y la ropa; el cuero, la piel, el escudo y el hacha quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar · con huesos: las piezas de su lámina de piezas (ESQUELETO + las animaciones de HUMANO)
 - **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
   - Bandido · Arquero
 - **caceria.js**: la Cacería Salvaje: sabuesos y el Cazador (se suman a CRIATURAS)

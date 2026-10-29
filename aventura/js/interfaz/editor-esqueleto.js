@@ -25,9 +25,8 @@
   // la vista del esqueleto: el otro costado es el costado en espejo
   const base = () => (st.vista === "W" ? "E" : st.vista);
   const espejo = () => st.vista === "W";
-  // el personaje: el muñeco o el bandido del hacha con las piezas de su lámina (por ahora solo de costado: de frente y de
-  // espaldas sigue el muñeco)
-  const rigBandido = () => (st.pj === "bandido" && base() === "E" && window.BANDIDO && BANDIDO.rigE ? BANDIDO.rigE() : null);
+  // el personaje: el muñeco o el bandido del hacha con las piezas de su lámina de piezas
+  const rigBandido = () => (st.pj === "bandido" && window.BANDIDO && BANDIDO.rigDe ? BANDIDO.rigDe(base()) : null);
   const esq = () => rigBandido() || H.MUNECO[base()];
 
   // ---------- lo que se ve ----------
@@ -340,7 +339,6 @@
   });
   $("sqPj").addEventListener("change", (e) => {
     st.pj = e.target.value;
-    if (st.pj === "bandido" && base() !== "E") st.vista = "E";
     if (st.pj === "bandido" && st.ref === "bandido") st.calco = "no";
     if (!esq().huesos.some((h) => h.id === st.hueso)) st.hueso = "brazoD";
     medir();

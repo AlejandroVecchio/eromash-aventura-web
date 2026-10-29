@@ -248,7 +248,7 @@ window.BANDIDO = (function () {
           const gr = /url\(#(.+)\)/.exec(fill), grad = gr ? grads[gr[1]] : null;
           const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(grad ? grad.stops[0][1] : fill);
           const [h, s, l] = m ? rgbAHsl(+m[1], +m[2], +m[3]) : [0, 0, 0];
-          const forma = { d, path: new Path2D(d), regla: p.getAttribute("fill-rule") === "evenodd" ? "evenodd" : "nonzero", fill, grad, cx, cy, gris: s < 0.12 && l > 0.3, tono: grupo(h, s, l), area: (x1 - x0) * (y1 - y0), piel: h > 15 && h < 35 && s > 0.5 && l > 0.55 };
+          const forma = { path: new Path2D(d), regla: p.getAttribute("fill-rule") === "evenodd" ? "evenodd" : "nonzero", fill, grad, cx, cy, gris: s < 0.12 && l > 0.3, tono: grupo(h, s, l), area: (x1 - x0) * (y1 - y0), piel: h > 15 && h < 35 && s > 0.5 && l > 0.55 };
           // el fondo del cuerpo (la silueta) y lo casi negro (el hueco de la capucha) van con el tronco
           const fondo = forma.regla === "evenodd" || (x1 - x0) * (y1 - y0) > 300000;
           const negro = m && Math.max(+m[1], +m[2], +m[3]) < 34;
@@ -338,8 +338,8 @@ window.BANDIDO = (function () {
     // el hachazo en dos tiempos: el hacha arranca desde arriba de la lámina y cae; después queda abajo y adelante, como
     // la lleva al andar, con el cuerpo echado sobre el golpe
     const fase = baja > 0 ? 1 - baja : 1, arriba = baja > 0 && fase < 0.3;
-    // de costado, parado y andando, con huesos (las piezas de su lámina y la caminata del maniquí)
-    if (v === "E" && !(sube && g > 0.12) && baja <= 0 && !muere && !herido && rigE()) return dibujarHuesos(c, t, o);
+    // parado y andando, con huesos (las piezas de su lámina de piezas y la caminata del maniquí)
+    if (!(sube && g > 0.12) && baja <= 0 && !muere && !herido && rigDe(v)) return dibujarHuesos(c, v, t, o);
     if (((sube && g > 0.12) || arriba) && v !== "N" && cargar("aviso" + v).listo) {
       // la pose del aviso de la lámina: se agacha tras el escudo con el hacha en alto; tiembla y al soltar la baja
       nombre = "aviso" + v;
@@ -508,117 +508,205 @@ window.BANDIDO = (function () {
     return true;
   }
 
-  // ---------- de costado con huesos: las piezas recortadas de la lámina parada (ESQUELETO + las animaciones de HUMANO) ----------
-  // De costado el bandido camina con un esqueleto: su propio dibujo de costado (E.svg) cortado en piezas que se pegan a
-  // los huesos, y la caminata de la lámina del maniquí (HUMANO.ANIMS.andar). Las piezas son las formas de la lámina
-  // (por número, en el orden del SVG) recortadas con un polígono donde una forma toca dos piezas (las calzas, la bota).
-  // La pierna de atrás es la de adelante otra vez, un poco más oscura (la de la lámina queda tapada casi entera).
-  // Cada pieza se endereza con el ángulo con que está dibujada, así con giro 0 cuelga derecha como las de HUMANO.
-  const RIG = {
-    cadera: [420, 1270], caderaAtras: [480, 1270], rodilla: [300, 1520], tobillo: [310, 1830], talon: [165, 1910], punta: [520, 1925], hombro: [390, 600],
-  };
-  const FORMAS_E = {
-    piernas: [15, 16, 22, 25, 42, 43, 44, 45, 46, 47, 48],
-    hacha: [17, 18, 19, 20, 21, 23],
-    brazo: [24, 66, 67, 68, 69, 70],
-    manga: [0, 1, 2, 3, 4, 5],
-  };
-  // los recortes (en pixeles de la lámina): el muslo, la caña con la bota y el pie, solo de la pierna de adelante, y la manga
-  const RECORTES_E = {
-    muslo: [310, 1230, 480, 1230, 470, 1400, 445, 1565, 190, 1585, 200, 1440, 310, 1360],
-    pierna: [160, 1480, 445, 1480, 430, 1690, 362, 1700, 352, 1815, 160, 1815],
-    pie: [150, 1765, 335, 1765, 425, 1832, 545, 1890, 545, 1945, 150, 1945],
-    manga: [290, 540, 450, 560, 440, 830, 415, 995, 270, 995, 215, 760],
-  };
-  const rigs = {};
-  function rigE() {
-    const st = cargar("E");
-    if (!st.listo || !window.ESQUELETO || !window.HUMANO) return null;
-    if (rigs.E) return rigs.E;
-    const esc = (MUNDO * VISTAS.E.k) / 2048, [px, py] = VISTAS.E.pie;
-    const W = (p) => [(p[0] - px) * esc, (p[1] - py) * esc];
-    const ang = (a, b) => Math.atan2(-(b[0] - a[0]), b[1] - a[1]) / rad;
-    const largo = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]) * esc;
-    const R = RIG, aM = ang(R.cadera, R.rodilla), aP = ang(R.rodilla, R.tobillo), aS = Math.atan2(R.punta[1] - R.talon[1], R.punta[0] - R.talon[0]) / rad;
-    const cad = W(R.cadera), hom = W(R.hombro), atras = W(R.caderaAtras);
-    // la suela del pie enderezada, en las coordenadas del tobillo
-    const enPie = (q) => {
-      const dx = (q[0] - R.tobillo[0]) * esc, dy = (q[1] - R.tobillo[1]) * esc, c = Math.cos(-aS * rad), si = Math.sin(-aS * rad);
-      return [dx * c - dy * si, dx * si + dy * c];
-    };
-    const suela = [enPie(R.talon), enPie(R.punta)];
-    const huesos = [
-      { id: "cadera", x: cad[0], y: cad[1], punta: [0, 0] },
-      { id: "tronco", padre: "cadera", x: 0, y: 0, punta: [0, hom[1] - cad[1]] },
-      { id: "brazoD", padre: "tronco", x: hom[0] - cad[0], y: hom[1] - cad[1], punta: [0, 30] },
-    ];
-    for (const [l, x] of [["D", 0], ["I", atras[0] - cad[0]]]) {
-      huesos.push(
-        { id: "muslo" + l, padre: "cadera", x, y: 0, punta: [0, largo(R.cadera, R.rodilla)] },
-        { id: "pierna" + l, padre: "muslo" + l, x: 0, y: largo(R.cadera, R.rodilla), punta: [0, largo(R.rodilla, R.tobillo)] },
-        { id: "pie" + l, padre: "pierna" + l, x: 0, y: largo(R.rodilla, R.tobillo), punta: suela[1], suela },
-      );
+  // ---------- con huesos: las piezas de su lámina de piezas (ESQUELETO + las animaciones de HUMANO) ----------
+  // La lámina de piezas de Alejandro (29/10/2026: capucha, tronco, brazo, antebrazo y mano de cada lado, muslo, pierna y
+  // bota de cada lado, hacha y escudo, de frente, de costado y de espaldas) pasada a vector con Recraft en
+  // img/criaturas/bandido/piezas.svg: cada forma dice de qué pieza es (data-p = vista.pieza). Cada pieza se pega a su
+  // hueso de HUMANO y el bandido se mueve con las mismas animaciones que se editan en esqueleto.html (Personaje →
+  // Bandido). Los miembros se enderezan con el ángulo con que están dibujados, así con giro 0 cuelgan derechos.
+  // PIEZAS: en pixeles de la lámina (3548 × 1774). Miembros: [x, y] de arriba (hombro, codo, muñeca, cadera, rodilla) y
+  // [x, y] de abajo; botas: [x, y] del tobillo y la suela de punta a punta; capucha, tronco, hacha y escudo: su caja
+  // [x, y, ancho, alto] y el punto de arriba y el de abajo.
+  const PIEZAS = {
+    S: {
+      capucha: [76, 180, 312, 336, 238, 193, 220, 503],
+      tronco: [440, 154, 228, 330, 552, 183, 555, 423],
+      brazoD: [774, 212, 766, 438],
+      antebrazoD: [933, 243, 915, 462],
+      manoD: [1070, 340, 1066, 420],
+      brazoI: [1242, 209, 1220, 438],
+      antebrazoI: [1391, 244, 1380, 462],
+      manoI: [1530, 339, 1535, 431],
+      musloD: [1744, 204, 1707, 485],
+      piernaD: [1909, 212, 1889, 468],
+      pieD: [2074, 432, 2004, 515, 2114, 515],
+      musloI: [2258, 204, 2258, 496],
+      piernaI: [2444, 208, 2436, 472],
+      pieI: [2618, 433, 2571, 515, 2682, 515],
+      hacha: [2908, 178, 164, 320, 3022, 193, 3052, 482],
+      escudo: [3120, 144, 350, 402, 3308, 182, 3295, 506]
+    },
+    E: {
+      capucha: [50, 660, 336, 286, 218, 693, 308, 929],
+      tronco: [452, 682, 196, 328, 540, 709, 574, 953],
+      brazoD: [776, 715, 803, 952],
+      antebrazoD: [960, 749, 970, 975],
+      manoD: [1112, 840, 1113, 921],
+      brazoI: [1299, 714, 1318, 951],
+      antebrazoI: [1483, 749, 1483, 976],
+      manoI: [1640, 839, 1652, 924],
+      musloD: [1809, 716, 1809, 1006],
+      piernaD: [1986, 730, 1982, 976],
+      pieD: [2178, 943, 2209, 1025, 2293, 1025],
+      musloI: [2442, 719, 2443, 1009],
+      piernaI: [2631, 734, 2629, 978],
+      pieI: [2828, 944, 2805, 1025, 2943, 1025],
+      hacha: [3136, 680, 144, 330, 3260, 696, 3246, 993],
+      escudo: [3350, 682, 94, 364, 3401, 697, 3400, 1029]
+    },
+    N: {
+      capucha: [66, 1182, 304, 330, 228, 1193, 206, 1500],
+      tronco: [434, 1182, 234, 324, 551, 1220, 550, 1439],
+      brazoD: [788, 1236, 790, 1465],
+      antebrazoD: [954, 1268, 952, 1490],
+      manoD: [1100, 1367, 1100, 1447],
+      brazoI: [1259, 1235, 1259, 1465],
+      antebrazoI: [1422, 1268, 1418, 1487],
+      manoI: [1567, 1365, 1571, 1454],
+      musloD: [1743, 1231, 1752, 1530],
+      piernaD: [1915, 1238, 1908, 1501],
+      pieD: [2081, 1465, 2031, 1547, 2126, 1547],
+      musloI: [2269, 1230, 2268, 1529],
+      piernaI: [2457, 1238, 2448, 1496],
+      pieI: [2628, 1464, 2582, 1547, 2678, 1547],
+      hacha: [2964, 1204, 142, 330, 2990, 1223, 2984, 1518],
+      escudo: [3128, 1178, 364, 398, 3316, 1213, 3304, 1531]
     }
-    const caminos = {};
-    const recorte = (n) => caminos[n] || (caminos[n] = (() => {
-      const q = RECORTES_E[n], p = new Path2D();
-      p.moveTo(q[0], q[1]);
-      for (let i = 2; i < q.length; i += 2) p.lineTo(q[i], q[i + 1]);
-      p.closePath();
-      return p;
-    })());
-    // una pieza: las formas elegidas, con su punto de giro de la lámina, enderezada con su ángulo y recortada
-    const pieza = (hueso, z, cuales, giro, centro, corte, oscuro) => ({
-      hueso, z,
-      pintar(c, op) {
-        const cols = pinturas(st, (op.pal || 0) % PALETAS.length);
-        c.rotate(-giro * rad);
-        c.scale(esc, esc);
-        c.translate(-centro[0], -centro[1]);
-        if (corte) c.clip(recorte(corte));
-        for (const i of cuales) {
-          const f = st.formas[i];
-          c.fillStyle = cols[i];
-          c.fill(f.path, f.regla);
-          if (oscuro) {
-            c.fillStyle = "rgba(17,17,17," + oscuro + ")";
-            c.fill(f.path, f.regla);
-          }
-        }
-      },
-    });
-    const todas = st.formas.map((_, i) => i);
-    const fuera = new Set([...FORMAS_E.piernas, ...FORMAS_E.hacha, ...FORMAS_E.brazo]);
-    const calzas = [15, 16], bota = [42, 43, 44, 45, 46];
-    const piezas = [];
-    for (const [l, z, osc] of [["I", 1, 0.3], ["D", 2, 0]]) {
-      piezas.push(
-        pieza("muslo" + l, z, calzas, aM, R.cadera, "muslo", osc),
-        pieza("pierna" + l, z + 0.01, [...calzas, ...bota], aP, R.rodilla, "pierna", osc),
-        pieza("pie" + l, z + 0.02, bota, aS, R.tobillo, "pie", osc),
-      );
-    }
-    piezas.push(pieza("tronco", 3, todas.filter((i) => !fuera.has(i)), 0, R.cadera, null, 0));
-    piezas.push(pieza("brazoD", 4, FORMAS_E.manga, 0, R.hombro, "manga", 0));
-    piezas.push(pieza("brazoD", 4.01, [...FORMAS_E.brazo, ...FORMAS_E.hacha], 0, R.hombro, null, 0));
-    return (rigs.E = { huesos, piezas, pies: ["pieD", "pieI"] });
+  };
+  // dónde se pega cada cosa al tronco y la capucha al cuello (pixeles de la lámina, medido a ojo sobre cada pieza)
+  const ANCLAS = {
+    S: { cuello: [552, 180], hombroD: [468, 205], hombroI: [636, 205], caderaD: [505, 420], caderaI: [600, 420], capucha: [220, 440] },
+    E: { cuello: [560, 690], hombroD: [547, 745], hombroI: [540, 742], caderaD: [552, 930], caderaI: [545, 930], capucha: [290, 860] },
+    N: { cuello: [550, 1185], hombroD: [632, 1235], hombroI: [470, 1235], caderaD: [600, 1440], caderaI: [500, 1440], capucha: [216, 1420] },
+  };
+  // el orden de cada pieza (z) en cada vista: de costado lo del lado de atrás primero, y lo de atrás un poco más oscuro
+  const ORDEN = {
+    S: { musloD: 2, piernaD: 2.1, pieD: 2.2, musloI: 2, piernaI: 2.1, pieI: 2.2, tronco: 4, brazoD: 5, antebrazoD: 5.1, hacha: 5.15, manoD: 5.2, brazoI: 5, antebrazoI: 5.1, manoI: 5.2, capucha: 6, escudo: 7 },
+    E: { brazoI: 1, antebrazoI: 1.1, manoI: 1.2, musloI: 2, piernaI: 2.1, pieI: 2.2, musloD: 3, piernaD: 3.1, pieD: 3.2, tronco: 4, capucha: 5, escudo: 6, brazoD: 7, antebrazoD: 7.1, hacha: 7.15, manoD: 7.2 },
+    N: { escudo: 0.5, musloD: 2, piernaD: 2.1, pieD: 2.2, musloI: 2, piernaI: 2.1, pieI: 2.2, tronco: 4, hacha: 4.45, brazoD: 4.5, antebrazoD: 4.6, manoD: 4.7, brazoI: 4.5, antebrazoI: 4.6, manoI: 4.7, capucha: 6 },
+  };
+  const ATRAS = { E: { brazoI: 0.22, antebrazoI: 0.22, manoI: 0.22, musloI: 0.22, piernaI: 0.22, pieI: 0.22 } };
+  const ESC_P = 0.095;
+  const lamP = { listo: false };
+  function cargarPiezas() {
+    if (lamP.pedido) return lamP;
+    lamP.pedido = true;
+    fetch("img/criaturas/bandido/piezas.svg")
+      .then((r) => r.text())
+      .then((txt) => {
+        const doc = new DOMParser().parseFromString(txt, "image/svg+xml");
+        const grads = {};
+        doc.querySelectorAll("linearGradient").forEach((g) => {
+          grads[g.id] = { x: ["x1", "y1", "x2", "y2"].map((k) => +g.getAttribute(k)), stops: [...g.querySelectorAll("stop")].map((s) => [+s.getAttribute("offset"), s.getAttribute("stop-color")]) };
+        });
+        lamP.formas = [...doc.querySelectorAll("path")].map((p) => {
+          const fill = p.getAttribute("fill") || "#000", gr = /url\(#(.+)\)/.exec(fill);
+          return { pieza: p.getAttribute("data-p"), path: new Path2D(p.getAttribute("d")), regla: p.getAttribute("fill-rule") === "evenodd" ? "evenodd" : "nonzero", fill, grad: gr ? grads[gr[1]] : null };
+        });
+        lamP.pinturas = {};
+        lamP.listo = true;
+      })
+      .catch(() => (lamP.error = true));
+    return lamP;
   }
-  // la pose de costado: las animaciones de HUMANO (las mismas que se editan en esqueleto.html): parado el reposo y,
-  // andando, la caminata del maniquí (y la carrera al ir rápido) mezclada según cuánto se mueve
-  function poseE(t, o) {
+  const rigs = {};
+  function rigDe(v) {
+    if (rigs[v]) return rigs[v];
+    const st = cargarPiezas();
+    if (!st.listo || !window.ESQUELETO || !window.HUMANO || !PIEZAS[v]) return null;
+    const P = PIEZAS[v], A = ANCLAS[v], k = ESC_P;
+    const largo = (q) => Math.hypot(q[2] - q[0], q[3] - q[1]) * k;
+    const ang = (q) => Math.atan2(-(q[2] - q[0]), q[3] - q[1]);
+    const mitad = [(A.caderaD[0] + A.caderaI[0]) / 2, (A.caderaD[1] + A.caderaI[1]) / 2];
+    const rel = (q, b) => [(q[0] - b[0]) * k, (q[1] - b[1]) * k];
+    const cue = rel(A.cuello, mitad);
+    const huesos = [
+      { id: "cadera", x: 0, y: 0, punta: [0, 0] },
+      { id: "tronco", padre: "cadera", x: 0, y: 0, punta: cue },
+      { id: "cabeza", padre: "tronco", x: cue[0], y: cue[1], punta: [0, -20] },
+    ];
+    for (const l of ["D", "I"]) {
+      const h = rel(A["hombro" + l], mitad), c = rel(A["cadera" + l], mitad), pie = P["pie" + l], tob = [pie[0], pie[1]];
+      huesos.push(
+        { id: "brazo" + l, padre: "tronco", x: h[0], y: h[1], punta: [0, largo(P["brazo" + l])] },
+        { id: "antebrazo" + l, padre: "brazo" + l, x: 0, y: largo(P["brazo" + l]), punta: [0, largo(P["antebrazo" + l])] },
+        { id: "mano" + l, padre: "antebrazo" + l, x: 0, y: largo(P["antebrazo" + l]), punta: [0, largo(P["mano" + l])] },
+        { id: "muslo" + l, padre: "cadera", x: c[0], y: c[1], punta: [0, largo(P["muslo" + l])] },
+        { id: "pierna" + l, padre: "muslo" + l, x: 0, y: largo(P["muslo" + l]), punta: [0, largo(P["pierna" + l])] },
+        { id: "pie" + l, padre: "pierna" + l, x: 0, y: largo(P["pierna" + l]), punta: rel([pie[4], pie[5]], tob), suela: [rel([pie[2], pie[3]], tob), rel([pie[4], pie[5]], tob)] },
+      );
+    }
+    huesos.push(
+      { id: "hacha", padre: "manoD", x: 0, y: largo(P.manoD) * 0.55, punta: [0, 20] },
+      { id: "escudo", padre: "manoI", x: 0, y: largo(P.manoI) * 0.45, punta: [0, 0], derecho: true },
+    );
+    // cada pieza: sus formas, su punto de giro en la lámina, el giro que la endereza y si va dada vuelta
+    const pieza = (id, hueso, centro, giro, voltea) => {
+      const cuales = [];
+      st.formas.forEach((f, i) => f.pieza === v + "." + id && cuales.push(i));
+      const osc = (ATRAS[v] || {})[id] || 0;
+      return {
+        hueso, z: ORDEN[v][id],
+        pintar(c, op) {
+          const cols = pinturasP((op.pal || 0) % PALETAS.length);
+          c.scale(k, k * (voltea ? -1 : 1));
+          c.rotate(giro);
+          c.translate(-centro[0], -centro[1]);
+          for (const i of cuales) {
+            const f = st.formas[i];
+            c.fillStyle = cols[i];
+            c.fill(f.path, f.regla);
+            if (osc) {
+              c.fillStyle = "rgba(17,17,17," + osc + ")";
+              c.fill(f.path, f.regla);
+            }
+          }
+        },
+      };
+    };
+    const piezas = [pieza("tronco", "tronco", mitad, 0), pieza("capucha", "cabeza", A.capucha, 0)];
+    for (const l of ["D", "I"]) {
+      for (const m of ["brazo", "antebrazo", "mano", "muslo", "pierna"]) {
+        const q = P[m + l];
+        piezas.push(pieza(m + l, m + l, [q[0], q[1]], -ang(q)));
+      }
+      piezas.push(pieza("pie" + l, "pie" + l, [P["pie" + l][0], P["pie" + l][1]], 0));
+    }
+    // el hacha cuelga de la mano con la cabeza abajo (de costado girada, así el filo va adelante); se toma cerca del
+    // final del mango. El escudo, de su centro
+    const H = P.hacha, agarre = [H[6] + (H[4] - H[6]) * 0.14, H[7] + (H[5] - H[7]) * 0.14];
+    piezas.push(v === "E" ? pieza("hacha", "hacha", agarre, Math.PI) : pieza("hacha", "hacha", agarre, 0, true));
+    const S = P.escudo;
+    piezas.push(pieza("escudo", "escudo", [S[0] + S[2] / 2, S[1] + S[3] / 2], 0));
+    return (rigs[v] = { huesos, piezas, pies: ["pieD", "pieI"] });
+  }
+  function pinturasP(pal) {
+    const st = lamP;
+    if (st.pinturas[pal]) return st.pinturas[pal];
+    const P = PALETAS[pal];
+    return (st.pinturas[pal] = st.formas.map((f) => {
+      if (!f.grad) return tenir(f.fill, P);
+      const [x1, y1, x2, y2] = f.grad.x, g = lienzoGrad.createLinearGradient(x1, y1, x2, y2);
+      f.grad.stops.forEach(([o, c]) => g.addColorStop(o, tenir(c, P)));
+      return g;
+    }));
+  }
+  // la pose: las animaciones de HUMANO (las mismas que se editan en esqueleto.html): parado el reposo y, andando, la
+  // caminata del maniquí (y la carrera al ir rápido) mezclada según cuánto se mueve
+  function poseDe(v, t, o) {
     const sem = o.sem || 0, A = HUMANO.ANIMS, R = A.reposo;
-    const quieto = ESQUELETO.muestra(R, "E", ((((t + sem) / R.dur) % 1) + 1) % 1);
+    const quieto = ESQUELETO.muestra(R, v, ((((t + sem) / R.dur) % 1) + 1) % 1);
     const m = Math.min(2, o.mov || 0);
     if (m <= 0.05) return quieto;
     const f = t * (5.2 + m * 2.4) + sem, u = (((f / (Math.PI * 2)) % 1) + 1) % 1;
-    let anda = ESQUELETO.muestra(A.andar, "E", u);
-    if (m > 1) anda = ESQUELETO.mezclar(anda, ESQUELETO.muestra(A.correr, "E", u), Math.min(1, m - 1));
+    let anda = ESQUELETO.muestra(A.andar, v, u);
+    if (m > 1) anda = ESQUELETO.mezclar(anda, ESQUELETO.muestra(A.correr, v, u), Math.min(1, m - 1));
     return ESQUELETO.mezclar(quieto, anda, Math.min(1, m / 0.6));
   }
-  function dibujarHuesos(c, t, o) {
-    const esq = rigE();
+  function dibujarHuesos(c, v, t, o) {
+    const esq = rigDe(v);
     if (!esq) return false;
-    ESQUELETO.dibujar(c, esq, poseE(t, o), { pal: o.pal, sombraAncho: 24 });
+    ESQUELETO.dibujar(c, esq, poseDe(v, t, o), { pal: o.pal, sombraAncho: v === "E" ? 24 : 28 });
     return true;
   }
 
@@ -633,10 +721,11 @@ window.BANDIDO = (function () {
     );
   }
   const TODAS = Object.keys(VISTAS);
+  cargarPiezas();
   TODAS.forEach(cargar);
   const listo = () => TODAS.every((v) => cargar(v).listo);
   // para el editor de animación: carga también los cuadros de la caminata y olvida el golpe en curso de una semilla
   const precargar = () => Object.values(CICLO).forEach((ci) => ci.cuadros.forEach(cargar));
   const reiniciar = (k) => delete est[k || 0];
-  return { dibujar, VISTAS, PALETAS, cargar, listo, precargar, reiniciar, rigE, poseE };
+  return { dibujar, VISTAS, PALETAS, cargar, listo, precargar, reiniciar, rigDe, poseDe };
 })();

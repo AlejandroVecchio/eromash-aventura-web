@@ -19,7 +19,7 @@ I18N.textos({
   "sq.a_morir": { es: "Morir", en: "Die" },
   "sq.pj": { es: "Personaje", en: "Character" },
   "sq.pj_muneco": { es: "Muñeco", en: "Dummy" },
-  "sq.pj_bandido": { es: "Bandido del hacha (de costado)", en: "Axe bandit (side view)" },
+  "sq.pj_bandido": { es: "Bandido del hacha", en: "Axe bandit" },
   "sq.calco": { es: "Comparar con", en: "Compare with" },
   "sq.ref_bandido": { es: "El bandido de hoy", en: "Today's bandit" },
   "sq.ref_maniqui": { es: "Lámina del maniquí", en: "Mannequin sheet" },
