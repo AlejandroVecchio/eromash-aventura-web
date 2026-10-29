@@ -313,7 +313,7 @@
     const pj = $("sqPj");
     if (!pj.options.length) ["muneco", "bandido"].forEach((k) => pj.add(new Option(I18N.t("sq.pj_" + k), k)));
     pj.value = st.pj;
-    pj.parentNode.hidden = !window.BANDIDO;
+    pj.parentNode.hidden = !(window.BANDIDO && BANDIDO.rigDe);
     const ref = $("sqRef");
     if (!ref.options.length) ["bandido", "maniqui"].forEach((k) => ref.add(new Option(I18N.t("sq.ref_" + k), k)));
     ref.value = st.ref;
