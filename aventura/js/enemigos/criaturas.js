@@ -313,5 +313,5 @@ window.CRIATURAS = (function () {
     } else DIBUJO[id](c, t, o);
     c.restore();
   }
-  return { LISTA, dibujar, registrar };
+  return { LISTA, DIBUJO, dibujar, registrar };
 })();

@@ -159,6 +159,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - Draugr del túmulo · Jabalí de musgo · Cuervo de Hel · Fuego fatuo · Trol de musgo · Oso de zarzal
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
   - Lobo del zarzal · Errante de Helheim · Custodio de corteza · Ciervo Hueco (jefe)
+- **custodio.js**: El Custodio de corteza en vectores (módulo CUSTODIO)
+  - paletas: la corteza y el musgo cambian, la piedra, la máscara y las runas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, más el vaivén y el aplaste del cuerpo · dibujar
 - **dreki.js**: el dreki (se suma a CRIATURAS)
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
 - **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")

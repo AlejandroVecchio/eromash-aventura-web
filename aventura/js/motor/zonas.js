@@ -27,7 +27,9 @@ window.ZONAS = (function () {
   // el estilo de cada mazmorra (piso, paredes, lo que hay y lo que pasa: motor/mazmorras.js)
   const ESTILOS = ["cripta", "cueva", "mina", "hielo", "raices", "brasas"];
   const r3 = (v) => Math.round(v * 1000) / 1000;
-  // op = { salas, jefe ("dreki" | "campeon" | null), familia, oscuras (0..1), nombre, estilo }
+  // el custodio como jefe toma el color de su mazmorra (paletas de enemigos/custodio.js: 0 roble, 1 atadura, 2 ceniza, 3 escarcha)
+  const PAL_CUSTODIO = { cripta: 2, cueva: 2, mina: 0, hielo: 3, raices: 1, brasas: 0 };
+  // op = { salas, jefe ("dreki" | "custodio" | "campeon" | null), familia, oscuras (0..1), nombre, estilo }
   function generarMazmorra(op, sem) {
     op = op || {};
     const r = DIB.azar(Math.round((sem || 0) * 100000) + 9001);
@@ -180,7 +182,7 @@ window.ZONAS = (function () {
     const s0 = " " + String(txt || "").toLowerCase() + " ";
     const hayTierra = /isla|island|tierra|continente|land|zona|costa|mar\b|sea/.test(s0);
     const hayMaz = /mazmorra|cripta|calabozo|dungeon|crypt|catacumba|\bmina\b|\bmine\b|caverna|gruta|madriguera|estalact|grotto|cavern/.test(s0);
-    const jefeDe = (s) => (/drag[oó]n|dragon|dreki|wyrm|sierpe/.test(s) ? "dreki" : /jefe|boss|campe[oó]n|se[nñ]or/.test(s) ? "campeon" : undefined);
+    const jefeDe = (s) => (/drag[oó]n|dragon|dreki|wyrm|sierpe/.test(s) ? "dreki" : /custodio|warden|guardi[aá]n de ra[ií]z/.test(s) ? "custodio" : /jefe|boss|campe[oó]n|se[nñ]or/.test(s) ? "campeon" : undefined);
     const famDe = (s) => (FAM_DE.find(([, re]) => re.test(s)) || [])[0];
     const m0 = s0.match(/[«"“]([^»"”]{2,60})[»"”]/);
     const nombre = m0 ? txt.match(/[«"“]([^»"”]{2,60})[»"”]/)[1] : undefined;
@@ -247,8 +249,8 @@ window.ZONAS = (function () {
     pon("mina", lugar("skarnholt", -640, 380), { familia: "trol", jefe: "campeon", salas: 9, oscuras: 0.6, estilo: "mina" }, 0.533);
     pon("hondonada", lugar("torre", 600, 520), { familia: "fatuos", jefe: "dreki", salas: 10, oscuras: 0.5, estilo: "brasas" }, 0.871);
     pon("gruta", lugar("brunvik", 560, -420), { familia: "muertos", jefe: "campeon", salas: 9, oscuras: 0.45, estilo: "cueva" }, 0.347);
-    pon("pozo", lugar("paso_norte", -620, -360), { familia: "draugr", jefe: "campeon", salas: 8, oscuras: 0.3, estilo: "hielo" }, 0.619);
-    pon("madriguera", lugar("santuario", 640, 420), { familia: "jabalies", jefe: "campeon", salas: 9, oscuras: 0.55, estilo: "raices" }, 0.742);
+    pon("pozo", lugar("paso_norte", -620, -360), { familia: "draugr", jefe: "custodio", salas: 8, oscuras: 0.3, estilo: "hielo" }, 0.619);
+    pon("madriguera", lugar("santuario", 640, 420), { familia: "jabalies", jefe: "custodio", salas: 9, oscuras: 0.55, estilo: "raices" }, 0.742);
     return z;
   }
 
@@ -345,9 +347,15 @@ window.ZONAS = (function () {
     const d = Z.d,
       grupo = [];
     const dreki = d.jefe === "dreki";
-    const tipo = dreki ? "dreki" : LIDER[d.familia];
-    const e = CB.crear(tipo, cx, cy - 40, { pal: d.pal || 0, grupo, lider: { unico: true, afijos: dreki ? ["igneo"] : ["piedra"], nombre: "", titulo: "" } });
-    if (!dreki) {
+    const custodio = d.jefe === "custodio";
+    const tipo = dreki ? "dreki" : custodio ? "custodio" : LIDER[d.familia];
+    const e = CB.crear(tipo, cx, cy - 40, { pal: custodio ? PAL_CUSTODIO[d.estilo] || 0 : d.pal || 0, grupo, lider: { unico: true, afijos: dreki ? ["igneo"] : ["piedra"], nombre: "", titulo: "" } });
+    if (custodio) {
+      e.s = 1.15;
+      e.d.radio *= e.s;
+      e.d.barra *= e.s;
+      e.d.vida = e.vida = Math.round(e.d.vida * 2.4);
+    } else if (!dreki) {
       e.s = 1.45;
       e.d.radio *= e.s;
       e.d.barra *= e.s;
@@ -374,8 +382,8 @@ window.ZONAS = (function () {
   function rotularJefe(Z) {
     if (!Z.jefe) return;
     const l = Z.jefe.e.lider;
-    l.nombre = Z.d.jefe === "dreki" ? t("zn.dreki_" + (Z.d.pal || 0)) : t("zn.campeon", [t("zn.fam_" + Z.d.familia)]);
-    l.titulo = t(Z.d.jefe === "dreki" ? "zn.dreki_titulo" : "zn.campeon_titulo");
+    l.nombre = Z.d.jefe === "dreki" ? t("zn.dreki_" + (Z.d.pal || 0)) : Z.d.jefe === "custodio" ? t("zn.custodio_" + (PAL_CUSTODIO[Z.d.estilo] || 0)) : t("zn.campeon", [t("zn.fam_" + Z.d.familia)]);
+    l.titulo = t(Z.d.jefe === "dreki" ? "zn.dreki_titulo" : Z.d.jefe === "custodio" ? "zn.custodio_titulo" : "zn.campeon_titulo");
   }
   // los bancos de arena de una tierra (también los dibuja el editor): cada isla se une a la tierra grande o, si no
   // hay, a la isla anterior, por el tramo más corto de costa a costa, metido un poco en cada costa
