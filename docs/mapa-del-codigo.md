@@ -166,6 +166,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - paletas: el pelo, el musgo y los sombreros de los hongos cambian; ojos, colmillos y tallos quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · efectos · dibujar
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
 - **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")
+- **lobo-zarzal.js**: El lobo del zarzal en vectores (módulo LOBO)
+  - paletas: el pelo, la zarza y las ataduras cambian; ojos y espinas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · dibujar
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
