@@ -22,7 +22,7 @@ window.ZONAS = (function () {
   // ---------- los generadores (también los usa el editor) ----------
   const FAMILIAS = ["draugr", "muertos", "fatuos", "lobos", "cuervos", "trol", "jabalies"];
   const MIEMBROS = { draugr: ["draugr", "draugr", "errante"], muertos: ["errante", "errante", "fatuo"], fatuos: ["fatuo", "fatuo", "errante"], lobos: ["lobo", "lobo", "lobo"], cuervos: ["cuervo", "cuervo", "cuervo", "cuervo"], trol: ["jabali", "draugr"], jabalies: ["jabali", "jabali", "jabali"] };
-  const LIDER = { draugr: "draugr", muertos: "draugr", fatuos: "fatuo", lobos: "lobo", cuervos: "cuervo", trol: "trol", jabalies: "jabali" };
+  const LIDER = { draugr: "draugr", muertos: "draugr", fatuos: "fatuoMayor", lobos: "lobo", cuervos: "cuervo", trol: "trol", jabalies: "jabali" };
   const COSAS = ["volcan", "cueva", "campamento", "ruinas", "bosque", "cofre"];
   // el estilo de cada mazmorra (piso, paredes, lo que hay y lo que pasa: motor/mazmorras.js)
   const ESTILOS = ["cripta", "cueva", "mina", "hielo", "raices", "brasas"];

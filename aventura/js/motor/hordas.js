@@ -39,7 +39,7 @@ window.HORDAS = (function () {
     jabalies: { lider: "jabali", miembros: ["jabali", "jabali", "jabali"], totem: "jabali" },
     draugr: { lider: "draugr", miembros: ["draugr", "draugr", "errante", "draugr"], totem: "draugr" },
     cuervos: { lider: "cuervo", miembros: ["cuervo", "cuervo", "cuervo", "cuervo", "cuervo"], totem: "cuervo" },
-    fatuos: { lider: "fatuo", miembros: ["fatuo", "fatuo", "fatuo"], totem: "fatuo" },
+    fatuos: { lider: "fatuoMayor", miembros: ["fatuo", "fatuo", "fatuo"], totem: "fatuo" },
     muertos: { lider: "draugr", miembros: ["errante", "errante", "errante", "fatuo"], totem: "draugr" },
     trol: { lider: "trol", miembros: ["jabali", "jabali"], totem: "trol" },
   };
@@ -122,6 +122,14 @@ window.HORDAS = (function () {
   }
 
   function revivir(g) {
+    // los fatuos chicos que soltó un fatuo mayor al partirse no vuelven: vuelve el mayor
+    for (let i = g.miembros.length - 1; i >= 0; i--) {
+      const e = g.miembros[i];
+      if (!e.hijo) continue;
+      g.miembros.splice(i, 1);
+      const k = A.enemigos.indexOf(e);
+      if (k >= 0) A.enemigos.splice(k, 1);
+    }
     g.miembros.forEach((e) => CB.reiniciar(e));
     g.muerto = 0;
   }

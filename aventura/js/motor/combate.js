@@ -16,6 +16,8 @@ window.COMBATE = (function () {
     draugr: { vida: 95, dano: 18, vel: 1.7 * M, alcance: 2.6 * M, aviso: 1.0, forma: "franja", largo: 3.4 * M, ancho: 1.5 * M, radio: 18, espera: 2.0, barra: 124, plata: 6, muerto: true },
     jabali: { vida: 80, dano: 20, vel: 2.6 * M, alcance: 7 * M, aviso: 0.9, forma: "carga", largo: 8 * M, ancho: 1.7 * M, radio: 22, espera: 2.2, barra: 76, plata: 4 },
     cuervo: { vida: 28, dano: 8, vel: 5.6 * M, alcance: 1.7 * M, aviso: 0.6, forma: "abanico", radioGolpe: 2 * M, angulo: 0.6, radio: 12, espera: 1.4, barra: 82, plata: 2, vuela: true },
+    // el fatuo mayor (la lámina de Alejandro) guía a los fatuos: al morir se parte en dos chicos (parte)
+    fatuoMayor: { vida: 70, dano: 18, vel: 2.2 * M, alcance: 9 * M, aviso: 1.3, forma: "lejos", radioGolpe: 2 * M, radio: 16, espera: 2.6, barra: 128, plata: 8, vuela: true, muerto: true, luz: true, parte: "fatuo" },
     fatuo: { vida: 45, dano: 16, vel: 2.4 * M, alcance: 9 * M, aviso: 1.15, forma: "lejos", radioGolpe: 1.6 * M, radio: 12, espera: 2.4, barra: 100, plata: 5, vuela: true, muerto: true, luz: true },
     oso: { vida: 300, dano: 26, vel: 2.1 * M, alcance: 2.8 * M, aviso: 1.1, forma: "abanico", radioGolpe: 3.1 * M, angulo: 1.0, largo: 4.4 * M, ancho: 2 * M, radio: 34, espera: 2.2, barra: 150, plata: 30, pesado: true },
     dreki: { vida: 1600, dano: 30, vel: 1.5 * M, alcance: 5 * M, aviso: 1.35, forma: "abanico", radioGolpe: 5.5 * M, angulo: 0.85, largo: 13 * M, ancho: 3 * M, radio: 70, espera: 2.3, barra: 300, plata: 260, pesado: true },
@@ -184,9 +186,10 @@ window.COMBATE = (function () {
     if (e.lider && e.grupo) e.grupo.forEach((o) => o !== e && !o.muerto && o.activo && (o.aturdido = Math.max(o.aturdido || 0, 1.2)));
     // al morir se deshace en polvo (los muertos en huesos, los fatuos en luz)
     if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
-      const col = e.d.muerto ? (e.tipo === "fatuo" ? "#73D5DB" : "#D8D0C0") : "#5E4A36";
-      for (let k = 0; k < 14; k++) J.fx.push({ x: e.x + (Math.random() - 0.5) * e.d.radio * 1.6, y: e.y - Math.random() * e.d.barra * 0.6, vx: (Math.random() - 0.5) * 160, vy: -60 - Math.random() * 160, t: 0.4 + Math.random() * 0.3, c: col, s: 4 + Math.random() * 5, g: e.tipo === "fatuo" ? -0.3 : 0.8 });
+      const col = e.d.muerto ? (e.d.luz ? "#73D5DB" : "#D8D0C0") : "#5E4A36";
+      for (let k = 0; k < (e.d.parte ? 26 : 14); k++) J.fx.push({ x: e.x + (Math.random() - 0.5) * e.d.radio * 1.6, y: e.y - Math.random() * e.d.barra * 0.6, vx: (Math.random() - 0.5) * 160, vy: -60 - Math.random() * 160, t: 0.4 + Math.random() * 0.3, c: col, s: 4 + Math.random() * 5, g: e.d.luz ? -0.3 : 0.8 });
     }
+    partir(J, e);
     if (e.aviso) J.quitarAviso(e.aviso);
     e.aviso = null;
     // el líder rúnico estalla al morir: el círculo violeta avisa antes
@@ -199,6 +202,26 @@ window.COMBATE = (function () {
       });
     }
     if (J.alMorir) J.alMorir(e);
+  }
+  // el fatuo mayor se parte en dos fatuos chicos que salen despedidos a los costados y ya te persiguen; entran a su
+  // grupo (el grupo no cae hasta que caen ellos) y no se vuelven a partir
+  function partir(J, e) {
+    const tipo = e.d.parte, lista = window.JUEGO && JUEGO.enemigos;
+    if (!tipo || !lista) return;
+    for (const lado of [-1, 1]) {
+      const n = crear(tipo, e.x + lado * 24, e.y + 6, { pal: e.pal, grupo: e.grupo });
+      n.hijo = true;
+      n.hordaGrupo = e.hordaGrupo;
+      n.casa = e.casa;
+      n.estado = "persigue";
+      n.vio = 1;
+      n.recarga = 1.2 + (lado > 0 ? 0.6 : 0);
+      n.vx = lado * 260;
+      n.vy = -40;
+      if (e.grupo) e.grupo.push(n);
+      lista.push(n);
+    }
+    if (window.SONIDO) SONIDO.zumbido(e.x, e.y, 0.7);
   }
   // el golpe de la criatura llega: daño y lo que deja el líder (fuego en el piso, escarcha)
   function pega(J, e, a) {

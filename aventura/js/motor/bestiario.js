@@ -9,7 +9,7 @@ window.BESTIARIO = (function () {
   "use strict";
   let A, J, jug;
   const t = (k, v) => I18N.t(k, v);
-  const LISTA = ["lobo", "jabali", "cuervo", "oso", "errante", "draugr", "fatuo", "custodio", "trol", "dreki"];
+  const LISTA = ["lobo", "jabali", "cuervo", "oso", "errante", "draugr", "fatuoMayor", "fatuo", "custodio", "trol", "dreki"];
   const UNICOS = [
     ["hrungnir", "trol"],
     ["kolbrandr", "jabali"],

@@ -33,7 +33,7 @@ window.ALQUIMIA = (function () {
   // aceites: contra qué familia
   const ACEITES = {
     ceniza: { pide: { cardo: 2, abedul: 1 }, contra: ["draugr", "errante"], col: "#9A6BD8" },
-    escarcha: { pide: { escarcha: 2, luna: 1 }, contra: ["fatuo", "custodio"], col: "#C8F2F4" },
+    escarcha: { pide: { escarcha: 2, luna: 1 }, contra: ["fatuo", "fatuoMayor", "custodio"], col: "#C8F2F4" },
     cazador: { pide: { musgo: 1, serbal: 1, abedul: 1 }, contra: ["lobo", "jabali", "oso", "cuervo"], col: "#C8402D" },
     brea: { pide: { abedul: 2, cardo: 1, serbal: 1 }, contra: ["trol", "dreki"], col: "#5E4430" },
   };

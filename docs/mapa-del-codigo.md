@@ -168,6 +168,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **dreki.js**: el dreki (se suma a CRIATURAS)
 - **errante-helheim.js**: El errante de Helheim en vectores (módulo ERRANTE)
   - paletas: cambian la túnica y la piel; las garras, el cinturón y la runa quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los pies pisan el piso y solo se levantan al dar el paso · dibujar
+- **fatuo-mayor.js**: El fatuo mayor en vectores (módulo FATUO_MAYOR)
+  - paletas: tiñen la llama y la cara; el blanco del centro queda · carga: cada forma con sus comandos (M, L, C, Z) en números, para doblarlos en cada cuadro · el fuego: cada punto se corre según su altura (lejos de la cara, más) con una onda que sube · las runas que giran: Ingwaz, Algiz y Sowilo, planas como en la lámina · dibujar
 - **jabali-hongos.js**: El jabalí de hongos en vectores (módulo JABALI)
   - paletas: el pelo, el musgo y los sombreros de los hongos cambian; ojos, colmillos y tallos quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · efectos · dibujar
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)

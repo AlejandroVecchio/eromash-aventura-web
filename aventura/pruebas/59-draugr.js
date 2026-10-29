@@ -14,7 +14,7 @@
       for (const [vista, espejo] of [["S", false], ["E", false], ["N", false], ["E", true]])
         for (const est of estados)
           for (let pal = 0; pal < DRAUGR.PALETAS.length; pal++) CRIATURAS.dibujar(c, "draugr", 200, 300, 1, Object.assign({ vista, espejo, pal, sem: 5 }, est));
-      const px = c.getImageData(200, 285, 1, 1).data;
+      const px = c.getImageData(195, 245, 1, 1).data;
       si(px[3] > 0, "dibujó algo en el cuerpo");
     },
   });
