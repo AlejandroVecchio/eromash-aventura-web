@@ -112,29 +112,42 @@ window.BANDIDO = (function () {
     E11: [-413, -842, -123, -499],
     E12: [-404, -824, -110, -497],
   };
-  // la curva suave: el promedio más una onda por vuelta (la que mejor pasa por los 12 cuadros) de dónde va la mano y
-  // dónde va la cabeza del hacha
+  // dónde está de verdad el hacha en cada cuadro: la cabeza del hacha y el mango de cada uno se calzaron contra los del
+  // primero (lo que se ve de cada cuadro, pixel a pixel) y de ahí sale su giro (grados) y dónde queda el centro de la
+  // cabeza del hacha (desde el pie, en unidades del svg)
+  const HACHA_E = {
+    E01: [-0.0, -162, -450],
+    E02: [-1.8, -41, -442],
+    E03: [-2.8, -89, -476],
+    E04: [-0.7, 10, -468],
+    E05: [2.6, -154, -446],
+    E06: [2.7, -68, -395],
+    E07: [-5.9, -25, -436],
+    E08: [-3.7, -33, -456],
+    E09: [-3.1, -55, -491],
+    E10: [-3.0, 50, -508],
+    E11: [-0.2, -108, -496],
+    E12: [-1.1, -108, -492],
+  };
+  // la curva suave: el promedio más una onda por vuelta (la que mejor pasa por los 12 cuadros) del giro y del lugar
   const suave = (() => {
-    const L = 12, cols = [0, 1, 2, 3].map((j) => Object.keys(BRAZO_E).sort().map((n) => BRAZO_E[n][j]));
-    return cols.map((v) => {
+    const L = 12, nombres = Object.keys(HACHA_E).sort();
+    return [0, 1, 2].map((j) => {
       let c0 = 0, c1 = 0, s1 = 0;
-      v.forEach((x, i) => {
-        const p = ((i + 0.5) * Math.PI * 2) / L;
+      nombres.forEach((n, i) => {
+        const x = HACHA_E[n][j], p = ((i + 0.5) * Math.PI * 2) / L;
         c0 += x / L; c1 += (2 * x * Math.cos(p)) / L; s1 += (2 * x * Math.sin(p)) / L;
       });
       return (p) => c0 + c1 * Math.cos(p) + s1 * Math.sin(p);
     });
   })();
-  // el arreglo del brazo de un cuadro en ese momento de la vuelta: lo lleva entero (girado, corrido y apenas estirado)
-  // para que su mano y su hacha caigan en la curva suave (en unidades del svg, desde el pie; el giro va desde el hombro)
+  // el arreglo del brazo de un cuadro en ese momento de la vuelta: lo gira y lo corre entero para que su hacha quede
+  // donde dice la curva (la matriz va alrededor del hombro, como los demás huesos)
   const brazoDe = (nombre, ph) => {
-    const b = BRAZO_E[nombre], S = HOMBRO, M = [suave[0](ph), suave[1](ph)], G = [suave[2](ph), suave[3](ph)];
-    const a0 = Math.atan2(b[3] - b[1], b[2] - b[0]), a1 = Math.atan2(G[1] - M[1], G[0] - M[0]);
-    const k = Math.max(0.92, Math.min(1.08, Math.hypot(G[0] - M[0], G[1] - M[1]) / Math.hypot(b[2] - b[0], b[3] - b[1])));
-    const co = Math.cos(a1 - a0) * k, si = Math.sin(a1 - a0) * k;
-    // la mano del cuadro, girada desde el hombro, y lo que le falta para llegar a la de la curva
-    const rx = S[0] + co * (b[0] - S[0]) - si * (b[1] - S[1]), ry = S[1] + si * (b[0] - S[0]) + co * (b[1] - S[1]);
-    return [co, si, -si, co, M[0] - rx, M[1] - ry];
+    const [a, hx, hy] = HACHA_E[nombre], S = HOMBRO, d = (suave[0](ph) - a) * rad;
+    const co = Math.cos(d), si = Math.sin(d);
+    const rx = S[0] + co * (hx - S[0]) - si * (hy - S[1]), ry = S[1] + si * (hx - S[0]) + co * (hy - S[1]);
+    return [co, si, -si, co, suave[1](ph) - rx, suave[2](ph) - ry];
   };
   const cerca = (px, py, ax, ay, bx, by) => {
     const vx = bx - ax, vy = by - ay, u = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy)));
@@ -146,6 +159,11 @@ window.BANDIDO = (function () {
     if (!br) continue;
     const S = [px + HOMBRO[0], py + HOMBRO[1]], M = [px + br[0], py + br[1]], G = [px + br[2], py + br[3]];
     const sube = [S[0] + (M[0] - S[0]) * 0.3, S[1] + (M[1] - S[1]) * 0.3], codo = [S[0] + (M[0] - S[0]) * 0.95, S[1] + (M[1] - S[1]) * 0.95];
+    // la manga lleva el arreglo de a poco: nada junto al hombro, entero desde la mitad del brazo
+    const manga = (x, y) => {
+      const vx = M[0] - S[0], vy = M[1] - S[1], u = ((x - S[0]) * vx + (y - S[1]) * vy) / (vx * vx + vy * vy);
+      return Math.max(0.05, Math.min(1, (u - 0.25) / 0.4));
+    };
     VISTAS[n].huesos.brazo = S;
     VISTAS[n].brazoAndar = true;
     VISTAS[n].peso = (x, y, f) =>
@@ -155,7 +173,7 @@ window.BANDIDO = (function () {
       (f.gris && Math.hypot(x - G[0], y - G[1]) < 230) ||
       (f.tono === "cuero" && !f.piel && cerca(x, y, 1.6 * M[0] - 0.6 * G[0], 1.6 * M[1] - 0.6 * G[1], G[0], G[1]) < 70) ||
       (f.area < 60000 && cerca(x, y, sube[0], sube[1], codo[0], codo[1]) < 85)
-        ? ["brazo", 1]
+        ? ["brazo", manga(x, y)]
         : null;
   }
   const HUESOS = ["torso", "cabeza", "brazo", "brazoI", "brazoD", "hacha", "pieI", "pieD"];
