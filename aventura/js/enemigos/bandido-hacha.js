@@ -519,5 +519,8 @@ window.BANDIDO = (function () {
   const TODAS = Object.keys(VISTAS);
   TODAS.forEach(cargar);
   const listo = () => TODAS.every((v) => cargar(v).listo);
-  return { dibujar, VISTAS, PALETAS, cargar, listo };
+  // para el editor de animación: carga también los cuadros de la caminata y olvida el golpe en curso de una semilla
+  const precargar = () => Object.values(CICLO).forEach((ci) => ci.cuadros.forEach(cargar));
+  const reiniciar = (k) => delete est[k || 0];
+  return { dibujar, VISTAS, PALETAS, cargar, listo, precargar, reiniciar };
 })();

@@ -210,7 +210,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **cartel.js**: el cartel de lugar (CARTEL): el cartel dorado que anuncia un lugar, una tierra nueva o la capital al llegar
   - parámetros (los mismos de cartel_lugar.gd; tamaños a 1080 de alto, tiempos en segundos) · ayudas · el lienzo · estado · tiempos · disposición · dibujo · paisaje / estandarte en un solo trazo · dibujos de cada región y capital · la fila y cuándo sale cada uno
 - **editor-esqueleto.js**: Editor de animación por piezas (esqueleto.html)
-  - estado · lo que se ve · la línea de tiempo: las claves de todos tenues, las del hueso elegido como rombos, y dónde se está · los valores del hueso elegido · elegir y arrastrar huesos · la línea de tiempo con el puntero · botones · el reloj
+  - estado · lo que se ve · el bandido de hoy · la línea de tiempo: las claves de todos tenues, las del hueso elegido como rombos, y dónde se está · los valores del hueso elegido · elegir y arrastrar huesos · la línea de tiempo con el puntero · botones · el reloj
 - **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando

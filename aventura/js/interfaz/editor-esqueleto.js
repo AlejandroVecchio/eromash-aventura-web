@@ -2,7 +2,8 @@
 // Muestra un esqueleto con sus piezas (por ahora el muñeco de HUMANO) en cualquiera de sus vistas, reproduce cada
 // animación y deja editarla: se elige un hueso tocándolo y se arrastra (girar, mover o estirar) y queda una clave en
 // el instante de la línea de tiempo. Lo editado se guarda en el navegador y se descarga o se copia en JSON
-// ({ formato: "eromash-animaciones", anims }) para pasarlo al juego.
+// ({ formato: "eromash-animaciones", anims }) para pasarlo al juego. Al lado (o debajo, transparente) se puede ver el
+// bandido del hacha como se mueve hoy en el juego (BANDIDO, cuadros de su lámina) en la misma animación, vista e instante.
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
@@ -17,7 +18,7 @@
     const g = JSON.parse(localStorage.getItem(CLAVE));
     if (g && g.anims) for (const id in g.anims) anims[id] = g.anims[id];
   } catch (e) {}
-  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true };
+  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true, calco: params.get("calco") || "lado" };
   let deshacer = [], copiaPose = null;
   const anim = () => anims[st.anim];
   // la vista del esqueleto: el otro costado es el costado en espejo
@@ -34,13 +35,15 @@
     const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
     cv.width = Math.round(r.width * d);
     cv.height = Math.round(r.height * d);
-    escala = Math.min(cv.width / 120, cv.height / 170);
-    ox = cv.width / 2;
+    const lado = hayCalco() && st.calco === "lado";
+    escala = Math.min(cv.width / (lado ? 250 : 120), cv.height / 170);
+    ox = cv.width * (lado ? 0.3 : 0.5);
     oy = cv.height - 22 * escala;
     const rt = lt.getBoundingClientRect();
     lt.width = Math.round(rt.width * d);
     lt.height = Math.round(rt.height * d);
   }
+  const hayCalco = () => !!window.BANDIDO && st.calco !== "no";
   const transformar = (g) => g.setTransform(escala * (espejo() ? -1 : 1), 0, 0, escala, ox, oy);
   function poseEn(t) {
     return E.muestra(anim(), base(), t);
@@ -53,6 +56,7 @@
     c.fillStyle = "#24301D";
     c.fillRect(0, oy, cv.width, cv.height - oy);
     const op = { colores: H.COLORES[st.pal] };
+    if (hayCalco()) calco();
     if (st.fantasmas) {
       // la pose de un poco antes y un poco después, tenues (en otro lienzo para que no se vean las piezas de adentro)
       for (const [dt, a] of [[-0.08, 0.22], [0.08, 0.22]]) {
@@ -72,6 +76,38 @@
     c.setTransform(1, 0, 0, 1, 0, 0);
     tiempo();
     canales(pose);
+  }
+  // ---------- el bandido de hoy ----------
+  // el bandido del hacha con su dibujo del juego en la misma animación, vista e instante: los cuadros de su lámina al
+  // andar y correr (una vuelta por animación), la pose de la lámina en el aviso, el hachazo, herido y morir
+  const borrador = document.createElement("canvas").getContext("2d");
+  let reintento = 0;
+  function calco() {
+    const u = st.t, dur = anim().dur, o = { vista: base(), pal: st.pal, sem: 0 };
+    let t = u * dur;
+    BANDIDO.reiniciar(0);
+    if (st.anim === "andar" || st.anim === "correr") {
+      o.mov = st.anim === "andar" ? 1 : 2;
+      t = (u * Math.PI * 2) / (5.2 + o.mov * 2.4);
+    } else if (st.anim === "aviso") o.golpe = Math.max(0.001, u);
+    else if (st.anim === "golpe") {
+      // el hacha estaba arriba y recién se soltó
+      BANDIDO.dibujar(borrador, 0, Object.assign({}, o, { golpe: 1 }));
+      t = 0.0001 + u * dur;
+      o.golpe = 0;
+    } else if (st.anim === "herido") o.herido = 1 - u;
+    else if (st.anim === "morir") o.muere = u * 0.8;
+    const debajo = st.calco === "debajo";
+    c.save();
+    c.setTransform(escala * (espejo() ? -1 : 1), 0, 0, escala, debajo ? ox : cv.width * 0.72, oy);
+    if (debajo) c.globalAlpha = 0.45;
+    const hecho = BANDIDO.dibujar(c, t, o);
+    c.restore();
+    // mientras cargan los cuadros de su lámina, se vuelve a dibujar en un rato
+    if (!hecho && !st.jugando) {
+      clearTimeout(reintento);
+      reintento = setTimeout(dibujar, 250);
+    }
   }
   // los huesos encima: una línea de donde nace a su punta y un punto en la articulación; el elegido en dorado
   function huesos(pose) {
@@ -249,6 +285,10 @@
     const pal = $("sqPal");
     if (!pal.options.length) H.COLORES.forEach((_, i) => pal.add(new Option(I18N.t("sq.pal_" + i), i)));
     pal.value = st.pal;
+    const cal = $("sqCalco");
+    if (!cal.options.length) ["lado", "debajo", "no"].forEach((k) => cal.add(new Option(I18N.t("sq.calco_" + k), k)));
+    cal.value = st.calco;
+    cal.parentNode.hidden = !window.BANDIDO;
     $("sqDur").value = anim().dur;
     $("sqBucle").checked = !!anim().bucle;
     $("sqJugar").textContent = I18N.t(st.jugando ? "sq.pausa" : "sq.jugar");
@@ -266,6 +306,11 @@
   });
   $("sqPal").addEventListener("change", (e) => {
     st.pal = +e.target.value;
+    dibujar();
+  });
+  $("sqCalco").addEventListener("change", (e) => {
+    st.calco = e.target.value;
+    medir();
     dibujar();
   });
   $("sqVel").addEventListener("change", (e) => (st.vel = +e.target.value));
@@ -409,8 +454,9 @@
     requestAnimationFrame(cuadro);
   }
   window.addEventListener("resize", () => { medir(); dibujar(); });
-  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; armarBotones(); dibujar(); });
+  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; $("sqCalco").innerHTML = ""; armarBotones(); dibujar(); });
   I18N.apply(document);
+  if (window.BANDIDO) BANDIDO.precargar();
   medir();
   armarBotones();
   dibujar();
