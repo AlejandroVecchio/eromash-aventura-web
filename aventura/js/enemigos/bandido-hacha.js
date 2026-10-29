@@ -48,41 +48,41 @@ window.BANDIDO = (function () {
   // nada que el vectorizador rellenó entre las piernas se ve.
   const ANDAR = {
     S01: [506.6, 896, 1914],
-    S02: [506.8, 876, 1914],
+    S02: [506.8, 883, 1914],
     S03: [506.6, 882, 1914],
-    S04: [506.8, 859, 1914],
-    S05: [521.3, 918, 1909],
-    S06: [519.6, 878, 1912],
-    S07: [518.7, 883, 1913],
-    S08: [518.9, 854, 1913],
-    S09: [516.2, 864, 1918],
-    S10: [516.2, 848, 1918],
-    S11: [516.0, 863, 1918],
-    S12: [516.0, 876, 1918],
-    E01: [523.3, 1084, 1909],
-    E02: [523.6, 817, 1909],
-    E03: [523.1, 797, 1910],
-    E04: [522.6, 543, 1911],
-    E05: [525.3, 1002, 1906],
-    E06: [525.3, 896, 1906],
-    E07: [525.1, 1033, 1907],
-    E08: [524.6, 924, 1907],
-    E09: [522.6, 950, 1911],
-    E10: [522.1, 528, 1911],
-    E11: [522.1, 892, 1911],
-    E12: [521.4, 927, 1913],
-    N01: [506.3, 848, 1916],
-    N02: [508.3, 829, 1915],
-    N03: [507.1, 835, 1914],
+    S04: [506.8, 854, 1914],
+    S05: [521.3, 907, 1909],
+    S06: [519.6, 870, 1912],
+    S07: [518.7, 882, 1913],
+    S08: [518.9, 853, 1913],
+    S09: [516.2, 869, 1918],
+    S10: [516.2, 855, 1918],
+    S11: [516.0, 867, 1918],
+    S12: [516.0, 880, 1918],
+    E01: [523.3, 1051, 1909],
+    E02: [523.6, 809, 1909],
+    E03: [523.1, 778, 1910],
+    E04: [522.6, 570, 1911],
+    E05: [525.3, 999, 1906],
+    E06: [525.3, 920, 1906],
+    E07: [525.1, 1032, 1907],
+    E08: [524.6, 917, 1907],
+    E09: [522.6, 949, 1911],
+    E10: [522.1, 564, 1911],
+    E11: [522.1, 884, 1911],
+    E12: [521.4, 919, 1913],
+    N01: [506.3, 844, 1916],
+    N02: [508.3, 825, 1915],
+    N03: [507.1, 836, 1914],
     N04: [507.1, 855, 1914],
-    N05: [515.9, 851, 1916],
-    N06: [515.3, 835, 1917],
+    N05: [515.9, 848, 1916],
+    N06: [515.3, 834, 1917],
     N07: [515.3, 833, 1917],
-    N08: [515.5, 837, 1917],
-    N09: [515.1, 838, 1918],
-    N10: [515.1, 837, 1918],
-    N11: [514.9, 810, 1918],
-    N12: [515.3, 828, 1917],
+    N08: [515.5, 838, 1917],
+    N09: [515.1, 836, 1918],
+    N10: [515.1, 841, 1918],
+    N11: [514.9, 813, 1918],
+    N12: [515.3, 832, 1917],
   };
   // cada vista: sus cuadros en orden en una vuelta (dos pasos) y dónde queda el punto más alto del cuerpo (pico: en la
   // vuelta de 0 a 2π, sube del todo en pico + π/2 y pico + 3π/2, al pasar la pierna, cuadros 4 y 10)
@@ -225,17 +225,22 @@ window.BANDIDO = (function () {
   // ---------- dibujar ----------
   const cal = () => (window.CALIDAD ? CALIDAD.nivel : "alta");
   const est = {};
-  // el hachazo: después del aviso el hacha cae desde arriba en la pose de la lámina y el cuerpo sigue el golpe
-  const HACHAZO = 0.34;
+  // el hachazo: después del aviso el hacha cae desde arriba en la pose de la lámina y el cuerpo sigue el golpe. El ataque
+  // básico usa el mismo hachazo, con su aviso más corto (el de combate.js) y la caída más rápida
+  const HACHAZO = 0.34, HACHAZO_BASICO = 0.2;
   function dibujar(c, t, o) {
     const v = o.vista || "S", k = o.sem != null ? o.sem : 0;
     let F = est[k];
-    if (!F || t < F.t) F = est[k] = { t, golpe: 0, suelta: -9 };
+    if (!F || t < F.t) F = est[k] = { t, golpe: 0, suelta: -9, dur: HACHAZO, basico: false };
     F.t = t;
-    const g = o.golpe || 0, ant = F.golpe, sube = g > 0 && g >= ant;
+    const gh = o.golpe || 0, gb = o.basico || 0, g = Math.max(gh, gb), ant = F.golpe, sube = g > 0 && g >= ant;
     F.golpe = g;
-    if (g < ant && ant > 0.8) F.suelta = t;
-    const dz = t - F.suelta, baja = dz < HACHAZO ? 1 - dz / HACHAZO : 0;
+    if (g < ant && ant > 0.8) {
+      F.suelta = t;
+      F.dur = F.basico ? HACHAZO_BASICO : HACHAZO;
+    }
+    if (g > 0) F.basico = gb > gh;
+    const dz = t - F.suelta, baja = dz < F.dur ? 1 - dz / F.dur : 0;
     const muere = Math.min(1, (o.muere || 0) / 0.8), herido = o.herido > 0 ? o.herido * o.herido : 0;
     const ef = { muere, estela: 0, linde: 0 };
     let nombre = v, q, anda = null;
@@ -255,18 +260,21 @@ window.BANDIDO = (function () {
     } else if (o.mov > 0.05 && !muere && !sube && baja <= 0 && CICLO[v].cuadros.every((n) => cargar(n).listo)) {
       // andar: los cuadros de las láminas de la caminata, uno tras otro. Para que no salte de un cuadro al otro,
       // el cuerpo baja y se aplasta apenas al pisar y sube al pasar la pierna de forma continua, y el cuadro anterior se
-      // funde durante el primer tercio del siguiente
+      // funde con el anterior y el siguiente; cada cuadro está corrido para que el tronco quede en el mismo lugar
       const m = Math.min(2, o.mov), amp = Math.min(1, m), f = t * (5.2 + m * 2.4) + (o.sem || 0);
       const ciclo = CICLO[v], L = ciclo.cuadros.length, cada = (Math.PI * 2) / L;
       const ph = ((f % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), n = Math.min(L - 1, Math.floor(ph / cada)), fr = (ph - n * cada) / cada;
       const alto = (1 - Math.cos(2 * (ph - ciclo.pico))) / 2;
       nombre = ciclo.cuadros[n];
       q = nueva();
-      q.dy = -alto * 30 * amp;
+      q.dy = -alto * 22 * amp;
       q.sy = 1 - 0.018 * (1 - alto) * amp;
       q.sx = 1 + 0.01 * (1 - alto) * amp;
       q.rot = (v === "E" ? 2 + Math.sin(2 * ph) * 0.8 : Math.sin(ph) * 1.6) * rad * amp;
-      if (fr < 0.35) anda = { antes: ciclo.cuadros[(n + L - 1) % L], a: Math.pow(1 - fr / 0.35, 1.5) };
+      // fundido continuo: en la primera mitad de cada cuadro se va el anterior y en la segunda ya entra el siguiente,
+      // los dos a media transparencia en el cambio, así no hay salto
+      const u = fr < 0.5 ? fr / 0.5 : (1 - fr) / 0.5, lisa = u * u * (3 - 2 * u);
+      anda = { antes: ciclo.cuadros[(n + (fr < 0.5 ? L - 1 : 1)) % L], a: 0.5 * (1 - lisa) };
     } else {
       q = pose(v, t, o);
       if (baja > 0 && v !== "N") {
@@ -398,9 +406,13 @@ window.BANDIDO = (function () {
 
   if (window.CRIATURAS) {
     const viejo = CRIATURAS.DIBUJO ? CRIATURAS.DIBUJO.bandido : null;
-    CRIATURAS.registrar("bandido", (c, t, o) => {
-      if (!dibujar(c, t, o) && viejo) viejo(c, t, o);
-    });
+    CRIATURAS.registrar(
+      "bandido",
+      (c, t, o) => {
+        if (!dibujar(c, t, o) && viejo) viejo(c, t, o);
+      },
+      { basicoPropio: true },
+    );
   }
   const TODAS = Object.keys(VISTAS);
   TODAS.forEach(cargar);

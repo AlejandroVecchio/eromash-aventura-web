@@ -1,5 +1,5 @@
 // Pruebas del bandido del hacha de los Sin Linde dibujado desde la lámina de Alejandro (enemigos/bandido-hacha.js): carga sus vistas en
-// vector y se dibuja quieto, andando, en el aviso, en el hachazo, herido y muriendo, con cada paleta.
+// vector y se dibuja quieto, andando, en el aviso, en el hachazo, en el ataque básico (el mismo hachazo, más corto), herido y muriendo, con cada paleta.
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push({
@@ -10,7 +10,7 @@
       const cv = document.createElement("canvas");
       cv.width = cv.height = 400;
       const c = cv.getContext("2d");
-      const estados = [{}, { mov: 1 }, { golpe: 0.5 }, { golpe: 0.9 }, { golpe: 0.02 }, { golpe: 0 }, { herido: 0.8 }, { muere: 0.5 }];
+      const estados = [{}, { mov: 1 }, { golpe: 0.5 }, { golpe: 0.9 }, { golpe: 0.02 }, { golpe: 0 }, { basico: 0.5 }, { basico: 0.95 }, { basico: 0, cabezazo: 1 }, { herido: 0.8 }, { muere: 0.5 }];
       for (const [vista, espejo] of [["S", false], ["E", false], ["N", false], ["E", true]])
         for (const est of estados)
           for (let pal = 0; pal < BANDIDO.PALETAS.length; pal++) CRIATURAS.dibujar(c, "bandido", 200, 300, 1, Object.assign({ vista, espejo, pal, sem: 5 }, est));

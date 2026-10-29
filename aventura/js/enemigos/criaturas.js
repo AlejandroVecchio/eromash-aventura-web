@@ -274,8 +274,11 @@ window.CRIATURAS = (function () {
   const DIBUJO = { lobo, errante, custodio, ciervo };
   const LISTA = Object.keys(DIBUJO);
   // criaturas-bosque.js suma las suyas
-  function registrar(id, f) {
+  // con op.basicoPropio la criatura anima su ataque básico ella misma (o.basico, o.cabezazo) y no se la inclina acá
+  const PROPIO = {};
+  function registrar(id, f, op) {
     DIBUJO[id] = f;
+    PROPIO[id] = !!(op && op.basicoPropio);
     if (!LISTA.includes(id)) LISTA.push(id);
   }
   // destello al recibir un golpe, como los esbirros de la arena: un cuadro sí y otro no, en blanco.
@@ -298,7 +301,7 @@ window.CRIATURAS = (function () {
     c.scale(s * (o.espejo ? -1 : 1), s);
     // el ataque básico: se echa atrás mientras avisa y embiste con la cabeza hacia donde mira (de costado se inclina
     // desde los pies; de frente se adelanta y crece; de espaldas se aleja)
-    if (o.basico > 0 || o.cabezazo > 0) {
+    if ((o.basico > 0 || o.cabezazo > 0) && !PROPIO[id]) {
       const u = Math.min(1, (o.basico || 0) / 0.8),
         atras = u * u * (3 - 2 * u) * (o.cabezazo > 0 ? 0 : 1),
         adelante = o.cabezazo || 0,
