@@ -175,21 +175,9 @@ window.ARQUERO = (function () {
       q.sy += Math.abs(c) * 0.025 * amp;
       q.rot += s * 1.5 * rad * amp;
       q.cabeza += -s * 3 * rad * amp;
-      if (costado) {
-        q.paso.pieI = -s * 50 * amp;
-        q.paso.pieD = s * 50 * amp;
-        q.alza.pieI = Math.max(0, -c) * 22 * amp;
-        q.alza.pieD = Math.max(0, c) * 22 * amp;
-        q.brazoI += -s * 10 * rad * amp;
-        q.brazoD += s * 4 * rad * amp;
-        q.dx += s * 10 * amp;
-      } else {
-        q.alza.pieI = Math.max(0, s) * 20 * amp;
-        q.alza.pieD = Math.max(0, -s) * 20 * amp;
-        q.brazoI += s * 4 * rad * amp;
-        q.brazoD -= s * 4 * rad * amp;
-        q.dx += s * 8 * amp;
-      }
+      // mientras no haya cuadros de andar de la lámina, el cuerpo se mece entero (nada se despega)
+      q.dx += s * (costado ? 6 : 4) * amp;
+      q.rot += s * (costado ? 1.5 : 1) * rad * amp;
     }
     return q;
   }
