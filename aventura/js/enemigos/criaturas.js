@@ -296,6 +296,24 @@ window.CRIATURAS = (function () {
     c.translate(x, y);
     const s = o.s || 1;
     c.scale(s * (o.espejo ? -1 : 1), s);
+    // el ataque básico: se echa atrás mientras avisa y embiste con la cabeza hacia donde mira (de costado se inclina
+    // desde los pies; de frente se adelanta y crece; de espaldas se aleja)
+    if (o.basico > 0 || o.cabezazo > 0) {
+      const u = Math.min(1, (o.basico || 0) / 0.8),
+        atras = u * u * (3 - 2 * u) * (o.cabezazo > 0 ? 0 : 1),
+        adelante = o.cabezazo || 0,
+        v = o.vista || "S";
+      const tiembla = o.basico > 0.8 ? Math.sin((o.basico || 0) * 200) * 1.5 : 0;
+      if (v === "E") {
+        c.translate(-6 * atras + 16 * adelante + tiembla, 0);
+        c.rotate(-0.07 * atras + 0.13 * adelante);
+      } else {
+        const f = v === "N" ? -1 : 1;
+        c.translate(tiembla, f * (-4 * atras + 10 * adelante));
+        const k = 1 + f * (-0.04 * atras + 0.07 * adelante);
+        c.scale(k, k);
+      }
+    }
     const blanco = o.herido > 0 && Math.floor(o.herido * 18) % 2 === 0;
     if (blanco) {
       flashC.setTransform(1, 0, 0, 1, 0, 0);

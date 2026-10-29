@@ -21,6 +21,13 @@ window.COMBATE = (function () {
     dreki: { vida: 1600, dano: 30, vel: 1.5 * M, alcance: 5 * M, aviso: 1.35, forma: "abanico", radioGolpe: 5.5 * M, angulo: 0.85, largo: 13 * M, ancho: 3 * M, radio: 70, espera: 2.3, barra: 300, plata: 260, pesado: true },
     trol: { vida: 420, dano: 30, vel: 1.4 * M, alcance: 3.4 * M, aviso: 1.4, forma: "circulo", radioGolpe: 3.8 * M, largo: 7 * M, ancho: 2.2 * M, radio: 40, espera: 2.6, barra: 196, plata: 40, pesado: true },
   };
+  // el ataque básico (pedido de Alejandro, 29/10/2026): además de su habilidad, de cerca cada criatura embiste con la
+  // cabeza mientras la habilidad se recarga. Aviso corto con un abanico chico en el piso y, como los esbirros de la
+  // arena, una estrella de cuatro puntas que destella en la cabeza justo cuando hay que cubrirse (la ventana de parada).
+  const BASICO = { aviso: 0.65, avisoPesado: 0.85, alcance: 1.3 * M, radio: 1.6 * M, ang: 0.75, dano: 0.55, espera: 0.8, recarga: 3.5 };
+  const DESTELLO = { desde: 0.34, hasta: 0.18 }; // segundos antes del golpe, como en la arena
+  const conBasico = (e) => e.d.forma !== "lejos" && !e.d.blanco && !e.patron && !e.propio;
+  const alcanceBasico = (e) => e.d.radio + BASICO.alcance;
   // los modificadores de los líderes (como los campeones de Diablo 2): cada uno con su color de aura
   const AFIJOS = {
     veloz: { col: "#73D5DB" },
@@ -196,7 +203,7 @@ window.COMBATE = (function () {
   // el golpe de la criatura llega: daño y lo que deja el líder (fuego en el piso, escarcha)
   function pega(J, e, a) {
     const p = J.jugador;
-    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(e.d.dano, tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
+    if (contiene(a, p.x, p.y) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) J.herir(Math.min(Math.round(e.d.dano * (a.dano || 1)), tope(J)), e.x, e.y, tiene(e, "helado") ? "helado" : null);
     if (tiene(e, "igneo")) {
       const z = aviso("circulo", a.forma === "lejos" || a.forma === "circulo" ? a.x : p.x, a.forma === "circulo" ? a.y : p.y, 3, { radio: 1.6 * M, rgb: RGB.igneo, zona: true, dps: 9 });
       if (a.forma !== "circulo" && a.forma !== "lejos") {
@@ -258,12 +265,15 @@ window.COMBATE = (function () {
       e.vy *= Math.pow(0.002, dt);
     }
     e.mov = 0;
+    e.recarga = Math.max(0, (e.recarga || 0) - dt);
+    e.cabezazo = Math.max(0, (e.cabezazo || 0) - dt * 3.5);
     if (e.helado > 0) {
       e.helado -= dt;
       if (e.aviso) {
         J.quitarAviso(e.aviso);
         e.aviso = null;
         e.estado = "espera";
+        e.basico = 0;
         e.t = 0;
       }
       return;
@@ -307,7 +317,21 @@ window.COMBATE = (function () {
           break;
         }
         const lejos = d.forma === "lejos";
-        const enRango = lejos ? dist < d.alcance && dist > 3 * M : d.forma === "carga" ? dist < d.alcance && dist > 2.5 * M : dist < d.alcance;
+        // con la habilidad recargando, de cerca embiste con la cabeza
+        if (e.recarga > 0 && conBasico(e) && dist < alcanceBasico(e) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) {
+          const dir = Math.atan2(dy * 1.25, dx);
+          const a = aviso("abanico", e.x, e.y, d.pesado ? BASICO.avisoPesado : BASICO.aviso, { radio: d.radio + BASICO.radio, ang: BASICO.ang, dir, dano: BASICO.dano, basico: true });
+          if (tiene(e, "veloz")) a.dur *= 0.85;
+          e.estado = "basico";
+          e.t = 0;
+          e.basico = 0;
+          e.aviso = a;
+          J.avisos.push(a);
+          e.mira = VIKINGO.vista(dx, dy, e.mira);
+          if (window.SONIDO) SONIDO.tocar("grunido", { vol: 0.35, tono: 1.2 * (GRUNEN[e.tipo] || 1), x: e.x, y: e.y });
+          break;
+        }
+        const enRango = e.recarga <= 0 && (lejos ? dist < d.alcance && dist > 3 * M : d.forma === "carga" ? dist < d.alcance && dist > 2.5 * M : dist < d.alcance);
         if (enRango && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) {
           e.estado = "aviso";
           e.t = 0;
@@ -341,7 +365,7 @@ window.COMBATE = (function () {
           my = my * (1 - k * 0.6) + (ty / tl) * k * 0.6;
         }
         // el fatuo y el jabalí buscan distancia; el resto se acerca
-        if ((lejos && dist < 5 * M) || (d.forma === "carga" && dist < 3 * M)) {
+        if ((lejos && dist < 5 * M) || (d.forma === "carga" && dist < 3 * M && e.recarga <= 0)) {
           mx = -mx;
           my = -my;
         }
@@ -366,9 +390,24 @@ window.COMBATE = (function () {
         e.mov = 1;
         break;
       }
+      case "basico":
+        e.basico = Math.min(1, e.t / e.aviso.dur);
+        if (e.t >= e.aviso.dur) {
+          pega(J, e, e.aviso);
+          J.quitarAviso(e.aviso);
+          e.aviso = null;
+          e.basico = 0;
+          e.cabezazo = 1;
+          e.estado = "espera";
+          // espera menos que tras la habilidad
+          e.t = Math.max(0, d.espera - BASICO.espera);
+          if (window.SONIDO) SONIDO.tocar("golpe", { vol: 0.4, tono: 0.8, x: e.x, y: e.y });
+        }
+        break;
       case "aviso":
         e.golpe = Math.min(1, e.t / e.aviso.dur);
         if (e.t >= e.aviso.dur) {
+          e.recarga = conBasico(e) ? BASICO.recarga : 0;
           pega(J, e, e.aviso);
           if (d.forma === "carga") e.carga = { dir: e.aviso.dir, t: 0.32, vel: e.aviso.largo / 0.32 };
           J.quitarAviso(e.aviso);
@@ -456,7 +495,7 @@ window.COMBATE = (function () {
     return false;
   }
   function reiniciar(e) {
-    Object.assign(e, { x: e.casa[0], y: e.casa[1], vida: e.d.vida, estado: "quieto", t: 0, vx: 0, vy: 0, golpe: 0, herido: 0, muerto: 0, aviso: null, quema: 0, helado: 0, carga: null, aturdido: 0, huyo: false, vio: 0, duda: 0, aguante: 0 });
+    Object.assign(e, { x: e.casa[0], y: e.casa[1], vida: e.d.vida, estado: "quieto", t: 0, vx: 0, vy: 0, golpe: 0, herido: 0, muerto: 0, aviso: null, quema: 0, helado: 0, carga: null, aturdido: 0, huyo: false, vio: 0, duda: 0, aguante: 0, recarga: 0, basico: 0, cabezazo: 0 });
   }
   // lo que cuenta la criatura sobre la cabeza: «!» al verte, «?» al perderte, estrellas si está aturdida y un destello
   // blanco justo antes de que pegue (para leer el momento de esquivar)
@@ -480,6 +519,7 @@ window.COMBATE = (function () {
           sy = yy + 6 + Math.sin(a) * 6;
         DIB.P(c, [sx, sy - 6, sx + 2, sy - 2, sx + 6, sy, sx + 2, sy + 2, sx, sy + 6, sx - 2, sy + 2, sx - 6, sy, sx - 2, sy - 2], "#FFD98A");
       }
+    if (e.estado === "basico" && e.aviso) estrella(c, e, (1 - e.basico) * e.aviso.dur);
     if (e.estado === "aviso" && e.golpe > 0.82)
       alfa(c, (e.golpe - 0.82) / 0.18, () => {
         DIB.halo(c, e.x, e.y - e.d.barra * 0.45, e.d.barra * 0.6, "#F2ECEC", 1);
@@ -489,6 +529,25 @@ window.COMBATE = (function () {
         c.ellipse(e.x, e.y, e.d.radio * 1.5, e.d.radio * 0.6, 0, 0, TAU);
         c.stroke();
       });
+  }
+  // la estrella de cubrirse, la misma de los esbirros de la arena: blanca de cuatro puntas con el rombo coral, en la
+  // cabeza, entre 0,34 s y 0,18 s antes del golpe (si se levanta el escudo al verla, el golpe cae en la ventana de parada)
+  function estrella(c, e, resta) {
+    if (resta > DESTELLO.desde || resta < DESTELLO.hasta) return;
+    const k = (DESTELLO.desde - resta) / (DESTELLO.desde - DESTELLO.hasta),
+      u = Math.sin(k * Math.PI),
+      s = e.s || 1;
+    const lado = e.mira.vista === "E" ? (e.mira.espejo ? -1 : 1) : 0;
+    const x = e.x + lado * e.d.radio * 0.9,
+      y = e.y - e.d.barra * 0.66,
+      r = (10 + 16 * u) * s,
+      q = r * 0.2;
+    c.save();
+    c.translate(x, y);
+    c.rotate(k * 0.6);
+    DIB.P(c, [0, -r, q, -q, r, 0, q, q, 0, r, -q, q, -r, 0, -q, -q], "#F2ECEC");
+    DIB.P(c, [0, -q * 1.6, q * 1.6, 0, 0, q * 1.6, -q * 1.6, 0], "#FF8D71");
+    c.restore();
   }
   function dibujar(c, e, t) {
     if (e.d.dibujo) return ASSETS.dibujar(c, e.d.dibujo, e.x, e.y, t, Object.assign({ herido: e.herido, sem: e.sem }, e.o));
@@ -507,7 +566,7 @@ window.COMBATE = (function () {
         });
         DIB.halo(c, e.x, e.y - e.d.barra * 0.4, e.d.barra * 0.7, col, 0.5);
       }
-      CRIATURAS.dibujar(c, e.tipo, e.x, e.y, t, { vista: e.mira.vista, espejo: e.mira.espejo, mov: e.mov, golpe: e.golpe, herido: e.herido, muere: e.muerto, pal: e.pal, s: e.s, sem: e.sem, escudo: e.escudoK });
+      CRIATURAS.dibujar(c, e.tipo, e.x, e.y, t, { vista: e.mira.vista, espejo: e.mira.espejo, mov: e.mov, golpe: e.golpe, herido: e.herido, muere: e.muerto, pal: e.pal, s: e.s, sem: e.sem, escudo: e.escudoK, basico: e.basico || 0, cabezazo: e.cabezazo || 0 });
       // escarcha o fuego encima
       if (e.helado > 0) alfa(c, 0.45, () => DIB.E(c, e.x, e.y - e.d.barra * 0.45, e.d.radio * 1.4, e.d.barra * 0.5, "#C8F2F4"));
       if (e.quema > 0)

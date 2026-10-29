@@ -19,3 +19,27 @@
     },
   });
 }
+(window.PRUEBAS = window.PRUEBAS || []).push({
+  nombre: "ataque básico: de cerca y con la habilidad recargando embiste con la cabeza, avisa en el piso y pega menos",
+  fn: async (A, { igual, si }) => {
+    const e = A.enemigos.find((o) => o.tipo === "lobo" && o.hordaGrupo && !o.lider);
+    const p = A.jug, casa = e.casa;
+    // lejos de los pueblos (son refugio) y con su casa al lado
+    p.x = casa[0] - 40;
+    p.y = casa[1];
+    Object.assign(e, { x: p.x + 40, y: p.y, estado: "persigue", t: 0, recarga: 2, aviso: null, aturdido: 0, helado: 0, carga: null, muerto: 0, activo: true, vida: e.d.vida, vx: 0, vy: 0 });
+    COMBATE.actualizar(A.J, e, 0.016);
+    igual(e.estado, "basico", "estado:");
+    si(e.aviso && e.aviso.basico && A.J.avisos.includes(e.aviso), "marca el abanico chico en el piso");
+    si(e.aviso.dur < e.d.aviso + 0.01, "su aviso es corto");
+    for (let i = 0; i < 80 && e.estado === "basico"; i++) COMBATE.actualizar(A.J, e, 0.016);
+    igual(e.estado, "espera", "después del cabezazo espera:");
+    si(e.cabezazo > 0, "queda la embestida para el dibujo");
+    // sin recarga, a distancia de su habilidad, usa la habilidad
+    Object.assign(e, { estado: "persigue", t: 0, recarga: 0, cabezazo: 0 });
+    COMBATE.actualizar(A.J, e, 0.016);
+    igual(e.estado, "aviso", "con la habilidad lista avisa la habilidad:");
+    if (e.aviso) A.J.quitarAviso(e.aviso);
+    Object.assign(e, { aviso: null, estado: "quieto", x: casa[0], y: casa[1] });
+  },
+});
