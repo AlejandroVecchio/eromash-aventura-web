@@ -1,7 +1,7 @@
 // ---------- El bandido del hacha de los Sin Linde en vectores (módulo BANDIDO) ----------
 // La lámina de Alejandro (frente, costado, espalda y el aviso de frente y de costado) pasada a SVG tal cual
 // (img/criaturas/bandido/*.svg, vectorizada con Recraft) y animada con huesos: respira con el hacha colgando y el escudo
-// al costado, camina con los cuatro cuadros de su lámina de caminata (andar/), en el aviso entra la pose de la lámina
+// al costado, camina con los cuadros de sus láminas de caminata (andar/: 4 de frente y de espaldas, 10 de costado), en el aviso entra la pose de la lámina
 // agachado tras el escudo con el hacha en alto (tiembla y la linde del escudo se enciende), baja el hachazo en dos
 // tiempos con una estela clara, se encoge herido y al morir cae de rodillas. Paletas: trapos rojos de la lámina, piel de
 // lobo gris y verde de monte, en el mismo orden que el dibujo viejo (BANDIDOS_DIBUJO.PAL). Se registra en CRIATURAS como
@@ -41,25 +41,40 @@ window.BANDIDO = (function () {
       peso: (x, y) => (x < 1050 && y < 680 ? ["hacha", 1] : x < 1250 && y < 900 && y > 600 ? ["hacha", rampa(1250 - x, 250) * 0.6] : null),
     },
   };
-  // los cuadros de la caminata (la segunda lámina: 4 por vista, en img/criaturas/bandido/andar/): [k, pie x, pie y],
-  // con el pie bajo la capucha a la altura del suelo para que el cuerpo no salte de un cuadro al otro y k ajustado para
-  // que mida lo mismo que parado. Se recortan con su silueta (clip), así nada que el vectorizador rellenó entre las
+  // los cuadros de la caminata (en img/criaturas/bandido/andar/): [k, pie x, pie y], con el pie bajo la capucha a la
+  // altura del suelo para que el cuerpo no salte de un cuadro al otro y k ajustado para que mida lo mismo que parado. De
+  // frente y de espaldas, los 4 de la segunda lámina (pie adelante, pierna pasando, el otro pie, la otra pierna); de
+  // costado, los 10 de la tercera lámina que hacen un paso entero (pisa, baja, pasa la pierna, la lleva adelante y vuelve
+  // a pisar), dos veces por vuelta. Se recortan con su silueta (clip), así nada que el vectorizador rellenó entre las
   // piernas se ve.
   const ANDAR = {
     S1: [509.0, 776, 1930],
     S2: [509.0, 722, 1930],
     S3: [509.0, 738, 1930],
     S4: [509.0, 744, 1930],
-    E1: [512.5, 747, 1928],
-    E2: [512.7, 512, 1928],
-    E3: [512.5, 742, 1928],
-    E4: [512.5, 508, 1928],
+    E01: [504.5, 768, 1905],
+    E02: [504.7, 640, 1905],
+    E03: [502.8, 700, 1905],
+    E04: [502.3, 507, 1907],
+    E05: [520.5, 479, 1914],
+    E06: [520.1, 560, 1915],
+    E07: [520.5, 581, 1914],
+    E08: [520.5, 579, 1914],
+    E09: [523.1, 637, 1910],
+    E10: [522.8, 706, 1910],
     N1: [505.0, 740, 1935],
     N2: [505.6, 740, 1934],
     N3: [505.2, 741, 1935],
     N4: [505.5, 746, 1934],
   };
-  const ORDEN_ANDAR = {};
+  // cada vista: sus cuadros en orden en una vuelta (dos pasos) y dónde queda el punto más alto del cuerpo (pico: en la
+  // vuelta de 0 a 2π, sube del todo en pico + π/2 y pico + 3π/2, al pasar la pierna)
+  const PASO = ["E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"];
+  const CICLO = {
+    S: { cuadros: ["S1", "S2", "S3", "S4"], pico: Math.PI / 4 },
+    N: { cuadros: ["N1", "N2", "N3", "N4"], pico: Math.PI / 4 },
+    E: { cuadros: PASO.concat(PASO), pico: -0.1 * Math.PI },
+  };
   for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
   const HUESOS = ["torso", "cabeza", "brazo", "brazoI", "brazoD", "hacha", "pieI", "pieD"];
   const PIES = ["pieI", "pieD"];
@@ -220,21 +235,21 @@ window.BANDIDO = (function () {
       q.dx = (g > 0.7 && sube ? Math.sin(t * 40) * 6 : 0) + (v === "E" ? cae * 70 : 0);
       q.hacha = (sube ? Math.sin(t * 36) * 2.5 * rad * a - 8 * rad * a : 0) + (v === "E" ? 95 : -70) * rad * cae;
       ef.linde = sube ? Math.max(0, (g - 0.35) / 0.65) : 1 - cae;
-    } else if (o.mov > 0.05 && !muere && !sube && baja <= 0 && cargar(v + "4").listo && cargar(v + "1").listo) {
-      // andar: los cuatro cuadros de la lámina de la caminata, uno tras otro. Para que no salte de un cuadro al otro,
+    } else if (o.mov > 0.05 && !muere && !sube && baja <= 0 && CICLO[v].cuadros.every((n) => cargar(n).listo)) {
+      // andar: los cuadros de las láminas de la caminata, uno tras otro. Para que no salte de un cuadro al otro,
       // el cuerpo baja y se aplasta apenas al pisar y sube al pasar la pierna de forma continua, y el cuadro anterior se
       // funde durante el primer tercio del siguiente
       const m = Math.min(2, o.mov), amp = Math.min(1, m), f = t * (5.2 + m * 2.4) + (o.sem || 0);
-      const ph = ((f % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), n = Math.min(3, Math.floor(ph / (Math.PI / 2))), fr = (ph - (n * Math.PI) / 2) / (Math.PI / 2);
-      const alto = (1 - Math.cos(2 * (ph - Math.PI / 4))) / 2;
-      const orden = ORDEN_ANDAR[v] || [1, 2, 3, 4];
-      nombre = v + orden[n];
+      const ciclo = CICLO[v], L = ciclo.cuadros.length, cada = (Math.PI * 2) / L;
+      const ph = ((f % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), n = Math.min(L - 1, Math.floor(ph / cada)), fr = (ph - n * cada) / cada;
+      const alto = (1 - Math.cos(2 * (ph - ciclo.pico))) / 2;
+      nombre = ciclo.cuadros[n];
       q = nueva();
       q.dy = -alto * 30 * amp;
       q.sy = 1 - 0.018 * (1 - alto) * amp;
       q.sx = 1 + 0.01 * (1 - alto) * amp;
       q.rot = (v === "E" ? 2 + Math.sin(2 * ph) * 0.8 : Math.sin(ph) * 1.6) * rad * amp;
-      if (fr < 0.35) anda = { antes: v + orden[(n + 3) % 4], a: Math.pow(1 - fr / 0.35, 1.5) };
+      if (fr < 0.35) anda = { antes: ciclo.cuadros[(n + L - 1) % L], a: Math.pow(1 - fr / 0.35, 1.5) };
     } else {
       q = pose(v, t, o);
       if (baja > 0 && v !== "N") {
