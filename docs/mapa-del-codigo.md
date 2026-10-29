@@ -163,6 +163,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - paletas: las plumas cambian; el pico, el hueso del amuleto y la runa quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los demás giran en su lugar · dibujar
 - **custodio.js**: El Custodio de corteza en vectores (módulo CUSTODIO)
   - paletas: la corteza y el musgo cambian, la piedra, la máscara y las runas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, más el vaivén y el aplaste del cuerpo · dibujar
+- **draugr-tumulo.js**: El draugr del túmulo en vectores (módulo DRAUGR)
+  - paletas: cambian las placas, la piel y la luz de los ojos y la runa; el cuero y el hierro quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los pies pisan el piso y solo se levantan al dar el paso · dibujar
 - **dreki.js**: el dreki (se suma a CRIATURAS)
 - **errante-helheim.js**: El errante de Helheim en vectores (módulo ERRANTE)
   - paletas: cambian la túnica y la piel; las garras, el cinturón y la runa quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los pies pisan el piso y solo se levantan al dar el paso · dibujar
