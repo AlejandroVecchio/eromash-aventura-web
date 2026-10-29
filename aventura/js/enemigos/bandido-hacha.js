@@ -59,18 +59,22 @@ window.BANDIDO = (function () {
     S10: [516.2, 848, 1918],
     S11: [516.0, 863, 1918],
     S12: [516.0, 876, 1918],
-    E01: [523.3, 1084, 1909],
-    E02: [523.6, 817, 1909],
-    E03: [523.1, 797, 1910],
-    E04: [522.6, 543, 1911],
-    E05: [525.3, 1002, 1906],
-    E06: [525.3, 896, 1906],
-    E07: [525.1, 1033, 1907],
-    E08: [524.6, 924, 1907],
-    E09: [522.6, 950, 1911],
-    E10: [522.1, 528, 1911],
-    E11: [522.1, 892, 1911],
-    E12: [521.4, 927, 1913],
+    E01: [513.3, 481, 1927],
+    E02: [513.3, 487, 1928],
+    E03: [513.7, 536, 1926],
+    E04: [514.4, 516, 1925],
+    E05: [512.2, 472, 1930],
+    E06: [511.8, 466, 1930],
+    E07: [512.4, 474, 1929],
+    E08: [512.4, 475, 1928],
+    E09: [513.7, 499, 1927],
+    E10: [513.9, 506, 1925],
+    E11: [514.4, 560, 1926],
+    E12: [514.2, 512, 1925],
+    E13: [514.6, 483, 1924],
+    E14: [514.2, 484, 1926],
+    E15: [513.5, 479, 1928],
+    E16: [513.5, 480, 1927],
     N01: [506.3, 848, 1916],
     N02: [508.3, 829, 1915],
     N03: [507.1, 835, 1914],
@@ -86,11 +90,12 @@ window.BANDIDO = (function () {
   };
   // cada vista: sus cuadros en orden en una vuelta (dos pasos) y dónde queda el punto más alto del cuerpo (pico: en la
   // vuelta de 0 a 2π, sube del todo en pico + π/2 y pico + 3π/2, al pasar la pierna, cuadros 4 y 10)
-  const cuadros = (v) => Array.from({ length: 12 }, (_, i) => v + String(i + 1).padStart(2, "0"));
+  const cuadros = (v, n) => Array.from({ length: n || 12 }, (_, i) => v + String(i + 1).padStart(2, "0"));
   const CICLO = {
     S: { cuadros: cuadros("S"), pico: 0.08 * Math.PI },
     N: { cuadros: cuadros("N"), pico: 0.08 * Math.PI },
-    E: { cuadros: cuadros("E"), pico: 0.08 * Math.PI },
+    // de costado, la lámina de 16 cuadros (29/10/2026): pisa en el 1 y el 9, pasa la pierna en el 5 y el 13
+    E: { cuadros: cuadros("E", 16), pico: 0 },
   };
   for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
   const HUESOS = ["torso", "cabeza", "brazo", "brazoI", "brazoD", "hacha", "pieI", "pieD"];
