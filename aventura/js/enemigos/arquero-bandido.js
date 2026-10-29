@@ -46,6 +46,25 @@ window.ARQUERO = (function () {
       punta: [1960, 600],
     },
   };
+  // los cuadros de la caminata (la segunda lámina: 4 por vista, pie derecho adelante, pierna derecha pasando, pie
+  // izquierdo adelante, pierna izquierda pasando), en img/criaturas/arquero/andar/: [k, pie x, pie y], con el pie
+  // en el centro del tronco a la altura del suelo para que el cuerpo no salte de un cuadro al otro. Se recortan con su
+  // silueta (clip), así lo que el vectorizador rellenó entre el arco y la cuerda no se ve.
+  const ANDAR = {
+    S1: [511.7, 680, 1930],
+    S2: [513.0, 679, 1930],
+    S3: [511.7, 679, 1930],
+    S4: [514.3, 637, 1930],
+    E1: [512.6, 766, 1928],
+    E2: [507.4, 534, 1927],
+    E3: [511.3, 778, 1928],
+    E4: [510.0, 538, 1928],
+    N1: [509.0, 696, 1934],
+    N2: [505.3, 673, 1933],
+    N3: [507.8, 687, 1934],
+    N4: [507.8, 682, 1934]
+  };
+  for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
   const HUESOS = ["torso", "cabeza", "brazoI", "brazoD", "arco", "pieI", "pieD"];
   const PIES = ["pieI", "pieD"];
 
@@ -92,7 +111,7 @@ window.ARQUERO = (function () {
   function cargar(v) {
     if (vistas[v]) return vistas[v];
     const st = (vistas[v] = { listo: false });
-    fetch("img/criaturas/arquero/" + v + ".svg")
+    fetch("img/criaturas/arquero/" + (VISTAS[v].dir || "") + v + ".svg")
       .then((r) => r.text())
       .then((txt) => {
         const doc = new DOMParser().parseFromString(txt, "image/svg+xml");
@@ -128,6 +147,7 @@ window.ARQUERO = (function () {
           return forma;
         });
         st.pinturas = {};
+        st.andar = !!def.clip;
         st.listo = true;
       })
       .catch(() => (st.error = true));
@@ -135,7 +155,9 @@ window.ARQUERO = (function () {
   }
   function pinturas(st, pal) {
     if (st.pinturas[pal]) return st.pinturas[pal];
-    const P = PALETAS[pal] || null;
+    // la lámina de la caminata tiene la capucha un poco más encendida: con la paleta de la lámina se la baja al rojo de
+    // la lámina parada, así no cambia de color al empezar a andar
+    const P = PALETAS[pal] || (st.andar ? { capucha: [2, 0.9, 0.9] } : null);
     return (st.pinturas[pal] = st.formas.map((f) => {
       if (!f.grad) return tenir(f.fill, P);
       const [x1, y1, x2, y2] = f.grad.x, g = lienzoGrad.createLinearGradient(x1, y1, x2, y2);
@@ -220,6 +242,12 @@ window.ARQUERO = (function () {
         ef.sinFlecha = true;
         ef.estela = tiro;
       }
+    } else if (o.mov > 0.05 && !muere && !sube && cargar(v + "4").listo && cargar(v + "1").listo) {
+      // andar: los cuatro cuadros de la lámina de la caminata, uno tras otro, con un balanceo suave
+      const m = Math.min(2, o.mov), f = t * (5.2 + m * 2.4) + (o.sem || 0), n = (Math.floor(f / (Math.PI / 2)) % 4 + 4) % 4;
+      nombre = v + (n + 1);
+      q = nueva();
+      q.rot = Math.sin(f) * 1.2 * rad * Math.min(1, m);
     } else {
       q = pose(v, t, o);
       if (v === "N" && (sube || tiro > 0)) {
@@ -267,7 +295,7 @@ window.ARQUERO = (function () {
     c.translate(-def.pie[0], -def.pie[1]);
     const B = c.getTransform(), base = [B.a, B.b, B.c, B.d, B.e, B.f];
     const fs = st.formas;
-    let Mpunta = null;
+    let Mpunta = null, recorte = false;
     for (let i = 0; i < fs.length; i++) {
       const f = fs[i], w = f.w;
       if (ef.sinFlecha && f.flecha) continue;
@@ -285,7 +313,13 @@ window.ARQUERO = (function () {
       c.setTransform(r[0], r[1], r[2], r[3], r[4], r[5]);
       c.fillStyle = cols[i];
       c.fill(f.path, f.regla);
+      if (def.clip && !recorte && f.regla === "evenodd") {
+        c.save();
+        c.clip(f.path, "evenodd");
+        recorte = true;
+      }
     }
+    if (recorte) c.restore();
     c.setTransform(T0);
     const vivo = 1 - ef.muere;
     // dónde queda la punta de la flecha en el espacio de la criatura
