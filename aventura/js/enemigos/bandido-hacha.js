@@ -1,7 +1,7 @@
 // ---------- El bandido del hacha de los Sin Linde en vectores (módulo BANDIDO) ----------
 // La lámina de Alejandro (frente, costado, espalda y el aviso de frente y de costado) pasada a SVG tal cual
 // (img/criaturas/bandido/*.svg, vectorizada con Recraft) y animada con huesos: respira con el hacha colgando y el escudo
-// al costado, camina con los cuadros de sus láminas de caminata (andar/: 4 de frente y de espaldas, 10 de costado), en el aviso entra la pose de la lámina
+// al costado, camina con los 12 cuadros de su lámina de caminata en cada vista (andar/), en el aviso entra la pose de la lámina
 // agachado tras el escudo con el hacha en alto (tiembla y la linde del escudo se enciende), baja el hachazo en dos
 // tiempos con una estela clara, se encoge herido y al morir cae de rodillas. Paletas: trapos rojos de la lámina, piel de
 // lobo gris y verde de monte, en el mismo orden que el dibujo viejo (BANDIDOS_DIBUJO.PAL). Se registra en CRIATURAS como
@@ -41,39 +41,56 @@ window.BANDIDO = (function () {
       peso: (x, y) => (x < 1050 && y < 680 ? ["hacha", 1] : x < 1250 && y < 900 && y > 600 ? ["hacha", rampa(1250 - x, 250) * 0.6] : null),
     },
   };
-  // los cuadros de la caminata (en img/criaturas/bandido/andar/): [k, pie x, pie y], con el pie bajo la capucha a la
-  // altura del suelo para que el cuerpo no salte de un cuadro al otro y k ajustado para que mida lo mismo que parado. De
-  // frente y de espaldas, los 4 de la segunda lámina (pie adelante, pierna pasando, el otro pie, la otra pierna); de
-  // costado, los 10 de la tercera lámina que hacen un paso entero (pisa, baja, pasa la pierna, la lleva adelante y vuelve
-  // a pisar), dos veces por vuelta. Se recortan con su silueta (clip), así nada que el vectorizador rellenó entre las
-  // piernas se ve.
+  // los cuadros de la caminata (en img/criaturas/bandido/andar/, una lámina de 12 por vista): [k, pie x, pie y], con
+  // el pie bajo la capucha a la altura del suelo para que el cuerpo no salte de un cuadro al otro y k ajustado para que
+  // mida lo mismo que parado. Los 12 son una vuelta entera en el orden de la lámina: pisa, despega el pie de atrás, pasa
+  // la pierna y vuelve a pisar, primero con una pierna y después con la otra. Se recortan con su silueta (clip), así
+  // nada que el vectorizador rellenó entre las piernas se ve.
   const ANDAR = {
-    S1: [509.0, 776, 1930],
-    S2: [509.0, 722, 1930],
-    S3: [509.0, 738, 1930],
-    S4: [509.0, 744, 1930],
-    E01: [504.5, 768, 1905],
-    E02: [504.7, 640, 1905],
-    E03: [502.8, 700, 1905],
-    E04: [502.3, 507, 1907],
-    E05: [520.5, 479, 1914],
-    E06: [520.1, 560, 1915],
-    E07: [520.5, 581, 1914],
-    E08: [520.5, 579, 1914],
-    E09: [523.1, 637, 1910],
-    E10: [522.8, 706, 1910],
-    N1: [505.0, 740, 1935],
-    N2: [505.6, 740, 1934],
-    N3: [505.2, 741, 1935],
-    N4: [505.5, 746, 1934],
+    S01: [506.6, 896, 1914],
+    S02: [506.8, 876, 1914],
+    S03: [506.6, 882, 1914],
+    S04: [506.8, 859, 1914],
+    S05: [521.3, 918, 1909],
+    S06: [519.6, 878, 1912],
+    S07: [518.7, 883, 1913],
+    S08: [518.9, 854, 1913],
+    S09: [516.2, 864, 1918],
+    S10: [516.2, 848, 1918],
+    S11: [516.0, 863, 1918],
+    S12: [516.0, 876, 1918],
+    E01: [523.3, 1084, 1909],
+    E02: [523.6, 817, 1909],
+    E03: [523.1, 797, 1910],
+    E04: [522.6, 543, 1911],
+    E05: [525.3, 1002, 1906],
+    E06: [525.3, 896, 1906],
+    E07: [525.1, 1033, 1907],
+    E08: [524.6, 924, 1907],
+    E09: [522.6, 950, 1911],
+    E10: [522.1, 528, 1911],
+    E11: [522.1, 892, 1911],
+    E12: [521.4, 927, 1913],
+    N01: [506.3, 848, 1916],
+    N02: [508.3, 829, 1915],
+    N03: [507.1, 835, 1914],
+    N04: [507.1, 855, 1914],
+    N05: [515.9, 851, 1916],
+    N06: [515.3, 835, 1917],
+    N07: [515.3, 833, 1917],
+    N08: [515.5, 837, 1917],
+    N09: [515.1, 838, 1918],
+    N10: [515.1, 837, 1918],
+    N11: [514.9, 810, 1918],
+    N12: [515.3, 828, 1917],
   };
   // cada vista: sus cuadros en orden en una vuelta (dos pasos) y dónde queda el punto más alto del cuerpo (pico: en la
-  // vuelta de 0 a 2π, sube del todo en pico + π/2 y pico + 3π/2, al pasar la pierna)
-  const PASO = ["E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"];
+  // vuelta de 0 a 2π, sube del todo en pico + π/2 y pico + 3π/2, al pasar la pierna, cuadros 4 y 10)
+  const cuadros = (v) => Array.from({ length: 12 }, (_, i) => v + String(i + 1).padStart(2, "0"));
   const CICLO = {
-    S: { cuadros: ["S1", "S2", "S3", "S4"], pico: Math.PI / 4 },
-    N: { cuadros: ["N1", "N2", "N3", "N4"], pico: Math.PI / 4 },
-    E: { cuadros: PASO.concat(PASO), pico: -0.1 * Math.PI },
+    S: { cuadros: cuadros("S"), pico: 0.08 * Math.PI },
+    N: { cuadros: cuadros("N"), pico: 0.08 * Math.PI },
+    E: { cuadros: cuadros("E"), pico: 0.08 * Math.PI },
   };
   for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
   const HUESOS = ["torso", "cabeza", "brazo", "brazoI", "brazoD", "hacha", "pieI", "pieD"];
