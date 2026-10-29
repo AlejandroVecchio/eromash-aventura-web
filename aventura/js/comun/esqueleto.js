@@ -161,6 +161,13 @@ window.ESQUELETO = (function () {
       const m = P[pz.hueso];
       if (!m || pz.oculta) continue;
       c.setTransform(T.multiply(new DOMMatrix(m)));
+      // una pieza puede pintarse sola (las recortadas de una lámina en SVG): recibe el lienzo ya puesto en su hueso
+      if (pz.pintar) {
+        c.save();
+        pz.pintar(c, op);
+        c.restore();
+        continue;
+      }
       for (const f of pz.formas) {
         c.fillStyle = cols[f.col] || f.col;
         c.fill(camino(f), f.regla || "nonzero");

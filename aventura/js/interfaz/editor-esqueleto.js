@@ -19,13 +19,16 @@
     const g = JSON.parse(localStorage.getItem(CLAVE));
     if (g && g.anims) for (const id in g.anims) anims[id] = g.anims[id];
   } catch (e) {}
-  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true, calco: params.get("calco") || "lado", ref: params.get("ref") || "bandido" };
+  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true, pj: params.get("pj") || "muneco", calco: params.get("calco") || "lado", ref: params.get("ref") || "bandido" };
   let deshacer = [], copiaPose = null;
   const anim = () => anims[st.anim];
   // la vista del esqueleto: el otro costado es el costado en espejo
   const base = () => (st.vista === "W" ? "E" : st.vista);
   const espejo = () => st.vista === "W";
-  const esq = () => H.MUNECO[base()];
+  // el personaje: el muñeco o el bandido del hacha con las piezas de su lámina (por ahora solo de costado: de frente y de
+  // espaldas sigue el muñeco)
+  const rigBandido = () => (st.pj === "bandido" && base() === "E" && window.BANDIDO && BANDIDO.rigE ? BANDIDO.rigE() : null);
+  const esq = () => rigBandido() || H.MUNECO[base()];
 
   // ---------- lo que se ve ----------
   const cv = $("sqLienzo"), c = cv.getContext("2d");
@@ -56,7 +59,7 @@
     // la línea del piso
     c.fillStyle = "#24301D";
     c.fillRect(0, oy, cv.width, cv.height - oy);
-    const op = { colores: H.COLORES[st.pal] };
+    const op = { colores: H.COLORES[st.pal], pal: st.pal };
     if (hayCalco()) calco();
     if (st.fantasmas) {
       // la pose de un poco antes y un poco después, tenues (en otro lienzo para que no se vean las piezas de adentro)
@@ -308,6 +311,10 @@
     const cal = $("sqCalco");
     if (!cal.options.length) ["lado", "debajo", "no"].forEach((k) => cal.add(new Option(I18N.t("sq.calco_" + k), k)));
     cal.value = st.calco;
+    const pj = $("sqPj");
+    if (!pj.options.length) ["muneco", "bandido"].forEach((k) => pj.add(new Option(I18N.t("sq.pj_" + k), k)));
+    pj.value = st.pj;
+    pj.parentNode.hidden = !window.BANDIDO;
     const ref = $("sqRef");
     if (!ref.options.length) ["bandido", "maniqui"].forEach((k) => ref.add(new Option(I18N.t("sq.ref_" + k), k)));
     ref.value = st.ref;
@@ -329,6 +336,15 @@
   });
   $("sqPal").addEventListener("change", (e) => {
     st.pal = +e.target.value;
+    dibujar();
+  });
+  $("sqPj").addEventListener("change", (e) => {
+    st.pj = e.target.value;
+    if (st.pj === "bandido" && base() !== "E") st.vista = "E";
+    if (st.pj === "bandido" && st.ref === "bandido") st.calco = "no";
+    if (!esq().huesos.some((h) => h.id === st.hueso)) st.hueso = "brazoD";
+    medir();
+    armarBotones();
     dibujar();
   });
   $("sqRef").addEventListener("change", (e) => {
@@ -469,7 +485,10 @@
 
   // ---------- el reloj ----------
   let antes = performance.now(), quieto = 0;
+  let conBandido = false;
   function cuadro(ahora) {
+    // las piezas del bandido llegan cuando carga su lámina: entonces se rehacen los botones de los huesos
+    if (!conBandido && rigBandido()) { conBandido = true; armarBotones(); }
     const dt = Math.min(0.05, (ahora - antes) / 1000);
     antes = ahora;
     if (st.jugando) {
@@ -482,7 +501,7 @@
     requestAnimationFrame(cuadro);
   }
   window.addEventListener("resize", () => { medir(); dibujar(); });
-  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; $("sqCalco").innerHTML = ""; $("sqRef").innerHTML = ""; armarBotones(); dibujar(); });
+  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; $("sqCalco").innerHTML = ""; $("sqRef").innerHTML = ""; $("sqPj").innerHTML = ""; armarBotones(); dibujar(); });
   I18N.apply(document);
   if (window.BANDIDO) BANDIDO.precargar();
   medir();
