@@ -3,7 +3,8 @@
 // animación y deja editarla: se elige un hueso tocándolo y se arrastra (girar, mover o estirar) y queda una clave en
 // el instante de la línea de tiempo. Lo editado se guarda en el navegador y se descarga o se copia en JSON
 // ({ formato: "eromash-animaciones", anims }) para pasarlo al juego. Al lado (o debajo, transparente) se puede ver el
-// bandido del hacha como se mueve hoy en el juego (BANDIDO, cuadros de su lámina) en la misma animación, vista e instante.
+// bandido del hacha como se mueve hoy en el juego (BANDIDO, cuadros de su lámina) en la misma animación, vista e instante,
+// o la fase de la lámina del maniquí (img/referencias/maniqui-<vista>.png, 16 fases de la caminata) al andar.
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
@@ -18,7 +19,7 @@
     const g = JSON.parse(localStorage.getItem(CLAVE));
     if (g && g.anims) for (const id in g.anims) anims[id] = g.anims[id];
   } catch (e) {}
-  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true, calco: params.get("calco") || "lado" };
+  const st = { vista: "E", anim: "andar", t: 0, jugando: true, vel: 1, hueso: "brazoD", herr: "r", pal: 0, fantasmas: false, verHuesos: true, calco: params.get("calco") || "lado", ref: params.get("ref") || "bandido" };
   let deshacer = [], copiaPose = null;
   const anim = () => anims[st.anim];
   // la vista del esqueleto: el otro costado es el costado en espejo
@@ -43,7 +44,7 @@
     lt.width = Math.round(rt.width * d);
     lt.height = Math.round(rt.height * d);
   }
-  const hayCalco = () => !!window.BANDIDO && st.calco !== "no";
+  const hayCalco = () => st.calco !== "no" && (st.ref === "maniqui" ? st.anim === "andar" : !!window.BANDIDO);
   const transformar = (g) => g.setTransform(escala * (espejo() ? -1 : 1), 0, 0, escala, ox, oy);
   function poseEn(t) {
     return E.muestra(anim(), base(), t);
@@ -82,7 +83,26 @@
   // andar y correr (una vuelta por animación), la pose de la lámina en el aviso, el hachazo, herido y morir
   const borrador = document.createElement("canvas").getContext("2d");
   let reintento = 0;
+  // la lámina del maniquí: 16 celdas de 374 × 424 en una grilla de 4 × 4, con el piso en y = 373 y el centro en x = 187;
+  // el muslo mide 89,5 pixeles y el del muñeco 28
+  const MANIQUI = {}, PX = H.medidas.MUSLO / 89.5;
+  function maniqui() {
+    const v = base(), img = MANIQUI[v] || (MANIQUI[v] = Object.assign(new Image(), { src: "img/referencias/maniqui-" + v + ".png" }));
+    if (!img.complete || !img.naturalWidth) {
+      img.onload = () => dibujar();
+      return;
+    }
+    const i = Math.floor(((st.t % 1) + 1e-6) * 16) % 16, cx = (i % 4) * 374, cy = Math.floor(i / 4) * 424;
+    const debajo = st.calco === "debajo";
+    c.save();
+    c.setTransform(escala * (espejo() ? -1 : 1), 0, 0, escala, debajo ? ox : cv.width * 0.72, oy);
+    c.globalAlpha = debajo ? 0.5 : 1;
+    if (debajo) c.globalCompositeOperation = "multiply";
+    c.drawImage(img, cx, cy, 374, 424, -187 * PX, -373 * PX, 374 * PX, 424 * PX);
+    c.restore();
+  }
   function calco() {
+    if (st.ref === "maniqui") return maniqui();
     const u = st.t, dur = anim().dur, o = { vista: base(), pal: st.pal, sem: 0 };
     let t = u * dur;
     BANDIDO.reiniciar(0);
@@ -288,7 +308,9 @@
     const cal = $("sqCalco");
     if (!cal.options.length) ["lado", "debajo", "no"].forEach((k) => cal.add(new Option(I18N.t("sq.calco_" + k), k)));
     cal.value = st.calco;
-    cal.parentNode.hidden = !window.BANDIDO;
+    const ref = $("sqRef");
+    if (!ref.options.length) ["bandido", "maniqui"].forEach((k) => ref.add(new Option(I18N.t("sq.ref_" + k), k)));
+    ref.value = st.ref;
     $("sqDur").value = anim().dur;
     $("sqBucle").checked = !!anim().bucle;
     $("sqJugar").textContent = I18N.t(st.jugando ? "sq.pausa" : "sq.jugar");
@@ -300,12 +322,18 @@
   $("sqAnim").addEventListener("change", (e) => {
     st.anim = e.target.value;
     st.t = 0;
+    medir();
     deshacer = [];
     armarBotones();
     dibujar();
   });
   $("sqPal").addEventListener("change", (e) => {
     st.pal = +e.target.value;
+    dibujar();
+  });
+  $("sqRef").addEventListener("change", (e) => {
+    st.ref = e.target.value;
+    medir();
     dibujar();
   });
   $("sqCalco").addEventListener("change", (e) => {
@@ -454,7 +482,7 @@
     requestAnimationFrame(cuadro);
   }
   window.addEventListener("resize", () => { medir(); dibujar(); });
-  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; $("sqCalco").innerHTML = ""; armarBotones(); dibujar(); });
+  I18N.on(() => { $("sqAnim").innerHTML = ""; $("sqPal").innerHTML = ""; $("sqCalco").innerHTML = ""; $("sqRef").innerHTML = ""; armarBotones(); dibujar(); });
   I18N.apply(document);
   if (window.BANDIDO) BANDIDO.precargar();
   medir();

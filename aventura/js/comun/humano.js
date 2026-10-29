@@ -118,9 +118,24 @@ window.HUMANO = (function () {
     const codo = K([0, 14 * m.c], [0.5, 30 * m.c]);
     return { cad, rod, tob, hom, codo };
   }
-  // de costado: las pistas de giro de cada hueso
+  // la caminata base de la lámina del maniquí de Alejandro (29/10/2026: 16 fases, dos pasos, de costado mirando a la
+  // derecha, desde que pisa el pie derecho): el giro de cada hueso del lado derecho medido en las articulaciones de
+  // cada fase y alisado apenas (1-2-1); el izquierdo es el mismo media vuelta después
+  const LAMINA = {
+    muslo: [-25.3, -23.9, -22.4, -18.9, -12.7, -5.4, -1.0, -2.6, -5.7, -5.0, -4.0, -9.3, -20.1, -29.1, -31.1, -28.2],
+    pierna: [22.2, 23.9, 27.9, 28.3, 23.2, 15.5, 13.8, 23.9, 36.9, 42.9, 45.5, 52.3, 59.8, 58.3, 44.8, 29.0],
+    pie: [-6.5, -4.6, -6.2, -9.6, -10.6, -9.8, -9.9, -12.1, -14.2, -15.6, -18.8, -23.9, -27.7, -26.3, -18.7, -10.7],
+    brazo: [13.9, 13.1, 10.4, 5.8, 0.0, -5.8, -10.2, -12.7, -13.5, -12.6, -10.1, -5.8, 0.0, 5.8, 10.4, 13.1],
+    antebrazo: [-13.6, -14.5, -15.4, -15.3, -14.6, -14.1, -14.3, -14.7, -14.8, -14.0, -12.6, -11.6, -11.6, -12.6, -13.3, -13.4],
+  };
+  function deLamina(m) {
+    const p = {};
+    for (const h in LAMINA) p[h] = LAMINA[h].map((v, i) => [i / 16, h === "brazo" ? v * m.b - m.inclina : v]);
+    return p;
+  }
+  // de costado: las pistas de giro de cada hueso (de las medidas o de la lámina)
   function costado(g, m) {
-    const p = {
+    const p = g.lamina || {
       muslo: neg(g.cad), pierna: g.rod, pie: g.tob, brazo: neg(media(g.hom)), antebrazo: neg(media(g.codo)),
     };
     const out = {
@@ -161,7 +176,7 @@ window.HUMANO = (function () {
     return out;
   }
   function caminata(id, dur, m) {
-    const lado = costado(marcha(m), m);
+    const lado = costado(m.lamina ? { lamina: deLamina(m) } : marcha(m), m);
     return { id, dur, bucle: true, pistas: { E: lado, S: frente(lado, m), N: frente(lado, m) } };
   }
 
@@ -182,7 +197,7 @@ window.HUMANO = (function () {
         brazoD: { r: K([0, 4], [0.5, 5]) }, brazoI: { r: K([0, -4], [0.5, -5]) }, antebrazoI: { sy: K([0, 0.6]) },
         musloD: { r: K([0, 3]) }, musloI: { r: K([0, -3]) }, pieD: { r: K([0, -3]) }, pieI: { r: K([0, 3]) },
       }),
-    andar: caminata("andar", 1.1, { p: 1, r: 1, b: 1, c: 1, inclina: 3, mece: 1.6 }),
+    andar: caminata("andar", 1.1, { lamina: true, b: 1, inclina: 2, mece: 1.6 }),
     correr: caminata("correr", 0.66, { p: 1.55, r: 1.6, b: 2, c: 2.6, inclina: 12, mece: 1.2 }),
     // el aviso: se afirma con las rodillas, levanta el hacha por arriba de la cabeza y adelanta el escudo; al final tiembla
     aviso: una("aviso", 0.8, false,
