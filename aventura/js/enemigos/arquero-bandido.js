@@ -64,6 +64,8 @@ window.ARQUERO = (function () {
     N3: [507.8, 687, 1934],
     N4: [507.8, 682, 1934]
   };
+  // de frente los cuadros de la lámina, en su orden, se ven caminar hacia atrás: van al revés
+  const ORDEN_ANDAR = { S: [1, 4, 3, 2] };
   for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
   const HUESOS = ["torso", "cabeza", "brazoI", "brazoD", "arco", "pieI", "pieD"];
   const PIES = ["pieI", "pieD"];
@@ -249,13 +251,14 @@ window.ARQUERO = (function () {
       const m = Math.min(2, o.mov), amp = Math.min(1, m), f = t * (5.2 + m * 2.4) + (o.sem || 0);
       const ph = ((f % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), n = Math.min(3, Math.floor(ph / (Math.PI / 2))), fr = (ph - (n * Math.PI) / 2) / (Math.PI / 2);
       const alto = (1 - Math.cos(2 * (ph - Math.PI / 4))) / 2;
-      nombre = v + (n + 1);
+      const orden = ORDEN_ANDAR[v] || [1, 2, 3, 4];
+      nombre = v + orden[n];
       q = nueva();
       q.dy = -alto * 34 * amp;
       q.sy = 1 - 0.018 * (1 - alto) * amp;
       q.sx = 1 + 0.01 * (1 - alto) * amp;
       q.rot = (v === "E" ? 2 + Math.sin(2 * ph) * 0.8 : Math.sin(ph) * 1.6) * rad * amp;
-      if (fr < 0.35) anda = { antes: v + (((n + 3) % 4) + 1), a: Math.pow(1 - fr / 0.35, 1.5) };
+      if (fr < 0.35) anda = { antes: v + orden[(n + 3) % 4], a: Math.pow(1 - fr / 0.35, 1.5) };
     } else {
       q = pose(v, t, o);
       if (v === "N" && (sube || tiro > 0)) {
