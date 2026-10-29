@@ -151,6 +151,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/enemigos/ · el dibujo de las criaturas
 
 - **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
+- **arquero-bandido.js**: El arquero de los Sin Linde en vectores (módulo ARQUERO)
+  - paletas: cambian la capucha y la ropa; el cuero, la piel y el arco quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
 - **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
   - Bandido · Arquero
 - **caceria.js**: la Cacería Salvaje: sabuesos y el Cazador (se suman a CRIATURAS)
