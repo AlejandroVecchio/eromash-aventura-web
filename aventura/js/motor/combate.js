@@ -317,7 +317,8 @@ window.COMBATE = (function () {
           break;
         }
         const lejos = d.forma === "lejos";
-        // con la habilidad recargando, de cerca embiste con la cabeza
+        // con la habilidad recargando, de cerca embiste con la cabeza: va por cercanía, sin marca en el piso
+        // (las áreas son de las habilidades); solo avisa la estrella en su cabeza
         if (e.recarga > 0 && conBasico(e) && dist < alcanceBasico(e) && !ELDERVALD.hayMuro(e.x, e.y, p.x, p.y)) {
           const dir = Math.atan2(dy * 1.25, dx);
           const a = aviso("abanico", e.x, e.y, d.pesado ? BASICO.avisoPesado : BASICO.aviso, { radio: d.radio + BASICO.radio, ang: BASICO.ang, dir, dano: BASICO.dano, basico: true });
@@ -326,7 +327,6 @@ window.COMBATE = (function () {
           e.t = 0;
           e.basico = 0;
           e.aviso = a;
-          J.avisos.push(a);
           e.mira = VIKINGO.vista(dx, dy, e.mira);
           if (window.SONIDO) SONIDO.tocar("grunido", { vol: 0.35, tono: 1.2 * (GRUNEN[e.tipo] || 1), x: e.x, y: e.y });
           break;
@@ -394,7 +394,6 @@ window.COMBATE = (function () {
         e.basico = Math.min(1, e.t / e.aviso.dur);
         if (e.t >= e.aviso.dur) {
           pega(J, e, e.aviso);
-          J.quitarAviso(e.aviso);
           e.aviso = null;
           e.basico = 0;
           e.cabezazo = 1;

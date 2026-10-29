@@ -20,7 +20,7 @@
   });
 }
 (window.PRUEBAS = window.PRUEBAS || []).push({
-  nombre: "ataque básico: de cerca y con la habilidad recargando embiste con la cabeza, avisa en el piso y pega menos",
+  nombre: "ataque básico: de cerca y con la habilidad recargando embiste con la cabeza, sin marca en el piso y pega menos",
   fn: async (A, { igual, si }) => {
     const e = A.enemigos.find((o) => o.tipo === "lobo" && o.hordaGrupo && !o.lider);
     const p = A.jug, casa = e.casa;
@@ -30,7 +30,7 @@
     Object.assign(e, { x: p.x + 40, y: p.y, estado: "persigue", t: 0, recarga: 2, aviso: null, aturdido: 0, helado: 0, carga: null, muerto: 0, activo: true, vida: e.d.vida, vx: 0, vy: 0 });
     COMBATE.actualizar(A.J, e, 0.016);
     igual(e.estado, "basico", "estado:");
-    si(e.aviso && e.aviso.basico && A.J.avisos.includes(e.aviso), "marca el abanico chico en el piso");
+    si(e.aviso && e.aviso.basico && !A.J.avisos.includes(e.aviso), "no marca nada en el piso: avisa solo la estrella");
     si(e.aviso.dur < e.d.aviso + 0.01, "su aviso es corto");
     for (let i = 0; i < 80 && e.estado === "basico"; i++) COMBATE.actualizar(A.J, e, 0.016);
     igual(e.estado, "espera", "después del cabezazo espera:");
