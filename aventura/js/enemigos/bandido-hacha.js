@@ -92,7 +92,72 @@ window.BANDIDO = (function () {
     N: { cuadros: cuadros("N"), pico: 0.08 * Math.PI },
     E: { cuadros: cuadros("E"), pico: 0.08 * Math.PI },
   };
-  for (const n in ANDAR) VISTAS[n] = { k: ANDAR[n][0], pie: [ANDAR[n][1], ANDAR[n][2]], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
+  // el brazo del hacha en la caminata de costado: en la lámina cada cuadro lo tiene un poco más adelante o más atrás que
+  // el anterior (en zigzag) y al pasar de uno a otro saltaba. Cada cuadro sabe dónde tiene la mano y la cabeza del hacha
+  // (desde el pie, en unidades del svg) y el hombro es el mismo para todos; el brazo entero (manga, mano, mango y hacha)
+  // es un hueso que se gira y se estira apenas desde el hombro hasta la curva suave que pasa por todos los cuadros, así
+  // el hacha se mece de forma continua y en el fundido el brazo de los dos cuadros cae en el mismo lugar
+  const HOMBRO = [-150, -1230];
+  const BRAZO_E = {
+    E01: [-441, -793, -162, -454],
+    E02: [-308, -787, -60, -454],
+    E03: [-377, -790, -124, -464],
+    E04: [-269, -777, 3, -488],
+    E05: [-406, -799, -158, -448],
+    E06: [-348, -747, -64, -403],
+    E07: [-245, -720, -25, -437],
+    E08: [-345, -778, -36, -455],
+    E09: [-307, -853, -70, -502],
+    E10: [-222, -812, 44, -522],
+    E11: [-413, -842, -123, -499],
+    E12: [-404, -824, -110, -497],
+  };
+  // la curva suave: el promedio más una onda por vuelta (la que mejor pasa por los 12 cuadros) de dónde va la mano y
+  // dónde va la cabeza del hacha
+  const suave = (() => {
+    const L = 12, cols = [0, 1, 2, 3].map((j) => Object.keys(BRAZO_E).sort().map((n) => BRAZO_E[n][j]));
+    return cols.map((v) => {
+      let c0 = 0, c1 = 0, s1 = 0;
+      v.forEach((x, i) => {
+        const p = ((i + 0.5) * Math.PI * 2) / L;
+        c0 += x / L; c1 += (2 * x * Math.cos(p)) / L; s1 += (2 * x * Math.sin(p)) / L;
+      });
+      return (p) => c0 + c1 * Math.cos(p) + s1 * Math.sin(p);
+    });
+  })();
+  // el arreglo del brazo de un cuadro en ese momento de la vuelta: lo lleva entero (girado, corrido y apenas estirado)
+  // para que su mano y su hacha caigan en la curva suave (en unidades del svg, desde el pie; el giro va desde el hombro)
+  const brazoDe = (nombre, ph) => {
+    const b = BRAZO_E[nombre], S = HOMBRO, M = [suave[0](ph), suave[1](ph)], G = [suave[2](ph), suave[3](ph)];
+    const a0 = Math.atan2(b[3] - b[1], b[2] - b[0]), a1 = Math.atan2(G[1] - M[1], G[0] - M[0]);
+    const k = Math.max(0.92, Math.min(1.08, Math.hypot(G[0] - M[0], G[1] - M[1]) / Math.hypot(b[2] - b[0], b[3] - b[1])));
+    const co = Math.cos(a1 - a0) * k, si = Math.sin(a1 - a0) * k;
+    // la mano del cuadro, girada desde el hombro, y lo que le falta para llegar a la de la curva
+    const rx = S[0] + co * (b[0] - S[0]) - si * (b[1] - S[1]), ry = S[1] + si * (b[0] - S[0]) + co * (b[1] - S[1]);
+    return [co, si, -si, co, M[0] - rx, M[1] - ry];
+  };
+  const cerca = (px, py, ax, ay, bx, by) => {
+    const vx = bx - ax, vy = by - ay, u = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / (vx * vx + vy * vy)));
+    return Math.hypot(px - ax - u * vx, py - ay - u * vy);
+  };
+  for (const n in ANDAR) {
+    const [k, px, py] = ANDAR[n], br = BRAZO_E[n];
+    VISTAS[n] = { k, pie: [px, py], huesos: {}, peso: () => null, clip: true, dir: "andar/" };
+    if (!br) continue;
+    const S = [px + HOMBRO[0], py + HOMBRO[1]], M = [px + br[0], py + br[1]], G = [px + br[2], py + br[3]];
+    const sube = [S[0] + (M[0] - S[0]) * 0.3, S[1] + (M[1] - S[1]) * 0.3], codo = [S[0] + (M[0] - S[0]) * 0.95, S[1] + (M[1] - S[1]) * 0.95];
+    VISTAS[n].huesos.brazo = S;
+    VISTAS[n].brazoAndar = true;
+    VISTAS[n].peso = (x, y, f) =>
+      f.negro
+        ? Math.hypot(x - M[0], y - M[1]) < 170 ? ["brazo", 1] : null
+        : (f.piel && Math.hypot(x - M[0], y - M[1]) < 140) ||
+      (f.gris && Math.hypot(x - G[0], y - G[1]) < 230) ||
+      (f.tono === "cuero" && !f.piel && cerca(x, y, 1.6 * M[0] - 0.6 * G[0], 1.6 * M[1] - 0.6 * G[1], G[0], G[1]) < 70) ||
+      (f.area < 60000 && cerca(x, y, sube[0], sube[1], codo[0], codo[1]) < 85)
+        ? ["brazo", 1]
+        : null;
+  }
   const HUESOS = ["torso", "cabeza", "brazo", "brazoI", "brazoD", "hacha", "pieI", "pieD"];
   const PIES = ["pieI", "pieD"];
 
@@ -165,12 +230,16 @@ window.BANDIDO = (function () {
           const gr = /url\(#(.+)\)/.exec(fill), grad = gr ? grads[gr[1]] : null;
           const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(grad ? grad.stops[0][1] : fill);
           const [h, s, l] = m ? rgbAHsl(+m[1], +m[2], +m[3]) : [0, 0, 0];
-          const forma = { path: new Path2D(d), regla: p.getAttribute("fill-rule") === "evenodd" ? "evenodd" : "nonzero", fill, grad, cx, cy, gris: s < 0.12 && l > 0.3, tono: grupo(h, s, l) };
+          const forma = { path: new Path2D(d), regla: p.getAttribute("fill-rule") === "evenodd" ? "evenodd" : "nonzero", fill, grad, cx, cy, gris: s < 0.12 && l > 0.3, tono: grupo(h, s, l), area: (x1 - x0) * (y1 - y0), piel: h > 15 && h < 35 && s > 0.5 && l > 0.55 };
           // el fondo del cuerpo (la silueta) y lo casi negro (el hueco de la capucha) van con el tronco
           const fondo = forma.regla === "evenodd" || (x1 - x0) * (y1 - y0) > 300000;
           const negro = m && Math.max(+m[1], +m[2], +m[3]) < 34;
-          const r = fondo || negro ? null : def.peso(cx, cy, forma);
+          forma.negro = !!negro;
+          // lo casi negro va con el tronco, salvo la sombra de la mano en la caminata, que va con el brazo
+          const r = fondo || (negro && !def.brazoAndar) ? null : def.peso(cx, cy, forma);
           forma.w = r && r[1] > 0 ? [[HUESOS.indexOf(r[0]), r[1]], [0, 1 - r[1]]] : [[0, 1]];
+          // el brazo de la caminata se pinta al final y sin el recorte de la silueta: al girarlo puede salirse de ella
+          forma.suelta = !!(def.brazoAndar && r);
           return forma;
         });
         st.pinturas = {};
@@ -208,7 +277,11 @@ window.BANDIDO = (function () {
       const a = def.huesos[n];
       if (!a) return torso;
       if (PIES.includes(n) && !q.caido) return [1, 0, 0, 1, q.dx * 0.3, 0];
-      return mul(torso, giro(q[n] || 0, a[0], a[1]));
+      const m = mul(torso, giro(q[n] || 0, a[0], a[1]));
+      if (n !== "brazo" || !q.brazoM) return m;
+      // el arreglo del brazo de la caminata, alrededor del hombro
+      const [p, r, z, w, tx, ty] = q.brazoM;
+      return mul(m, [p, r, z, w, a[0] - p * a[0] - z * a[1] + tx, a[1] - r * a[0] - w * a[1] + ty]);
     });
   }
   const nueva = () => ({ cabeza: 0, brazo: 0, brazoI: 0, brazoD: 0, hacha: 0, dx: 0, dy: 0, sx: 1, sy: 1, rot: 0 });
@@ -275,6 +348,10 @@ window.BANDIDO = (function () {
       // los dos a media transparencia en el cambio, así no hay salto
       const u = fr < 0.5 ? fr / 0.5 : (1 - fr) / 0.5, lisa = u * u * (3 - 2 * u);
       anda = { antes: ciclo.cuadros[(n + (fr < 0.5 ? L - 1 : 1)) % L], a: 0.5 * (1 - lisa) };
+      if (v === "E") {
+        q.brazoM = brazoDe(nombre, ph);
+        anda.brazoM = brazoDe(anda.antes, ph);
+      }
     } else {
       q = pose(v, t, o);
       if (baja > 0 && v !== "N") {
@@ -322,7 +399,11 @@ window.BANDIDO = (function () {
     const st = cargar(nombre);
     if (!st.listo) return false;
     const hecho = pintar(c, st, VISTAS[nombre], huesos(VISTAS[nombre], q), o, ef, v === "E");
-    if (anda && anda.a > 0.02 && cal() !== "baja") fundir(c, anda.antes, q, o, ef, v === "E", anda.a);
+    if (anda && anda.a > 0.02 && cal() !== "baja") {
+      // el otro cuadro con su propio arreglo del brazo: los dos brazos caen en el mismo lugar
+      const q2 = anda.brazoM ? Object.assign({}, q, { brazoM: anda.brazoM }) : q;
+      fundir(c, anda.antes, q2, o, ef, v === "E", anda.a);
+    }
     return hecho;
   }
   // el cuadro anterior de la caminata, encima y cada vez más transparente: se pinta entero en un lienzo aparte y se
@@ -358,9 +439,11 @@ window.BANDIDO = (function () {
     c.translate(-def.pie[0], -def.pie[1]);
     const B = c.getTransform(), base = [B.a, B.b, B.c, B.d, B.e, B.f];
     const fs = st.formas;
-    let recorte = false;
+    let recorte = null;
     for (let i = 0; i < fs.length; i++) {
       const f = fs[i], w = f.w;
+      // el brazo de la caminata va sin el recorte de la silueta (al moverlo puede salirse de ella), en su lugar de siempre
+      if (f.suelta && recorte) c.restore();
       let m;
       if (w.length === 1 || w[0][1] > 0.995) m = Ms[w[0][0]];
       else {
@@ -374,10 +457,11 @@ window.BANDIDO = (function () {
       c.setTransform(r[0], r[1], r[2], r[3], r[4], r[5]);
       c.fillStyle = cols[i];
       c.fill(f.path, f.regla);
-      if (def.clip && !recorte && f.regla === "evenodd") {
+      if (def.clip && !recorte && f.regla === "evenodd") recorte = { path: f.path, m: r };
+      if (recorte && (f.path === recorte.path || f.suelta)) {
         c.save();
-        c.clip(f.path, "evenodd");
-        recorte = true;
+        c.setTransform(recorte.m[0], recorte.m[1], recorte.m[2], recorte.m[3], recorte.m[4], recorte.m[5]);
+        c.clip(recorte.path, "evenodd");
       }
     }
     if (recorte) c.restore();
