@@ -162,6 +162,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **custodio.js**: El Custodio de corteza en vectores (módulo CUSTODIO)
   - paletas: la corteza y el musgo cambian, la piedra, la máscara y las runas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, más el vaivén y el aplaste del cuerpo · dibujar
 - **dreki.js**: el dreki (se suma a CRIATURAS)
+- **jabali-hongos.js**: El jabalí de hongos en vectores (módulo JABALI)
+  - paletas: el pelo, el musgo y los sombreros de los hongos cambian; ojos, colmillos y tallos quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · efectos · dibujar
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
 - **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")
 
