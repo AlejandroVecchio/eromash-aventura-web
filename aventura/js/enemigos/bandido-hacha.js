@@ -319,6 +319,7 @@ window.BANDIDO = (function () {
   // el hachazo: después del aviso el hacha cae desde arriba en la pose de la lámina y el cuerpo sigue el golpe. El ataque
   // básico usa el mismo hachazo, con su aviso más corto (el de combate.js) y la caída más rápida
   const HACHAZO = 0.34, HACHAZO_BASICO = 0.2;
+  const CON_HUESOS = /[?&]huesos=1/.test(location.search);
   function dibujar(c, t, o) {
     const v = o.vista || "S", k = o.sem != null ? o.sem : 0;
     let F = est[k];
@@ -339,7 +340,8 @@ window.BANDIDO = (function () {
     // la lleva al andar, con el cuerpo echado sobre el golpe
     const fase = baja > 0 ? 1 - baja : 1, arriba = baja > 0 && fase < 0.3;
     // parado y andando, con huesos (las piezas de su lámina de piezas y la caminata del maniquí)
-    if (!(sube && g > 0.12) && baja <= 0 && !muere && !herido && rigDe(v)) return dibujarHuesos(c, v, t, o);
+    // (apagado en el juego hasta que Alejandro apruebe cómo se ve: `?huesos=1` o `o.huesos` lo prenden para probar)
+    if ((o.huesos || CON_HUESOS) && !(sube && g > 0.12) && baja <= 0 && !muere && !herido && rigDe(v)) return dibujarHuesos(c, v, t, o);
     if (((sube && g > 0.12) || arriba) && v !== "N" && cargar("aviso" + v).listo) {
       // la pose del aviso de la lámina: se agacha tras el escudo con el hacha en alto; tiembla y al soltar la baja
       nombre = "aviso" + v;
