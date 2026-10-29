@@ -143,7 +143,11 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **controles.js**: controles (módulo CONTROLES)
   - teclas propias
 - **dibujo.js**: herramientas de dibujo (módulo DIB)
+- **esqueleto.js**: Animación por piezas con huesos (módulo ESQUELETO)
+  - curvas: el valor de un canal en el instante t (0 a 1) · poses: { hueso: { r, x, y, sx, sy } } · huesos: la matriz de cada uno (sin su estiramiento) y la de sus piezas (con él) · dibujo: las piezas en su orden (z), cada una con la matriz de su hueso · animador: lleva el tiempo de cada animación y pasa de una a otra fundiendo las poses · editar: poner o sacar una clave de un canal
 - **futhark.js**: las runas del Futhark antiguo (módulo FUTHARK)
+- **humano.js**: Humano: esqueleto, muñeco de prueba y animaciones de humano (módulo HUMANO)
+  - medidas (unidades del mundo, con los pies en y = 0; mide unos 120) · piezas planas: cada una en dos mitades, la de la izquierda en sombra (luz de arriba a la derecha) · el muñeco: las piezas de cada vista · animaciones
 - **sonido.js**: sonido (módulo SONIDO)
 - **volumen.js**: todo girable: volúmenes que se ven bien desde cualquier lado (módulo VOL)
   - el giro del mundo · colores: cada cara con su tono · el proyector de un objeto · caras · sólidos · en el piso del objeto · partes de un objeto, de atrás hacia adelante · la gente y las criaturas: la vista según la cámara · ayudas para pasar los dibujos viejos
@@ -205,6 +209,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
 - **cartel.js**: el cartel de lugar (CARTEL): el cartel dorado que anuncia un lugar, una tierra nueva o la capital al llegar
   - parámetros (los mismos de cartel_lugar.gd; tamaños a 1080 de alto, tiempos en segundos) · ayudas · el lienzo · estado · tiempos · disposición · dibujo · paisaje / estandarte en un solo trazo · dibujos de cada región y capital · la fila y cuándo sale cada uno
+- **editor-esqueleto.js**: Editor de animación por piezas (esqueleto.html)
+  - estado · lo que se ve · la línea de tiempo: las claves de todos tenues, las del hueso elegido como rombos, y dónde se está · los valores del hueso elegido · elegir y arrastrar huesos · la línea de tiempo con el puntero · botones · el reloj
 - **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
@@ -502,6 +508,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
 - **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
+- **esqueleto.js**: Textos del editor de animación por piezas (esqueleto.html, interfaz/editor-esqueleto.js): prefijo sq.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.

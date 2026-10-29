@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eromash · Editor de animación</title>
+<link rel="stylesheet" href="css/aventura.css" />
+<style>
+  /* Editor de animación por piezas: el lienzo grande a la izquierda y los mandos al costado (debajo en el celular) */
+  :root { --fondo: #111111; --panel: #1C1714; --texto: #F2ECEC; --suave: #E0B2B2; --rojo: #C8402D; --rojoO: #5E130D; --oro: #FFD98A; }
+  * { box-sizing: border-box; }
+  body { background: var(--fondo); color: var(--texto); margin: 0; font-family: "Eromash Text", system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; padding: 14px 16px 6px; }
+  header h1 { font-family: "Eromash Display", system-ui, sans-serif; margin: 0; font-size: 24px; }
+  header p { color: var(--suave); margin: 0; flex: 1 1 280px; }
+  header a { color: var(--oro); text-decoration: none; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; padding: 0 16px 16px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .escena { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  #sqLienzo { width: 100%; height: min(68vh, 640px); display: block; touch-action: none; background: #2C3A24; cursor: crosshair; }
+  .tiempo { display: flex; align-items: center; gap: 8px; }
+  #sqTiempo { flex: 1; height: 44px; display: block; touch-action: none; cursor: ew-resize; min-width: 0; }
+  #sqInstante { font-variant-numeric: tabular-nums; color: var(--suave); min-width: 112px; text-align: right; font-size: 14px; }
+  .panel { background: var(--panel); padding: 12px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+  .panel h2 { font-family: "Eromash Display", system-ui, sans-serif; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--oro); margin: 0 0 6px; }
+  .fila { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  button, select, input[type=number] { background: var(--rojoO); color: var(--texto); border: 0; padding: 7px 10px; font: inherit; font-size: 14px; cursor: pointer; min-height: 34px; }
+  input[type=number] { width: 74px; background: #2A221E; cursor: text; }
+  select { background: #2A221E; }
+  button[aria-pressed=true] { background: var(--rojo); }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--oro); outline-offset: 1px; }
+  label { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+  input[type=checkbox] { accent-color: var(--rojo); width: 18px; height: 18px; }
+  .canales { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+  .canales label { flex-direction: column; align-items: stretch; gap: 2px; font-size: 12px; color: var(--suave); }
+  .canales input { width: 100%; }
+  #sqHuesos button { padding: 5px 8px; font-size: 13px; min-height: 30px; }
+  .ayuda { color: var(--suave); font-size: 13px; line-height: 1.4; margin: 0; }
+  .archivo { position: relative; overflow: hidden; display: inline-flex; align-items: center; background: var(--rojoO); padding: 7px 10px; min-height: 34px; cursor: pointer; }
+  .archivo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  #sqAviso { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--rojo); padding: 10px 16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 data-i18n="sq.titulo"></h1>
+  <p data-i18n="sq.sub"></p>
+  <a href="catalogo.html" data-i18n="sq.volver"></a>
+</header>
+<main>
+  <section class="escena">
+    <canvas id="sqLienzo"></canvas>
+    <div class="tiempo">
+      <button id="sqAtras" type="button" data-i18n-aria="sq.atras">◀</button>
+      <button id="sqJugar" type="button"></button>
+      <button id="sqAdelante" type="button" data-i18n-aria="sq.adelante">▶</button>
+      <canvas id="sqTiempo"></canvas>
+      <span id="sqInstante"></span>
+    </div>
+    <p class="ayuda" data-i18n="sq.ayuda"></p>
+  </section>
+  <aside class="panel">
+    <div>
+      <h2 data-i18n="sq.anim"></h2>
+      <div class="fila">
+        <select id="sqAnim" data-i18n-aria="sq.anim"></select>
+        <label><span data-i18n="sq.dur"></span> <input id="sqDur" type="number" min="0.1" step="0.05" /></label>
+        <label><input id="sqBucle" type="checkbox" /> <span data-i18n="sq.bucle"></span></label>
+      </div>
+    </div>
+    <div>
+      <h2 data-i18n="sq.vista"></h2>
+      <div class="fila" id="sqVistas"></div>
+    </div>
+    <div class="fila">
+      <label><span data-i18n="sq.vel"></span>
+        <select id="sqVel"><option value="0.25">×0,25</option><option value="0.5">×0,5</option><option value="1" selected>×1</option><option value="1.5">×1,5</option></select>
+      </label>
+      <label><span data-i18n="sq.color"></span> <select id="sqPal"></select></label>
+      <label><input id="sqFantasmas" type="checkbox" /> <span data-i18n="sq.fantasmas"></span></label>
+      <label><input id="sqVerHuesos" type="checkbox" checked /> <span data-i18n="sq.huesos_ver"></span></label>
+    </div>
+    <div>
+      <h2 data-i18n="sq.herr"></h2>
+      <div class="fila" id="sqHerr"></div>
+    </div>
+    <div>
+      <h2 data-i18n="sq.huesos"></h2>
+      <div class="fila" id="sqHuesos"></div>
+    </div>
+    <div>
+      <h2 data-i18n="sq.canales"></h2>
+      <div class="canales">
+        <label><span data-i18n="sq.c_r"></span><input id="sqC_r" type="number" step="1" /></label>
+        <label><span data-i18n="sq.c_x"></span><input id="sqC_x" type="number" step="0.5" /></label>
+        <label><span data-i18n="sq.c_y"></span><input id="sqC_y" type="number" step="0.5" /></label>
+        <label><span data-i18n="sq.c_sx"></span><input id="sqC_sx" type="number" step="0.05" /></label>
+        <label><span data-i18n="sq.c_sy"></span><input id="sqC_sy" type="number" step="0.05" /></label>
+      </div>
+      <div class="fila" style="margin-top:8px">
+        <button id="sqClave" type="button" data-i18n="sq.clave"></button>
+        <button id="sqBorrar" type="button" data-i18n="sq.borrar"></button>
+        <button id="sqCopiarPose" type="button" data-i18n="sq.copiar_pose"></button>
+        <button id="sqPegarPose" type="button" data-i18n="sq.pegar_pose"></button>
+      </div>
+    </div>
+    <div class="fila">
+      <button id="sqDeshacer" type="button" data-i18n="sq.deshacer"></button>
+      <button id="sqFabrica" type="button" data-i18n="sq.fabrica"></button>
+    </div>
+    <div class="fila">
+      <button id="sqCopiar" type="button" data-i18n="sq.copiar"></button>
+      <button id="sqExportar" type="button" data-i18n="sq.exportar"></button>
+      <label class="archivo"><span data-i18n="sq.importar"></span><input id="sqImportar" type="file" accept="application/json,.json" /></label>
+    </div>
+  </aside>
+</main>
+<div id="sqAviso" role="status" hidden></div>
+<script src="../juego/js/comun/calidad.js"></script>
+<script src="../juego/js/comun/i18n.js"></script>
+<script src="js/textos/esqueleto.js"></script>
+<script src="js/comun/esqueleto.js"></script>
+<script src="js/comun/humano.js"></script>
+<script src="js/interfaz/editor-esqueleto.js"></script>
+</body>
+</html>
