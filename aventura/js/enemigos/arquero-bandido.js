@@ -220,7 +220,7 @@ window.ARQUERO = (function () {
     const dz = t - F.suelta, tiro = dz < TIRO ? 1 - dz / TIRO : 0;
     const muere = Math.min(1, (o.muere || 0) / 0.8), herido = o.herido > 0 ? o.herido * o.herido : 0;
     const ef = { muere, punta: 0, estela: 0, sinFlecha: false };
-    let nombre = v, q;
+    let nombre = v, q, anda = null;
     if (((sube && g > 0.12) || tiro > 0) && v !== "N" && cargar("aviso" + v).listo) {
       // la pose del tiro de la lámina: entra agachándose, tensa (la mano tiembla) y al soltar retrocede
       nombre = "aviso" + v;
@@ -243,11 +243,19 @@ window.ARQUERO = (function () {
         ef.estela = tiro;
       }
     } else if (o.mov > 0.05 && !muere && !sube && cargar(v + "4").listo && cargar(v + "1").listo) {
-      // andar: los cuatro cuadros de la lámina de la caminata, uno tras otro, con un balanceo suave
-      const m = Math.min(2, o.mov), f = t * (5.2 + m * 2.4) + (o.sem || 0), n = (Math.floor(f / (Math.PI / 2)) % 4 + 4) % 4;
+      // andar: los cuatro cuadros de la lámina de la caminata, uno tras otro. Para que no salte de un cuadro al otro,
+      // el cuerpo baja y se aplasta apenas al pisar y sube al pasar la pierna de forma continua, y el cuadro anterior se
+      // funde durante el primer 40 % del siguiente
+      const m = Math.min(2, o.mov), amp = Math.min(1, m), f = t * (5.2 + m * 2.4) + (o.sem || 0);
+      const ph = ((f % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), n = Math.min(3, Math.floor(ph / (Math.PI / 2))), fr = (ph - (n * Math.PI) / 2) / (Math.PI / 2);
+      const alto = (1 - Math.cos(2 * (ph - Math.PI / 4))) / 2;
       nombre = v + (n + 1);
       q = nueva();
-      q.rot = Math.sin(f) * 1.2 * rad * Math.min(1, m);
+      q.dy = -alto * 34 * amp;
+      q.sy = 1 - 0.018 * (1 - alto) * amp;
+      q.sx = 1 + 0.01 * (1 - alto) * amp;
+      q.rot = (v === "E" ? 2 + Math.sin(2 * ph) * 0.8 : Math.sin(ph) * 1.6) * rad * amp;
+      if (fr < 0.35) anda = { antes: v + (((n + 3) % 4) + 1), a: Math.pow(1 - fr / 0.35, 1.5) };
     } else {
       q = pose(v, t, o);
       if (v === "N" && (sube || tiro > 0)) {
@@ -280,16 +288,38 @@ window.ARQUERO = (function () {
     }
     const st = cargar(nombre);
     if (!st.listo) return false;
-    return pintar(c, st, VISTAS[nombre], huesos(VISTAS[nombre], q), o, ef, v === "E", t);
+    const hecho = pintar(c, st, VISTAS[nombre], huesos(VISTAS[nombre], q), o, ef, v === "E", t);
+    if (anda && anda.a > 0.02 && cal() !== "baja") fundir(c, anda.antes, q, o, ef, v === "E", t, anda.a);
+    return hecho;
+  }
+  // el cuadro anterior de la caminata, encima y cada vez más transparente: se pinta entero en un lienzo aparte y se
+  // pega con transparencia (pintado directo con globalAlpha se verían las caras de adentro unas a través de otras)
+  const lienzoF = document.createElement("canvas"), cf = lienzoF.getContext("2d");
+  function fundir(c, nombre, q, o, ef, costado, t, a) {
+    const st = cargar(nombre);
+    if (!st.listo) return;
+    const T = c.getTransform(), s = Math.min(4, Math.hypot(T.a, T.b)), W = Math.ceil(180 * s), H = Math.ceil(170 * s);
+    if (lienzoF.width < W) lienzoF.width = W;
+    if (lienzoF.height < H) lienzoF.height = H;
+    cf.setTransform(1, 0, 0, 1, 0, 0);
+    cf.clearRect(0, 0, W, H);
+    cf.setTransform(s, 0, 0, s, 90 * s, 150 * s);
+    pintar(cf, st, VISTAS[nombre], huesos(VISTAS[nombre], q), o, Object.assign({}, ef, { sinSombra: true }), costado, t);
+    c.save();
+    c.globalAlpha *= a;
+    c.drawImage(lienzoF, 0, 0, W, H, -90, -150, 180, 170);
+    c.restore();
   }
   function pintar(c, st, def, Ms, o, ef, costado, t) {
     const cols = pinturas(st, (o.pal || 0) % PALETAS.length);
     const esc = (MUNDO * def.k) / 2048;
     c.save();
-    c.fillStyle = "rgba(0,0,0,0.34)";
-    c.beginPath();
-    c.ellipse(0, 0, costado ? 24 : 28, 7, 0, 0, Math.PI * 2);
-    c.fill();
+    if (!ef.sinSombra) {
+      c.fillStyle = "rgba(0,0,0,0.34)";
+      c.beginPath();
+      c.ellipse(0, 0, costado ? 24 : 28, 7, 0, 0, Math.PI * 2);
+      c.fill();
+    }
     const T0 = c.getTransform();
     c.scale(esc, esc);
     c.translate(-def.pie[0], -def.pie[1]);
