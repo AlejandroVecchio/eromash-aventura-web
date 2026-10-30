@@ -63,16 +63,17 @@ window.TROL = (function () {
     muerteE1: pose(245, 1260, 1685), muerteE2: pose(306, 1282, 1337), muerteE3: pose(323, 1231, 1118),
     muerteE4: pose(325, 1256, 1010), muerteE5: pose(343, 1272, 788), muerteE6: pose(328, 1238, 718),
   };
-  // la caminata de la lámina de costado y de espaldas (12 cuadros por vista, primero un pie y después el otro), pasada a
-  // los colores de la lámina principal y a su tamaño; de frente anda con huesos
+  // la caminata: de costado sale del video de Runway de Alejandro (30/10/2026: una vuelta de 48 cuadros a cámara quieta,
+  // 12 tomados cada 4, todos con la misma ventana, así el cuerpo sube, baja y se mece como en el video); de espaldas, de
+  // la lámina de caminata (12 cuadros, primero un pie y después el otro). Los dos pasados a los colores de la lámina
+  // principal y a su tamaño; de frente anda con huesos
   const ANDAR = {
-    E: [[227, 1145, 1968], [249, 1200, 1780], [247, 1200, 1749], [245, 1146, 1751], [250, 1207, 1771], [247, 1180, 1783], [227, 1153, 1995], [255, 1160, 1738], [251, 1178, 1782], [247, 1189, 1808], [256, 1146, 1735], [255, 1169, 1757]],
+    E: Array.from({ length: 12 }, () => [280, 1317, 1413]),
     N: [[288, 876, 1496], [293, 924, 1439], [294, 908, 1459], [298, 911, 1467], [297, 917, 1438], [269, 989, 1615], [294, 881, 1569], [303, 920, 1549], [292, 919, 1552], [297, 914, 1586], [299, 918, 1555], [274, 986, 1685]],
   };
   // la vista principal se apoya 45 de su SVG más abajo que la planta del pie (el borde de las uñas): la caminata igual
   const BAJA = { E: 45 * 276, N: 45 * 323 };
-  // de costado la lámina de caminata queda un 8 % más chica que la vista principal aun medida por el alto
-  const MAS = { E: 1.08, N: 1 };
+  const MAS = { E: 1, N: 1 };
   for (const v in ANDAR) ANDAR[v].forEach(([k0, x, y], i, _, k = k0 * MAS[v]) => (POSES["andar/" + v + String(i + 1).padStart(2, "0")] = pose(k, x, y + BAJA[v] / k)));
   Object.assign(VISTAS, POSES);
   const HUESOS = ["torso", "cabeza", "brazo", "brazoA", "brazoL", "pie", "pieI", "pieD"];
@@ -231,7 +232,7 @@ window.TROL = (function () {
   const IMPACTO = 0.5; // lo que queda el árbol contra el piso después del aplastar
   const MUERTE = 1.1; // en cuánto pasa los seis cuadros de la muerte (después queda tendido)
   const FUNDE = 0.16; // lo que tarda una pose en fundirse en la siguiente
-  const ANDA = 8; // cuadros por segundo de la caminata al paso de persecución
+  const ANDA = 6; // cuadros por segundo de la caminata al paso de persecución (el video da una vuelta en 2 s)
   function dibujar(c, t, o) {
     const v = o.vista || "S", k = o.sem != null ? o.sem : 0, lado = v === "N" ? null : v;
     let F = est[k];
