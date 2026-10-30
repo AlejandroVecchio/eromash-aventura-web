@@ -57,10 +57,10 @@ window.TEJEDORA = (function () {
   };
   // las poses de la lámina: la tela (su habilidad) y el ataque básico
   const POSES = {
-    telaS: quieta(648, [1024, 1140]),
-    telaE: quieta(657, [1024, 1040]),
-    basicoS: quieta(596, [1011, 1380]),
-    basicoE: quieta(675, [1031, 1215]),
+    telaS: quieta(540, [1024, 1140]),
+    telaE: quieta(626, [1024, 1040]),
+    basicoS: quieta(552, [1011, 1380]),
+    basicoE: quieta(625, [1031, 1215]),
   };
   const T = ARANA.armar({
     carpeta: "img/criaturas/tejedora/",
