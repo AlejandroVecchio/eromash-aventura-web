@@ -38,9 +38,39 @@ function archivo(rel) {
   const assets = rel.startsWith("mundo") ? [...txt.matchAll(/^\s+(\w+): \{ f: /gm)].map((m) => m[1]) : [];
   return { rel, cab, secciones, assets };
 }
+// las entidades que pesan mucho más que lo normal (pedido de Alejandro, 30/10/2026): las que tienen láminas o cuadros de
+// video que pesan más de PESADA veces la mediana de img/criaturas/. Al armar el juego hay que cuidarlas (que carguen
+// recién cuando están cerca y suelten sus cuadros al alejarse); su archivo lleva la marca «⚠ PESADA» y el mapa las lista
+const CRIATURAS = path.join(RAIZ, "aventura", "img", "criaturas");
+const PESADA = 3;
+const pesoDe = (d) => fs.readdirSync(d).reduce((t, f) => {
+  const q = path.join(d, f), st = fs.statSync(q);
+  return t + (st.isDirectory() ? pesoDe(q) : st.size);
+}, 0);
+function pesadas() {
+  if (!fs.existsSync(CRIATURAS)) return { lista: [], mediana: 0 };
+  const todas = fs.readdirSync(CRIATURAS).filter((d) => fs.statSync(path.join(CRIATURAS, d)).isDirectory()).map((d) => ({ d, b: pesoDe(path.join(CRIATURAS, d)) }));
+  const orden = todas.map((x) => x.b).sort((a, b) => a - b), mediana = orden[Math.floor(orden.length / 2)] || 0;
+  const enemigos = fs.readdirSync(path.join(JS, "enemigos")).filter((f) => f.endsWith(".js"));
+  const lista = todas.filter((x) => x.b > mediana * PESADA).sort((a, b) => b.b - a.b).map((x) => {
+    const js = enemigos.find((f) => fs.readFileSync(path.join(JS, "enemigos", f), "utf8").includes("img/criaturas/" + x.d + "/"));
+    return { ...x, js };
+  });
+  return { lista, mediana };
+}
+const mb = (b) => (b / 1048576).toFixed(1).replace(".", ",") + " MB";
 function armar() {
   const errores = [];
-  let out = [DESDE, "", "## Todos los archivos", ""];
+  let out = [DESDE, "", "## Entidades pesadas", ""];
+  const P = pesadas();
+  out.push(`Las criaturas cuyas imágenes pesan más de ${PESADA} veces lo normal (la mediana de \`img/criaturas/\` es ${mb(P.mediana)}). Al armar el juego hay que tratarlas con cuidado: que carguen sus cuadros recién cuando están cerca y los suelten al alejarse. Su archivo lleva la marca «⚠ PESADA» arriba.`, "");
+  for (const x of P.lista) {
+    out.push(`- ⚠ **${x.d}**: ${mb(x.b)}${x.js ? ` (\`js/enemigos/${x.js}\`)` : ""}`);
+    if (x.js && !fs.readFileSync(path.join(JS, "enemigos", x.js), "utf8").split("\n").slice(0, 15).some((l) => l.includes("⚠ PESADA")))
+      errores.push(`js/enemigos/${x.js} pesa ${mb(x.b)} en imágenes: sumale arriba la línea «// ⚠ PESADA: …» que diga qué pesa y cómo cargarla`);
+  }
+  if (!P.lista.length) out.push("- Ninguna por ahora.");
+  out.push("", "## Todos los archivos", "");
   out.push("Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.", "");
   for (const dir of fs.readdirSync(JS).filter((d) => fs.statSync(path.join(JS, d)).isDirectory() && d !== "vendor" && d !== "pr").sort()) {
     out.push(`### js/${dir}/ · ${CARPETAS[dir] || ""}`, "");

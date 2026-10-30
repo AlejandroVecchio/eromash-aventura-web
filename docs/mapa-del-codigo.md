@@ -107,6 +107,13 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 
 <!-- desde acá lo arma herramientas/mapa-del-codigo.cjs -->
 
+## Entidades pesadas
+
+Las criaturas cuyas imágenes pesan más de 3 veces lo normal (la mediana de `img/criaturas/` es 0,7 MB). Al armar el juego hay que tratarlas con cuidado: que carguen sus cuadros recién cuando están cerca y los suelten al alejarse. Su archivo lleva la marca «⚠ PESADA» arriba.
+
+- ⚠ **trol**: 3,9 MB (`js/enemigos/trol-musgo.js`)
+- ⚠ **bandido**: 3,1 MB (`js/enemigos/bandido-hacha.js`)
+
 ## Todos los archivos
 
 Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.
@@ -143,14 +150,24 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **controles.js**: controles (módulo CONTROLES)
   - teclas propias
 - **dibujo.js**: herramientas de dibujo (módulo DIB)
+- **esqueleto.js**: Animación por piezas con huesos (módulo ESQUELETO)
+  - curvas: el valor de un canal en el instante t (0 a 1) · poses: { hueso: { r, x, y, sx, sy } } · huesos: la matriz de cada uno (sin su estiramiento) y la de sus piezas (con él) · dibujo: las piezas en su orden (z), cada una con la matriz de su hueso · animador: lleva el tiempo de cada animación y pasa de una a otra fundiendo las poses · editar: poner o sacar una clave de un canal
 - **futhark.js**: las runas del Futhark antiguo (módulo FUTHARK)
+- **humano.js**: Humano: esqueleto, muñeco de prueba y animaciones de humano (módulo HUMANO)
+  - medidas (unidades del mundo, con los pies en y = 0; mide unos 120) · piezas planas: cada una en dos mitades, la de la izquierda en sombra (luz de arriba a la derecha) · el muñeco: las piezas de cada vista · animaciones
 - **sonido.js**: sonido (módulo SONIDO)
 - **volumen.js**: todo girable: volúmenes que se ven bien desde cualquier lado (módulo VOL)
   - el giro del mundo · colores: cada cara con su tono · el proyector de un objeto · caras · sólidos · en el piso del objeto · partes de un objeto, de atrás hacia adelante · la gente y las criaturas: la vista según la cámara · ayudas para pasar los dibujos viejos
 
 ### js/enemigos/ · el dibujo de las criaturas
 
+- **arana-nido.js**: La araña del nido en vectores (módulo ARANA)
+  - paletas: quitina, musgo, runa y ojos cambian; colmillos y puntas de las patas quedan · el motor: armar(ficha) da una araña dibujada desde su lámina · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso y el vaivén del cuerpo · dibujar
 - **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
+- **arquero-bandido.js**: El arquero de los Sin Linde en vectores (módulo ARQUERO)
+  - paletas: cambian la capucha y la ropa; el cuero, la piel y el arco quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
+- **bandido-hacha.js**: El bandido del hacha de los Sin Linde en vectores (módulo BANDIDO)
+  - paletas: cambian la capucha y la ropa; el cuero, la piel, el escudo y el hacha quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
 - **bandidos.js**: los Sin Linde: bandidos del bosque (se suman a CRIATURAS)
   - Bandido · Arquero
 - **caceria.js**: la Cacería Salvaje: sabuesos y el Cazador (se suman a CRIATURAS)
@@ -159,9 +176,26 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - Draugr del túmulo · Jabalí de musgo · Cuervo de Hel · Fuego fatuo · Trol de musgo · Oso de zarzal
 - **criaturas.js**: las criaturas de Eldervald (módulo CRIATURAS)
   - Lobo del zarzal · Errante de Helheim · Custodio de corteza · Ciervo Hueco (jefe)
+- **cuervo-hel.js**: El cuervo de Hel en vectores (módulo CUERVO)
+  - paletas: las plumas cambian; el pico, el hueso del amuleto y la runa quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los demás giran en su lugar · dibujar
+- **custodio.js**: El Custodio de corteza en vectores (módulo CUSTODIO)
+  - paletas: la corteza y el musgo cambian, la piedra, la máscara y las runas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, más el vaivén y el aplaste del cuerpo · dibujar
+- **draugr-tumulo.js**: El draugr del túmulo en vectores (módulo DRAUGR)
+  - paletas: cambian las placas, la piel y la luz de los ojos y la runa; el cuero y el hierro quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los pies pisan el piso y solo se levantan al dar el paso · dibujar
 - **dreki.js**: el dreki (se suma a CRIATURAS)
+- **errante-helheim.js**: El errante de Helheim en vectores (módulo ERRANTE)
+  - paletas: cambian la túnica y la piel; las garras, el cinturón y la runa quedan · carga: cada forma con su Path2D, su color y su hueso · huesos: el tronco lleva escala, giro y corrimiento; los pies pisan el piso y solo se levantan al dar el paso · dibujar
+- **fatuo-mayor.js**: El fatuo mayor en vectores (módulo FATUO_MAYOR)
+  - paletas: tiñen la llama y la cara; el blanco del centro queda · carga: cada forma con sus comandos (M, L, C, Z) en números, para doblarlos en cada cuadro · el fuego: cada punto se corre según su altura (lejos de la cara, más) con una onda que sube · las runas que giran: Ingwaz, Algiz y Sowilo, planas como en la lámina · dibujar
+- **jabali-hongos.js**: El jabalí de hongos en vectores (módulo JABALI)
+  - paletas: el pelo, el musgo y los sombreros de los hongos cambian; ojos, colmillos y tallos quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · efectos · dibujar
 - **jotunn.js**: Hrímnir, el jötunn de la escarcha (se suma a CRIATURAS)
 - **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")
+- **lobo-zarzal.js**: El lobo del zarzal en vectores (módulo LOBO)
+  - paletas: el pelo, la zarza y las ataduras cambian; ojos y espinas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · dibujar
+- **tejedora.js**: La Tejedora en vectores (módulo TEJEDORA)
+- **trol-musgo.js**: El trol de musgo en vectores (módulo TROL)
+  - paletas: cambian la piel, el musgo y la luz de la runa y los ojos; el árbol y los dientes quedan · carga: cada forma con su Path2D, su color, su grupo y su hueso · huesos: el tronco se bambolea desde los pies; los pies pisan el piso y solo se levantan al dar el paso · dibujar
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 
@@ -187,6 +221,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - lo que puede ir en una casilla · poner y sacar · usar · lo que ve el HUD
 - **cartel.js**: el cartel de lugar (CARTEL): el cartel dorado que anuncia un lugar, una tierra nueva o la capital al llegar
   - parámetros (los mismos de cartel_lugar.gd; tamaños a 1080 de alto, tiempos en segundos) · ayudas · el lienzo · estado · tiempos · disposición · dibujo · paisaje / estandarte en un solo trazo · dibujos de cada región y capital · la fila y cuándo sale cada uno
+- **editor-esqueleto.js**: Editor de animación por piezas (esqueleto.html)
+  - estado · lo que se ve · el bandido de hoy · la línea de tiempo: las claves de todos tenues, las del hueso elegido como rombos, y dónde se está · los valores del hueso elegido · elegir y arrastrar huesos · la línea de tiempo con el puntero · botones · el reloj
 - **hoja.js**: la hoja de Eromash (sistema HOJA, pestaña Hoja de la mochila)
 - **hud.js**: la interfaz de la aventura (módulo HUD)
   - menús (título, pausa, diario, fin): botones que se eligen con mouse, flechas o mando
@@ -484,6 +520,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **elementos.js**: Textos de las runas de los elementos y las reacciones (motor/elementos.js, mundo/assets-elementos.js): prefijo el.
 - **encuentros.js**: Textos de los encuentros en el camino (motor/encuentros.js): prefijo ec. (y los nombres de la gente en av.nombre_).
 - **engarces.js**: Textos de las muescas, las tallas y las palabras rúnicas (motor/engarces.js): prefijo en.
+- **esqueleto.js**: Textos del editor de animación por piezas (esqueleto.html, interfaz/editor-esqueleto.js): prefijo sq.
 - **este.js**: Textos del Aserradero de Orm y el Santuario de las Raíces (prefijo es., las piezas en as.), los dos idiomas.
 - **etapas.js**: Textos de las etapas EL-0X-N y sus tres encargos (prefijo et., y los objetivos y diálogos nuevos en av.), los dos idiomas.
 - **forja.js**: Textos de la forja al ritmo del yunque (motor/forja.js): prefijo fg.
