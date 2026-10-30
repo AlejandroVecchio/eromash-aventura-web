@@ -107,6 +107,13 @@ Un sistema nuevo es un objeto en `window.SISTEMAS` con los ganchos que necesite 
 
 <!-- desde acá lo arma herramientas/mapa-del-codigo.cjs -->
 
+## Entidades pesadas
+
+Las criaturas cuyas imágenes pesan más de 3 veces lo normal (la mediana de `img/criaturas/` es 0,7 MB). Al armar el juego hay que tratarlas con cuidado: que carguen sus cuadros recién cuando están cerca y los suelten al alejarse. Su archivo lleva la marca «⚠ PESADA» arriba.
+
+- ⚠ **trol**: 3,9 MB (`js/enemigos/trol-musgo.js`)
+- ⚠ **bandido**: 3,1 MB (`js/enemigos/bandido-hacha.js`)
+
 ## Todos los archivos
 
 Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `---------- nombre`) y, en `mundo/`, los assets que dibuja.

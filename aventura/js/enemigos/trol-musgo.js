@@ -1,4 +1,6 @@
 // ---------- El trol de musgo en vectores (módulo TROL) ----------
+// ⚠ PESADA: unos 4 MB de imágenes (los cuadros de video de la caminata, 1,9 MB, y las láminas en vector). Hoy carga todo
+// al empezar; al armar el juego, si hace falta, que cargue recién cuando hay un trol cerca.
 // La lámina de Alejandro (30/10/2026) pasada a SVG tal cual (img/criaturas/trol/*.svg, vectorizada con Recraft y con
 // los colores corregidos contra la lámina): frente, costado y espalda con el árbol en la mano derecha; el aplastar
 // (el árbol en alto con las dos manos y el impacto contra el piso, de frente y de costado), el revés (el puño cruzado

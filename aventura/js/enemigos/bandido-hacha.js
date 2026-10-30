@@ -1,4 +1,6 @@
 // ---------- El bandido del hacha de los Sin Linde en vectores (módulo BANDIDO) ----------
+// ⚠ PESADA: unos 3 MB de láminas en vector (la caminata de 12 cuadros por vista). Hoy carga todo al empezar; al armar el
+// juego, si hace falta, que cargue recién cuando hay un bandido cerca.
 // La lámina de Alejandro (frente, costado, espalda y el aviso de frente y de costado) pasada a SVG tal cual
 // (img/criaturas/bandido/*.svg, vectorizada con Recraft) y animada con huesos: respira con el hacha colgando y el escudo
 // al costado, camina con los 12 cuadros de su lámina de caminata en cada vista (andar/), en el aviso entra la pose de la lámina
