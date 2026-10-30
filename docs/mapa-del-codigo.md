@@ -187,6 +187,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **lobo-zarzal.js**: El lobo del zarzal en vectores (módulo LOBO)
   - paletas: el pelo, la zarza y las ataduras cambian; ojos y espinas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · dibujar
 - **tejedora.js**: La Tejedora en vectores (módulo TEJEDORA)
+- **trol-musgo.js**: El trol de musgo en vectores (módulo TROL)
+  - paletas: cambian la piel, el musgo y la luz de la runa y los ojos; el árbol y los dientes quedan · carga: cada forma con su Path2D, su color, su grupo y su hueso · huesos: el tronco se bambolea desde los pies; los pies pisan el piso y solo se levantan al dar el paso · dibujar
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 

@@ -21,7 +21,7 @@ window.COMBATE = (function () {
     fatuo: { vida: 45, dano: 16, vel: 2.4 * M, alcance: 9 * M, aviso: 1.15, forma: "lejos", radioGolpe: 1.6 * M, radio: 12, espera: 2.4, barra: 100, plata: 5, vuela: true, muerto: true, luz: true },
     oso: { vida: 300, dano: 26, vel: 2.1 * M, alcance: 2.8 * M, aviso: 1.1, forma: "abanico", radioGolpe: 3.1 * M, angulo: 1.0, largo: 4.4 * M, ancho: 2 * M, radio: 34, espera: 2.2, barra: 150, plata: 30, pesado: true },
     dreki: { vida: 1600, dano: 30, vel: 1.5 * M, alcance: 5 * M, aviso: 1.35, forma: "abanico", radioGolpe: 5.5 * M, angulo: 0.85, largo: 13 * M, ancho: 3 * M, radio: 70, espera: 2.3, barra: 300, plata: 260, pesado: true },
-    trol: { vida: 420, dano: 30, vel: 1.4 * M, alcance: 3.4 * M, aviso: 1.4, forma: "circulo", radioGolpe: 3.8 * M, largo: 7 * M, ancho: 2.2 * M, radio: 40, espera: 2.6, barra: 196, plata: 40, pesado: true },
+    trol: { vida: 420, dano: 30, vel: 1.4 * M, alcance: 3.4 * M, aviso: 1.4, forma: "circulo", radioGolpe: 3.8 * M, largo: 7 * M, ancho: 2.2 * M, radio: 40, espera: 2.6, barra: 196, plata: 40, pesado: true, muerte: 1.9 },
   };
   // el ataque básico (pedido de Alejandro, 29/10/2026): además de su habilidad, de cerca cada criatura embiste con la
   // cabeza mientras la habilidad se recarga. Aviso corto con un abanico chico en el piso y, como los esbirros de la
@@ -574,8 +574,10 @@ window.COMBATE = (function () {
   }
   function dibujar(c, e, t) {
     if (e.d.dibujo) return ASSETS.dibujar(c, e.d.dibujo, e.x, e.y, t, Object.assign({ herido: e.herido, sem: e.sem }, e.o));
-    if (!e.activo || e.muerto > 0.8) return;
-    alfa(c, e.muerto > 0 ? 1 - e.muerto / 0.8 : 1, () => {
+    // con d.muerte la criatura anima su caída (el trol de la lámina) y se desvanece al final
+    const fin = e.d.muerte || 0.8;
+    if (!e.activo || e.muerto > fin) return;
+    alfa(c, e.muerto > 0 ? (e.d.muerte ? Math.min(1, (fin - e.muerto) / 0.45) : 1 - e.muerto / 0.8) : 1, () => {
       // el aura del líder: anillo del color de su primer afijo, que late
       if (e.lider && e.muerto === 0) {
         const col = e.lider.unico ? "#FFD98A" : AFIJOS[e.lider.afijos[0]].col;
