@@ -284,8 +284,11 @@ window.TROL = (function () {
       q.dx = b > 0.8 ? Math.sin(t * 40) * 6 : 0;
     } else if (v !== "S" && (o.mov || 0) > 0.05 && cargar("andar/" + v + "01").listo) {
       // la caminata de la lámina, de costado y de espaldas
-      const i = Math.floor(t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5) % 12;
-      nombre = "andar/" + v + String(i + 1).padStart(2, "0");
+      // la segunda mitad de cada cuadro se funde en el que sigue, así el paso corre sin saltos
+      const f = t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5, i = Math.floor(f) % 12, cuadro = (n) => "andar/" + v + String(n + 1).padStart(2, "0");
+      nombre = cuadro(i);
+      sigue = cuadro((i + 1) % 12);
+      mezcla = Math.max(0, (f - Math.floor(f) - 0.5) / 0.5);
       q = nueva();
     } else {
       q = postura(v, t, o);
