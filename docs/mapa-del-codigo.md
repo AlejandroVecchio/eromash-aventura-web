@@ -154,6 +154,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/enemigos/ · el dibujo de las criaturas
 
+- **arana-nido.js**: La araña del nido en vectores (módulo ARANA)
+  - paletas: quitina, musgo, runa y ojos cambian; colmillos y puntas de las patas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso y el vaivén del cuerpo · dibujar
 - **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
 - **arquero-bandido.js**: El arquero de los Sin Linde en vectores (módulo ARQUERO)
   - paletas: cambian la capucha y la ropa; el cuero, la piel y el arco quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
