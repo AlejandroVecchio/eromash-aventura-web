@@ -2,8 +2,9 @@
 // La lámina de Alejandro (30/10/2026) pasada a SVG tal cual (img/criaturas/trol/*.svg, vectorizada con Recraft y con
 // los colores corregidos contra la lámina): frente, costado y espalda con el árbol en la mano derecha; el aplastar
 // (el árbol en alto con las dos manos y el impacto contra el piso, de frente y de costado), el revés (el puño cruzado
-// y el barrido, su ataque básico) y la muerte en seis cuadros de frente y de costado. Parado y al andar se mueve con
-// huesos: paso pesado desde los pies, el árbol se mece y el puño libre acompaña.
+// y el barrido, su ataque básico) y la muerte en seis cuadros de frente y de costado. Parado se mueve con huesos
+// (respira, el árbol se mece y el puño libre acompaña); al andar pasan los cuadros de los videos de Runway de
+// Alejandro, uno por vista (img/criaturas/trol/video/*.webp).
 // Paletas: la de la lámina (musgo), piedra y barro con la marca roja (los mismos índices que el dibujo viejo).
 // Se registra en CRIATURAS como "trol"; mientras el SVG carga se ve el dibujo viejo.
 window.TROL = (function () {
@@ -63,18 +64,18 @@ window.TROL = (function () {
     muerteE1: pose(245, 1260, 1685), muerteE2: pose(306, 1282, 1337), muerteE3: pose(323, 1231, 1118),
     muerteE4: pose(325, 1256, 1010), muerteE5: pose(343, 1272, 788), muerteE6: pose(328, 1238, 718),
   };
-  // la caminata: de espaldas, de la lámina de caminata (12 cuadros en vector, primero un pie y después el otro); de
-  // costado, el video de Runway de Alejandro tal cual (VIDEO, más abajo); de frente anda con huesos
-  const ANDAR = {
-    N: [[288, 876, 1496], [293, 924, 1439], [294, 908, 1459], [298, 911, 1467], [297, 917, 1438], [269, 989, 1615], [294, 881, 1569], [303, 920, 1549], [292, 919, 1552], [297, 914, 1586], [299, 918, 1555], [274, 986, 1685]],
+  // la caminata sale de los videos de Runway de Alejandro (30/10/2026), uno por vista: una vuelta entera a cámara
+  // quieta (costado 48 cuadros, frente 30, espaldas 44, a 24 por segundo), recortados todos con la misma ventana del
+  // video, pasados a los colores de la lámina principal y guardados como imágenes a la mitad
+  // (img/criaturas/trol/video/<vista>01….webp). Se dibujan en las mismas unidades que los SVG (la ventana = 2048 de
+  // ancho): k = el ancho de la ventana en pixeles de la lámina, pie = [centro de la piel, piso], alto = el de la ventana.
+  // La vista principal se apoya 45 de su SVG más abajo que la planta del pie (el borde de las uñas): la caminata igual
+  const vid = (n, k, x, y, alto, kv) => ({ n, def: pose(k, x, y + (45 * kv) / k), alto });
+  const VIDEO = {
+    E: vid(48, 280, 1317, 1413, (2048 * 625) / 852, 276),
+    S: vid(30, 283, 1204, 1455, (2048 * 438) / 587, 310),
+    N: vid(44, 320, 853, 1302, (2048 * 429) / 640, 323),
   };
-  // la vista principal se apoya 45 de su SVG más abajo que la planta del pie (el borde de las uñas): la caminata igual
-  const BAJA = { E: 45 * 276, N: 45 * 323 };
-  for (const v in ANDAR) ANDAR[v].forEach(([k, x, y], i) => (POSES["andar/" + v + String(i + 1).padStart(2, "0")] = pose(k, x, y + BAJA[v] / k)));
-  // el video de costado (30/10/2026): la vuelta entera de 48 cuadros a cámara quieta, recortados todos con la misma
-  // ventana (852 × 625 del video), pasados a los colores de la lámina principal y guardados como imágenes a la mitad
-  // (img/criaturas/trol/video/E01…E48.webp). Se dibujan en las mismas unidades que los SVG (la ventana = 2048 de ancho)
-  const VIDEO = { n: 48, def: pose(280, 1317, 1413 + BAJA.E / 280), alto: (2048 * 625) / 852 };
   Object.assign(VISTAS, POSES);
   const HUESOS = ["torso", "cabeza", "brazo", "brazoA", "brazoL", "pie", "pieI", "pieD"];
   const PIES = ["pie", "pieI", "pieD"];
@@ -126,7 +127,7 @@ window.TROL = (function () {
     const st = (vistas[v] = { listo: false });
     if (v.startsWith("video/")) {
       const img = new Image();
-      img.onload = () => ((st.img = img), (st.lienzos = {}), (st.listo = true));
+      img.onload = () => ((st.img = img), (st.lienzos = {}), (st.v = v[6]), (st.listo = true));
       img.onerror = () => (st.error = true);
       img.src = "img/criaturas/trol/" + v + ".webp";
       return st;
@@ -266,7 +267,7 @@ window.TROL = (function () {
   const IMPACTO = 0.5; // lo que queda el árbol contra el piso después del aplastar
   const MUERTE = 1.1; // en cuánto pasa los seis cuadros de la muerte (después queda tendido)
   const FUNDE = 0.16; // lo que tarda una pose en fundirse en la siguiente
-  const ANDA = 6; // cuadros por segundo de la caminata al paso de persecución (el video da una vuelta en 2 s)
+  const ANDA = 24; // cuadros por segundo de la caminata al paso de persecución (los del video)
   function dibujar(c, t, o) {
     const v = o.vista || "S", k = o.sem != null ? o.sem : 0, lado = v === "N" ? null : v;
     let F = est[k];
@@ -316,11 +317,10 @@ window.TROL = (function () {
       nombre = "reves" + lado;
       q = nueva();
       q.dx = b > 0.8 ? Math.sin(t * 40) * 6 : 0;
-    } else if (v !== "S" && (o.mov || 0) > 0.05 && cargar(v === "E" ? "video/E01" : "andar/N01").listo) {
-      // la caminata: de costado el video, de espaldas la lámina; la segunda mitad de cada cuadro se funde en el que
-      // sigue, así el paso corre sin saltos (una vuelta en 2 s al paso de persecución)
-      const n = v === "E" ? VIDEO.n : 12, f = (t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5) * (n / 12), i = Math.floor(f) % n;
-      const cuadro = (j) => (v === "E" ? "video/E" : "andar/N") + String(j + 1).padStart(2, "0");
+    } else if ((o.mov || 0) > 0.05 && cargar("video/" + v + "01").listo) {
+      // la caminata del video de cada vista, a su paso; la segunda mitad de cada cuadro se funde en el que sigue
+      const n = VIDEO[v].n, f = t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 7, i = Math.floor(f) % n;
+      const cuadro = (j) => "video/" + v + String(j + 1).padStart(2, "0");
       nombre = cuadro(i);
       sigue = cuadro((i + 1) % n);
       mezcla = Math.max(0, (f - Math.floor(f) - 0.5) / 0.5);
@@ -378,19 +378,19 @@ window.TROL = (function () {
   }
   // un cuadro del video, en su paleta, con el mismo pie y el mismo tamaño que los SVG; se echa atrás si lo golpean
   function pintarVideo(c, st, q, o, alfa, sombra) {
-    const def = VIDEO.def, esc = (MUNDO * def.k) / 2048;
+    const V = VIDEO[st.v], def = V.def, esc = (MUNDO * def.k) / 2048;
     c.save();
     if (sombra) {
       c.fillStyle = "rgba(0,0,0,0.36)";
       c.beginPath();
-      c.ellipse(0, 0, 62, 16, 0, 0, Math.PI * 2);
+      c.ellipse(0, 0, st.v === "E" ? 62 : 72, 16, 0, 0, Math.PI * 2);
       c.fill();
     }
     c.globalAlpha *= alfa;
     c.scale(esc, esc);
     c.translate(q.dx, q.dy);
     c.scale(q.sx, q.sy);
-    c.drawImage(lienzo(st, (o.pal || 0) % PALETAS.length), -def.pie[0], -def.pie[1], 2048, VIDEO.alto);
+    c.drawImage(lienzo(st, (o.pal || 0) % PALETAS.length), -def.pie[0], -def.pie[1], 2048, V.alto);
     c.restore();
     return true;
   }
@@ -473,7 +473,7 @@ window.TROL = (function () {
       { basicoPropio: true }
     );
   }
-  const TODAS = Object.keys(VISTAS).concat(Array.from({ length: VIDEO.n }, (_, i) => "video/E" + String(i + 1).padStart(2, "0")));
+  const TODAS = Object.keys(VISTAS).concat(...Object.keys(VIDEO).map((v) => Array.from({ length: VIDEO[v].n }, (_, i) => "video/" + v + String(i + 1).padStart(2, "0"))));
   // lo de parado primero: las poses y la muerte se piden después
   ["S", "E", "N"].forEach(cargar);
   setTimeout(() => TODAS.forEach(cargar), 400);
