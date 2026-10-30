@@ -63,18 +63,18 @@ window.TROL = (function () {
     muerteE1: pose(245, 1260, 1685), muerteE2: pose(306, 1282, 1337), muerteE3: pose(323, 1231, 1118),
     muerteE4: pose(325, 1256, 1010), muerteE5: pose(343, 1272, 788), muerteE6: pose(328, 1238, 718),
   };
-  // la caminata: de costado sale del video de Runway de Alejandro (30/10/2026: una vuelta de 48 cuadros a cámara quieta,
-  // 12 tomados cada 4, todos con la misma ventana, así el cuerpo sube, baja y se mece como en el video); de espaldas, de
-  // la lámina de caminata (12 cuadros, primero un pie y después el otro). Los dos pasados a los colores de la lámina
-  // principal y a su tamaño; de frente anda con huesos
+  // la caminata: de espaldas, de la lámina de caminata (12 cuadros en vector, primero un pie y después el otro); de
+  // costado, el video de Runway de Alejandro tal cual (VIDEO, más abajo); de frente anda con huesos
   const ANDAR = {
-    E: Array.from({ length: 12 }, () => [280, 1317, 1413]),
     N: [[288, 876, 1496], [293, 924, 1439], [294, 908, 1459], [298, 911, 1467], [297, 917, 1438], [269, 989, 1615], [294, 881, 1569], [303, 920, 1549], [292, 919, 1552], [297, 914, 1586], [299, 918, 1555], [274, 986, 1685]],
   };
   // la vista principal se apoya 45 de su SVG más abajo que la planta del pie (el borde de las uñas): la caminata igual
   const BAJA = { E: 45 * 276, N: 45 * 323 };
-  const MAS = { E: 1, N: 1 };
-  for (const v in ANDAR) ANDAR[v].forEach(([k0, x, y], i, _, k = k0 * MAS[v]) => (POSES["andar/" + v + String(i + 1).padStart(2, "0")] = pose(k, x, y + BAJA[v] / k)));
+  for (const v in ANDAR) ANDAR[v].forEach(([k, x, y], i) => (POSES["andar/" + v + String(i + 1).padStart(2, "0")] = pose(k, x, y + BAJA[v] / k)));
+  // el video de costado (30/10/2026): la vuelta entera de 48 cuadros a cámara quieta, recortados todos con la misma
+  // ventana (852 × 625 del video), pasados a los colores de la lámina principal y guardados como imágenes a la mitad
+  // (img/criaturas/trol/video/E01…E48.webp). Se dibujan en las mismas unidades que los SVG (la ventana = 2048 de ancho)
+  const VIDEO = { n: 48, def: pose(280, 1317, 1413 + BAJA.E / 280), alto: (2048 * 625) / 852 };
   Object.assign(VISTAS, POSES);
   const HUESOS = ["torso", "cabeza", "brazo", "brazoA", "brazoL", "pie", "pieI", "pieD"];
   const PIES = ["pie", "pieI", "pieD"];
@@ -124,6 +124,13 @@ window.TROL = (function () {
   function cargar(v) {
     if (vistas[v]) return vistas[v];
     const st = (vistas[v] = { listo: false });
+    if (v.startsWith("video/")) {
+      const img = new Image();
+      img.onload = () => ((st.img = img), (st.lienzos = {}), (st.listo = true));
+      img.onerror = () => (st.error = true);
+      img.src = "img/criaturas/trol/" + v + ".webp";
+      return st;
+    }
     fetch("img/criaturas/trol/" + v + ".svg")
       .then((r) => r.text())
       .then((txt) => {
@@ -170,6 +177,33 @@ window.TROL = (function () {
       const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(f.fill), l = m ? rgbAHsl(+m[1], +m[2], +m[3])[2] : 0.4;
       return hslARgb(32, 0.06, 0.2 + l * 0.62);
     }));
+  }
+  // un cuadro del video en otra paleta: cada pixel pasa por tenir según su grupo, una vez por cuadro y paleta
+  function lienzo(st, pal) {
+    const P = PALETAS[pal] || null;
+    if (!P) return st.img;
+    if (st.lienzos[pal]) return st.lienzos[pal];
+    const cv = document.createElement("canvas");
+    cv.width = st.img.width;
+    cv.height = st.img.height;
+    const x = cv.getContext("2d");
+    // el grupo (piel, musgo, madera…) se lee de la imagen suavizada: pixel por pixel salta entre grupos y queda granulado
+    x.filter = "blur(3px)";
+    x.drawImage(st.img, 0, 0);
+    const suave = x.getImageData(0, 0, cv.width, cv.height).data;
+    x.filter = "none";
+    x.clearRect(0, 0, cv.width, cv.height);
+    x.drawImage(st.img, 0, 0);
+    const im = x.getImageData(0, 0, cv.width, cv.height), d = im.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      const [h, s, l] = rgbAHsl(d[i], d[i + 1], d[i + 2]), p = P[grupo(...rgbAHsl(suave[i], suave[i + 1], suave[i + 2]))];
+      if (!p) continue;
+      const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(hslARgb(p[0], Math.min(1, s * p[1]), l * p[2]));
+      d[i] = +m[1]; d[i + 1] = +m[2]; d[i + 2] = +m[3];
+    }
+    x.putImageData(im, 0, 0);
+    return (st.lienzos[pal] = cv);
   }
   function pinturas(st, pal) {
     if (st.pinturas[pal]) return st.pinturas[pal];
@@ -282,12 +316,13 @@ window.TROL = (function () {
       nombre = "reves" + lado;
       q = nueva();
       q.dx = b > 0.8 ? Math.sin(t * 40) * 6 : 0;
-    } else if (v !== "S" && (o.mov || 0) > 0.05 && cargar("andar/" + v + "01").listo) {
-      // la caminata de la lámina, de costado y de espaldas
-      // la segunda mitad de cada cuadro se funde en el que sigue, así el paso corre sin saltos
-      const f = t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5, i = Math.floor(f) % 12, cuadro = (n) => "andar/" + v + String(n + 1).padStart(2, "0");
+    } else if (v !== "S" && (o.mov || 0) > 0.05 && cargar(v === "E" ? "video/E01" : "andar/N01").listo) {
+      // la caminata: de costado el video, de espaldas la lámina; la segunda mitad de cada cuadro se funde en el que
+      // sigue, así el paso corre sin saltos (una vuelta en 2 s al paso de persecución)
+      const n = v === "E" ? VIDEO.n : 12, f = (t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5) * (n / 12), i = Math.floor(f) % n;
+      const cuadro = (j) => (v === "E" ? "video/E" : "andar/N") + String(j + 1).padStart(2, "0");
       nombre = cuadro(i);
-      sigue = cuadro((i + 1) % 12);
+      sigue = cuadro((i + 1) % n);
       mezcla = Math.max(0, (f - Math.floor(f) - 0.5) / 0.5);
       q = nueva();
     } else {
@@ -326,7 +361,8 @@ window.TROL = (function () {
     F.q = q;
     const costado = v === "E", dibuja = (n, qq, a, sombra) => {
       const s2 = cargar(n);
-      if (s2.listo && a > 0.01) pintar(c, s2, VISTAS[n], huesos(VISTAS[n], qq), o, ef, costado, a, sombra);
+      if (s2.listo && a > 0.01 && s2.img) pintarVideo(c, s2, qq, o, a, sombra);
+      else if (s2.listo && a > 0.01) pintar(c, s2, VISTAS[n], huesos(VISTAS[n], qq), o, ef, costado, a, sombra);
     };
     const A = F.antes, ua = A ? (t - A.t0) / FUNDE : 1;
     let alfa = 1;
@@ -338,6 +374,24 @@ window.TROL = (function () {
       dibuja(nombre, q, alfa * (1 - mezcla * mezcla), !A || ua >= 1);
       dibuja(sigue, nueva(), alfa * Math.min(1, mezcla * 2), false);
     } else dibuja(nombre, q, alfa, !A || ua >= 1);
+    return true;
+  }
+  // un cuadro del video, en su paleta, con el mismo pie y el mismo tamaño que los SVG; se echa atrás si lo golpean
+  function pintarVideo(c, st, q, o, alfa, sombra) {
+    const def = VIDEO.def, esc = (MUNDO * def.k) / 2048;
+    c.save();
+    if (sombra) {
+      c.fillStyle = "rgba(0,0,0,0.36)";
+      c.beginPath();
+      c.ellipse(0, 0, 62, 16, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha *= alfa;
+    c.scale(esc, esc);
+    c.translate(q.dx, q.dy);
+    c.scale(q.sx, q.sy);
+    c.drawImage(lienzo(st, (o.pal || 0) % PALETAS.length), -def.pie[0], -def.pie[1], 2048, VIDEO.alto);
+    c.restore();
     return true;
   }
   function pintar(c, st, def, Ms, o, ef, costado, alfa, sombra) {
@@ -419,7 +473,7 @@ window.TROL = (function () {
       { basicoPropio: true }
     );
   }
-  const TODAS = Object.keys(VISTAS);
+  const TODAS = Object.keys(VISTAS).concat(Array.from({ length: VIDEO.n }, (_, i) => "video/E" + String(i + 1).padStart(2, "0")));
   // lo de parado primero: las poses y la muerte se piden después
   ["S", "E", "N"].forEach(cargar);
   setTimeout(() => TODAS.forEach(cargar), 400);

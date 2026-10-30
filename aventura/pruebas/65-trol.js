@@ -3,7 +3,7 @@
 {
   const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
   (window.PRUEBAS = window.PRUEBAS || []).push({
-    nombre: "trol: las 47 láminas cargan y se dibuja en cada vista, estado y paleta",
+    nombre: "trol: las 35 láminas y los 48 cuadros del video cargan y se dibuja en cada vista, estado y paleta",
     fn: async (A, { si }) => {
       for (let i = 0; i < 160 && !TROL.listo(); i++) await esperar(50);
       si(TROL.listo(), "las vistas y poses en vector cargaron");
