@@ -25,7 +25,7 @@ window.ARANAS = (function () {
     VENDA_CURA = 30;
   Object.assign(COMBATE.TIPOS, {
     arana: { vida: 60, dano: 12, vel: 3.4 * M, alcance: 5 * M, aviso: 0.75, forma: "carga", largo: 5.5 * M, ancho: 1.4 * M, radio: 20, espera: 1.8, barra: 64, plata: 3 },
-    aranaReina: { vida: 130, dano: 18, vel: 1.8 * M, alcance: 9 * M, aviso: 1.2, forma: "lejos", radioGolpe: 1.9 * M, radio: 40, espera: 2.4, barra: 128, plata: 20, pesado: true, rgb: [232, 228, 220] },
+    aranaReina: { vida: 130, dano: 18, vel: 1.8 * M, alcance: 9 * M, aviso: 1.2, forma: "lejos", radioGolpe: 1.9 * M, radio: 40, espera: 2.4, barra: 128, plata: 20, pesado: true, rgb: [232, 228, 220], basico: true },
   });
   if (window.BESTIARIO) BESTIARIO.LISTA.push("arana", "aranaReina");
   if (window.MATERIALES) {

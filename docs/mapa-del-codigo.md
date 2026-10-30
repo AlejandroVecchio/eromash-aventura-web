@@ -155,7 +155,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 ### js/enemigos/ · el dibujo de las criaturas
 
 - **arana-nido.js**: La araña del nido en vectores (módulo ARANA)
-  - paletas: quitina, musgo, runa y ojos cambian; colmillos y puntas de las patas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso y el vaivén del cuerpo · dibujar
+  - paletas: quitina, musgo, runa y ojos cambian; colmillos y puntas de las patas quedan · el motor: armar(ficha) da una araña dibujada desde su lámina · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso y el vaivén del cuerpo · dibujar
 - **aranas.js**: las arañas del bosque viejo (se suman a CRIATURAS)
 - **arquero-bandido.js**: El arquero de los Sin Linde en vectores (módulo ARQUERO)
   - paletas: cambian la capucha y la ropa; el cuero, la piel y el arco quedan · carga: cada forma con su Path2D, su color, su regla de relleno y su hueso · huesos: el tronco lleva escala, giro y corrimiento desde los pies; los pies pisan el piso · dibujar
@@ -186,6 +186,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **kempur.js**: los campeones de la hólmganga (CRIATURAS "kempa")
 - **lobo-zarzal.js**: El lobo del zarzal en vectores (módulo LOBO)
   - paletas: el pelo, la zarza y las ataduras cambian; ojos y espinas quedan · carga: cada forma con su Path2D, su color y sus pesos · la pose: un ángulo por hueso, cuánto se levanta cada pata y el vaivén del cuerpo · dibujar
+- **tejedora.js**: La Tejedora en vectores (módulo TEJEDORA)
 
 ### js/equipo/ · las piezas de equipo (bases, rarezas, afijos) y su dibujo
 

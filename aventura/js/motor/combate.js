@@ -28,7 +28,8 @@ window.COMBATE = (function () {
   // arena, una estrella de cuatro puntas que destella en la cabeza justo cuando hay que cubrirse (la ventana de parada).
   const BASICO = { aviso: 0.65, avisoPesado: 0.85, alcance: 1.3 * M, radio: 1.6 * M, ang: 0.75, dano: 0.55, espera: 0.8, recarga: 3.5 };
   const DESTELLO = { desde: 0.34, hasta: 0.18 }; // segundos antes del golpe, como en la arena
-  const conBasico = (e) => e.d.forma !== "lejos" && !e.d.blanco && !e.patron && !e.propio;
+  // los que tiran de lejos no lo tienen, salvo que su ficha diga `basico` (la Tejedora pica a quien se le acerca)
+  const conBasico = (e) => (e.d.forma !== "lejos" || e.d.basico) && !e.d.blanco && !e.patron && !e.propio;
   const alcanceBasico = (e) => e.d.radio + BASICO.alcance;
   // los modificadores de los líderes (como los campeones de Diablo 2): cada uno con su color de aura
   const AFIJOS = {
