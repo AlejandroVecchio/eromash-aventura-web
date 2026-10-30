@@ -56,11 +56,24 @@ window.TROL = (function () {
     impactoS: pose(402, 1154, 986), impactoE: pose(370, 872, 1002),
     revesS: pose(353, 1246, 1210), revesE: pose(293, 1256, 1478),
     golpeS: pose(336, 1292, 1274), golpeE: pose(332, 1278, 1295),
-    muerteS1: pose(252, 1192, 1528), muerteS2: pose(261, 1265, 1240), muerteS3: pose(281, 1362, 1162),
-    muerteS4: pose(297, 1280, 865), muerteS5: pose(281, 1281, 882), muerteS6: pose(310, 1265, 737),
-    muerteE1: pose(223, 1260, 1685), muerteE2: pose(278, 1282, 1337), muerteE3: pose(294, 1231, 1118),
-    muerteE4: pose(295, 1256, 1010), muerteE5: pose(312, 1272, 788), muerteE6: pose(298, 1238, 718),
+    // la lámina dibuja la muerte más chica que parado (el musgo y la piel miden un 14 % menos de frente y un 9 % de
+    // costado): se agranda para que no se achique al caer
+    muerteS1: pose(292, 1192, 1528), muerteS2: pose(303, 1265, 1240), muerteS3: pose(326, 1362, 1162),
+    muerteS4: pose(345, 1280, 865), muerteS5: pose(326, 1281, 882), muerteS6: pose(360, 1265, 737),
+    muerteE1: pose(245, 1260, 1685), muerteE2: pose(306, 1282, 1337), muerteE3: pose(323, 1231, 1118),
+    muerteE4: pose(325, 1256, 1010), muerteE5: pose(343, 1272, 788), muerteE6: pose(328, 1238, 718),
   };
+  // la caminata de la lámina de costado y de espaldas (12 cuadros por vista, primero un pie y después el otro), pasada a
+  // los colores de la lámina principal y a su tamaño; de frente anda con huesos
+  const ANDAR = {
+    E: [[227, 1145, 1968], [249, 1200, 1780], [247, 1200, 1749], [245, 1146, 1751], [250, 1207, 1771], [247, 1180, 1783], [227, 1153, 1995], [255, 1160, 1738], [251, 1178, 1782], [247, 1189, 1808], [256, 1146, 1735], [255, 1169, 1757]],
+    N: [[288, 876, 1496], [293, 924, 1439], [294, 908, 1459], [298, 911, 1467], [297, 917, 1438], [269, 989, 1615], [294, 881, 1569], [303, 920, 1549], [292, 919, 1552], [297, 914, 1586], [299, 918, 1555], [274, 986, 1685]],
+  };
+  // la vista principal se apoya 45 de su SVG más abajo que la planta del pie (el borde de las uñas): la caminata igual
+  const BAJA = { E: 45 * 276, N: 45 * 323 };
+  // de costado la lámina de caminata queda un 8 % más chica que la vista principal aun medida por el alto
+  const MAS = { E: 1.08, N: 1 };
+  for (const v in ANDAR) ANDAR[v].forEach(([k0, x, y], i, _, k = k0 * MAS[v]) => (POSES["andar/" + v + String(i + 1).padStart(2, "0")] = pose(k, x, y + BAJA[v] / k)));
   Object.assign(VISTAS, POSES);
   const HUESOS = ["torso", "cabeza", "brazo", "brazoA", "brazoL", "pie", "pieI", "pieD"];
   const PIES = ["pie", "pieI", "pieD"];
@@ -115,8 +128,11 @@ window.TROL = (function () {
       .then((txt) => {
         const doc = new DOMParser().parseFromString(txt, "image/svg+xml");
         const def = VISTAS[v];
+        // el vectorizado no siempre da 2048 de ancho (con los recortes chicos da menos): todo se pasa a 2048
+        const vb = +(doc.documentElement.getAttribute("viewBox") || "0 0 2048").split(/\s+/)[2] || 2048, ka = 2048 / vb;
+        const aMil = new DOMMatrix().scale(ka);
         st.formas = [...doc.querySelectorAll("path")].map((p) => {
-          const d = p.getAttribute("d"), fill = p.getAttribute("fill") || "#000", nums = d.match(/-?\d+\.?\d*/g).map(Number);
+          const d = p.getAttribute("d"), fill = p.getAttribute("fill") || "#000", nums = d.match(/-?\d+\.?\d*/g).map((n) => n * ka);
           let cx = 0, cy = 0, n = 0, x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
           for (let i = 0; i + 1 < nums.length; i += 2) {
             cx += nums[i]; cy += nums[i + 1]; n++;
@@ -125,7 +141,9 @@ window.TROL = (function () {
           }
           cx /= n; cy /= n;
           const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(fill), hsl = m ? rgbAHsl(+m[1], +m[2], +m[3]) : [0, 0, 0];
-          const forma = { path: new Path2D(d), fill, cx, cy, ancho: x1 - x0, alto: y1 - y0, g: grupo(...hsl) };
+          const path = new Path2D();
+          path.addPath(new Path2D(d), aMil);
+          const forma = { path, fill, cx, cy, ancho: x1 - x0, alto: y1 - y0, g: grupo(...hsl) };
           // el fondo del cuerpo (una forma enorme) y lo casi negro van con el tronco: si se fueran con un brazo o un pie
           // dejarían un pedazo de sombra suelto
           const fondo = (x1 - x0) * (y1 - y0) > 900000 && forma.g === "piel";
@@ -143,6 +161,14 @@ window.TROL = (function () {
       })
       .catch(() => (st.error = true));
     return st;
+  }
+  // al morir se vuelve piedra: cada forma pasa a un gris de piedra con la misma luz que tenía
+  function deGris(st) {
+    if (st.grises) return st.grises;
+    return (st.grises = st.formas.map((f) => {
+      const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(f.fill), l = m ? rgbAHsl(+m[1], +m[2], +m[3])[2] : 0.4;
+      return hslARgb(32, 0.06, 0.2 + l * 0.62);
+    }));
   }
   function pinturas(st, pal) {
     if (st.pinturas[pal]) return st.pinturas[pal];
@@ -204,6 +230,8 @@ window.TROL = (function () {
   const est = {};
   const IMPACTO = 0.5; // lo que queda el árbol contra el piso después del aplastar
   const MUERTE = 1.1; // en cuánto pasa los seis cuadros de la muerte (después queda tendido)
+  const FUNDE = 0.16; // lo que tarda una pose en fundirse en la siguiente
+  const ANDA = 8; // cuadros por segundo de la caminata al paso de persecución
   function dibujar(c, t, o) {
     const v = o.vista || "S", k = o.sem != null ? o.sem : 0, lado = v === "N" ? null : v;
     let F = est[k];
@@ -215,13 +243,20 @@ window.TROL = (function () {
     const dz = t - F.suelta, impacto = dz < IMPACTO ? 1 - dz / IMPACTO : 0;
     const herido = o.herido > 0 ? o.herido * o.herido : 0, b = o.basico || 0, cz = o.cabezazo || 0;
     const ef = { runa: 0.3 + Math.sin(t * 1.2 + k) * 0.1, muere: 0, sube, g };
-    let nombre = v, q = null;
+    let nombre = v, q = null, sigue = null, mezcla = 0;
     if (o.muere > 0) {
-      // la muerte de la lámina, cuadro por cuadro (de espaldas cae como de costado)
-      const n = Math.min(6, 1 + Math.floor((o.muere / MUERTE) * 6));
-      nombre = "muerte" + (v === "S" ? "S" : "E") + n;
+      // la muerte de la lámina, cuadro por cuadro (de espaldas cae como de costado): cada cuadro se funde en el que
+      // sigue y el cuerpo se vuelve piedra gris
+      const u = Math.min(6, (o.muere / MUERTE) * 6), n = Math.min(6, 1 + Math.floor(u)), lt = v === "S" ? "S" : "E";
+      nombre = "muerte" + lt + n;
+      if (n < 6) {
+        sigue = "muerte" + lt + (n + 1);
+        mezcla = Math.max(0, (u - (n - 1) - 0.6) / 0.4);
+      }
       q = nueva();
       ef.muere = Math.min(1, o.muere / MUERTE);
+      const p = Math.max(0, Math.min(1, (o.muere - 0.15) / 0.9));
+      ef.piedra = p * p * (3 - 2 * p);
     } else if (lado && sube && g > 0.12 && cargar("aplastar" + lado).listo) {
       // el aplastar: el árbol en alto con las dos manos; tiembla cuando está por bajar
       nombre = "aplastar" + lado;
@@ -246,6 +281,11 @@ window.TROL = (function () {
       nombre = "reves" + lado;
       q = nueva();
       q.dx = b > 0.8 ? Math.sin(t * 40) * 6 : 0;
+    } else if (v !== "S" && (o.mov || 0) > 0.05 && cargar("andar/" + v + "01").listo) {
+      // la caminata de la lámina, de costado y de espaldas
+      const i = Math.floor(t * ANDA * Math.min(1.3, o.mov) + (o.sem || 0) * 5) % 12;
+      nombre = "andar/" + v + String(i + 1).padStart(2, "0");
+      q = nueva();
     } else {
       q = postura(v, t, o);
       if (v === "N") {
@@ -272,16 +312,42 @@ window.TROL = (function () {
     }
     const st = cargar(nombre);
     if (!st.listo) return false;
-    return pintar(c, st, VISTAS[nombre], huesos(VISTAS[nombre], q), o, ef, v === "E");
+    // al cambiar de pose (parado, aplastar, impacto, revés, la caminata, la muerte) la de antes se funde en la nueva
+    const tipo = nombre.replace(/\d+$/, "");
+    if (F.tipo !== tipo) {
+      F.antes = F.tipo && !F.tipo.startsWith("muerte") ? { nombre: F.nombre, q: F.q, t0: t } : null;
+      F.tipo = tipo;
+    }
+    F.nombre = nombre;
+    F.q = q;
+    const costado = v === "E", dibuja = (n, qq, a, sombra) => {
+      const s2 = cargar(n);
+      if (s2.listo && a > 0.01) pintar(c, s2, VISTAS[n], huesos(VISTAS[n], qq), o, ef, costado, a, sombra);
+    };
+    const A = F.antes, ua = A ? (t - A.t0) / FUNDE : 1;
+    let alfa = 1;
+    if (A && ua < 1) {
+      dibuja(A.nombre, A.q, 1 - ua * ua, true);
+      alfa = Math.min(1, ua * 2);
+    }
+    if (sigue && cargar(sigue).listo && mezcla > 0) {
+      dibuja(nombre, q, alfa * (1 - mezcla * mezcla), !A || ua >= 1);
+      dibuja(sigue, nueva(), alfa * Math.min(1, mezcla * 2), false);
+    } else dibuja(nombre, q, alfa, !A || ua >= 1);
+    return true;
   }
-  function pintar(c, st, def, Ms, o, ef, costado) {
+  function pintar(c, st, def, Ms, o, ef, costado, alfa, sombra) {
     const cols = pinturas(st, (o.pal || 0) % PALETAS.length);
     const esc = (MUNDO * def.k) / 2048;
     c.save();
-    c.fillStyle = "rgba(0,0,0,0.36)";
-    c.beginPath();
-    c.ellipse(0, 0, costado ? 62 : 72, 16, 0, 0, Math.PI * 2);
-    c.fill();
+    if (sombra) {
+      c.fillStyle = "rgba(0,0,0,0.36)";
+      c.beginPath();
+      c.ellipse(0, 0, costado ? 62 : 72, 16, 0, 0, Math.PI * 2);
+      c.fill();
+    }
+    c.globalAlpha *= alfa;
+    const piedra = ef.piedra || 0, grises = piedra > 0 ? deGris(st) : null, a0 = c.globalAlpha;
     const T0 = c.getTransform();
     c.scale(esc, esc);
     c.translate(-def.pie[0], -def.pie[1]);
@@ -302,6 +368,12 @@ window.TROL = (function () {
       c.setTransform(r[0], r[1], r[2], r[3], r[4], r[5]);
       c.fillStyle = cols[i];
       c.fill(fs[i].path);
+      if (grises) {
+        c.globalAlpha = a0 * piedra;
+        c.fillStyle = grises[i];
+        c.fill(fs[i].path);
+        c.globalAlpha = a0;
+      }
     }
     // la runa del pecho: late, se enciende en los avisos y se apaga al morir
     const encender = (col, a, modo) => {
