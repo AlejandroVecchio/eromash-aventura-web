@@ -1556,13 +1556,25 @@ window.ELDERVALD = (function () {
     fn();
     c.restore();
   }
+  // los trozos no dependen del giro: con la cámara derecha llevan adentro el barro, el musgo y los helechos; girada,
+  // esos se dibujan en vivo enderezados (pintarDerechos) sobre trozos sin ellos. Antes cada grado de giro borraba
+  // todos los trozos y, como se repintan de a 3 por cuadro, el piso titilaba mientras la cámara giraba.
   function girarVista(g) {
-    g = Math.round(g * 100) / 100;
-    if (g === giroVista) return;
-    giroVista = g;
-    cache.clear();
+    giroVista = g || 0;
   }
-  function pintarTrozo(tx, ty, esc) {
+  const LOS_DERECHOS = ["alfombraMusgo", "barro", "brezo", "helechos"];
+  // lo que se endereza contra el giro, en el orden de siempre (primero musgo y barro, planos; los helechos encima)
+  function pintarDerechos(c, x0, y0, x1, y1) {
+    LOS_DERECHOS.forEach((id) => {
+      const m = id === "helechos" ? 40 : 140,
+        mv = id === "helechos" ? 40 : 70;
+      decoDe(id).forEach((d) => {
+        if (d.x < x0 - m || d.x > x1 + m || d.y < y0 - mv || d.y > y1 + mv) return;
+        derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, id === "helechos" ? { sem: d.sem } : { s: d.s, sem: d.sem, huellas: d.huellas }));
+      });
+    });
+  }
+  function pintarTrozo(tx, ty, esc, sinDerechos) {
     const lado = Math.ceil(TROZO * esc);
     const cv = document.createElement("canvas");
     cv.width = cv.height = lado;
@@ -1665,15 +1677,8 @@ window.ELDERVALD = (function () {
       if (Math.max(o.x, x2) + 200 < x0 || Math.min(o.x, x2) - 200 > x1) return;
       ASSETS.dibujar(c, o.id, o.x, o.y, 0, o.o);
     });
-    // primero musgo y barro (planos), después los helechos encima
-    DECO.forEach((d) => {
-      if ((d.id !== "alfombraMusgo" && d.id !== "barro" && d.id !== "brezo") || d.x < x0 - 140 || d.x > x1 + 140 || d.y < y0 - 70 || d.y > y1 + 70) return;
-      derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, { s: d.s, sem: d.sem, huellas: d.huellas }));
-    });
-    DECO.forEach((d) => {
-      if (d.id !== "helechos" || d.x < x0 - 40 || d.x > x1 + 40 || d.y < y0 - 40 || d.y > y1 + 40) return;
-      derecho(c, d.x, d.y, () => ASSETS.dibujar(c, d.id, d.x, d.y, 0, { sem: d.sem }));
-    });
+    // primero musgo y barro (planos), después los helechos encima (con la cámara girada van en vivo, ver girarVista)
+    if (!sinDerechos) pintarDerechos(c, x0, y0, x1, y1);
     return cv;
   }
   function trazo(c, pts, w, col) {
@@ -1697,14 +1702,22 @@ window.ELDERVALD = (function () {
       tx1 = Math.min(Math.ceil(ANCHO / TROZO) - 1, Math.floor(x1 / TROZO)),
       ty0 = Math.max(0, Math.floor(y0 / TROZO)),
       ty1 = Math.min(Math.ceil(ALTO / TROZO) - 1, Math.floor(y1 / TROZO));
+    const girado = !!giroVista,
+      modo = girado ? "g" : "d";
     let pintados = 0;
     for (let ty = ty0; ty <= ty1; ty++)
       for (let tx = tx0; tx <= tx1; tx++) {
-        const k = tx + "," + ty;
+        const k = modo + tx + "," + ty;
         let cv = cache.get(k);
         if (!cv) {
-          if (pintados > 2 && cache.size && !todo) continue; // no más de 3 por cuadro: evita tirones al llegar a otra zona
-          cv = pintarTrozo(tx, ty, esc);
+          if (pintados > 2 && cache.size && !todo) {
+            // no más de 3 por cuadro: evita tirones al llegar a otra zona. Mientras tanto va el trozo del otro modo si
+            // está (recién girada o enderezada la cámara), así nunca queda un hueco
+            const otro = cache.get((girado ? "d" : "g") + tx + "," + ty);
+            if (otro) c.drawImage(otro, tx * TROZO, ty * TROZO, TROZO + 0.6, TROZO + 0.6);
+            continue;
+          }
+          cv = pintarTrozo(tx, ty, esc, girado);
           pintados++;
           cache.set(k, cv);
           if (cache.size > 120) cache.delete(cache.keys().next().value);
@@ -1714,10 +1727,15 @@ window.ELDERVALD = (function () {
         }
         c.drawImage(cv, tx * TROZO, ty * TROZO, TROZO + 0.6, TROZO + 0.6);
       }
+    if (girado) pintarDerechos(c, Math.max(0, x0), Math.max(0, y0), x1, y1);
   }
   function invalidar(x, y) {
     // vuelve a pintar el trozo de (x, y) y sus vecinos (al reparar el puente, por ejemplo)
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) cache.delete(Math.floor(x / TROZO + dx) + "," + Math.floor(y / TROZO + dy));
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const k = Math.floor(x / TROZO + dx) + "," + Math.floor(y / TROZO + dy);
+        cache.delete("d" + k);
+        cache.delete("g" + k);
+      }
   }
   function repararPuente(si) {
     puenteSano.paso = si;
