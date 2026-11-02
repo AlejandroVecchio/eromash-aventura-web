@@ -12,7 +12,7 @@
     maderaS = C.maderaSombra || "#553A22",
     maderaL = C.maderaLuz || "#9A7650";
   const CUERO = ["#8A6A4A", "#6E5238", "#A8865E"],
-    ROJO = ["#9C2315", "#5E130D", "#C8402D"];
+    ROJO = ["#8E6C34", "#5E4622", "#B8893E"]; // el ocre de los Sin Linde (el rojo es de Eromash)
   const xy = (x, y, s) => (a) => a.map((v, i) => (i % 2 ? y - v * s : x + v * s));
 
   function tiendaSinLinde(c, x, y, t, o) {

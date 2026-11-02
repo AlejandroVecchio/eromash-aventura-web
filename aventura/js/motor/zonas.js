@@ -543,6 +543,62 @@ window.ZONAS = (function () {
     return s - Math.floor(s);
   };
   const PISO = { entrada: ["#3A3430", "#36302C"], sala: ["#2E2A27", "#2A2623"], oscura: ["#262220", "#221E1C"], tesoro: ["#3A3226", "#342C22"], jefe: ["#2A2426", "#262022"] };
+  // la sombra que tiran las paredes sobre el piso: un dibujo chico de la mazmorra entera (roca oscura, piso claro)
+  // desenfocado y estirado encima del piso, así lo que se ve de la sala se apaga suave contra la roca en vez de
+  // terminar en un corte recto. Se arma una vez por mazmorra (de nuevo si se abre una pared: Z.sombraCv = null).
+  const SP = 8; // píxeles por celda
+  function sombraDe(Z) {
+    if (Z.sombraCv) return Z.sombraCv;
+    const d = Z.d,
+      g = (x, y) => (x < 0 || y < 0 || x >= d.ancho || y >= d.alto ? 0 : Z.g[y * d.ancho + x]),
+      M = 3, // celdas de margen alrededor
+      w = (d.ancho + M * 2) * SP,
+      h = (d.alto + M * 2) * SP;
+    const crudo = document.createElement("canvas");
+    crudo.width = w;
+    crudo.height = h;
+    const cc = crudo.getContext("2d");
+    cc.fillStyle = "#050404";
+    cc.fillRect(0, 0, w, h);
+    const tapa = Math.round((H / C) * SP); // la pared de abajo se dibuja corrida hacia arriba: tapa esa parte del piso
+    for (let cy = 0; cy < d.alto; cy++)
+      for (let cx = 0; cx < d.ancho; cx++) {
+        if (!g(cx, cy)) continue;
+        const px = (cx + M) * SP,
+          py = (cy + M) * SP;
+        cc.clearRect(px, py, SP, g(cx, cy + 1) ? SP : SP - tapa);
+      }
+    const cv = document.createElement("canvas");
+    cv.width = w;
+    cv.height = h;
+    const c2 = cv.getContext("2d");
+    if ("filter" in c2) {
+      c2.filter = "blur(" + Math.round(SP * 0.45) + "px)";
+      c2.drawImage(crudo, 0, 0);
+    } else {
+      // sin filtros: achicar y volver a agrandar también desenfoca
+      const ch2 = document.createElement("canvas");
+      ch2.width = Math.ceil(w / 4);
+      ch2.height = Math.ceil(h / 4);
+      ch2.getContext("2d").drawImage(crudo, 0, 0, ch2.width, ch2.height);
+      c2.imageSmoothingEnabled = true;
+      c2.drawImage(ch2, 0, 0, w, h);
+    }
+    Z.sombraCv = { cv, M };
+    return Z.sombraCv;
+  }
+  function sombrasPared(c, Z) {
+    const s0 = sombraDe(Z),
+      k = C / SP;
+    DIB.alfa(c, 0.72, () => c.drawImage(s0.cv, Z.x0 - s0.M * C, Z.y0 - s0.M * C, s0.cv.width * k, s0.cv.height * k));
+  }
+  // la tapa de roca de cada celda de pared va casi negra, igual en todas (sin costuras entre celdas): lo que se ve
+  // de la sala termina en la sombra del piso (sombrasPared) que se funde con la roca, no en un rectángulo de roca
+  // iluminada recortado contra el negro. El canto que da a la sala queda apenas marcado.
+  function tapaOscura(c, X, Y, canto, colCanto) {
+    DIB.alfa(c, 0.8, () => DIB.R(c, X - 1, Y - H, C + 2, C + 1, "#050404"));
+    if (canto) DIB.alfa(c, 0.55, () => DIB.R(c, X - 1, Y - H, C + 2, 6, colCanto));
+  }
   function fondoMazmorra(c, Z, x0, y0, x1, y1) {
     const d = Z.d,
       cx0 = Math.max(0, Math.floor((x0 - Z.x0) / C) - 1),
@@ -573,6 +629,7 @@ window.ZONAS = (function () {
           if (h0 < 0.06 && tipo !== "jefe") DIB.alfa(c, 0.5, () => DIB.E(c, lx + 50, ly + 60, 26, 9, "#3E4A2E"));
         }
       }
+    sombrasPared(c, Z);
     if (window.MAZMORRAS && Z.estilo) MAZMORRAS.sobrePiso(c, Z, x0, y0, x1, y1);
     // el círculo rúnico de la sala del jefe
     if (Z.jefe) {
@@ -621,6 +678,7 @@ window.ZONAS = (function () {
               h0 = hash(cx, cy);
             if (window.MAZMORRAS && Z.estilo) {
               MAZMORRAS.pared(c, Z, cx, cy, X, Y, cara, g(cx, cy - 1) > 0);
+              tapaOscura(c, X, Y, g(cx, cy - 1) > 0, MAZMORRAS.canto(Z));
               const si = Z.sala[(cy + 1) * d.ancho + cx];
               if (cara && si >= 0 && d.salas[si].antorchas && d.salas[si].antorchas.includes(cx)) ASSETS.dibujar(c, "antorchaPared", X + C / 2, Y + C - 30, J.t, { encendida: true, s: 1.1 });
               return;
@@ -628,6 +686,7 @@ window.ZONAS = (function () {
             DIB.R(c, X - 1, Y - H, C + 2, C + 1, h0 < 0.5 ? "#161211" : "#141010");
             // el canto de arriba de la pared que tapa la sala (se lee dónde termina)
             if (g(cx, cy - 1) > 0) DIB.R(c, X - 1, Y - H, C + 2, 7, "#2A2420");
+            tapaOscura(c, X, Y, g(cx, cy - 1) > 0, "#2A2420");
             if (!cara) return;
             // la cara de la pared que mira a la sala: hiladas de piedra
             DIB.R(c, X - 1, Y + C - H, C + 2, H, "#3A3430");

@@ -16,14 +16,15 @@ window.LUZ = (function () {
   // la hora del día (0..24) a partir del tiempo de juego; la partida empieza a las 9 de la mañana
   const hora = (tiempo) => (9 + (tiempo / DIA) * 24) % 24;
   // cuánta noche hay: 0 de día, 1 en plena noche
+  // (la noche cierra a las 20:30 y a las 6 ya clarea: antes a las 6 seguía siendo noche cerrada)
   function noche(h) {
-    if (h >= 20 || h < 4.5) return 1;
-    if (h >= 17.5) return (h - 17.5) / 2.5;
-    if (h < 7) return 1 - (h - 4.5) / 2.5;
+    if (h >= 20.5 || h < 4) return 1;
+    if (h >= 18) return (h - 18) / 2.5;
+    if (h < 6.4) return 1 - (h - 4) / 2.4;
     return 0;
   }
-  // el atardecer y el amanecer tiñen todo de ámbar
-  const ocaso = (h) => Math.max(0, 1 - Math.abs(h - 18.4) / 1.3) + Math.max(0, 1 - Math.abs(h - 5.8) / 1.0) * 0.6;
+  // el atardecer y el amanecer tiñen todo de ámbar (de 17 a 20 y de 4:30 a 7:30)
+  const ocaso = (h) => Math.max(0, 1 - Math.abs(h - 18.6) / 1.6) + Math.max(0, 1 - Math.abs(h - 6) / 1.4) * 0.8;
 
   // estado de cada cuadro: oscuridad objetivo según la hora y el lugar (sombra = cuánto tapa el bosque ahí)
   function ambiente(tiempo, sombra, dt) {
@@ -32,7 +33,8 @@ window.LUZ = (function () {
     const objetivo = Math.min(0.9, 0.06 + sombra * 0.34 + n * 0.72);
     osc += (objetivo - osc) * (1 - Math.exp(-dt * 1.5));
     const o = ocaso(h);
-    tono = [Math.round(8 + o * 40), Math.round(12 + o * 10), Math.round(26 - o * 10)];
+    // la sombra del ocaso tira a vino, no a azul
+    tono = [Math.round(8 + o * 56), Math.round(12 + o * 6), Math.round(26 + o * 6)];
     // de noche cerrada el tono se va al azul de la luna
     if (n > 0.7) tono = [tono[0], tono[1] + Math.round((n - 0.7) * 20), tono[2] + Math.round((n - 0.7) * 40)];
     return { h, n, o, osc };
@@ -43,22 +45,27 @@ window.LUZ = (function () {
     const nv = nivel();
     c.save();
     c.setTransform(1, 0, 0, 1, 0, 0);
-    // el ámbar del atardecer, por debajo de la oscuridad
+    // el ámbar del atardecer, por debajo de la oscuridad: tiñe (multiplica) y suma un poco de luz cálida
     if (amb.o > 0.02) {
+      c.globalCompositeOperation = "multiply";
+      c.fillStyle = `rgba(255,150,96,${(0.62 * amb.o).toFixed(3)})`;
+      c.fillRect(0, 0, cw, ch);
       c.globalCompositeOperation = "source-over";
-      c.fillStyle = `rgba(255,141,113,${0.1 * amb.o})`;
+      c.fillStyle = `rgba(255,141,113,${(0.12 * amb.o).toFixed(3)})`;
       c.fillRect(0, 0, cw, ch);
     }
     // rayos de sol que se cuelan entre las copas (de día, solo alta)
     // el color de los rayos sigue la hora (rosado al alba, oro a mediodía, ámbar al caer el sol); de noche, la luna;
     // con lluvia casi no pasan (amb.lluvia lo pone vida.js)
     const ll = amb.lluvia || 0;
-    if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o) * (1 - ll * 0.85), colorHora(amb.h));
+    // (con la oscuridad apagada: los rayos rosados del alba sobre la noche azul se veían como rayas violeta)
+    if (nv === "alta" && amb.n < 0.6) rayos(c, cw, ch, x0, t, (1 - amb.n / 0.6) * (0.5 + amb.o) * (1 - ll * 0.85) * Math.max(0, 1 - amb.osc * 1.4), colorHora(amb.h));
     else if (nv === "alta" && amb.n >= 0.6 && ll < 0.5) rayos(c, cw, ch, x0, t, ((amb.n - 0.6) / 0.4) * 0.55, "200,242,244");
     if (nv === "baja") {
       const tb = amb.tono || tono;
       c.fillStyle = `rgba(${tb[0]},${tb[1]},${tb[2]},${Math.min(0.42, amb.osc * 0.55)})`;
       c.fillRect(0, 0, cw, ch);
+      velo(c, cw, ch, amb);
       c.restore();
       return;
     }
@@ -88,6 +95,7 @@ window.LUZ = (function () {
     cc.globalAlpha = 1;
     c.imageSmoothingEnabled = true;
     c.drawImage(capa, 0, 0, cw, ch);
+    velo(c, cw, ch, amb);
     // el color de cada luz, sumado (solo alta, y más fuerte cuanto más oscuro)
     if (nv === "alta" && amb.osc > 0.2) {
       c.globalCompositeOperation = "lighter";
@@ -105,25 +113,48 @@ window.LUZ = (function () {
     }
     c.restore();
   }
+  // la bruma (amb.bruma, la pone vida.js): un velo gris claro sobre todo, más espeso arriba (lo lejano) que abajo;
+  // de noche toma el tono de la oscuridad. Es un solo rectángulo con un degradado hecho una vez: va en toda calidad
+  let veloG = null;
+  function velo(c, cw, ch, amb) {
+    const b = amb.bruma || 0;
+    if (b <= 0.02) return;
+    if (!veloG || veloG.h !== ch) {
+      const g = c.createLinearGradient(0, 0, 0, ch);
+      g.addColorStop(0, "rgba(255,255,255,1)");
+      g.addColorStop(0.55, "rgba(255,255,255,0.7)");
+      g.addColorStop(1, "rgba(255,255,255,0.45)");
+      veloG = { g, h: ch };
+    }
+    const n = amb.n || 0,
+      mez = (a, z) => Math.round(a + (z - a) * Math.min(1, n * 1.1));
+    c.globalCompositeOperation = "source-over";
+    c.globalAlpha = Math.min(0.5, 0.36 * b * (1 - n * 0.45));
+    c.fillStyle = `rgb(${mez(200, 60)},${mez(212, 72)},${mez(218, 88)})`;
+    c.fillRect(0, 0, cw, ch);
+    // y más espesa arriba
+    c.globalAlpha = Math.min(0.3, 0.2 * b * (1 - n * 0.6));
+    c.fillStyle = veloG.g;
+    c.fillRect(0, 0, cw, ch);
+    c.globalAlpha = 1;
+  }
   // Las luces se pintan con dos dibujos hechos una sola vez (crear un degradado por luz en cada cuadro era lo más caro
   // de la luz): el agujero en la oscuridad (círculo que se apaga hacia afuera, cortado en una elipse de 1 × 0,82) y
   // el brillo de cada color. La fuerza de cada luz va como globalAlpha: da lo mismo que el degradado de antes.
   const LADO = 256;
+  // (el degradado es redondo y se aplasta a la elipse: antes se recortaba un círculo con una elipse y arriba y abajo
+  // la luz terminaba en un borde duro; y cae suave, sin escalón, hasta 0 justo en el borde)
   const AGUJERO = (() => {
     const cv = document.createElement("canvas");
     cv.width = LADO;
     cv.height = Math.round(LADO * 0.82);
     const g2 = cv.getContext("2d"),
-      m = LADO / 2,
-      my = cv.height / 2;
-    const g = g2.createRadialGradient(m, my, 0, m, my, m);
-    g.addColorStop(0, "rgba(0,0,0,1)");
-    g.addColorStop(0.45, "rgba(0,0,0,0.75)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
+      m = LADO / 2;
+    g2.scale(1, cv.height / LADO);
+    const g = g2.createRadialGradient(m, m, 0, m, m, m);
+    [[0, 1], [0.3, 0.9], [0.5, 0.72], [0.64, 0.52], [0.76, 0.32], [0.86, 0.16], [0.94, 0.05], [1, 0]].forEach(([q, a]) => g.addColorStop(q, "rgba(0,0,0," + a + ")"));
     g2.fillStyle = g;
-    g2.beginPath();
-    g2.ellipse(m, my, m, my, 0, 0, Math.PI * 2);
-    g2.fill();
+    g2.fillRect(0, 0, LADO, LADO);
     return cv;
   })();
   const BRILLOS = new Map();
@@ -173,9 +204,9 @@ window.LUZ = (function () {
   }
   // niebla baja: bancos que flotan sobre el piso en el mundo (alta: siempre un poco, de noche más)
   const BANCOS = Array.from({ length: 14 }, (_, i) => ({ fx: (i * 0.61) % 1, fy: (i * 0.37) % 1, r: 0.5 + ((i * 0.53) % 1) * 0.6, v: 8 + (i % 5) * 4 }));
-  function niebla(c, x0, y0, vw, vh, t, densidad) {
+  function niebla(c, x0, y0, vw, vh, t, densidad, bruma = 0) {
     if (nivel() !== "alta" || densidad <= 0.02) return;
-    const celda = 1400;
+    const celda = Math.round(1400 - 650 * Math.min(1, bruma)); // con bruma los bancos van más juntos
     c.save();
     const gx0 = Math.floor(x0 / celda) - 1,
       gy0 = Math.floor(y0 / celda) - 1;

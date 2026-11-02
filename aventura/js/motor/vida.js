@@ -167,7 +167,8 @@ window.VIDA = (function () {
     bruma = 0,
     viento = 12,
     rafaga = null, // { t, dur, dir }
-    proxRafaga = 20;
+    proxRafaga = 20,
+    climaListo = false;
   const forzado = new URLSearchParams(location.search).get("clima");
   function climaDe(tiempo) {
     const h = LUZ.hora(tiempo),
@@ -990,8 +991,11 @@ window.VIDA = (function () {
         amb = A.amb();
       // el clima va cambiando suave
       const cl = climaDe(A.H.E.tiempo);
-      lluvia += (cl.ll - lluvia) * Math.min(1, dt * 0.4);
-      bruma += (cl.br - bruma) * Math.min(1, dt * 0.4);
+      // el primer cuadro (al cargar, o con ?clima=) arranca con el clima del momento, sin esperar a que entre
+      const k = climaListo ? Math.min(1, dt * 0.4) : 1;
+      climaListo = true;
+      lluvia += (cl.ll - lluvia) * k;
+      bruma += (cl.br - bruma) * k;
       // ráfagas de viento: cruzan hojas y suben el viento un rato
       proxRafaga -= dt;
       if (proxRafaga <= 0) {

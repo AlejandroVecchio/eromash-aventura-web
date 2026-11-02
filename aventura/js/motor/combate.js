@@ -490,6 +490,51 @@ window.COMBATE = (function () {
         c.stroke();
       });
   }
+  // ---------- los nombres de los líderes ----------
+  // Se pintan al final del cuadro en píxeles del lienzo (c sin transformar). cabeza = [x0, y0, x1, y1] de Eromash en
+  // el lienzo: un nombre que se le encima sube por arriba de su casco. Nunca se sale del borde de la pantalla.
+  const rotulosCola = [];
+  function rotulos(c, cw, ch, cabeza) {
+    const lista = rotulosCola.splice(0);
+    const tapados = [];
+    lista.sort((a, b) => b.py - a.py);
+    lista.forEach((r) => {
+      const k = Math.max(0.7, Math.min(1.6, r.k)),
+        fN = '800 ' + Math.round(13 * k) + 'px "Eromash Text", system-ui, sans-serif',
+        fT = '600 ' + Math.round(10 * k) + 'px "Eromash Text", system-ui, sans-serif';
+      c.font = fN;
+      let w = c.measureText(r.nombre).width;
+      if (r.titulo) {
+        c.font = fT;
+        w = Math.max(w, c.measureText(r.titulo).width);
+      }
+      const alto = (r.titulo ? 28 : 15) * k,
+        m = 8;
+      let x = Math.max(w / 2 + m, Math.min(cw - w / 2 - m, r.px)),
+        y = r.py;
+      // la caja ocupa de y - alto a y + 3 (la base del nombre está en y)
+      const choca = (b) => x + w / 2 > b[0] && x - w / 2 < b[2] && y + 3 * k > b[1] && y - alto < b[3];
+      if (cabeza && choca(cabeza)) y = cabeza[1] - 6 * k;
+      tapados.forEach((b) => choca(b) && (y = b[1] - 4 * k));
+      y = Math.max(alto + m, Math.min(ch - m, y));
+      tapados.push([x - w / 2, y - alto, x + w / 2, y + 3 * k]);
+      c.globalAlpha = r.a;
+      c.textAlign = "center";
+      c.lineWidth = 3 * k;
+      c.strokeStyle = "#0A0707";
+      c.font = fN;
+      c.strokeText(r.nombre, x, y);
+      c.fillStyle = r.col;
+      c.fillText(r.nombre, x, y);
+      if (r.titulo) {
+        c.font = fT;
+        c.strokeText(r.titulo, x, y - 14 * k);
+        c.fillStyle = "#F2ECEC";
+        c.fillText(r.titulo, x, y - 14 * k);
+      }
+    });
+    c.globalAlpha = 1;
+  }
   function dibujar(c, e, t) {
     if (e.d.dibujo) return ASSETS.dibujar(c, e.d.dibujo, e.x, e.y, t, Object.assign({ herido: e.herido, sem: e.sem }, e.o));
     if (!e.activo || e.muerto > 0.8) return;
@@ -525,20 +570,11 @@ window.COMBATE = (function () {
         c.fillRect(e.x - w / 2, y, (w * Math.max(0, e.vida)) / e.d.vida, 5);
         if (window.RPG) RPG.rotulo(c, e, e.x - w / 2 - 12, y + 2);
       } else if (window.RPG && e.muerto === 0 && e.estado !== "quieto" && e.estado !== "vuelve") RPG.rotulo(c, e, e.x - 32, y + 2);
-      if (e.lider && e.muerto === 0) {
-        c.font = '800 13px "Eromash Text", system-ui, sans-serif';
-        c.textAlign = "center";
-        c.lineWidth = 3;
-        c.strokeStyle = "#0A0707";
-        c.strokeText(e.lider.nombre, e.x, y - 8);
-        c.fillStyle = e.lider.unico ? "#FFD98A" : "#E0B2B2";
-        c.fillText(e.lider.nombre, e.x, y - 8);
-        if (e.lider.titulo) {
-          c.font = '600 10px "Eromash Text", system-ui, sans-serif';
-          c.strokeText(e.lider.titulo, e.x, y - 22);
-          c.fillStyle = "#F2ECEC";
-          c.fillText(e.lider.titulo, e.x, y - 22);
-        }
+      // el nombre del líder no se dibuja acá: se anota dónde cae en la pantalla y juego.js lo pinta al final con
+      // rotulos(), encima de todo, sin taparle la cabeza a Eromash ni salirse del borde
+      if (e.lider && e.muerto === 0 && rotulosCola.length < 40) {
+        const m = c.getTransform();
+        rotulosCola.push({ px: m.a * e.x + m.c * (y - 8) + m.e, py: m.b * e.x + m.d * (y - 8) + m.f, k: Math.hypot(m.a, m.b), nombre: e.lider.nombre, titulo: e.lider.titulo, col: e.lider.unico ? "#FFD98A" : "#E0B2B2", a: c.globalAlpha });
       }
     });
   }
@@ -739,5 +775,5 @@ window.COMBATE = (function () {
     c.restore();
   }
 
-  return { TIPOS, AFIJOS, crear, actualizar, golpear, reiniciar, dibujar, contiene, dibujarAviso, crearCiervo, despertar, reiniciarCiervo, actualizarCiervo, golpearCiervo, dibujarCiervo, atados, VIDA_C };
+  return { TIPOS, AFIJOS, crear, actualizar, golpear, reiniciar, dibujar, contiene, dibujarAviso, crearCiervo, despertar, reiniciarCiervo, actualizarCiervo, golpearCiervo, dibujarCiervo, atados, VIDA_C, rotulos };
 })();

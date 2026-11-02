@@ -440,10 +440,11 @@ window.EIKHOLT = (function () {
       let p;
       if (desde && desde.guardado) p = [st.x, st.y];
       else if (desde && desde.puerta && plano.anclas["puerta_" + desde.puerta]) {
-        // del lado de adentro de la puerta, un poco más adentro que el portón
+        // del lado de adentro de la puerta, pasando el portón: a 3 m quedaba debajo del pasillo de arriba (en la Puerta
+        // del Sur, con la cámara mirando al norte, se lo veía chiquito a través del techo)
         const q = plano.anclas["puerta_" + desde.puerta],
           l = Math.hypot(q[0], q[1]);
-        p = [q[0] - (q[0] / l) * 3 * M, q[1] - (q[1] / l) * 3 * M];
+        p = [q[0] - (q[0] / l) * 9 * M, q[1] - (q[1] / l) * 9 * M];
       } else p = lugarDe(jug.x, jug.y);
       if (!MUNDO25.libre(p[0], p[1], 30)) p = MUNDO25.buscarLibre(p[0], p[1]);
       const e = ero();

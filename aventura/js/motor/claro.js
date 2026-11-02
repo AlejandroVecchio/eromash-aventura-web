@@ -110,17 +110,22 @@ window.CLARO = (function () {
         pie: cy,
         y: 1e9 - 2,
         f: () => {
+          // se apaga arriba y también abajo, y los costados van en tres capas: antes terminaba en una raya recta
           const w0 = libre ? 520 : 300,
-            g = c.createLinearGradient(0, cy - 1400, 0, cy + 200);
+            a = libre ? 0.16 : 0.11,
+            g = c.createLinearGradient(0, cy - 1400, 0, cy + 420);
           g.addColorStop(0, "rgba(200,230,240,0)");
-          g.addColorStop(1, `rgba(200,230,240,${libre ? 0.16 : 0.11})`);
+          g.addColorStop(0.72, `rgba(200,230,240,${a / 3})`);
+          g.addColorStop(1, "rgba(200,230,240,0)");
           c.fillStyle = g;
-          c.beginPath();
-          c.moveTo(cx - w0 * 0.5, cy - 1400);
-          c.lineTo(cx + w0 * 0.5, cy - 1400);
-          c.lineTo(cx + w0 * 1.6, cy + 200);
-          c.lineTo(cx - w0 * 1.6, cy + 200);
-          c.fill();
+          for (const k of [1, 0.78, 0.56]) {
+            c.beginPath();
+            c.moveTo(cx - w0 * 0.5 * k, cy - 1400);
+            c.lineTo(cx + w0 * 0.5 * k, cy - 1400);
+            c.lineTo(cx + w0 * 1.9 * k, cy + 420);
+            c.lineTo(cx - w0 * 1.9 * k, cy + 420);
+            c.fill();
+          }
         },
       });
       // la niebla baja, que se levanta al final

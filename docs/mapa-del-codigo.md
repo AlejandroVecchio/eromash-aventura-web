@@ -243,7 +243,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **cocina.js**: la cocina en la fogata (sistema COCINA, modo "cocina")
   - lo que hace falta · el menú de la fogata · la tabla de cortar · el dibujo de la tabla · íconos · el sistema
 - **combate.js**: combate: criaturas, avisos en el piso y el Ciervo Hueco (módulo COMBATE)
-  - avisos en el piso · criaturas · el Ciervo Hueco (EL-05)
+  - avisos en el piso · criaturas · los nombres de los líderes · el Ciervo Hueco (EL-05)
 - **comercio.js**: el comercio: comprar, vender y recomprar (sistema COMERCIO)
   - precios · lo que venden hoy · comprar, vender, recomprar · la pestaña del mercader · Kolbrun en el bosque · el sistema
 - **conjuntos.js**: los conjuntos de equipo (sistema CONJUNTOS)

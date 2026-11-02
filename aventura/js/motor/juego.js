@@ -1616,6 +1616,7 @@
       });
     }
     lista.sort((a, b) => a.y - b.y);
+    prepararFocos(vista);
     prepararAura(lista);
     lista.forEach((d) => {
       if (aura) auraAntes(d); // el claro de Eromash
@@ -1632,7 +1633,7 @@
     pisoT();
     cadaSis("aire", c, wx0, wy0, wx1, wy1); // hojas, polen, humo, lluvia y nubes (debajo de la luz: vida.js)
     // la luz y la niebla van encima del mundo; chispas y números quedan encima de la luz para leerse siempre
-    LUZ.niebla(c, x0, y0, vw, vh, J.t, amb.niebla != null ? amb.niebla : 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0));
+    LUZ.niebla(c, x0, y0, vw, vh, J.t, amb.niebla != null ? amb.niebla : 0.35 + amb.n * 0.9 + (window.VIDA ? VIDA.niebla() : 0), amb.bruma || 0);
     let luces = juntarLuces(wx0, wy0, wx1, wy1);
     if (g) luces = luces.map((l) => Object.assign({}, l, { x: vista(l.x, l.y)[0], y: vista(l.x, l.y)[1] }));
     LUZ.dibujar(c, cw, ch, x0, y0, esc, luces, amb, J.t);
@@ -1696,6 +1697,12 @@
       c.fillStyle = g;
       c.fillRect(0, 0, cw, ch);
     }
+    // los nombres de los líderes, encima de todo: sin taparle la cabeza a Eromash ni cortarse en el borde
+    const [jvx, jvy] = vista(jug.x, jug.y),
+      jsx = (jvx - x0) * esc,
+      jsy = (jvy - (jug.z || 0) - y0) * esc,
+      saltoJ = jug.salto > 0 ? Math.sin((1 - jug.salto / 0.42) * Math.PI) * 70 * CUERPO : 0;
+    CB.rotulos(c, cw, ch, [jsx - 34 * esc, jsy - (92 + saltoJ) * esc, jsx + 34 * esc, jsy - 20 * esc]);
     if (limpio) return;
     cunasGolpe(cw, ch);
     flechasAmenaza(x0, y0, x1, y1);
@@ -1948,15 +1955,29 @@
     fondoC = fondoCv.getContext("2d");
   // en cada cuadro: { x, y, rx, ry, clave, px, py, pw, ph } (el óvalo en la vista y en píxeles del lienzo), o null;
   // capa = la tanda abierta (con qué máscara va)
-  let aura = null;
+  let aura = null,
+    auraR = 0,
+    auraT = 0;
   function prepararAura(lista) {
     aura = null;
     if (J.modo === "titulo" || jug.muerto || (window.CALIDAD && CALIDAD.nivel === "baja") || (window.OPCIONES && OPCIONES.v("aura") === false)) return;
     const yo = lista.find((d) => d.jugador),
       [jx, jy] = J.vista(jug.x, jug.y),
-      rx = 210 * (J.lampara || 1),
+      y = jy - (jug.z || 0) - 45;
+    // el claro se abre hasta abarcar a las criaturas que pelean cerca (focos), así un arbusto o una copa no tapa la
+    // pelea; crece y se achica de a poco
+    const base = 210 * (J.lampara || 1);
+    let quiere = base;
+    focos.forEach((f) => {
+      const dx = Math.abs(f.x - jx) + f.r,
+        dy = Math.abs(f.y - f.h * 0.5 - y) + f.h * 0.5;
+      quiere = Math.max(quiere, Math.min(base * 2.4, Math.max(dx, dy / AURA_K) / 0.62));
+    });
+    const dtA = Math.min(0.1, Math.max(0, J.t - auraT));
+    auraT = J.t;
+    auraR = auraR ? auraR + (quiere - auraR) * Math.min(1, dtA * (quiere > auraR ? 5 : 1.5)) : quiere;
+    const rx = Math.max(base, Math.ceil(auraR / 24) * 24), // de a escalones: las capas del claro no cambian de tamaño en cada cuadro
       ry = rx * AURA_K,
-      y = jy - (jug.z || 0) - 45,
       m = c.getTransform(),
       r = window.CALIDAD && CALIDAD.nivel === "media" ? 0.5 : 1; // en media la capa va a media resolución
     aura = { x: jx, y, rx, ry, clave: yo ? yo.y : jy, capa: null, r };
@@ -2033,6 +2054,27 @@
     }
     if (masc === MASCARA_ADELANTE) d.enAura = true;
   }
+  // las criaturas que pelean con Eromash (en la vista): lo alto que las tapa desde adelante se vuelve transparente,
+  // como el claro de Eromash, así la pelea se ve aunque pase detrás de un arbusto o de la copa de un roble
+  let focos = [];
+  function prepararFocos(vista) {
+    focos = [];
+    if (J.modo === "titulo") return;
+    enemigos.forEach((e) => {
+      if (!e.activo || e.muerto || e.d.dibujo || e.estado === "quieto" || e.estado === "vuelve" || focos.length >= 16) return;
+      if (Math.abs(e.x - jug.x) > 900 || Math.abs(e.y - jug.y) > 700) return;
+      const [x, y] = vista(e.x, e.y),
+        s = e.s || 1;
+      focos.push({ x, y, r: (e.d.radio || 20) * s + 10, h: (e.d.barra || 60) * s });
+    });
+  }
+  function tapaFoco(o, d) {
+    if (!focos.length || o.o.piso || o.alto < 20) return false;
+    const b = bordes(o),
+      ox = o.x + ((d && d.dx) || 0),
+      oy = o.y + ((d && d.dy) || 0);
+    return focos.some((f) => oy > f.y && oy - b.alto < f.y && Math.abs(ox - f.x) < b.ancho * 0.8 + f.r);
+  }
   // árboles y casas que tapan a Eromash se vuelven transparentes (con el claro de arriba, o si está apagado, de a uno)
   function dibujarCosa(o, d) {
     if (d && d.corte) {
@@ -2050,6 +2092,7 @@
     // la copa de los gigantes tapa desde muy arriba: [desde, hasta, ancho] medidos desde el pie del árbol
     const cp = o.o.copa;
     if (cp && o.y > jug.y && o.y - jug.y > cp[0] - 40 && o.y - jug.y < cp[1] && Math.abs(jug.x - o.x) < cp[2]) a = 0.62;
+    if (a === 1 && !aura && tapaFoco(o, d)) a = 0.5; // sin el claro (calidad baja), de a uno
     if (a < 1) DIB.alfa(c, a, () => ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o));
     else ASSETS.dibujar(c, o.id, o.x, o.y, J.t, o.o);
   }

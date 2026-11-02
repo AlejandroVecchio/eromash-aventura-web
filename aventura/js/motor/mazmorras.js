@@ -258,6 +258,7 @@ window.MAZMORRAS = (function () {
     const W = Z.d.ancho;
     Z.g[gr.y * W + gr.x] = 2;
     Z.g[(gr.y - 1) * W + gr.x] = 2;
+    Z.sombraCv = null; // la sombra de las paredes se vuelve a armar (zonas.js)
     const cx = Z.x0 + gr.x * C + C / 2,
       cy = Z.y0 + (gr.y - 1) * C + C / 2;
     Z.cofres.push({ x: cx, y: cy, k: gr.k + "_c", rico: false });
@@ -753,6 +754,7 @@ window.MAZMORRAS = (function () {
     piso,
     sobrePiso,
     pared,
+    canto: (Z) => PARED[Z.estilo][3],
     objetos,
     luces,
     aire,

@@ -1,7 +1,8 @@
 // ---------- los Sin Linde: bandidos del bosque (se suman a CRIATURAS) ----------
 // Útlagi: gente que el Ting echó fuera de la ley y que vive en el bosque, fuera de toda linde. Diseños propios, en tres
 // vistas (S frente, E costado, N espaldas), base en (0, 0), con el trazo de la arena (caras planas, mitad izquierda
-// en sombra). Tres variantes de color (o.pal): trapos rojos de los Sin Linde, piel de lobo gris y verde de monte.
+// en sombra). Tres variantes de color (o.pal): trapos de ocre de los Sin Linde (nunca el
+// rojo de Eromash: en pelea se confundían), piel de lobo gris y verde de monte.
 //  · Bandido: capucha con una tira de tela que tapa la boca, chaleco de cuero, escudo remendado y hacha corta.
 //  · Arquero: capucha larga, carcaj a la espalda y arco de tejo; tensa el arco durante el aviso.
 // El rasgo de todos: una linde partida (un rombo cortado al medio) pintada en el pecho o en el escudo.
@@ -9,7 +10,7 @@
   "use strict";
   const { P, E, R, L, sombra } = DIB;
   const PAL = [
-    { capa: "#9C2315", capaS: "#5E130D", ropa: "#5A4432", ropaS: "#3E2E22", piel: "#C8987A", pielS: "#A87A5E", marca: "#FF8D71" }, // trapos rojos
+    { capa: "#8E6C34", capaS: "#5E4622", ropa: "#4A3A2C", ropaS: "#32271E", piel: "#C8987A", pielS: "#A87A5E", marca: "#FF8D71" }, // trapos de ocre
     { capa: "#6E6A66", capaS: "#4E4A46", ropa: "#3A3432", ropaS: "#262220", piel: "#D8B8A0", pielS: "#B8987E", marca: "#C8402D" }, // piel de lobo
     { capa: "#4E5A3E", capaS: "#3A4430", ropa: "#5A4A36", ropaS: "#3E3226", piel: "#C0906E", pielS: "#9E7254", marca: "#FFD98A" }, // verde de monte
   ];

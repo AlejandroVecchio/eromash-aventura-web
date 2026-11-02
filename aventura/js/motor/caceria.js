@@ -216,8 +216,11 @@ window.CACERIA = (function () {
       const s = caza.miembros.find((e) => !e.muerto && e !== caza.cazador);
       if (s) aullido(s.x, s.y);
     }
-    // la noche se tiñe de violeta mientras corre
-    J.ambZona = Object.assign(J.ambZona || {}, { tono: [30, 16, 56] });
+    // la noche se tiñe de violeta y se cierra más mientras corre (entra en dos segundos): las luces siguen abriendo
+    // su agujero, así la lámpara y los braseros se vuelven lo único que se ve
+    caza.tinte = Math.min(1, (caza.tinte || 0) + dt / 2);
+    const k = caza.tinte;
+    J.ambZona = Object.assign(J.ambZona || {}, { tono: [Math.round(8 + 26 * k), Math.round(14 + 2 * k), Math.round(30 + 30 * k)], osc: Math.max(A.amb ? A.amb().osc : 0.8, 0.8 + 0.14 * k) });
   }
 
   // ---------- el cuerno ----------
