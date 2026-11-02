@@ -1654,7 +1654,9 @@
     });
     c.globalAlpha = 1;
     // el rombo rúnico sobre lo que se usa con E ahora (la persona, la cosa)
-    if (J.cerca && J.cerca.x != null) {
+    // el modo cámara para videos (motor/video.js) graba sin las ayudas del jugador: rombo, haz, cuñas y flechas
+    const limpio = !!(window.VIDEO && VIDEO.limpio);
+    if (J.cerca && J.cerca.x != null && !limpio) {
       const [bx, by0] = vista(J.cerca.x, J.cerca.y),
         by = by0 + Math.sin(J.t * 4) * 5;
       DIB.halo(c, bx, by, 26, "#73D5DB", 1);
@@ -1671,8 +1673,8 @@
       c.stroke();
     }
     const enVista = (p) => (p && g ? vista(p[0], p[1]) : p);
-    dibujarHaz(enVista(dondeObjetivo()), x0, y0, x1, y1);
-    if (window.MAPA) dibujarHaz(enVista(MAPA.marca()), x0, y0, x1, y1, "255,217,138", "#FFD98A");
+    if (!limpio) dibujarHaz(enVista(dondeObjetivo()), x0, y0, x1, y1);
+    if (window.MAPA && !limpio) dibujarHaz(enVista(MAPA.marca()), x0, y0, x1, y1, "255,217,138", "#FFD98A");
     // el aire del bosque: viñeta suave (se apaga en calidad baja)
     c.setTransform(1, 0, 0, 1, 0, 0);
     if (!window.CALIDAD || CALIDAD.nivel !== "baja") {
@@ -1694,6 +1696,7 @@
       c.fillStyle = g;
       c.fillRect(0, 0, cw, ch);
     }
+    if (limpio) return;
     cunasGolpe(cw, ch);
     flechasAmenaza(x0, y0, x1, y1);
   }

@@ -48,7 +48,7 @@ window.VIDEO = (function () {
   function pilotar(dt) {
     pad.axes[0] = pad.axes[1] = 0;
     boton(2, false);
-    if (J.modo !== "juego" || J.dentro) return;
+    if (J.modo !== "juego") return; // también en Eikholt y adentro: el palo anda igual
     const enemigos = (window.JUEGO && JUEGO.enemigos) || [];
     let obj = null,
       dm = 1600;
@@ -129,6 +129,7 @@ window.VIDEO = (function () {
   return {
     sistema,
     activo,
+    limpio: activo && modo !== "hud", // juego.js no dibuja el rombo de E, el haz del objetivo, las cuñas ni las flechas
     listo: () => listo,
     escena,
     buscarEscena,
