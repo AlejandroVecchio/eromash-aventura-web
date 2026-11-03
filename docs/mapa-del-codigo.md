@@ -342,6 +342,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
   - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
   - partículas con estado · luces que dejan los eventos · clima del día · los lugares místicos · fauna chica · emisores con estado (brasas, humo, hojas, motas rúnicas…) · campos sin estado (dependen solo de la posición y el tiempo) · el fuego guía · fauna chica: liebres, pinzones, mariposas y bandadas · eventos que mandan los sistemas · capas de dibujo · el sistema
+- **video.js**: el modo cámara para grabar videos (sistema VIDEO)
+  - la interfaz · el mando virtual del piloto · las escenas · el sistema
 - **zonas.js**: las zonas del generador: mazmorras oscuras y tierras con islas (sistema ZONAS)
   - los generadores (también los usa el editor) · leer un pedido escrito (sin IA) · las tres mazmorras que vienen con el juego · armar cada zona en su lugar fuera del mapa · entrar, salir y pasar · dibujar · el sistema
 

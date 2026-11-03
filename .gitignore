@@ -1,3 +1,6 @@
 node_modules/
 .DS_Store
 *.log
+
+# tomas grabadas con herramientas/grabar.cjs
+tomas/
