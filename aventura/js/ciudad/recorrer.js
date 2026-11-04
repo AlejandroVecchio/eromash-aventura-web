@@ -54,11 +54,13 @@ window.RECORRER25 = (function () {
   const FRASES_GENERICAS = { guardia: "ek.dice_guardia_", trabajador: "ek.dice_vecino_", trabajador2: "ek.dice_vecina_", trabajador3: "ek.dice_viajero_", herido: "ek.dice_vecina_", svanhild: null, eydis: null, orm: null };
   const CHICOS = { tyra: 1, eirik: 1, arvid: 1 };
   const LINEAS_ROL = { vecino: 8, vecina: 8, nino: 5, vendedor: 6, recluta: 4, viajero: 6, pescador: 4, guardia: 5 };
+  // n puede venir negativo (una semilla por posición): en JS -9 % 8 da -1 y salía la clave cruda «ek.dice_vecina_-1»
+  const resto = (n, L) => (((Math.floor(n) % L) + L) % L);
   function frase(id, n, rol) {
-    if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + (n % LINEAS_ROL[rol]));
+    if (rol && LINEAS_ROL[rol]) return tr("ek.dice_" + rol + "_" + resto(n, LINEAS_ROL[rol]));
     const pre = FRASES_GENERICAS[id];
     if (pre === null) return null;
-    const k = pre ? pre + (n % (pre.includes("guardia") ? 5 : pre.includes("viajero") ? 6 : 8)) : "pj." + id + "_" + (n % 4);
+    const k = pre ? pre + resto(n, pre.includes("guardia") ? 5 : pre.includes("viajero") ? 6 : 8) : "pj." + id + "_" + resto(n, 4);
     const s = tr(k);
     return s === k ? null : s;
   }
