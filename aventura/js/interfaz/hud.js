@@ -366,6 +366,7 @@ window.HUD = (function () {
   let guardadoT = 0;
   function guardado() {
     $("hudGuardado").classList.remove("oculto");
+    if (window.SONIDO) SONIDO.tocar("interfaz/guardado", { vol: 0.3, var: 0 });
     clearTimeout(guardadoT);
     guardadoT = setTimeout(() => $("hudGuardado").classList.add("oculto"), 1600);
   }
@@ -420,7 +421,7 @@ window.HUD = (function () {
   }
   function elegir(i) {
     const b = menu && menu.botones[i];
-    if (b && window.SONIDO) SONIDO.tocar("clic", { vol: 0.3 });
+    if (b && window.SONIDO) SONIDO.tocar("interfaz/confirmar", { vol: 0.4 });
     if (b) b.fn();
   }
   function cerrar() {

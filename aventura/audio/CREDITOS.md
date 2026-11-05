@@ -12,3 +12,9 @@ Todos vienen de la carpeta `juego/audio/` del juego de la arena (repo eromash-ju
 - `fogata.ogg`: fragmento de **1 Hour of Relaxing fireplace with Crackling Sounds**, Hear_it_use_it — https://freesound.org/people/Hear_it_use_it/sounds/873471/ — **CC BY 4.0**, https://creativecommons.org/licenses/by/4.0/ (tramo de 36 s nivelado y cerrado en bucle, hecho para la arena).
 
 CC0: https://creativecommons.org/publicdomain/zero/1.0/
+
+## Hechos con ElevenLabs (`eleven/`)
+
+Todo lo que está en `aventura/audio/eleven/` (música, ambientes, efectos y voces, 557 tomas) se generó en noviembre de 2026 con **ElevenLabs** (plan Creator, cuenta de Alejandro Vecchio) a partir de los prompts de la lista de sonidos del juego: efectos y ambientes con *Sound Effects* (`eleven_text_to_sound_v2`), música con *Eleven Music* y voces con *Voice Design* + *Text to Speech* (`eleven_multilingual_v2`). Con plan pago el uso comercial está permitido; la música entra en la excepción de «Indie Game» de los Eleven Music Terms (juego con menos de 500.000 USD de ingresos y estudio con menos de 1.000.000 USD el último año fiscal). Hay que declararlo en el cuestionario de contenido generado por IA de Steam.
+
+Los archivos se nivelaron (música −18 LUFS, ambientes −26, interfaz −21, efectos y voces −17, tope de −1 dBTP) y se pasaron a ogg vorbis. El prompt y los créditos de cada toma están en la carpeta del proyecto `sonidos/aventura-2.5d/` (`creditos.csv`, `registro.jsonl`). La lista para el juego la arma `node herramientas/sonidos-lista.cjs`.

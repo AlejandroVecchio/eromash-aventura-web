@@ -148,8 +148,12 @@ window.COMBATE = (function () {
   }
   // lo que se oye cuando una criatura prepara el golpe: las bestias gruñen, los muertos y los fuegos zumban grave
   const GRUNEN = { bandido: 1.5, arquero: 1.7, lobo: 1.25, jabali: 0.95, oso: 0.7, trol: 0.6, cuervo: 1.7, dreki: 0.45 };
+  let teVioT = -9;
   function sonarAviso(e) {
     if (!window.SONIDO) return;
+    // la señal de aviso se oye siempre (se lee igual que la marca en el piso) y encima la voz de cada criatura
+    SONIDO.tocar("criaturas/aviso", { vol: 0.3, x: e.x, y: e.y, var: 0.04 });
+    if (SONIDO.criatura(e, Math.random() < 0.5 ? "ataque" : "aviso") || SONIDO.criatura(e, "aviso")) return;
     const g = GRUNEN[e.tipo];
     if (g) SONIDO.tocar(e.patron || e.lider ? "rugido" : "grunido", { vol: e.patron || e.lider ? 0.5 : 0.4, tono: g / (e.s || 1), x: e.x, y: e.y });
     else SONIDO.zumbido(e.x, e.y, e.d.pesado ? 1.4 : 1);
@@ -286,7 +290,11 @@ window.COMBATE = (function () {
           e.estado = "persigue";
           e.vio = 1.1;
           alertar(e);
-          if (window.SONIDO && (e.lider || e.patron)) SONIDO.tocar("rugido", { vol: 0.55, tono: 0.85, x: e.x, y: e.y });
+          if (window.SONIDO && (e.lider || e.patron)) SONIDO.tocar(e.patron ? "jefes/semijefe-rugido" : "rugido", { vol: 0.55, x: e.x, y: e.y });
+          else if (window.SONIDO && J.t - teVioT > 4) {
+            teVioT = J.t;
+            SONIDO.tocar("criaturas/te-vio", { vol: 0.45, var: 0 });
+          }
           // el rugido de un líder sobresalta a Eromash
           // y a un semijefe le contesta con un pisotón
           if ((e.lider || e.patron) && window.ANIMA) ANIMA.gesto("susto");
@@ -303,6 +311,7 @@ window.COMBATE = (function () {
         if (HUYEN[e.tipo] && !e.lider && !e.patron && e.vida < d.vida * 0.2 && !e.huyo) {
           e.huyo = true;
           e.estado = "huye";
+          if (window.SONIDO) SONIDO.criatura(e, "huye", { vol: 0.45 });
           e.t = 0;
           break;
         }
@@ -427,6 +436,7 @@ window.COMBATE = (function () {
       if (!(e.d.pesado || e.lider || e.patron) || e.aguante >= 3) {
         e.aguante = 0;
         e.aturdido = e.d.pesado || e.lider ? 0.9 : 0.7;
+        if (window.SONIDO) SONIDO.tocar("armas-y-habilidades/aturdido", { vol: 0.45, x: e.x, y: e.y });
         if (e.aviso) {
           J.quitarAviso(e.aviso);
           e.aviso = null;

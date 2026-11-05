@@ -137,6 +137,8 @@ window.CARTEL = (function () {
     if (C.dibujo === "region" && REGIONES[op.region]) dib = REGIONES[op.region]();
     else if (C.dibujo === "estandarte" && CAPITALES.includes(op.capital)) dib = estandarte(op.capital);
     calcularMomentos();
+    // la primera vez en un lugar suena el cuerno del descubrimiento (el regreso no suena)
+    if (tipo !== "regreso" && window.SONIDO) SONIDO.tocar("interfaz/lugar", { vol: tipo === "lugar" ? 0.5 : 0.65, var: 0 });
     tt = 0;
     activo = true;
     lienzo.style.display = "block";

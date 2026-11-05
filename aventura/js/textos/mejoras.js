@@ -53,6 +53,7 @@ I18N.textos({
   "op.si": { es: "Sí", en: "On" },
   "op.no": { es: "No", en: "Off" },
   "op.vol_general": { es: "Volumen general", en: "Master volume" },
+  "op.vol_musica": { es: "Volumen de la música", en: "Music volume" },
   "op.vol_efectos": { es: "Volumen de los efectos", en: "Effects volume" },
   "op.vol_ambiente": { es: "Volumen del bosque", en: "Forest volume" },
   "op.calidad": { es: "Calidad gráfica", en: "Graphics quality" },

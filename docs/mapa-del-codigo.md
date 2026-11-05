@@ -140,11 +140,14 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 
 ### js/comun/ · lo compartido: dibujo, runas, controles y sonido
 
+- **banda.js**: banda sonora (módulo BANDA)
 - **controles.js**: controles (módulo CONTROLES)
   - teclas propias
 - **dibujo.js**: herramientas de dibujo (módulo DIB)
 - **futhark.js**: las runas del Futhark antiguo (módulo FUTHARK)
 - **sonido.js**: sonido (módulo SONIDO)
+  - las voces de cada criatura · la música
+- **sonidos-lista.js**: Los sonidos de ElevenLabs que hay en audio/eleven/ (lo arma herramientas/sonidos-lista.cjs: no se edita a mano).
 - **volumen.js**: todo girable: volúmenes que se ven bien desde cualquier lado (módulo VOL)
   - el giro del mundo · colores: cada cara con su tono · el proyector de un objeto · caras · sólidos · en el piso del objeto · partes de un objeto, de atrás hacia adelante · la gente y las criaturas: la vista según la cámara · ayudas para pasar los dibujos viejos
 

@@ -128,6 +128,7 @@
       jug.sta = Math.min(jug.staMax, jug.sta + 15);
       jug.contra = 1.6;
       textoFlotante(jug.x, jug.y - 130, t("mj.justa"), "#73D5DB");
+      if (window.SONIDO) SONIDO.tocar("eromash/esquiva-justa", { vol: 0.7, var: 0 });
     }
     if (jug.muerto || jug.salto > 0 || jug.inv > 0) return; // saltar evita todo; esquivar da invulnerabilidad
     if ((jug.z || 0) > 60) return; // arriba de la muralla no llegan los de abajo
@@ -148,7 +149,10 @@
     if (golpesDir.length > 4) golpesDir.shift();
     jug.inv = 0.6;
     jug.sinGolpe = 0;
-    if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.75 });
+    if (window.SONIDO) {
+      SONIDO.tocar(dano >= 20 ? "eromash/herido-fuerte" : "eromash/herido", { vol: 0.75 });
+      if (Math.random() < 0.6) SONIDO.tocar("eromash/voz-dolor", { vol: 0.5, var: 0.05 });
+    }
     const l = Math.hypot(jug.x - ox, jug.y - oy) || 1;
     jug.vx = ((jug.x - ox) / l) * 380;
     jug.vy = ((jug.y - oy) / l) * 380;
@@ -267,6 +271,7 @@
     if (window.PODERES && PODERES.pj()) PODERES.darPlata(plata);
     HUD.aviso(t("mj.mision_cumplida", [plata]), "#FFD98A");
     if (window.SONIDO) SONIDO.tocar("mision", { vol: 0.7, var: 0 });
+    if (window.SONIDO) J.retrasar(1.2, () => SONIDO.tocar("interfaz/mision-nueva", { vol: 0.55, var: 0 }));
     ANIMA.gesto("grito", 0, { col: "#FFD98A" });
     if (window.VIDA) VIDA.evento("mision", jug.x, jug.y);
     J.retrasar(1.2, () => H.mision() && HUD.aviso(tav("mision_" + H.idMision()), "lugar", t("mj.mision_nueva")));
@@ -280,7 +285,7 @@
     if (e === etapaVista) return;
     if (etapaVista && e.split("-").slice(0, 2).join("-") === etapaVista.split("-").slice(0, 2).join("-")) {
       HUD.aviso(t("mj.objetivo_cumplido"), "#7BC86C");
-      if (window.SONIDO) SONIDO.tocar("pagina", { vol: 0.6 });
+      if (window.SONIDO) SONIDO.tocar("interfaz/objetivo", { vol: 0.6, var: 0 });
       J.retrasar(1.4, adondeIr);
     }
     etapaVista = e;
@@ -449,6 +454,7 @@
     if (lenteEspera > 0) return;
     lenteEspera = 1.2;
     J.ondas.push({ tipo: "pulso", x: jug.x, y: jug.y, t: 0 });
+    if (window.SONIDO) SONIDO.tocar("runas/lente", { vol: 0.5, var: 0.03 });
     let algo = false;
     for (const r of REVELA)
       if (r.cond() && dist(jug, r.p) <= r.radio) {
@@ -458,6 +464,7 @@
       }
     SISM.forEach((s0) => s0.lente && s0.lente(jug.x, jug.y) && (algo = true));
     if (!algo) setTimeout(() => (avisar("lente_nada"), ANIMA.gesto("duda")), 500);
+    else if (window.SONIDO) setTimeout(() => SONIDO.tocar("runas/revelar", { vol: 0.5 }), 450);
   }
 
   // ---------- diálogos ----------
@@ -487,6 +494,15 @@
     // en Opciones, «diálogos: solos» pasa a la línea siguiente después del tiempo de leerla
     dlg.solo = window.OPCIONES && OPCIONES.v("dialogos") === "solos" ? 1.6 + texto.length * 0.045 : 0;
     for (const id in npcs) npcs[id].hablando = id === quien ? 1 : 0;
+    // la primera vez que alguien habla en un diálogo se oye su voz (una frase corta en el idioma del juego)
+    // (la piedra rúnica dice cada línea entera: voces/runa_refugio_1-es)
+    const idioma = I18N.lang === "en" ? "en" : "es";
+    const linea = "voces/" + String(clave).replace(/^dlg_/, "") + "-" + idioma,
+      voz = "voces/" + quien + "-" + idioma;
+    if (window.SONIDO && SONIDO.hay(linea)) {
+      if (!dlg.i) SONIDO.tocar("runas/runa-voz-entrada", { vol: 0.35, var: 0 });
+      SONIDO.tocar(linea, { vol: 0.85, var: 0 });
+    } else if (window.SONIDO && SONIDO.hay(voz) && !dlg.d.lineas.slice(0, dlg.i).some((l) => l[0] === quien)) SONIDO.tocar(voz, { vol: 0.8, var: 0 });
   }
   function seguirDialogo() {
     dlg.i++;
@@ -571,6 +587,10 @@
     jug.muerto = true;
     jug.hp = 0;
     J.sacudir(0.8);
+    if (window.SONIDO) {
+      SONIDO.tocar("eromash/voz-caer", { vol: 0.55, var: 0 });
+      SONIDO.tocar("eromash/caer", { vol: 0.6, var: 0 });
+    }
     const caida = [jug.x, jug.y];
     setTimeout(() => HUD.fundido(true), 550);
     setTimeout(() => {
@@ -591,6 +611,7 @@
       J.cam.x = jug.x;
       J.cam.y = jug.y;
       HUD.fundido(false);
+      if (window.SONIDO) SONIDO.tocar("eromash/volver", { vol: 0.6, var: 0 });
       avisar("reapareciste");
     }, 1600);
   }
@@ -642,7 +663,13 @@
   }
   function atacarCon(d, dir, side = 1) {
     jug.atk = { t: 0, d, dir, side, pego: false };
-    if (window.SONIDO) SONIDO.tocar(d.caida ? "caida" : "tajo", { vol: d.giro || d.remate ? 0.55 : 0.4, tono: d.giro ? 0.8 : d.remate ? 0.88 : 1.05 });
+    if (window.SONIDO) {
+      // el combo suena distinto en cada golpe: dos tajos y el remate grande; el giro es el torbellino
+      const tajo = d.caida ? "caida" : d.giro ? "armas-y-habilidades/torbellino" : d.remate ? "armas-y-habilidades/tajo-3" : d.avanza ? "eromash/estocada" : side < 0 ? "armas-y-habilidades/tajo-2" : "armas-y-habilidades/tajo-1";
+      SONIDO.tocar(tajo, { vol: d.giro || d.remate ? 0.55 : 0.45, var: 0.06, dur: d.giro ? 0.7 : undefined });
+      if (d.remate || d.caida) SONIDO.tocar("eromash/voz-fuerte", { vol: 0.45, var: 0.04 });
+      else if (Math.random() < 0.3) SONIDO.tocar("eromash/voz-golpe", { vol: 0.35, var: 0.06 });
+    }
     if (!d.giro) jug.mira = VIKINGO.vista(Math.cos(dir), Math.sin(dir), jug.mira);
     if (d.caida) {
       polvareda(jug.x, jug.y, 14);
@@ -678,7 +705,7 @@
     return enemigos.some((e) => e.activo && !e.muerto && e.estado !== "quieto" && e.estado !== "vuelve" && Math.abs(e.x - jug.x) < 1100 && Math.abs(e.y - jug.y) < 800);
   }
   function columnaRunica(x, y) {
-    if (window.SONIDO) SONIDO.runa(x, y);
+    if (window.SONIDO) SONIDO.hay("mundo/viaje-columna") ? SONIDO.tocar("mundo/viaje-columna", { vol: 0.6, x, y, var: 0.03 }) : SONIDO.runa(x, y);
     J.ondas.push({ tipo: "pulso", x, y, t: 0 });
     J.marcas.push({ tipo: "anillo", x, y, s: 1.6, col: "#73D5DB", t: 0, dura: 2.4 }); // breve: no es una marca de la Lente
     if (window.CALIDAD && CALIDAD.nivel === "baja") return;
@@ -701,7 +728,8 @@
         pasoAcum = 0;
         const puente = W.PUENTES.some((p) => W.distLinea(jug.x, jug.y, [p.a, p.b]) < 50);
         const cam = !puente && W.CAMINOS.find((c0) => W.distLinea(jug.x, jug.y, c0.p) < c0.w / 2);
-        const tipo = puente ? "pasoMadera" : cam && (cam.tipo === "adoquin" || cam.tipo === "ladrillo") ? "pasoPiedra" : "paso";
+        const barro = !puente && !cam && W.barroEn && W.barroEn(jug.x, jug.y);
+        const tipo = puente ? "pasoMadera" : cam && (cam.tipo === "adoquin" || cam.tipo === "ladrillo") ? "pasoPiedra" : barro ? "pasoBarro" : !cam && Math.random() < 0.3 ? "pasoHojas" : "paso";
         SONIDO.tocar(tipo, { vol: [0, 0.18, 0.25, 0.34][jug.paso], var: 0.1, filtro: tipo === "paso" && !cam ? 2200 : null });
       }
     } else pasoAcum = 40;
@@ -727,7 +755,7 @@
     SONIDO.bucle("fogata", "fogata", f * 0.7);
     // con poca vida se oye el corazón
     if (jug.hp < jug.hpMax * 0.25 && !jug.muerto && (latidoT -= dt) <= 0) {
-      latidoT = 0.9;
+      latidoT = SONIDO.hay("eromash/latido") ? 2 : 0.9;
       SONIDO.latido();
     }
   }
@@ -846,7 +874,7 @@
       jug.atk = null;
       jug.carga = 0;
       polvareda(jug.x, jug.y, 5);
-      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.5, tono: 1.25 });
+      if (window.SONIDO) SONIDO.tocar("eromash/esquiva", { vol: 0.5 });
       return;
     }
     if (pide("saltar") && jug.salto <= 0 && !jug.atk) {
@@ -854,7 +882,7 @@
       jug.salto = 0.42;
       jug.saltoLargo = jug.correr;
       jug.golpeAire = false;
-      if (window.SONIDO) SONIDO.tocar("tela", { vol: 0.35, tono: 0.9 });
+      if (window.SONIDO) SONIDO.tocar("eromash/salto", { vol: 0.45 });
     }
     // al caer del salto: polvo, y si se atacó en el aire, el golpe contra el piso
     if (jug.saltoAntes > 0 && jug.salto <= 0) {
@@ -1000,16 +1028,19 @@
       const murio = CB.golpear(J, e, dano, jug.x, jug.y, d.empuje || 1);
       cadaSis("alPegar", e, dano, info, murio);
       if (window.SONIDO) {
-        SONIDO.tocar(critico || contra || d.remate || d.caida || e.d.pesado ? "golpeFuerte" : "golpe", { vol: critico || contra ? 0.9 : 0.6, tono: e.d.pesado ? 0.8 : 1, x: e.x, y: e.y });
-        if (murio) SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
-        else if (!e.d.muerto && Math.random() < 0.35) SONIDO.tocar("herida", { vol: 0.35, tono: e.d.pesado ? 0.7 : 1.15, x: e.x, y: e.y });
+        SONIDO.tocar(SONIDO.impacto(e), { vol: 0.6, tono: e.d.pesado ? 0.85 : 1, x: e.x, y: e.y });
+        if (critico || contra) SONIDO.tocar("armas-y-habilidades/critico", { vol: 0.7, x: e.x, y: e.y });
+        if (sorpresa) SONIDO.tocar("eromash/sorpresa", { vol: 0.5, x: e.x, y: e.y });
+        if (murio && (d.remate || d.caida || critico)) SONIDO.tocar("armas-y-habilidades/remate", { vol: 0.6, x: e.x, y: e.y });
+        if (murio) SONIDO.criatura(e, "muerte") || SONIDO.tocar("muerte", { vol: 0.5, tono: e.d.pesado ? 0.7 : e.d.vuela ? 1.3 : 1, x: e.x, y: e.y });
+        else if (Math.random() < 0.35) SONIDO.criatura(e, "herida", { vol: 0.4 }) || (!e.d.muerto && SONIDO.tocar("herida", { vol: 0.35, tono: e.d.pesado ? 0.7 : 1.15, x: e.x, y: e.y }));
       }
       pego++;
     }
     if (ciervo.activo && enArco(ciervo.x, ciervo.y, 60)) {
       const antes = ciervo.vida;
       CB.golpearCiervo(J, ciervo, d.dano * J.mulDano * (contra ? 2 : 1));
-      if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.8, tono: 0.7, x: ciervo.x, y: ciervo.y });
+      if (window.SONIDO) SONIDO.tocar("armas-y-habilidades/impacto-madera", { vol: 0.8, tono: 0.85, x: ciervo.x, y: ciervo.y });
       chispa(ciervo.x, ciervo.y - 80);
       numero(ciervo.x, ciervo.y - 120, Math.max(0, Math.round(antes - ciervo.vida)), contra ? "#FFD98A" : null, contra);
       pego++;
@@ -2245,6 +2276,7 @@
   }
   function pausa() {
     J.modo = "menu";
+    J.pausa = true; // la música de la pausa (comun/banda.js)
     HUD.abrir(`<h2>${tav("pausa_titulo")}</h2>${tarjetaPausa()}`, [
       { texto: tav("pausa_seguir"), fn: cerrarMenu },
       { texto: tav("pausa_guardar"), fn: () => {
@@ -2284,6 +2316,7 @@
     HUD.abrir(`<h2>${tav("fin_titulo")}</h2><p>${tav("fin_texto")}</p>`, [{ texto: tav("fin_seguir"), fn: cerrarMenu }]);
   }
   function cerrarMenu() {
+    J.pausa = false;
     HUD.cerrar();
     J.modo = "juego";
     CONTROLES.soltar();

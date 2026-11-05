@@ -654,6 +654,7 @@ window.INVENTARIO = (function () {
     if (!raiz || !PODERES.estado()) return;
     if (J.modo !== "juego" && J.modo !== "menu") return;
     HUD.cerrar();
+    if (!abierta && window.SONIDO) SONIDO.tocar("interfaz/abrir", { vol: 0.45 });
     abierta = true;
     J.modo = "menu";
     pestana = p || pestana;

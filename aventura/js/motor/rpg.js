@@ -126,8 +126,7 @@ window.RPG = (function () {
     jug.sta = jug.staMax;
     if (A.columnaRunica) A.columnaRunica(jug.x, jug.y);
     if (window.SONIDO) {
-      SONIDO.tocar("mision", { vol: 0.75, tono: 1.12, var: 0 });
-      SONIDO.runa(jug.x, jug.y);
+      SONIDO.tocar("interfaz/nivel", { vol: 0.75, var: 0 });
     }
     if (window.ANIMA) ANIMA.absorber({ col: "#FFD98A", col2: "#FFE7A8", forma: "chispa" });
     if (window.VIDA) VIDA.evento("nivel", jug.x, jug.y);

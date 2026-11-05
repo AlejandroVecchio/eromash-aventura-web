@@ -29,7 +29,7 @@ window.OPCIONES = (function () {
     const S = window.SONIDO;
     const lista = [];
     if (S) {
-      ["general", "efectos", "ambiente"].forEach((k) =>
+      ["general", "musica", "efectos", "ambiente"].forEach((k) =>
         lista.push({ texto: t("op.vol_" + k), valor: pct(S.volumen(k)), fn: () => S.volumen(k, sigVol(S.volumen(k))) }),
       );
     }

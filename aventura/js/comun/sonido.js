@@ -1,38 +1,49 @@
 // ---------- sonido (módulo SONIDO) ----------
-// Los sonidos libres (CC0) de la arena, en audio/ (créditos en audio/CREDITOS.md), más lo que se arma acá mismo con
-// Web Audio: el viento del bosque, los grillos, el zumbido de la runa y el gruñido grave de un aviso. Todo pasa por tres
-// volúmenes (general, efectos, ambiente) que se guardan en el navegador. El audio arranca con el primer toque o tecla
-// (los navegadores no dejan antes). Lo que suena en el mundo baja con la distancia a Eromash y se corre a izquierda o
-// derecha según dónde está.
+// Los sonidos de la aventura: los de ElevenLabs en audio/eleven/<carpeta>/ (la lista la arma herramientas/sonidos-lista.cjs
+// en sonidos-lista.js; SONIDO.tocar("carpeta/nombre")), los libres (CC0) que vinieron de la arena (créditos en
+// audio/CREDITOS.md) y lo que se arma acá mismo con Web Audio: el viento, el zumbido de la runa, el gruñido grave de un
+// aviso. Todo pasa por cuatro volúmenes (general, efectos, ambiente, música) que se guardan en el navegador. El audio
+// arranca con el primer toque o tecla (los navegadores no dejan antes). Lo que suena en el mundo baja con la distancia a
+// Eromash y se corre a izquierda o derecha según dónde está. Nada se baja de golpe: lo chico se carga de a poco detrás
+// y la música y los ambientes recién cuando se piden (la música se escucha mientras baja).
 window.SONIDO = (function () {
   "use strict";
   const n = (pre, a, b, ext) => Array.from({ length: b - a + 1 }, (_, i) => pre + (a + i) + ext);
+  const NUEVOS = window.SONIDOS_LISTA || {};
+  const el = (clave) => (NUEVOS[clave] || []).map((f) => "eleven/" + clave.split("/")[0] + "/" + f + ".ogg");
   const LISTA = {
-    paso: Array.from({ length: 10 }, (_, i) => "pasos/footstep0" + i + ".mp3"),
-    pasoMadera: n("pasos/madera-", 1, 5, ".ogg"),
-    pasoPiedra: n("pasos/piedra-", 1, 3, ".ogg"),
-    tajo: ["golpes/knifeSlice.mp3", "golpes/knifeSlice2.mp3"],
+    paso: el("eromash/tierra").concat(el("eromash/pasos-pasto")),
+    pasoMadera: el("eromash/pasos-madera"),
+    pasoPiedra: el("eromash/adoquin"),
+    pasoHojas: el("eromash/hojas"),
+    pasoBarro: el("eromash/barro"),
+    pasoAgua: el("eromash/agua"),
+    tajo: el("armas-y-habilidades/tajo-1").concat(el("armas-y-habilidades/tajo-2")),
     golpe: ["golpes/chop.mp3"],
     golpeFuerte: n("golpes/impactSoft_heavy_00", 0, 2, ".ogg"),
     tela: ["golpes/cloth1.mp3", "golpes/cloth2.mp3", "golpes/cloth3.mp3"],
-    caida: ["golpes/dropLeather.mp3"],
-    filo: ["golpes/drawKnife1.mp3"],
-    grunido: n("criaturas/grunt_0", 7, 9, ".ogg"),
+    caida: el("eromash/aterrizaje"),
+    filo: el("interfaz/equipar-arma"),
+    grunido: el("criaturas/aviso"),
     herida: ["criaturas/hurt_04.ogg"],
     muerte: ["criaturas/die_03.ogg", "criaturas/creature_die_01.ogg"],
-    rugido: ["criaturas/creature_roar_01.ogg"],
-    plata: ["ui/handleCoins.mp3", "ui/handleCoins2.mp3"],
-    puerta: ["ui/doorClose_4.mp3"],
+    rugido: el("criaturas/lider-rugido"),
+    runa: el("runas/despierta"),
+    plata: el("interfaz/plata"),
+    puerta: el("mundo/puerta-madera"),
     crujido: ["ui/creak1.mp3"],
-    pagina: ["ui/bookFlip1.ogg"],
-    libro: ["ui/bookOpen.ogg"],
-    clic: ["ui/metalClick.ogg"],
-    mision: ["ui/mision_cumplida.ogg"],
+    pagina: el("interfaz/diario"),
+    libro: el("interfaz/libro"),
+    clic: el("interfaz/cursor"),
+    mision: el("interfaz/mision-cumplida"),
     fogata: ["fogata.ogg"],
     cuervos: ["arena_crows.ogg"],
   };
+  for (const k in NUEVOS) LISTA[k] = el(k);
+  // lo que no se baja solo detrás: la música (se escucha por streaming) y los ambientes largos (cuando se piden)
+  const tarde = (k) => k.startsWith("musica/") || k.startsWith("ambiente/");
   const CLAVE = "eromash.aventura.sonido";
-  const vol = { general: 0.8, efectos: 1, ambiente: 0.6 };
+  const vol = { general: 0.8, efectos: 1, ambiente: 0.6, musica: 0.5 };
   try {
     Object.assign(vol, JSON.parse(localStorage.getItem(CLAVE) || "{}"));
   } catch (e) {}
@@ -40,8 +51,10 @@ window.SONIDO = (function () {
     maestro,
     efectos,
     ambiente,
+    musicaG,
     ruido = null;
   const buf = {},
+    pedidos = {},
     bucles = {};
   const oido = { x: 0, y: 0 };
 
@@ -53,8 +66,10 @@ window.SONIDO = (function () {
     maestro = ctx.createGain();
     efectos = ctx.createGain();
     ambiente = ctx.createGain();
+    musicaG = ctx.createGain();
     efectos.connect(maestro);
     ambiente.connect(maestro);
+    musicaG.connect(maestro);
     maestro.connect(ctx.destination);
     aplicarVolumen();
     // ruido marrón de 4 s para el viento
@@ -66,14 +81,27 @@ window.SONIDO = (function () {
       u = (u + 0.02 * (Math.random() * 2 - 1)) / 1.02;
       d[i] = u * 3.5;
     }
-    for (const k in LISTA)
-      LISTA[k].forEach((f, i) =>
+    // primero lo de siempre (pasos, golpes, interfaz), después el resto de los efectos de a tres, sin apurar la página
+    const cola = Object.keys(LISTA).filter((k) => !tarde(k));
+    const sigue = () => {
+      const k = cola.shift();
+      if (k) cargar(k).then(sigue);
+    };
+    for (let i = 0; i < 3; i++) sigue();
+  }
+  // baja y decodifica las tomas de un sonido (una sola vez); devuelve una promesa
+  function cargar(k) {
+    if (pedidos[k]) return pedidos[k];
+    if (!ctx || !LISTA[k]) return Promise.resolve();
+    return (pedidos[k] = Promise.all(
+      LISTA[k].map((f, i) =>
         fetch("audio/" + f)
           .then((r) => r.arrayBuffer())
           .then((a) => ctx.decodeAudioData(a))
           .then((b) => ((buf[k] = buf[k] || [])[i] = b))
           .catch(() => {}),
-      );
+      ),
+    ));
   }
   ["pointerdown", "keydown"].forEach((ev) => addEventListener(ev, () => {
     iniciar();
@@ -85,6 +113,7 @@ window.SONIDO = (function () {
     maestro.gain.value = vol.general;
     efectos.gain.value = vol.efectos;
     ambiente.gain.value = vol.ambiente;
+    musicaG.gain.value = vol.musica;
   }
   function volumen(k, v) {
     if (v == null) return vol[k];
@@ -125,7 +154,10 @@ window.SONIDO = (function () {
   function tocar(nombre, op = {}) {
     if (!ctx || ctx.state !== "running") return;
     const lista = (buf[nombre] || []).filter(Boolean);
-    if (!lista.length) return;
+    if (!lista.length) {
+      cargar(nombre); // la próxima vez ya suena
+      return;
+    }
     const w = enMundo(op.x, op.y);
     const g = (op.vol != null ? op.vol : 1) * w.g;
     if (g < 0.02) return;
@@ -173,8 +205,45 @@ window.SONIDO = (function () {
       tono("sine", f, f * (1.6 + Math.random() * 0.8), 0.05 + Math.random() * 0.05, 0.05 * g, { x, y, retraso: i * (0.05 + Math.random() * 0.1), filtro: 2600 });
     }
   }
+  // ---------- las voces de cada criatura ----------
+  // que: aviso (prepara el golpe), herida, muerte. Devuelve false si esa criatura no tiene sonido propio para eso.
+  const C = "criaturas/";
+  const VOCES = {
+    lobo: { aviso: C + "lobo-grunido", ataque: C + "lobo-ladrido", herida: C + "lobo-herido", muerte: C + "lobo-muerte", huye: C + "huye" },
+    sabuesoCaceria: { aviso: C + "lobo-ladrido", herida: C + "lobo-herido", muerte: C + "lobo-muerte" },
+    errante: { aviso: C + "errante-voz", ataque: C + "errante-ataque", muerte: C + "errante-muerte" },
+    draugr: { aviso: C + "draugr-voz", muerte: C + "draugr-muerte" },
+    custodio: { aviso: C + "custodio-aviso", ataque: C + "custodio-golpe", muerte: C + "custodio-muerte" },
+    jabali: { aviso: C + "jabali", huye: C + "huye" },
+    cuervo: { aviso: C + "cuervo-ataque", huye: C + "cuervo-ataque" },
+    fatuo: { aviso: C + "fatuo", muerte: C + "se-deshace-luz" },
+    oso: { aviso: C + "oso" },
+    trol: { aviso: C + "trol" },
+    bandido: { aviso: C + "bandido-voz", muerte: C + "bandido-muerte" },
+    arquero: { aviso: C + "bandido-voz", muerte: C + "bandido-muerte" },
+    arana: { aviso: C + "arana-chillido" },
+    dreki: { aviso: "jefes/dreki-rugido" },
+    hrimthursar: { aviso: "jefes/hrimthursar" },
+  };
+  // con qué suena el filo al pegarle: piedra y madera, huesos o carne
+  const MATERIAL = { custodio: "roca", trol: "roca", draugr: "hueso", errante: "hueso", fatuo: "madera" };
+  function vozDe(tipo) {
+    if (VOCES[tipo]) return VOCES[tipo];
+    if (/^arana/.test(tipo || "")) return VOCES.arana;
+    if (/bandid|arquer/.test(tipo || "")) return VOCES.bandido;
+    return null;
+  }
+  function criatura(e, que, op = {}) {
+    const v = vozDe(e.tipo);
+    const k = v && v[que];
+    if (!k || !LISTA[k]) return false;
+    tocar(k, Object.assign({ x: e.x, y: e.y, vol: 0.5, var: 0.07, tono: e.s > 1 ? 0.9 : 1 }, op));
+    return true;
+  }
+  const impacto = (e) => "armas-y-habilidades/impacto-" + (MATERIAL[e.tipo] || "carne");
   // el corazón cuando queda poca vida
   function latido() {
+    if ((buf["eromash/latido"] || []).length) return tocar("eromash/latido", { vol: 0.5, var: 0 });
     tono("sine", 62, 44, 0.16, 0.35, { filtro: 200 });
     tono("sine", 58, 40, 0.16, 0.25, { filtro: 200, retraso: 0.2 });
   }
@@ -184,7 +253,10 @@ window.SONIDO = (function () {
     let b = bucles[id];
     if (!b) {
       const fuente = nombre === "viento" ? ruido : (buf[nombre] || [])[0];
-      if (!fuente) return;
+      if (!fuente) {
+        if (g > 0.01) cargar(nombre); // un ambiente se baja recién cuando se lo pide
+        return;
+      }
       const s = ctx.createBufferSource();
       s.buffer = fuente;
       s.loop = true;
@@ -201,15 +273,89 @@ window.SONIDO = (function () {
       }
       ultimo.connect(ambiente);
       s.connect(ga);
-      s.start(0, Math.random() * (fuente.duration - 1));
+      s.start(0, Math.random() * Math.max(0, fuente.duration - 1));
       b = Object.assign(b || {}, { s, ga });
       bucles[id] = b;
     }
     b.ga.gain.setTargetAtTime(Math.max(0, g), ctx.currentTime, 0.4);
     if (b.f && op.filtro) b.f.frequency.setTargetAtTime(op.filtro, ctx.currentTime, 0.6);
   }
+  // ---------- la música ----------
+  // musica(clave) se pide cada cuadro con la pieza que va (o null para silencio): la que estaba se apaga en 2,5 s y la
+  // nueva entra; si vuelve a pedirse una que se estaba apagando, sigue desde donde iba. Cada pieza suena por streaming
+  // (no se espera a que baje entera). remate(clave) toca una pieza corta encima (caer, fin de la pelea) y baja la otra.
+  const piezas = {};
+  let pedida = null,
+    bajar = 0;
+  function pieza(clave) {
+    let p = piezas[clave];
+    if (p) return p;
+    const f = (LISTA[clave] || [])[0];
+    if (!f) return null;
+    const a = new Audio("audio/" + f);
+    a.loop = true;
+    a.preload = "auto";
+    const ga = ctx.createGain();
+    ga.gain.value = 0;
+    try {
+      ctx.createMediaElementSource(a).connect(ga);
+    } catch (e) {
+      return null;
+    }
+    ga.connect(musicaG);
+    p = piezas[clave] = { a, ga, g: 0, quiere: 0 };
+    return p;
+  }
+  function musica(clave, op = {}) {
+    if (!ctx || ctx.state !== "running") return;
+    pedida = clave || null;
+    const base = op.vol != null ? op.vol : 1;
+    for (const k in piezas) {
+      const p = piezas[k];
+      p.quiere = k === pedida ? base * (1 - bajar * 0.7) : 0;
+      p.ga.gain.setTargetAtTime(p.quiere, ctx.currentTime, p.quiere > p.g ? 0.9 : 0.7);
+      if (p.quiere > 0 && p.a.paused) p.a.play().catch(() => {});
+      p.g += (p.quiere - p.g) * 0.03;
+      if (p.quiere === 0 && p.g < 0.01 && !p.a.paused) p.a.pause();
+    }
+    if (pedida && !piezas[pedida]) {
+      const p = pieza(pedida);
+      if (p) {
+        p.a.currentTime = 0;
+        p.a.play().catch(() => {});
+      }
+    }
+  }
+  function remate(clave, op = {}) {
+    if (!ctx || ctx.state !== "running") return;
+    const f = (LISTA[clave] || [])[0];
+    if (!f) return;
+    const a = new Audio("audio/" + f);
+    const ga = ctx.createGain();
+    ga.gain.value = op.vol != null ? op.vol : 1;
+    try {
+      ctx.createMediaElementSource(a).connect(ga);
+    } catch (e) {
+      return;
+    }
+    ga.connect(musicaG);
+    bajar = 1;
+    a.onended = () => (bajar = 0);
+    setTimeout(() => (bajar = 0), (op.max || 12) * 1000);
+    a.play().catch(() => (bajar = 0));
+  }
+  // un sonido que se toca de vez en cuando (gotas, una lechuza): con x, y se oye de ese lado
+  function detalle(nombre, op = {}) {
+    tocar(nombre, Object.assign({ ambiente: true, var: 0.05 }, op));
+  }
   return {
     iniciar,
+    cargar,
+    musica,
+    remate,
+    detalle,
+    musicaActual: () => pedida,
+    hay: (k) => !!LISTA[k],
     tocar,
     tono,
     runa,
@@ -217,6 +363,8 @@ window.SONIDO = (function () {
     latido,
     burbujas,
     bucle,
+    criatura,
+    impacto,
     volumen,
     oyente: (x, y) => ((oido.x = x), (oido.y = y)),
     listo: () => !!ctx && ctx.state === "running",

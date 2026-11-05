@@ -305,6 +305,7 @@ window.MAPA = (function () {
     if (b) b.disabled = !marca();
   }
   function abrir() {
+    if (window.SONIDO) SONIDO.tocar("interfaz/mapa-abrir", { vol: 0.45 });
     // adentro de una mazmorra, su propio mapa (interfaz/mapa-mazmorra.js)
     if (window.MAPA_MAZMORRA && MAPA_MAZMORRA.abrir()) return;
     if (J.leerCroquis) J.leerCroquis(); // el croquis de Eydis (EL-01)

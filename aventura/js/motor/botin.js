@@ -40,7 +40,7 @@ window.BOTIN = (function () {
     st.bolsa.push(it);
     if (!op.silencio) {
       HUD.aviso(t("ob.juntaste", [O().nombre(it)]), O().COL_TEXTO[it.r]);
-      if (window.SONIDO) SONIDO.tocar(O().BASES[it.b].slot === "arma" ? "filo" : "tela", { vol: 0.5, var: 0.1 });
+      if (window.SONIDO) SONIDO.tocar("interfaz/agarrar", { vol: 0.5, var: 0.1 });
     }
     if (window.INVENTARIO) INVENTARIO.repintar();
     return true;
@@ -77,7 +77,7 @@ window.BOTIN = (function () {
     st.puesto[casilla] = it;
     delete it.nuevo;
     if (antes) st.bolsa.splice(i, 0, antes);
-    if (window.SONIDO) SONIDO.tocar(O().BASES[it.b].slot === "arma" ? "filo" : "tela", { vol: 0.5 });
+    if (window.SONIDO) SONIDO.tocar(O().BASES[it.b].slot === "arma" ? "filo" : /malla|placa|yelmo|casco|hierro/.test(it.b) ? "interfaz/equipar-metal" : "interfaz/equipar", { vol: 0.5 });
     if (window.RPG) RPG.recalcular();
     return true;
   }
@@ -167,7 +167,7 @@ window.BOTIN = (function () {
     const a = Math.random() * Math.PI * 2,
       v = iman ? 120 : 70 + Math.random() * 80;
     vuelan.push({ x, y, it, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6, z: 6, vz: 300 + Math.random() * 80, t: 0, iman: !!iman, rot: (Math.random() - 0.5) * 1.2 });
-    if (it.r >= 2 && window.SONIDO) SONIDO.tono("triangle", it.r === 3 ? 392 : 523, it.r === 3 ? 1046 : 784, 0.5, 0.05, { x, y, filtro: 2400 });
+    if (it.r >= 2 && window.SONIDO) SONIDO.tocar(it.r >= 3 ? "interfaz/cae-legendaria" : "interfaz/cae-rara", { vol: it.r >= 3 ? 0.6 : 0.5, x, y, var: 0.03 });
   }
   function aterrizar(v) {
     st.suelo.push({ x: Math.round(v.x), y: Math.round(v.y), it: v.it, rot: v.rot });

@@ -141,8 +141,11 @@ window.PODERES = (function () {
   function botinCofre(x, y, nombre, b, importante) {
     if (window.VIDA) VIDA.evento("cofre", x, y, { importante });
     if (window.SONIDO) {
-      SONIDO.tocar("crujido", { vol: 0.7, x, y });
-      SONIDO.tono("triangle", 523, 784, 0.6, 0.05, { x, y, filtro: 2600, retraso: 0.1 });
+      if (SONIDO.hay("interfaz/cofre")) SONIDO.tocar("interfaz/cofre", { vol: 0.7, x, y, var: 0.03 });
+      else {
+        SONIDO.tocar("crujido", { vol: 0.7, x, y });
+        SONIDO.tono("triangle", 523, 784, 0.6, 0.05, { x, y, filtro: 2600, retraso: 0.1 });
+      }
     }
     const n = window.CALIDAD && CALIDAD.nivel === "baja" ? 6 : 16;
     for (let i = 0; i < n; i++) J.fx.push({ x: x + (Math.random() - 0.5) * 40, y: y - 30, vx: (Math.random() - 0.5) * 160, vy: -200 - Math.random() * 260, t: 0.45 + Math.random() * 0.3, c: i % 3 ? "#FFD98A" : "#FFF4D0", s: 3 + Math.random() * 4, g: 0.5 });
@@ -200,7 +203,7 @@ window.PODERES = (function () {
     pj.hierbas--;
     cura += 45;
     if (window.VIDA) VIDA.evento("sanar", jug.x, jug.y);
-    if (window.SONIDO) SONIDO.tono("sine", 660, 880, 0.35, 0.04, { filtro: 2400 });
+    if (window.SONIDO) SONIDO.tocar("interfaz/hierba", { vol: 0.55 });
     A.numero(jug.x, jug.y - 90, 45, "#7BC86C");
   }
   function darManzana() {
@@ -239,6 +242,9 @@ window.PODERES = (function () {
       A.chispa(e.x, e.y - 30);
       A.CB.golpear(J, e, dano, jug.x, jug.y, 0.6);
     };
+    // cada runa con su sonido (los de ElevenLabs de runas/ y armas-y-habilidades/)
+    const SR = { kenaz: "runas/kenaz", isa: "runas/isa", algiz: "armas-y-habilidades/escudo-subir", sowilo: "mundo/bendicion", laguz: "runas/laguz" };
+    if (window.SONIDO && SR[r]) SONIDO.tocar(SR[r], { vol: r === "sowilo" ? 0.5 : 0.65, var: 0.04, dur: r === "sowilo" ? 2 : undefined });
     if (r === "kenaz") {
       const dir = apuntar(),
         radio = 6.5 * M,
