@@ -341,6 +341,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **sigilo.js**: el sigilo: agacharse, el ojo y el golpe desde las sombras (sistema SIGILO)
   - el sistema
 - **tablon.js**: el tablón de cacería del Puesto (sistema TABLON)
+- **terror.js**: el modo terror para videos (sistema TERROR, ?terror=1)
+  - los ojos entre los árboles · el sistema
 - **tintes.js**: los tintes del casco (sistema TINTES)
   - la pestaña · el sistema
 - **vida.js**: el bosque vivo (sistema VIDA)
