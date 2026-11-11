@@ -1,7 +1,8 @@
 // ---------- el modo cámara para grabar videos (sistema VIDEO) ----------
 // Pedido de Alejandro (2/11/2026, la fábrica de videos para redes): con ?video=1 la aventura se ve limpia para
 // grabar tomas: sin interfaz (?video=hud la deja), sin cursor, Eromash no muere, y se puede pedir una escena armada
-// (?escena=…), un giro lento de la cámara (?barrido=grados por segundo) y un piloto que pelea solo (?piloto=1).
+// (?escena=…), un giro lento de la cámara (?barrido=grados por segundo), un piloto que pelea solo (?piloto=1) y
+// que Eromash pase a través de árboles y cercas (?atravesar=1).
 // Se combina con lo que ya existe: ?jugar=9 (ranura de prueba), ?ver=lugar, ?en=x,y, ?hora=22, ?clima=lluvia,
 // ?zona=id, ?eikholt=1, ?giro=45, ?lejos=1.4, ?lang=en. El encuadre vertical lo da la ventana (540 × 960 en
 // herramientas/grabar.cjs). Las escenas son las entradas de Probar mecánicas (PROBAR.GRUPOS) por su id:
@@ -18,7 +19,9 @@ window.VIDEO = (function () {
     barrido = Number(q.get("barrido")) || 0, // grados por segundo
     giro0 = 0,
     tGiro = 0,
-    piloto = q.get("piloto") === "1",
+    piloto = q.get("piloto") === "1" || q.get("piloto") === "paseo",
+    paseo = q.get("piloto") === "paseo", // ?piloto=paseo: solo pasea, no va a pelear
+    atravesar = q.get("atravesar") === "1", // Eromash pasa a través de los obstáculos (no queda trabado contra un árbol)
     listo = false,
     tListo = 0;
 
@@ -57,7 +60,7 @@ window.VIDEO = (function () {
       const d = Math.hypot(e.x - jug.x, e.y - jug.y);
       if (d < dm) (dm = d), (obj = e);
     });
-    if (!obj) {
+    if (!obj || paseo) {
       // sin nadie cerca: pasea en una vuelta amplia, que también luce en cámara
       const a = J.t * 0.35;
       return mover(Math.cos(a), Math.sin(a) * 0.7, 0.55);
@@ -108,6 +111,7 @@ window.VIDEO = (function () {
       J = A.J;
       jug = A.jug;
       giro0 = J.giro || 0;
+      if (activo && atravesar) J.atravesar = true;
     },
     actualizar(dt) {
       if (!activo || !J) return;
