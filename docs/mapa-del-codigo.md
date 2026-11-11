@@ -315,6 +315,8 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-losas.js**: minijuego: las losas deslizantes (MINIJ «losas»)
 - **mj-rastreo.js**: minijuego: el rastreo con la Lente (MINIJ «rastreo»)
 - **mj-rayo.js**: minijuego: el rayo de luz rúnica (MINIJ «rayo»)
+- **navidad.js**: el modo Navidad (sistema NAVIDAD): Eromash con gorro y Eldervald, el Hongo Dorado y Eikholt de Yule
+  - los árboles adornados · el gorro de Eromash · el bosque de Yule · la nieve · las lucecitas de noche · el Hongo Dorado · Eikholt · el sistema
 - **norte.js**: el corredor del norte en el juego (sistema NORTE)
 - **opcionales.js**: los objetivos opcionales de cada misión principal (sistema OPCIONALES)
   - de dónde sale cada tipo · los de cada misión
@@ -413,6 +415,9 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **assets-mazmorras.js**: lo de adentro de las mazmorras según su estilo: piedras, estalagmitas, estalactitas, cristales y más
   - El montón de piedras · La estalagmita · La estalactita · El cristal de la cueva · Los hongos de luz · El entibado de la mina · La vagoneta · La columna de hielo · Las raíces nudosas · La fuente rúnica
   - assets: montonPiedras, estalagmita, estalactita, cristalCueva, hongosLuz, entibado, vagoneta, columnaHielo, raicesNudosas, fuenteRunica
+- **assets-navidad.js**: Yule en Eldervald: los adornos de Navidad (assets del grupo «navidad» y los adornos de los árboles)
+  - piezas sueltas (dibujadas de frente, son redondas) · la guirnalda entre dos puntos · El abeto de Yule · El pino adornado · La guirnalda de Yule · La corona de acebo · Los regalos de Yule · El tronco de Yule · La cabra de paja de Yule · La bola de Jera · los adornos de los árboles del bosque · el gorro de Eromash
+  - assets: abetoYule, pinoYule, guirnaldaYule, coronaYule, regalosYule, troncoYule, cabraYule, bolaYule
 - **assets-norte.js**: el corredor del norte: Paso del Guardián y Antigua tala (se suma a ASSETS)
   - assets: pilarAntiguo, lonaCuadrilla, tornoVigas, tablaPuente, pilaTablones, andamio, posteCruzaron, casetaPuentero, toconMarcado, muroRaices, granTocon, cabanaLenadores
 - **assets-pesca.js**: la pesca (assets de PESCA)
@@ -519,6 +524,7 @@ Cada archivo con lo que dice su primera línea, sus secciones (para buscarlas: `
 - **mj-losas.js**: Textos de las losas deslizantes (motor/mj-losas.js): prefijo mn.losas
 - **mj-rastreo.js**: Textos del rastreo con la Lente (motor/mj-rastreo.js) y del último rastro de los contratos que lo pide (motor/contratos.js): prefijo mn.rastreo
 - **mj-rayo.js**: Textos del rayo de luz rúnica (motor/mj-rayo.js) y de lo que lo pide (motor/ritos.js, el sello de EL-07 en motor/juego.js): prefijo mn.rayo
+- **navidad.js**: textos del modo Navidad (motor/navidad.js y mundo/assets-navidad.js): los nombres de sus assets y el grupo del catálogo
 - **norte.js**: Textos del Paso del Guardián y la Antigua tala (prefijo nt., las piezas en as.), los dos idiomas.
 - **objetos.js**: Textos de las piezas de equipo y el botín (prefijo ob.), los dos idiomas. Los adjetivos llevan las cuatro formas
   - rarezas · bases · prefijos (adjetivos: m|f|mp|fp) · sufijos · nombres propios de las raras: «Colmillo del Invierno» / «Winter Fang» · las líneas de cada pieza · comparar · casillas, bolsa y acciones

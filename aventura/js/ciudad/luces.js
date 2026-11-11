@@ -70,6 +70,9 @@ window.LUCES25 = (function () {
         forjas.push(o);
       } else if (/brasero|fogon/.test(id)) sumar({ x: o.x, y: o.y, r: /fogon/.test(id) ? 900 : 520, col: ORO, f: /fogon/.test(id) ? 1 : 0.85, fuego: true });
       if (/^(piedraFundadores|piedraCaidos)/.test(id)) sumar({ x: o.x, y: o.y, r: 320, col: RUNA, f: 0.45, late: true });
+      // el modo Navidad (motor/navidad.js): los abetos de Yule con sus lucecitas y los troncos con velas
+      if (o.id === "abetoYule") sumar({ x: o.x, y: o.y, r: 300 * ((o.o && o.o.s) || 1), col: ORO, f: 0.85, vela: true });
+      if (o.id === "troncoYule") sumar({ x: o.x, y: o.y, r: 240 * ((o.o && o.o.s) || 1), col: BRASA, f: 0.7, fuego: true });
       if (o.tipo !== "casa") continue;
       const v = o.casa;
       // la ventana de cada casa junto a su puerta (las largas, también en la otra punta del frente); las tapiadas a oscuras
