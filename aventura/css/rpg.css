@@ -7,6 +7,8 @@
 .nivel-rombo b { position: relative; font-size: 12px; font-weight: 900; color: var(--oro); }
 #hudJugador .retrato { position: relative; }
 #hudXp { left: 50%; bottom: 3px; transform: translateX(-50%); width: min(560px, 60vw); height: 7px; background: rgba(17, 17, 17, 0.88); clip-path: polygon(4px 0, 100% 0, 100% 100%, 0 100%, 0 4px); }
+/* las marcas de cada cuarto del nivel: se ve cuánto falta de un vistazo */
+#hudXp::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, transparent calc(25% - 1px), rgba(17, 17, 17, 0.9) calc(25% - 1px) 25%, transparent 25% calc(50% - 1px), rgba(17, 17, 17, 0.9) calc(50% - 1px) 50%, transparent 50% calc(75% - 1px), rgba(17, 17, 17, 0.9) calc(75% - 1px) 75%, transparent 75%); }
 #hudXp i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #4A78D0, #73D5DB); transition: width 0.35s; }
 #hudXp span { position: absolute; left: 0; right: 0; bottom: 9px; text-align: center; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--rosa); text-shadow: 0 1px 0 #000; opacity: 0; transition: opacity 0.2s; }
 #hudXp:hover span, #hudXp.ver span { opacity: 1; }

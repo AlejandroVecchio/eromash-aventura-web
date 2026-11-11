@@ -1,5 +1,6 @@
 // Textos de niveles, experiencia y estadísticas (prefijo rp.), los dos idiomas.
 I18N.textos({
+  "rp.grupo_vencido": { es: "Grupo vencido · +{0} exp", en: "Pack defeated · +{0} xp" },
   "rp.xp_mas": { es: "+{0} exp", en: "+{0} xp" },
   "rp.xp_barra": { es: "Nivel {0} · {1} / {2} de experiencia", en: "Level {0} · {1} / {2} experience" },
   "rp.xp_tope": { es: "Nivel 30 · el tope de Eldervald", en: "Level 30 · Eldervald's cap" },
