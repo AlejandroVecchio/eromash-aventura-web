@@ -158,14 +158,15 @@ window.ENGARCES = (function () {
     const m = maxDe(it);
     return it.r === 0 ? m : it.r === 1 ? Math.max(1, m - 1) : 1;
   }
-  function abrir(it) {
+  // extra: +1 si la talla salió perfecta, -1 si se rajó (tallar la runa, mj-tallar.js)
+  function abrir(it, extra = 0) {
     if (!it || it.e || it.r >= 3 || !maxDe(it)) return false;
     const pj = PODERES.pj(),
       c = costoAbrir(it);
     if (pj.plata < c || (window.MATERIALES && !MATERIALES.alcanza(ABRIR_MAT))) return HUD.aviso(t("en.asa_falta"), "#C8402D"), false;
     pj.plata -= c;
     if (window.MATERIALES) MATERIALES.gastar(ABRIR_MAT);
-    it.e = muescasQueAbre(it);
+    it.e = Math.max(1, Math.min(maxDe(it), muescasQueAbre(it) + extra));
     it.g = [];
     recalcular(it);
     if (window.SONIDO) SONIDO.tocar("golpeFuerte", { vol: 0.5, tono: 1.3 });
@@ -177,10 +178,51 @@ window.ENGARCES = (function () {
     const bot = l.slice(0, 7).map((it) => ({
       texto: OBJETOS.nombre(it) + " · " + t("en.n_muescas", [muescasQueAbre(it)]),
       sub: t("en.asa_costo", [costoAbrir(it)]) + (window.MATERIALES ? " · " + MATERIALES.texto(ABRIR_MAT) : ""),
-      fn: () => (abrir(it) ? (A.cerrarMenu(), (elegida = it.u), INVENTARIO.abrir("tallas")) : menuAsa()),
+      fn: () => pedirAbrir(it),
     }));
     bot.push({ texto: t("ui.volver"), fn: () => (window.FORJA && FORJA.abrir ? FORJA.abrir() : A.cerrarMenu()) });
     A.menu(`<h2>${t("en.asa_titulo")}</h2><div class="sub">${l.length ? t("en.asa_sub") : t("en.asa_nada")}</div>`, bot);
+  }
+
+  // Ása deja el cincel: la muesca se talla en la piedra (MINIJ «tallar»); perfecta suma una, rajada resta una, dejarla
+  // no cobra nada. Las piezas raras piden piedra dura.
+  function pedirAbrir(it) {
+    const pj = PODERES.pj();
+    if (pj.plata < costoAbrir(it) || (window.MATERIALES && !MATERIALES.alcanza(ABRIR_MAT))) return HUD.aviso(t("en.asa_falta"), "#C8402D"), menuAsa();
+    const listo = (extra) => {
+      if (!abrir(it, extra)) return menuAsa();
+      if (extra > 0) HUD.aviso(t("en.tallar_extra"), "#73D5DB");
+      else if (extra < 0) HUD.aviso(t("en.tallar_rajada"), "#C8402D");
+      A.cerrarMenu();
+      elegida = it.u;
+      INVENTARIO.abrir("tallas");
+    };
+    if (!window.MINIJ || !MINIJ.JUEGOS.tallar) return listo(0);
+    A.cerrarMenu();
+    MINIJ.empezar("tallar", {
+      variante: it.r >= 2 ? "dura" : it.r === 1 ? "vetas" : "base",
+      quien: t("en.tallar_asa"),
+      x: jug.x,
+      y: jug.y,
+      fin: (r) => (r.dejo ? menuAsa() : listo(r.gano ? (r.precision >= 0.85 ? 1 : 0) : -1)),
+    });
+  }
+  // unir tres tallas en la de arriba: se talla el hueso nuevo; si se resquebraja, las tres siguen en la bolsa
+  function pedirUnir(id) {
+    const sig = ORDEN[ORDEN.indexOf(id) + 1];
+    if (!sig || tiene(id) < 3) return false;
+    if (!window.MINIJ || !MINIJ.JUEGOS.tallar) return unir(id);
+    INVENTARIO.cerrar();
+    MINIJ.empezar("tallar", {
+      runa: sig,
+      quien: t("en.tallar_unir"),
+      fin: (r) => {
+        if (r.gano) unir(id);
+        else if (!r.dejo) HUD.aviso(t("en.tallar_falla"), "#E0B2B2");
+        INVENTARIO.abrir("tallas");
+      },
+    });
+    return true;
   }
 
   // ---------- la pestaña de la mochila ----------
@@ -230,7 +272,7 @@ window.ENGARCES = (function () {
             cant: tiene(id) || "",
             falta: !tiene(id),
             fn: () => (it ? (engarzar(it, id), INVENTARIO.repintar()) : HUD.aviso(t("en.elegi_pieza")), false),
-            alt: sig && tiene(id) >= 3 ? { texto: t("en.unir", [t("en.t_" + sig)]), fn: () => (unir(id), INVENTARIO.repintar(), false) } : null,
+            alt: sig && tiene(id) >= 3 ? { texto: t("en.unir", [t("en.t_" + sig)]), fn: () => (pedirUnir(id), false) } : null,
           },
           f,
           k,
@@ -346,5 +388,5 @@ window.ENGARCES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, alGenerar, recalcular, lineas, nombre, engarzar, vaciar, unir, dar, sortear, abrir, menuAsa, palabraDe, maxDe, muescasQueAbre, elegir: (u) => (elegida = u), TALLAS, PALABRAS, ORDEN, MAX };
+  return { sistema, estado: () => st, alGenerar, recalcular, lineas, nombre, engarzar, vaciar, unir, dar, sortear, abrir, menuAsa, pedirAbrir, pedirUnir, palabraDe, maxDe, muescasQueAbre, elegir: (u) => (elegida = u), TALLAS, PALABRAS, ORDEN, MAX };
 })();

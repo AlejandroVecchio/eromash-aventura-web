@@ -7,6 +7,8 @@
 //                            dibujar(S, D), variantes: { id: op }, pie: clave, res(S) → texto, pista(S) → true })
 // y se juega con MINIJ.empezar(tipo, { variante, quien, x, y, fin(res) }): `fin` recibe { gano, dejo, ... } y quien lo
 // pidió (un cofre, un encargo, un acertijo) decide qué pasa. Las variantes reutilizan el mismo juego con otras reglas.
+// Un juego con `cuenta: s` arranca con una cuenta atrás (3, 2, 1) antes de su primer paso. Los de ritmo piden una tecla
+// por marca (`RITMO`: A S D W Q E R F, cada dificultad usa más) y la anuncian con un aro que se cierra (`D.aro`, `D.tecla`).
 // Probar mecánicas lista solo todo lo registrado (`MINIJ.lista()`). Textos `mn.` (y los de cada juego).
 // `pista(S)` da una ayuda y devuelve true si la dio: el botón «Pista» (o la Lente) la paga con una piedra de Loki
 // (motor/loki.js); un juego sin `pista` muestra el botón apagado.
@@ -32,6 +34,7 @@ window.MINIJ = (function () {
     const v = Object.assign({}, (def.variantes && def.variantes[op.variante || "base"]) || {}, op.reglas || {});
     S = { tipo, def, op, v, variante: op.variante || "base", t: 0, fin: null, cur: 0, luz: {}, rnd: DIB.azar(op.semilla != null ? op.semilla : Math.floor(Math.random() * 1e9)), modoAntes: J.modo === "menu" || J.modo === "dialogo" ? "juego" : J.modo };
     def.armar(S);
+    S.cuenta = def.cuenta || 0;
     if (window.LOKI) LOKI.alAbrirJuego();
     J.modo = "minij";
     lienzo.style.display = "block";
@@ -121,6 +124,14 @@ window.MINIJ = (function () {
     }
     if (CONTROLES.recien("pausa")) return terminar({ gano: false, dejo: true });
     if (CONTROLES.recien("lente")) pedirPista();
+    // la cuenta atrás: el juego se ve quieto y el reloj no corre
+    if (S.cuenta > 0) {
+      const antes = Math.ceil(S.cuenta);
+      S.cuenta -= dt;
+      S.t = 0;
+      if (Math.ceil(S.cuenta) !== antes) sonar(S.cuenta > 0 ? 440 : 880, 0.12, "triangle");
+      return dibujar();
+    }
     // el reloj de las variantes contra el tiempo
     if (S.v.tiempo) {
       S.queda = Math.max(0, S.v.tiempo - S.t);
@@ -167,7 +178,24 @@ window.MINIJ = (function () {
     DIB.alfa(c, a * 0.5, () => rombo(x, y, r, col));
     DIB.alfa(c, a, () => rombo(x, y, r * 0.6, col));
   }
-  const D = { get c() { return c; }, P, texto, runa, piedra, rombo, halo, sonar, W: W0, H: H0 };
+  // el aro que se cierra sobre una marca: f va de 1 (recién anunciada) a 0 (el instante justo, cuando toca el borde)
+  function aro(x, y, r, f, col = "#FFD98A") {
+    c.save();
+    c.lineWidth = 3;
+    c.strokeStyle = col;
+    DIB.alfa(c, 0.35, () => (c.beginPath(), c.arc(x, y, r, 0, Math.PI * 2), c.stroke()));
+    c.lineWidth = 4;
+    DIB.alfa(c, Math.min(1, 0.3 + (1 - f) * 0.9), () => (c.beginPath(), c.arc(x, y, r * (1 + 2.2 * Math.max(0, f)), 0, Math.PI * 2), c.stroke()));
+    c.restore();
+  }
+  // la tecla de una acción en una piedrita (la letra o el botón del mando)
+  function tecla(x, y, accion, tam = 34, col = "#F2ECEC", fondo = "#2A2220") {
+    const h = tam / 2;
+    P([x - h + 5, y - h, x + h, y - h, x + h, y + h - 5, x + h - 5, y + h, x - h, y + h, x - h, y - h + 5], fondo);
+    P([x - h, y - h, x + h, y - h, x + h, y - h + 3, x - h, y - h + 3], col);
+    texto(CONTROLES.glifo(accion), x, y + tam * 0.22, Math.round(tam * 0.56), col, "center", 800);
+  }
+  const D = { get c() { return c; }, P, texto, runa, piedra, rombo, halo, sonar, aro, tecla, W: W0, H: H0 };
   function dibujar() {
     const r = lienzo.getBoundingClientRect(),
       dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -185,6 +213,13 @@ window.MINIJ = (function () {
     if (sub) texto(sub, 220, 124, 17, "#E0B2B2", "left", 500);
     if (S.v.tiempo) texto(t("mn.queda", [Math.ceil(S.queda != null ? S.queda : S.v.tiempo)]), 1380, 124, 20, (S.queda || 99) < 10 ? "#FF8D71" : "#73D5DB", "right", 700);
     S.def.dibujar(S, D);
+    if (S.cuenta > 0) {
+      const n = Math.ceil(S.cuenta),
+        f = S.cuenta - Math.floor(S.cuenta);
+      DIB.alfa(c, 0.55, () => P([180, 140, 1420, 140, 1420, 860, 180, 860], "#111111"));
+      texto(t("mn.preparate"), 800, 330, 26, "#E0B2B2", "center", 600);
+      texto(String(n), 800, 520, Math.round(130 + 60 * f), "#FFD98A", "center", 800);
+    }
     if (window.LOKI && !S.fin) LOKI.boton(c, !!S.def.pista, S.pistaAviso);
     texto(t(S.def.pie || "mn.pie", [CONTROLES.glifo("interactuar"), CONTROLES.glifo("pausa"), CONTROLES.glifo("arriba")]), 800, 892, 16, "#E0B2B2", "center", 400);
     if (S.fin) {
@@ -210,7 +245,12 @@ window.MINIJ = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
+  // las teclas de ritmo en el orden en que se suman con la dificultad: A S D W Q E R F
+  const RITMO = ["ritmo5", "ritmo6", "ritmo7", "ritmo2", "ritmo1", "ritmo3", "ritmo4", "ritmo8"];
   return {
+    RITMO,
+    // la tecla de ritmo recién apretada (o null)
+    ritmo: () => RITMO.find((a) => CONTROLES.recien(a)) || null,
     sistema,
     registrar,
     empezar,
