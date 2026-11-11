@@ -157,6 +157,26 @@
       }),
     ),
   );
+  // Eromash de Navidad: el gorro de Yule del modo Navidad (motor/navidad.js) en sus cuatro vistas
+  if (ASSETS.NAVIDAD) {
+    const gn = grupo("as.grupo.eromashNavidad");
+    [["S", false, "calm"], ["E", false, "calm"], ["N", false, "calm"], ["E", true, "fierce"], ["S", false, "fierce"], ["S", false, "susto"]].forEach(([v, esp, o]) =>
+      ficha(gn, I18N.t("cat.cara." + o) + " · " + v + (esp ? "→O" : ""), 150, 200, (c, t) => {
+        piso(c, 150, 200);
+        const img = VIKINGO.imagen(VIKINGO.color || "R", v, o);
+        if (!img.complete) return;
+        c.save();
+        c.translate(75, 124 + Math.sin(t * 2.5) * 2);
+        if (esp) c.scale(-1, 1);
+        c.drawImage(img, -55, -66, 110, 132);
+        c.translate(-55, -66);
+        c.scale(110 / 400, 132 / 480);
+        c.translate(-40, -90);
+        ASSETS.NAVIDAD.gorro(c, v);
+        c.restore();
+      }),
+    );
+  }
   // gente y criaturas
   if (window.GENTE) {
     const gg = grupo("as.grupo.gente");

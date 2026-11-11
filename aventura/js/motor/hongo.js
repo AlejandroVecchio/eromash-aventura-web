@@ -105,6 +105,7 @@ window.HONGO = (function () {
     for (const c of CIRCULOS) if (Math.hypot(x - c.x, y - c.y) < c.r + r) return false;
     for (const q of RECTAS) if (x > q[0] - r && x < q[2] + r && y > q[1] - r && y < q[3] + r) return false;
     for (const n of gente) if (!n.sentado && n.visible && Math.hypot(x - n.x, y - n.y) < 45 + r && !n.z) return false;
+    if (window.NAVIDAD) for (const c of NAVIDAD.choquesHongo) if (Math.hypot(x - c.x, y - c.y) < c.r + r) return false;
     return true;
   }
 
@@ -1128,6 +1129,8 @@ window.HONGO = (function () {
       // la campana del fogón se vuelve tenue si Eromash queda detrás de ella
       const detras = PR.hondo(ero.x, ero.y) < PR.hondo(FOGON.x, FOGON.y) && Math.abs(PR(ero.x, ero.y, 0)[0] - PR(FOGON.x, FOGON.y, 0)[0]) < 420 * s;
       for (const m of MUEBLES) pon(m.x, m.y, (sx, sy) => ASSETS.dibujar(c, m.id, sx, sy, tiempo, Object.assign({}, m.o, { s, giro: m.giro || 0 }, m.id === "fogonHongo" && detras ? { tenue: true } : null)));
+      // el modo Navidad (motor/navidad.js): guirnaldas, coronas, el abeto de Yule y sus regalos
+      if (window.NAVIDAD && NAVIDAD.activo) NAVIDAD.hongo({ c, pon, PR, s, t: tiempo, lista, arriba: ero.modo !== "piso", paredVista, ZG, GN, GO, HX, HY, tramosN, tramosO, BARRA, MESAS });
       // la trampilla, pintada en el piso
       lista.push({ k: -1e9, f: () => {
         const [sx, sy] = PR(TRAMPILLA.x, TRAMPILLA.y, 0);
@@ -1343,6 +1346,7 @@ window.HONGO = (function () {
     pon(TARIMA.x, TARIMA.y, 260, noche ? 700 : 420, "255,217,138", noche ? 0.9 : 0.5);
     for (const h of HONGOS) pon(h.x, h.y, h.z + 30, 320, "255,217,138", 0.5);
     pon(PUERTA.x, HY - 80, 120, 520, noche ? "115,140,200" : "220,230,210", noche ? 0.35 : 0.7);
+    if (window.NAVIDAD) NAVIDAD.lucesHongo(pon, tiempo);
     if (!noche) {
       if (paredVista.o()) pon(-HX + 100, 150, 250, 700, "200,224,240", 0.6), pon(-HX + 100, -190, 250, 600, "200,224,240", 0.5);
       if (paredVista.n()) pon(1150, -HY + 80, 700, 800, "200,224,240", 0.6);

@@ -299,6 +299,7 @@ window.MUNDO25 = (function () {
     const n = noche(h);
     VISTA25.dibujar(c, cam, cw, ch, tt, extra, (cx) => RECORRER25.piso(cx, cam, tt, h), SOMBRAS25.preparar(cam, h, n));
     RECORRER25.encima(c, cam, cw, ch, tt, h, "mundo");
+    if (window.NAVIDAD) NAVIDAD.nieveCiudad(c, cam, cw, ch, tt); // el modo Navidad (motor/navidad.js)
     c.setTransform(1, 0, 0, 1, 0, 0);
     LUCES25.antes(c, cam, cw, ch, h, tt, n);
     if (n > 0.01) {

@@ -1338,6 +1338,8 @@
     c.rotate((p.salto > 0 ? -0.25 * jp * (vista === "E" ? 1 : 0.4) : 0) + po.rot);
     c.scale(po.sx, po.sy);
     if (img.complete) c.drawImage(img, -w / 2, -h + 6, w, h);
+    // el gorro de Yule del modo Navidad (motor/navidad.js, ?navidad=1)
+    if (window.NAVIDAD && NAVIDAD.activo) NAVIDAD.gorro(c, vista, -w / 2, -h + 6, w, h);
     if (po.flash > 0) {
       const bl = ANIMA.blanco(img);
       if (bl) {
