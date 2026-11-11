@@ -16,9 +16,9 @@ window.ARCO = (function () {
   const g = (o) => Object.assign({}, sin, o);
   ARMAS.tipo("arco", {
     combo: [
-      g({ wind: 0.14, swing: 0.04, rec: 0.2, mueve: 0.6, disparo: { dano: 12 } }),
-      g({ wind: 0.14, swing: 0.04, rec: 0.2, mueve: 0.6, disparo: { dano: 12 } }),
-      g({ wind: 0.2, swing: 0.04, rec: 0.3, mueve: 0.45, remate: true, disparo: { dano: 10, n: 3, abre: 0.16 } }),
+      g({ wind: 0.14, swing: 0.04, rec: 0.2, mueve: 0.6, disparo: { dano: 14 } }),
+      g({ wind: 0.14, swing: 0.04, rec: 0.2, mueve: 0.6, disparo: { dano: 14 } }),
+      g({ wind: 0.2, swing: 0.04, rec: 0.3, mueve: 0.45, remate: true, disparo: { dano: 11, n: 3, abre: 0.16 } }),
     ],
     giro: g({ wind: 0.06, swing: 0.04, rec: 0.32, mueve: 0.3, disparo: { dano: 42, tenso: true, empuje: 1.6 } }),
     carrera: g({ wind: 0.08, swing: 0.04, rec: 0.16, mueve: 1, disparo: { dano: 12 } }),

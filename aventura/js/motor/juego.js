@@ -647,6 +647,7 @@
     CARGA_GIRO = 0.6;
   // los golpes de la espada; cada tipo de arma trae los suyos (motor/armas.js: ARMAS.golpes)
   const GOLPES_ESPADA = { combo: GOLPES, giro: GOLPE_GIRO, carrera: GOLPE_CARRERA, caida: GOLPE_CAIDA, carga: CARGA_GIRO, coste: 15 };
+  if (window.ARMAS) ARMAS.tipo("espada", GOLPES_ESPADA); // la de siempre, también para la cuenta del daño por segundo
   const golpesAhora = () => (window.ARMAS && ARMAS.golpes(GOLPES_ESPADA)) || GOLPES_ESPADA;
   // hacia dónde apunta el cursor, con el ángulo de los golpes (la y del piso ×1,25); null con mando, sin mouse o encima de Eromash
   function dirCursor() {

@@ -141,6 +141,16 @@ tener que leer el código para balancear.
   1,4 s (`e.atada`, anillo violeta). Con las dos manos. Cinco: vara de fresno (1), báculo de la völva (5, regeneración
   rúnica), cristal rúnico (10), de asta (14) y rama de Yggdrasil (18).
 
+### Balance y daño por segundo (`ARMAS.dps`, `ARMAS.dpsTipo`)
+
+Cada arma muestra «≈ N de daño por segundo»: el combo de tres contra una sola criatura (preparación + tajo + vuelta de cada golpe), por el daño de la pieza sobre 10 y su velocidad, con lo que suma cada tipo por su cuenta (sangrado del hacha ×1,13, quiebra del martillo ×1,1, punta de la lanza ×1,15). Las armas de nivel 1 quedan así:
+
+| Espada | Hacha | Martillo | Lanza | Mandoble | Hacha danesa | Arco | Bastón |
+|---|---|---|---|---|---|---|---|
+| 46 | 51 | 47 | 42 | 41 | 43 | 29 | 25 |
+
+Las de una mano rondan la espada; las de dos manos pegan a muchos con cada barrido (y el torbellino), el arco de lejos y con la triple, y el bastón da energía rúnica y estalla: contra un grupo rinden más que su número. Se bajó el combo del hacha (17/20/37) y del martillo (19/21/40), y se subieron los barridos a dos manos (18/20/34), el arco (14/14/11×3) y el bastón (11/11/13).
+
 ## Escudo (`motor/escudo.js`, `ESCUDO`, acción `bloquear`: G, Ctrl, L2 o clic derecho; textos `eb.`)
 
 - Manteniendo bloquear se levanta el escudo (`jug.bloquea`): camina al 60 %, no carga golpes y no recupera

@@ -99,6 +99,7 @@ I18N.textos({
   "ob.rd_sangre": { es: "de Sangre", en: "Blood" },
 
   // ---------- las líneas de cada pieza ----------
+  "ob.l_dps": { es: "≈ {0} de daño por segundo", en: "≈ {0} damage per second" },
   "ob.l_dano": { es: "Daño {0} · velocidad {1}", en: "Damage {0} · speed {1}" },
   "ob.l_armadura": { es: "Armadura {0}", en: "Armour {0}" },
   "ob.st_danoP": { es: "+{0} % de daño", en: "+{0}% damage" },
