@@ -44,12 +44,15 @@ window.ARMAS = (function () {
     coste: 18,
   });
   // ---------- a dos manos ----------
-  // barrido, contrabarrido y el golpe desde arriba que sacude el piso; cargado, el torbellino (TORBELLINO)
+  // barrido, contrabarrido y el golpe desde arriba que sacude el piso; cargado, el torbellino (TORBELLINO).
+  // 11/11/2026: 23/26/44 (antes 17/19/32). Con su lentitud y su vel de 0,66 a 0,8, el daño por segundo contra uno
+  // solo quedaba por debajo de la espada de hierro inicial (la lábrys 41,8 contra 43,9); ahora van arriba de todo,
+  // porque se pierde el escudo.
   const DOS_MANOS = {
     combo: [
-      { wind: 0.22, swing: 0.2, rec: 0.3, arc: 3.2, reach: 124, dano: 17, empuje: 0.9, peso: 1.8, dosManos: true },
-      { wind: 0.2, swing: 0.2, rec: 0.32, arc: 3.2, reach: 124, dano: 19, empuje: 0.9, peso: 1.8, dosManos: true },
-      { wind: 0.34, swing: 0.12, rec: 0.46, arc: 1.5, reach: 132, dano: 32, empuje: 2.2, remate: true, piso: true, peso: 2.4, dosManos: true },
+      { wind: 0.22, swing: 0.2, rec: 0.3, arc: 3.2, reach: 124, dano: 23, empuje: 0.9, peso: 1.8, dosManos: true },
+      { wind: 0.2, swing: 0.2, rec: 0.32, arc: 3.2, reach: 124, dano: 26, empuje: 0.9, peso: 1.8, dosManos: true },
+      { wind: 0.34, swing: 0.12, rec: 0.46, arc: 1.5, reach: 132, dano: 44, empuje: 2.2, remate: true, piso: true, peso: 2.4, dosManos: true },
     ],
     giro: { wind: 0, swing: 0.12, rec: 0.3, arc: Math.PI * 2, reach: 128, dano: 18, empuje: 1.4, giro: true, dosManos: true },
     carrera: { wind: 0.12, swing: 0.18, rec: 0.36, arc: 1.8, reach: 130, dano: 24, avanza: 360, empuje: 1.8, peso: 1.6, dosManos: true },
