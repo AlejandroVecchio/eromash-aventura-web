@@ -974,8 +974,9 @@
     // las cercas frenan, salvo saltando
     const valla = (nx, ny) => jug.salto <= 0 && !(jug.z > 0) && W.vallaEntre(jug.x, jug.y, nx, ny, R);
     const cuerpos = atraviesa ? [] : cuerposCerca();
-    if (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y) && !choca(cuerpos, jug.x + dx, jug.y)) jug.x += dx;
-    if (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy) && !choca(cuerpos, jug.x, jug.y + dy)) jug.y += dy;
+    // J.atravesar (modo cámara, ?atravesar=1): para grabar, Eromash pasa a través de árboles, rocas y cercas
+    if (J.atravesar || (W.libre(jug.x + dx, jug.y, R) && !valla(jug.x + dx, jug.y) && !choca(cuerpos, jug.x + dx, jug.y))) jug.x += dx;
+    if (J.atravesar || (W.libre(jug.x, jug.y + dy, R) && !valla(jug.x, jug.y + dy) && !choca(cuerpos, jug.x, jug.y + dy))) jug.y += dy;
   }
   // la gente y los enemigos tienen cuerpo: Eromash no los atraviesa (si ya quedó encimado, puede salir)
   function cuerposCerca() {

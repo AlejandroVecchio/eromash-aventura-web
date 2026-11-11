@@ -97,7 +97,7 @@ tener que leer el código para balancear.
 - Cinco hachas de una mano: de mano (1), barbuda (4), rúnica (9, +8 % de poder rúnico), de hueso (13, 1 % de robo de
   vida) y de doble filo (16). El dibujo (`DIB_ARMAS.forma(id, fn)`) usa el lenguaje de las espadas de la arena: cinco
   escalones con tientos de cuero, remaches de oro, runas que laten y el filo encendido de la legendaria.
-- **A dos manos** (`mandoble`, `hacha2`; bases con `dosManos: true`): 17 / 19 / 32, barridos de 3,2 rad con envión
+- **A dos manos** (`mandoble`, `hacha2`; bases con `dosManos: true`): 23 / 26 / 44 (eran 17 / 19 / 32: contra uno solo pegaban menos por segundo que la espada inicial), barridos de 3,2 rad con envión
   (mientras pega camina al 35 %, `d.mueve`; `d.peso` inclina más el cuerpo) y un tercero desde arriba (`piso`) que
   hace una **onda** (`ARMAS.ONDA`: radio 170, tambalea 0,6 s, 0,25 a líderes y pesados) además del remate. El golpe al
   caer de un salto también hace onda. **Manteniendo atacar, torbellino** (`ARMAS.TORB`): desde 0,45 s de carga gira
