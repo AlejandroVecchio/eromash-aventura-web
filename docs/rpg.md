@@ -632,6 +632,15 @@ Leerlos todos da un punto de atributo y un fragmento. Todo se da la primera vez 
 - **Los hitos** (`HITOS`, `E.extra.saga.hitos`): 25 % plata (150 + 10 × nivel), 50 % un fragmento, 75 % una pieza rara o mejor, 100 % una legendaria y el título «Leyenda de Eldervald» (`leyenda`). Se revisan cada 3 s y al abrir la pestaña, y pagan una sola vez; una partida vieja marca sin pagar los que ya pasó la primera vez que carga (`visto`).
 - **La pestaña Saga** (antes del Diario): la cabecera con el título, el porcentaje, el próximo hito y su barra; por capítulo, una casilla por entrada con su runa y «hecho/total» (apagada sin empezar, dorada completa); al elegirla, su barra y una pista de cómo empezar.
 
+## El renombre que abre la capital (`motor/secundarias.js`, `motor/instructores.js`, `motor/comercio.js`, `motor/tablon.js`; textos `sc.renombre_abre_*`, `ie.pide_renombre`)
+
+El renombre en Eikholt (Forastero, Conocido, De confianza, Amigo de las lindes, Guardián de Eldervald) ya no es solo la rebaja de la forja: cada rango abre cosas.
+
+- **Instructores**: la primera lección de Hallbera, Ulfar y Vör pide nivel y prueba; la segunda además pide ser Conocido y la tercera De confianza (`INSTRUCTORES.RENOMBRE_LEC`). El menú lo dice en cada lección.
+- **Mercaderes**: una pieza más por rango y la suerte corre de común a mágica y rara (6 % por rango); desde Amigo de las lindes pueden traer legendarias (`COMERCIO.rarezaCon`). Al subir de rango el mercader trae lo nuevo enseguida.
+- **Tablón de cacería**: paga un 10 % más por rango (`TABLON.paga`).
+- Al subir sale el cartel de siempre y otro con lo que se abre; el diario lista los cuatro rangos con lo que abre cada uno.
+
 ## Pruebas
 
 `node aventura/pruebas/correr.cjs [filtro]` (con Playwright instalado) abre el juego sin ventana en la ranura 9 y

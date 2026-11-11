@@ -81,11 +81,15 @@ window.INSTRUCTORES = (function () {
 
   // ---------- las lecciones ----------
   const aprendidas = (id) => st.lec[id] || 0;
+  // la segunda lección pide ser Conocido en Eikholt y la tercera De confianza (renombre de SECUNDARIAS)
+  const RENOMBRE_LEC = [0, 1, 2];
+  const renombre = () => (window.SECUNDARIAS && SECUNDARIAS.renombre ? SECUNDARIAS.renombre() : 0);
   function lecPide(id) {
     const n = aprendidas(id),
       L = LECCIONES[id][n];
     if (!L) return "ie.todo";
     if ((window.RPG ? RPG.nivel() : 1) < L.nivel) return "ie.pide_nivel";
+    if (renombre() < RENOMBRE_LEC[n]) return "ie.pide_renombre";
     if ((st.pasada[id] || 0) <= n) return "ie.pide_prueba";
     if (PODERES.pj().plata < L.plata) return "ie.pide_plata";
     return null;
@@ -94,7 +98,7 @@ window.INSTRUCTORES = (function () {
     const no = lecPide(id);
     if (no) {
       const L = LECCIONES[id][aprendidas(id)];
-      HUD.aviso(t(no, L ? [L.nivel, L.plata] : []));
+      HUD.aviso(t(no, L ? (no === "ie.pide_renombre" ? [t("sc.renombre_" + RENOMBRE_LEC[aprendidas(id)])] : [L.nivel, L.plata]) : []));
       return false;
     }
     const n = aprendidas(id),
@@ -123,7 +127,7 @@ window.INSTRUCTORES = (function () {
       const hecha = k < n;
       bot.push({
         texto: (hecha ? "✓ " : "") + t("ie." + id + "_l" + (k + 1)),
-        sub: t("ie." + id + "_l" + (k + 1) + "_d") + (hecha ? "" : " · " + t("ie.lec_sub", [LECCIONES[id][k].nivel, LECCIONES[id][k].plata])),
+        sub: t("ie." + id + "_l" + (k + 1) + "_d") + (hecha ? "" : " · " + t("ie.lec_sub", [LECCIONES[id][k].nivel, LECCIONES[id][k].plata]) + (RENOMBRE_LEC[k] ? " · " + t("ie.lec_renombre", [t("sc.renombre_" + RENOMBRE_LEC[k])]) : "")),
         fn: k === n ? () => (aprender(id), menuMaestro(id)) : () => menuMaestro(id),
       });
     }
@@ -346,5 +350,5 @@ window.INSTRUCTORES = (function () {
     },
   };
   (window.SISTEMAS = window.SISTEMAS || []).push(sistema);
-  return { sistema, estado: () => st, muneco: () => muneco, gente: () => gente, menuMaestro, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES };
+  return { sistema, estado: () => st, muneco: () => muneco, gente: () => gente, menuMaestro, aprender, pedirPrueba, empezar, terminar, sesion: () => ses, lecPide, aprendidas, MAESTROS, LECCIONES, RENOMBRE_LEC };
 })();

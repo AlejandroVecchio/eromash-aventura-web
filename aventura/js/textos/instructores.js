@@ -15,6 +15,8 @@ I18N.textos({
   "ie.diario_lec": { es: "{0} de {1} aprendidas.", en: "{0} of {1} learned." },
   "ie.lec_sub": { es: "nivel {0} · {1} de plata", en: "level {0} · {1} silver" },
   "ie.todo": { es: "Ya te enseñó todo lo que sabe.", en: "You've learned everything they know." },
+  "ie.pide_renombre": { es: "Esa lección se enseña a quien es {0} en Eikholt.", en: "That lesson is taught to those who are {0} in Eikholt." },
+  "ie.lec_renombre": { es: "renombre: {0}", en: "renown: {0}" },
   "ie.pide_nivel": { es: "Esa lección pide nivel {0}.", en: "That lesson needs level {0}." },
   "ie.pide_prueba": { es: "Primero tenés que pasar su prueba en el muñeco.", en: "First you must pass their trial at the dummy." },
   "ie.pide_plata": { es: "La lección cuesta {1} de plata.", en: "The lesson costs {1} silver." },
