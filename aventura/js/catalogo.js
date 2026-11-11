@@ -168,11 +168,13 @@
         c.save();
         c.translate(75, 124 + Math.sin(t * 2.5) * 2);
         if (esp) c.scale(-1, 1);
-        c.drawImage(img, -55, -66, 110, 132);
+        c.save();
         c.translate(-55, -66);
         c.scale(110 / 400, 132 / 480);
         c.translate(-40, -90);
         ASSETS.NAVIDAD.gorro(c, v);
+        c.restore();
+        c.drawImage(img, -55, -66, 110, 132);
         c.restore();
       }),
     );

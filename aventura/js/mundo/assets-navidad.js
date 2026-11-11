@@ -638,7 +638,14 @@
     piel: [62, 132, 58, 110, 76, 90, 160, 82, 240, 80, 320, 82, 404, 90, 422, 110, 418, 132, 330, 140, 240, 142, 150, 140],
     pielSombra: [62, 132, 58, 110, 76, 90, 160, 82, 220, 80, 210, 141, 150, 140],
   };
+  // va DETRÁS de la cabeza (lo pide quien dibuja a Eromash antes de su imagen), chico y echado hacia atrás:
+  // los tres picos y la barra de arriba de la E quedan enteros y el borde de piel asoma entre los picos
+  // (la hoja «Eromash de Navidad» que aprobó Alejandro el 11/11/2026)
   function gorro(c, vista) {
+    c.save();
+    c.translate(240, 154);
+    c.scale(0.8, 0.8);
+    c.translate(-240, -142);
     const espejar = vista === "N" || vista === "E",
       X = (v) => (espejar ? 480 - v : v),
       pp = (a, col) => P(c, a.map((v, i) => (i % 2 ? v : X(v))), col);
@@ -658,8 +665,9 @@
       const bx = 96 + i * 58;
       pp([bx, 136, bx + 14, 116, bx + 26, 138], i < 3 ? "#C9A0A0" : NIEVE_S);
     }
-    // el acebo, del lado de adelante (de espaldas no se ve)
-    if (vista !== "N") acebo(c, X(118), 96, 16);
+    // el acebo, en el borde de piel del lado del pompón (de espaldas no se ve)
+    if (vista !== "N") acebo(c, X(330), 78, 28);
+    c.restore();
   }
 
   Object.assign(ASSETS.LISTA, {
